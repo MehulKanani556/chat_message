@@ -69,6 +69,7 @@ import Front from "../component/Front";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import ChatItem from "../component/ChatItem";
 import MessageList from "../component/MessageList";
+import Profile from "../component/Profile";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
@@ -271,6 +272,9 @@ const Chat2 = () => {
   const mobileMenuRef = useRef(null);
   const searchBoxRef = useRef(null);
 
+  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
+  const [showProfileInSidebar, setShowProfileInSidebar] = useState(false);
+
   //===========Use the custom socket hook===========
   const {
     socket,
@@ -314,12 +318,12 @@ const Chat2 = () => {
 
 
   // ====================auth=======================
-  
-  useEffect(()=>{
-    if(!currentUser){
+
+  useEffect(() => {
+    if (!currentUser) {
       navigate("/");
     }
-  },[])
+  }, [])
 
   //===========get all users===========
   useEffect(() => {
@@ -787,9 +791,9 @@ const Chat2 = () => {
 
     if (selectedChat && selectedChat?.members?.length > 0) {
       handleSendGroupMessage(data); // Send group message
-    }  else if (data.type === "file") {
+    } else if (data.type === "file") {
       handleMultipleFileUpload(messageInput);
-    }else if (data.type === "text") {
+    } else if (data.type === "text") {
       handleSendMessage(data);
     }
     setMessageInput("");
@@ -1263,13 +1267,10 @@ const Chat2 = () => {
     };
   }, []);
 
-  // Add state to manage sidebar visibility
-  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
-
   // Add useEffect to handle initial sidebar state based on screen width and selected chat
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <=767) {
+      if (window.innerWidth <= 767) {
         setShowLeftSidebar(!selectedChat);
       } else {
         setShowLeftSidebar(true);
@@ -1386,427 +1387,440 @@ const Chat2 = () => {
       {/* Left Sidebar */}
       <div
         className={`${showLeftSidebar ? "block" : "hidden"
-          } w-full md:w-80 border-r flex flex-col`}
+          } w-full md:w-96 border-r flex flex-col`}
       >
-        <div className="relative profile-dropdown">
-          <div
-            className="flex items-center p-4 border-b cursor-pointer hover:bg-gray-100  mt-4"
-            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-          >
-            {/* <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden"> */}
-            <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center border border-gray-500">
-              {user?.photo && user.photo !== "null" ? (
-                <img
-                  src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                  alt="Profile"
-                  className="object-fill w-full h-full"
-                />
-              ) : (
-                <span className="text-white text-2xl font-bold capitalize">
-                  {user?.userName && user?.userName.includes(" ")
-                    ? user?.userName.split(" ")[0][0] +
-                    user?.userName.split(" ")[1][0]
-                    : user?.userName[0]}
-                </span>
+        {showProfileInSidebar ? (
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto">
+              <Profile />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="relative profile-dropdown">
+              <div
+                className="flex items-center p-4 border-b cursor-pointer hover:bg-gray-100  mt-4"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              >
+                {/* <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden"> */}
+                <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center border border-gray-500">
+                  {user?.photo && user.photo !== "null" ? (
+                    <img
+                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                      alt="Profile"
+                      className="object-fill w-full h-full"
+                    />
+                  ) : (
+                    <span className="text-white text-2xl font-bold capitalize">
+                      {user?.userName && user?.userName.includes(" ")
+                        ? user?.userName.split(" ")[0][0] +
+                        user?.userName.split(" ")[1][0]
+                        : user?.userName[0]}
+                    </span>
+                  )}
+                </div>
+                {/* </div> */}
+                <div className="ml-3 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium">{user?.userName}</span>
+                      <p className="mb-0 text-xs">{user?.email}</p>
+                    </div>
+                    <PiDotsThreeBold />
+                  </div>
+                </div>
+              </div>
+
+              {isProfileDropdownOpen && (
+                <div className="absolute top-full left-0 w-[85%] bg-white border shadow-lg z-50 ml-5 rounded-[10px]">
+                  <div
+                    className="p-3 hover:bg-gray-100 border-t"
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false);
+                      setShowProfileInSidebar(true);
+                    }}
+                  >
+                    <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                      <FaRegUser className="w-5 h-5" />
+                      <span>Profile</span>
+                    </div>
+                  </div>
+
+                  <div
+                    className="p-3 hover:bg-gray-100 border-t"
+                    onClick={() => setIsLogoutModalOpen(true)}
+                  >
+                    <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                      <RiShutDownLine className="w-5 h-5" />
+                      <span>Logout</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
-            {/* </div> */}
-            <div className="ml-3 flex-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-medium">{user?.userName}</span>
-                  <p className="mb-0 text-xs">{user?.email}</p>
-                </div>
-                <PiDotsThreeBold />
+
+            <div className="p-4 border-b relative" ref={searchRef}>
+              <div className="flex items-center bg-gray-100 rounded-md p-2">
+                <FaSearch className="w-5 h-5 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="People, groups"
+                  className="bg-transparent ml-2 outline-none flex-1"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onFocus={() => setIsSearchDropdownOpen(true)}
+                />
               </div>
+
+              {/* ********************************** Search Dropdown ********************************** */}
+              {isSearchDropdownOpen && (
+                <div className="absolute left-0 top-[65px] right-0 bg-white mt-2 shadow-lg z-50 min-h-[782px]">
+                  {/* Tabs */}
+                  <div className="flex border-b">
+                    <button
+                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "All"
+                        ? "text-gray-700 border-b-2 border-blue-500"
+                        : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      onClick={() => setActiveSearchTab("All")}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "People"
+                        ? "text-gray-700 border-b-2 border-blue-500"
+                        : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      onClick={() => setActiveSearchTab("People")}
+                    >
+                      People
+                    </button>
+                    <button
+                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "Groups"
+                        ? "text-gray-700 border-b-2 border-blue-500"
+                        : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      onClick={() => setActiveSearchTab("Groups")}
+                    >
+                      Groups
+                    </button>
+                  </div>
+
+                  {/* Search hint */}
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    Quickly search for people, messages and groups.
+                  </div>
+
+                  {/* Content based on active tab */}
+                  {(activeSearchTab === "All" || activeSearchTab === "People") && (
+                    <div className="p-2">
+                      <div className="text-xs font-medium text-gray-500 px-2 mb-2">
+                        People
+                      </div>
+                      {filteredUsers.length > 0 ? (
+                        <>
+                          {/* Show only first 4 users in All tab, or all users in People tab */}
+                          {filteredUsers
+                            .filter((user) => !user.members)
+                            .slice(0, activeSearchTab === "All" ? 4 : undefined)
+                            .map((user) => (
+                              <div
+                                key={user._id}
+                                className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer font-semibold"
+                                onClick={() => {
+                                  setSelectedChat(user);
+                                  setIsSearchDropdownOpen(false);
+                                  setSearchInput("");
+                                }}
+                              >
+                                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                                  {user?.photo ? (
+                                    <img
+                                      src={`${IMG_URL}${user.photo.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`}
+                                      alt="Profile"
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  ) : (
+                                    <span className="text-sm font-medium">
+                                      {user.userName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-sm">{user.userName}</span>
+                                {onlineUsers.includes(user._id) && (
+                                  <div className="w-2 h-2 bg-green-500 rounded-full ml-2"></div>
+                                )}
+                              </div>
+                            ))}
+
+                          {/* Show View All button only in All tab and if there are more than 4 users */}
+                          {activeSearchTab === "All" &&
+                            filteredUsers.filter((user) => !user.members).length >
+                            4 && (
+                              <div
+                                className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
+                                onClick={() => {
+                                  setActiveSearchTab("People");
+                                }}
+                              >
+                                View All People (
+                                {
+                                  filteredUsers.filter((user) => !user.members)
+                                    .length
+                                }
+                                )
+                              </div>
+                            )}
+                        </>
+                      ) : (
+                        <div className="p-2 text-center text-gray-500">
+                          No matching people found
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(activeSearchTab === "All" || activeSearchTab === "Groups") && (
+                    <div className="p-2 border-t">
+                      <div className="text-xs font-medium text-gray-500 px-2 mb-2">
+                        Groups
+                      </div>
+                      {/* Create New Group Button */}
+                      <div
+                        className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                        onClick={() => {
+                          setIsGroupCreateModalOpen(true);
+                          setIsSearchDropdownOpen(false);
+                        }}
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gray-300 flex items-center justify-center mr-2">
+                          <FaUserPlus className="text-gray-600" />
+                        </div>
+                        <span className="text-sm font-semibold">
+                          Create New Group
+                        </span>
+                      </div>
+
+                      {/* List of Groups */}
+                      {groups.length > 0 ? (
+                        <>
+                          {/* Show only first 4 groups in All tab, or all groups in Groups tab */}
+                          {groups
+                            .slice(0, activeSearchTab === "All" ? 4 : undefined)
+                            .map((group) => (
+                              <div
+                                key={group._id}
+                                className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                                onClick={() => {
+                                  if (group.members?.includes(currentUser)) {
+                                    setSelectedChat(group);
+                                    setIsSearchDropdownOpen(false);
+                                    setSearchInput("");
+                                  } else {
+                                    // Handle non-member click - maybe show a join request dialog
+                                    alert("You are not a member of this group");
+                                  }
+                                }}
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-2">
+                                  {group?.photo ? (
+                                    <img
+                                      src={`${IMG_URL}${group.photo.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`}
+                                      alt="Group"
+                                      className="w-8 h-8 rounded-lg object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-sm font-medium">
+                                      {group.userName.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium">
+                                    {group.userName}
+                                  </span>
+                                  <div className="flex items-center">
+                                    <span className="text-xs text-gray-500">
+                                      {group.members?.length} members
+                                    </span>
+                                    {!group.members?.includes(currentUser) && (
+                                      <span className="ml-2 text-xs text-blue-500">
+                                        • Not a member
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                          {/* Show View All button only in All tab and if there are more than 4 groups */}
+                          {activeSearchTab === "All" && groups.length > 4 && (
+                            <div
+                              className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
+                              onClick={() => {
+                                setActiveSearchTab("Groups");
+                              }}
+                            >
+                              View All Groups ({groups.length})
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="p-2 text-center text-gray-500">
+                          No groups found
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Add a "No results" message when neither people nor groups are found */}
+                  {searchInput &&
+                    filteredUsers.length === 0 &&
+                    filteredGroups.length === 0 && (
+                      <div className="p-4 text-center text-gray-500">
+                        No results found for "{searchInput}"
+                      </div>
+                    )}
+                </div>
+              )}
             </div>
-          </div>
 
-          {isProfileDropdownOpen && (
-            <div className="absolute top-full left-0 w-[85%] bg-white border shadow-lg z-50 ml-5 rounded-[10px]">
+            <div className="flex justify-around p-4 border-b">
               <div
-                className="p-3 hover:bg-gray-100 border-t"
-                onClick={() => setIsProfileModalOpen(true)}
+                className={`${filteredUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
+                  } flex flex-col items-center cursor-pointer`}
+                onClick={() => handleFilter("chat")}
               >
-                <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                  <FaRegUser className="w-5 h-5" />
-                  <span>Profile</span>
-                </div>
+                <FaCommentDots className="w-6 h-6" />
+                <span className="text-xs mt-1">Chat</span>
               </div>
-
               <div
-                className="p-3 hover:bg-gray-100 border-t"
-                onClick={() => setIsLogoutModalOpen(true)}
+                className={`${callUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
+                  } flex flex-col items-center  cursor-pointer`}
+                onClick={() => handleFilter("call")}
               >
-                <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                  <RiShutDownLine className="w-5 h-5" />
-                  <span>Logout</span>
-                </div>
+                <FaPhone className="w-6 h-6" />
+                <span className="text-xs mt-1">Calls</span>
               </div>
+              <div
+                className="flex flex-col items-center text-gray-500 cursor-pointer"
+                onClick={() => setIsGroupCreateModalOpen(true)}
+              >
+                <FaUsers className="w-6 h-6" />
+                <span className="text-xs mt-1">+Group</span>
+              </div>
+              {/* <div className="flex flex-col items-center text-gray-500">
+                <FaBell className="w-6 h-6" />
+                <span className="text-xs mt-1">Notifications</span>
+              </div> */}
             </div>
-          )}
-        </div>
 
-        <div className="p-4 border-b relative" ref={searchRef}>
-          <div className="flex items-center bg-gray-100 rounded-md p-2">
-            <FaSearch className="w-5 h-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="People, groups"
-              className="bg-transparent ml-2 outline-none flex-1"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onFocus={() => setIsSearchDropdownOpen(true)}
-            />
-          </div>
-
-          {/* ********************************** Search Dropdown ********************************** */}
-          {isSearchDropdownOpen && (
-            <div className="absolute left-0 top-[65px] right-0 bg-white mt-2 shadow-lg z-50 min-h-[782px]">
-              {/* Tabs */}
-              <div className="flex border-b">
+            {callUsers.length == 0 && (
+              <div className="flex px-10 space-x-4 border-b justify-between">
                 <button
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "All"
-                    ? "text-gray-700 border-b-2 border-blue-500"
-                    : "text-gray-500 hover:text-gray-700"
+                  className={`py-2 ${selectedTab === "All" ? "border-b-2 border-blue-500" : ""
                     }`}
-                  onClick={() => setActiveSearchTab("All")}
+                  onClick={() => setSelectedTab("All")}
                 >
                   All
                 </button>
                 <button
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "People"
-                    ? "text-gray-700 border-b-2 border-blue-500"
-                    : "text-gray-500 hover:text-gray-700"
+                  className={`py-2 ${selectedTab === "Chats" ? "border-b-2 border-blue-500" : ""
                     }`}
-                  onClick={() => setActiveSearchTab("People")}
+                  onClick={() => setSelectedTab("Chats")}
                 >
-                  People
+                  Chats
                 </button>
                 <button
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "Groups"
-                    ? "text-gray-700 border-b-2 border-blue-500"
-                    : "text-gray-500 hover:text-gray-700"
+                  className={`py-2 ${selectedTab === "Unread" ? "border-b-2 border-blue-500" : ""
                     }`}
-                  onClick={() => setActiveSearchTab("Groups")}
+                  onClick={() => setSelectedTab("Unread")}
                 >
-                  Groups
+                  Unread
                 </button>
               </div>
+            )}
 
-              {/* Search hint */}
-              <div className="p-4 text-center text-gray-500 text-sm">
-                Quickly search for people, messages and groups.
-              </div>
+            <div className="flex-1 overflow-y-auto modal_scroll cursor-pointer">
+              {filteredUsers
+                .slice()
+                .sort((a, b) => {
+                  // Prioritize the current user
+                  if (a._id === currentUser) return -1;
+                  if (b._id === currentUser) return 1;
 
-              {/* Content based on active tab */}
-              {(activeSearchTab === "All" || activeSearchTab === "People") && (
-                <div className="p-2">
-                  <div className="text-xs font-medium text-gray-500 px-2 mb-2">
-                    People
-                  </div>
-                  {filteredUsers.length > 0 ? (
-                    <>
-                      {/* Show only first 4 users in All tab, or all users in People tab */}
-                      {filteredUsers
-                        .filter((user) => !user.members)
-                        .slice(0, activeSearchTab === "All" ? 4 : undefined)
-                        .map((user) => (
-                          <div
-                            key={user._id}
-                            className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer font-semibold"
-                            onClick={() => {
-                              setSelectedChat(user);
-                              setIsSearchDropdownOpen(false);
-                              setSearchInput("");
-                            }}
-                          >
-                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
-                              {user?.photo ? (
-                                <img
-                                  src={`${IMG_URL}${user.photo.replace(
-                                    /\\/g,
-                                    "/"
-                                  )}`}
-                                  alt="Profile"
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              ) : (
-                                <span className="text-sm font-medium">
-                                  {user.userName.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-sm">{user.userName}</span>
-                            {onlineUsers.includes(user._id) && (
-                              <div className="w-2 h-2 bg-green-500 rounded-full ml-2"></div>
-                            )}
-                          </div>
-                        ))}
+                  const lastMessageA = Array.isArray(a.messages)
+                    ? [...a.messages].sort(
+                      (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
+                    )[0]
+                    : null;
+                  const lastMessageB = Array.isArray(b.messages)
+                    ? [...b.messages].sort(
+                      (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
+                    )[0]
+                    : null;
 
-                      {/* Show View All button only in All tab and if there are more than 4 users */}
-                      {activeSearchTab === "All" &&
-                        filteredUsers.filter((user) => !user.members).length >
-                        4 && (
-                          <div
-                            className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
-                            onClick={() => {
-                              setActiveSearchTab("People");
-                            }}
-                          >
-                            View All People (
-                            {
-                              filteredUsers.filter((user) => !user.members)
-                                .length
-                            }
-                            )
-                          </div>
-                        )}
-                    </>
-                  ) : (
-                    <div className="p-2 text-center text-gray-500">
-                      No matching people found
-                    </div>
-                  )}
-                </div>
-              )}
+                  // New sorting logic for no messages
+                  if (!lastMessageA && !lastMessageB) {
+                    return new Date(b.createdAt) - new Date(a.createdAt); // Sort by createdAt if both have no messages
+                  }
+                  if (!lastMessageA) return 1; // If A has no messages, B comes first
+                  if (!lastMessageB) return -1; // If B has no messages, A comes first
 
-              {(activeSearchTab === "All" || activeSearchTab === "Groups") && (
-                <div className="p-2 border-t">
-                  <div className="text-xs font-medium text-gray-500 px-2 mb-2">
-                    Groups
-                  </div>
-                  {/* Create New Group Button */}
-                  <div
-                    className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                    onClick={() => {
-                      setIsGroupCreateModalOpen(true);
-                      setIsSearchDropdownOpen(false);
-                    }}
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-gray-300 flex items-center justify-center mr-2">
-                      <FaUserPlus className="text-gray-600" />
-                    </div>
-                    <span className="text-sm font-semibold">
-                      Create New Group
-                    </span>
-                  </div>
+                  return (
+                    new Date(lastMessageB.createdAt) -
+                    new Date(lastMessageA.createdAt)
+                  );
+                })
+                .map((item) => (
+                  <ChatItem
+                    key={item._id}
+                    item={item}
+                    currentUser={currentUser}
+                    onlineUsers={onlineUsers}
+                    setSelectedChat={setSelectedChat}
+                    setShowLeftSidebar={setShowLeftSidebar}
+                    IMG_URL={IMG_URL}
+                    selectedChat={selectedChat} // Pass selectedChat as a prop
+                  />
+                ))}
 
-                  {/* List of Groups */}
-                  {groups.length > 0 ? (
-                    <>
-                      {/* Show only first 4 groups in All tab, or all groups in Groups tab */}
-                      {groups
-                        .slice(0, activeSearchTab === "All" ? 4 : undefined)
-                        .map((group) => (
-                          <div
-                            key={group._id}
-                            className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                            onClick={() => {
-                              if (group.members?.includes(currentUser)) {
-                                setSelectedChat(group);
-                                setIsSearchDropdownOpen(false);
-                                setSearchInput("");
-                              } else {
-                                // Handle non-member click - maybe show a join request dialog
-                                alert("You are not a member of this group");
-                              }
-                            }}
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-2">
-                              {group?.photo ? (
-                                <img
-                                  src={`${IMG_URL}${group.photo.replace(
-                                    /\\/g,
-                                    "/"
-                                  )}`}
-                                  alt="Group"
-                                  className="w-8 h-8 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <span className="text-sm font-medium">
-                                  {group.userName.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <span className="text-sm font-medium">
-                                {group.userName}
-                              </span>
-                              <div className="flex items-center">
-                                <span className="text-xs text-gray-500">
-                                  {group.members?.length} members
-                                </span>
-                                {!group.members?.includes(currentUser) && (
-                                  <span className="ml-2 text-xs text-blue-500">
-                                    • Not a member
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                      {/* Show View All button only in All tab and if there are more than 4 groups */}
-                      {activeSearchTab === "All" && groups.length > 4 && (
-                        <div
-                          className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
-                          onClick={() => {
-                            setActiveSearchTab("Groups");
-                          }}
-                        >
-                          View All Groups ({groups.length})
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="p-2 text-center text-gray-500">
-                      No groups found
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Add a "No results" message when neither people nor groups are found */}
-              {searchInput &&
-                filteredUsers.length === 0 &&
-                filteredGroups.length === 0 && (
-                  <div className="p-4 text-center text-gray-500">
-                    No results found for "{searchInput}"
-                  </div>
-                )}
+              {callUsers &&
+                callUsers
+                  .map((item) => ({
+                    ...item,
+                    lastMessageTimestamp:
+                      item.messages.length > 0
+                        ? new Date(
+                          item.messages[
+                            item.messages.length - 1
+                          ].content.timestamp
+                        )
+                        : null,
+                  }))
+                  .filter((item) => item.lastMessageTimestamp) // Filter out users without messages
+                  .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp) // Sort by last message timestamp
+                  .map((item) => (
+                    <ChatItem
+                      key={item._id}
+                      item={item}
+                      currentUser={currentUser}
+                      onlineUsers={onlineUsers}
+                      setSelectedChat={setSelectedChat}
+                      setShowLeftSidebar={setShowLeftSidebar}
+                      IMG_URL={IMG_URL}
+                      selectedChat={selectedChat} // Pass selectedChat as a prop
+                    />
+                  ))}
             </div>
-          )}
-        </div>
-
-        <div className="flex justify-around p-4 border-b">
-          <div
-            className={`${filteredUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
-              } flex flex-col items-center cursor-pointer`}
-            onClick={() => handleFilter("chat")}
-          >
-            <FaCommentDots className="w-6 h-6" />
-            <span className="text-xs mt-1">Chat</span>
-          </div>
-          <div
-            className={`${callUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
-              } flex flex-col items-center  cursor-pointer`}
-            onClick={() => handleFilter("call")}
-          >
-            <FaPhone className="w-6 h-6" />
-            <span className="text-xs mt-1">Calls</span>
-          </div>
-          <div
-            className="flex flex-col items-center text-gray-500 cursor-pointer"
-            onClick={() => setIsGroupCreateModalOpen(true)}
-          >
-            <FaUsers className="w-6 h-6" />
-            <span className="text-xs mt-1">+Group</span>
-          </div>
-          {/* <div className="flex flex-col items-center text-gray-500">
-            <FaBell className="w-6 h-6" />
-            <span className="text-xs mt-1">Notifications</span>
-          </div> */}
-        </div>
-
-        {callUsers.length == 0 && (
-          <div className="flex px-10 space-x-4 border-b justify-between">
-            <button
-              className={`py-2 ${selectedTab === "All" ? "border-b-2 border-blue-500" : ""
-                }`}
-              onClick={() => setSelectedTab("All")}
-            >
-              All
-            </button>
-            <button
-              className={`py-2 ${selectedTab === "Chats" ? "border-b-2 border-blue-500" : ""
-                }`}
-              onClick={() => setSelectedTab("Chats")}
-            >
-              Chats
-            </button>
-            <button
-              className={`py-2 ${selectedTab === "Unread" ? "border-b-2 border-blue-500" : ""
-                }`}
-              onClick={() => setSelectedTab("Unread")}
-            >
-              Unread
-            </button>
-          </div>
+          </>
         )}
-
-        <div className="flex-1 overflow-y-auto modal_scroll cursor-pointer">
-          {filteredUsers
-            .slice()
-            .sort((a, b) => {
-              // Prioritize the current user
-              if (a._id === currentUser) return -1;
-              if (b._id === currentUser) return 1;
-
-              const lastMessageA = Array.isArray(a.messages)
-                ? [...a.messages].sort(
-                  (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
-                )[0]
-                : null;
-              const lastMessageB = Array.isArray(b.messages)
-                ? [...b.messages].sort(
-                  (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
-                )[0]
-                : null;
-
-              // New sorting logic for no messages
-              if (!lastMessageA && !lastMessageB) {
-                return new Date(b.createdAt) - new Date(a.createdAt); // Sort by createdAt if both have no messages
-              }
-              if (!lastMessageA) return 1; // If A has no messages, B comes first
-              if (!lastMessageB) return -1; // If B has no messages, A comes first
-
-              return (
-                new Date(lastMessageB.createdAt) -
-                new Date(lastMessageA.createdAt)
-              );
-            })
-            .map((item) => (
-              <ChatItem
-                key={item._id}
-                item={item}
-                currentUser={currentUser}
-                onlineUsers={onlineUsers}
-                setSelectedChat={setSelectedChat}
-                setShowLeftSidebar={setShowLeftSidebar}
-                IMG_URL={IMG_URL}
-                selectedChat={selectedChat} // Pass selectedChat as a prop
-              />
-            ))}
-
-          {callUsers &&
-            callUsers
-              .map((item) => ({
-                ...item,
-                lastMessageTimestamp:
-                  item.messages.length > 0
-                    ? new Date(
-                      item.messages[
-                        item.messages.length - 1
-                      ].content.timestamp
-                    )
-                    : null,
-              }))
-              .filter((item) => item.lastMessageTimestamp) // Filter out users without messages
-              .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp) // Sort by last message timestamp
-              .map((item) => (
-                <ChatItem
-                  key={item._id}
-                  item={item}
-                  currentUser={currentUser}
-                  onlineUsers={onlineUsers}
-                  setSelectedChat={setSelectedChat}
-                  setShowLeftSidebar={setShowLeftSidebar}
-                  IMG_URL={IMG_URL}
-                  selectedChat={selectedChat} // Pass selectedChat as a prop
-                />
-              ))}
-        </div>
       </div>
 
       {/* Right Sidebar */}
@@ -1817,32 +1831,32 @@ const Chat2 = () => {
         >
           {selectedChat ? (
             <>
-             
+
 
               <div className="flex items-center justify-between p-4 border-b relative">
                 <div className="flex items-center">
-                   {/* Add back button for mobile */}
-              {window.innerWidth <= 767 && (
-                <button
-                  className=" text-gray-600 hover:text-gray-800 mr-2"
-                  onClick={() => setShowLeftSidebar(true)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              )}
+                  {/* Add back button for mobile */}
+                  {window.innerWidth <= 767 && (
+                    <button
+                      className=" text-gray-600 hover:text-gray-800 mr-2"
+                      onClick={() => setShowLeftSidebar(true)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+                  )}
                   <div
                     className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center cursor-pointer"
                     onClick={() => {
@@ -2122,7 +2136,7 @@ const Chat2 = () => {
               {/* {console.log("replyingTo",replyingTo)} */}
 
               <div
-               className="flex-1 overflow-y-auto p-4 modal_scroll"
+                className="flex-1 overflow-y-auto p-4 modal_scroll"
                 style={{
                   height:
                     selectedFiles.length > 0
@@ -2221,30 +2235,30 @@ const Chat2 = () => {
                     }
                     return (
                       <div className=" rounded-t-lg bg-[#e5e7eb] w-full p-2">
-                      <div
-                        key={index}
-                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
-                      >
-                        {fileIcon}
-                        <div className="w-20 text-sm text-ellipsis  text-nowrap ">
-                          {file.name}
-                        </div>{" "}
-                        {/* Display file name */}
-                        <span className="text-xs text-gray-500">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </span>{" "}
-                        {/* Display file size */}
-                        <button
-                          className="absolute top-1 right-1 bg-white rounded-full"
-                          onClick={() => {
-                            setSelectedFiles(
-                              selectedFiles.filter((_, i) => i !== index)
-                            );
-                          }}
+                        <div
+                          key={index}
+                          className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
                         >
-                          <RxCross2 />
-                        </button>
-                      </div>
+                          {fileIcon}
+                          <div className="w-20 text-sm text-ellipsis  text-nowrap ">
+                            {file.name}
+                          </div>{" "}
+                          {/* Display file name */}
+                          <span className="text-xs text-gray-500">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </span>{" "}
+                          {/* Display file size */}
+                          <button
+                            className="absolute top-1 right-1 bg-white rounded-full"
+                            onClick={() => {
+                              setSelectedFiles(
+                                selectedFiles.filter((_, i) => i !== index)
+                              );
+                            }}
+                          >
+                            <RxCross2 />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -2311,17 +2325,17 @@ const Chat2 = () => {
                         ref={emojiPickerRef}
                         className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
                       >
-                        <EmojiPicker 
-                        onEmojiClick={onEmojiClick} 
-                        previewConfig={{
-                          showPreview: false,
-                        }}
-                        width={`${window.innerWidth < 768 ? "250px" : "300px"}`}
-                        height={`${window.innerWidth < 768 ? "300px" : "400px"}`}
-                        emojiSize={20}
-                        emojiStyle="facebook"
-                        lazyLoadEmojis={true}
-                        searchDisabled={window.innerWidth < 768}
+                        <EmojiPicker
+                          onEmojiClick={onEmojiClick}
+                          previewConfig={{
+                            showPreview: false,
+                          }}
+                          width={`${window.innerWidth < 768 ? "250px" : "300px"}`}
+                          height={`${window.innerWidth < 768 ? "300px" : "400px"}`}
+                          emojiSize={20}
+                          emojiStyle="facebook"
+                          lazyLoadEmojis={true}
+                          searchDisabled={window.innerWidth < 768}
                         />
                       </div>
                     )}
@@ -2340,9 +2354,9 @@ const Chat2 = () => {
                         onKeyDown={async (e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                           
+
                             if (selectedFiles.length > 0) {
-                             await handleMultipleFileUpload(selectedFiles); // Upload selected files
+                              await handleMultipleFileUpload(selectedFiles); // Upload selected files
                               setSelectedFiles([]); // Clear selected files after sending
                             }
                             await handleSubmit(e);
@@ -3037,7 +3051,7 @@ const Chat2 = () => {
       )}
 
       {/*Other User Profile Modal */}
-      {isUserProfileModalOpen && (
+      {/* {isUserProfileModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-96 modal_background">
             <div className="flex justify-between items-center pb-2 p-4">
@@ -3147,7 +3161,6 @@ const Chat2 = () => {
                               key={index}
                               className="relative bg-gray-100 rounded-lg aspect-square p-3 flex flex-col items-center justify-center group"
                             >
-                              {/* File type icon based on extension */}
                               <div className="flex-1 flex items-center justify-center">
                                 {message.content.fileType.includes("pdf") ? (
                                   <FaFilePdf className="w-12 h-12 text-red-500" />
@@ -3198,12 +3211,15 @@ const Chat2 = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
+
+
+
 
       {/* Logout Modal */}
-      {isLogoutModalOpen && (
+      {/* {isLogoutModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-5 modal_background  ">
+          <div className="bg-white rounded-lg p-5 modal_background">
             <h3 className="text-lg font-semibold mb-4">
               Are you sure you want to logout?
             </h3>
@@ -3228,7 +3244,7 @@ const Chat2 = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* group Profile Modal */}
       {isGroupModalOpen && (
