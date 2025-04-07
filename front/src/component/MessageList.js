@@ -28,6 +28,7 @@ import { FiEdit2 } from "react-icons/fi";
 import { SlActionUndo } from "react-icons/sl";
 import EmojiPicker, { EmojiStyle } from "emoji-picker-react";
 import AudioPlayer from "./AudioPlayer";
+import { FaRegClock } from "react-icons/fa";
 
 const MessageList = ({
   messages,
@@ -92,7 +93,7 @@ const MessageList = ({
                 ).toLocaleTimeString([], {
                   hour: "numeric",
                   minute: "2-digit",
-                  hour12: true,
+                  hour12: false,
                 });
 
                 if (message.content?.type === "system") {
@@ -1151,14 +1152,14 @@ const RegularMessage = ({
 
           {showTime && (
             <div
-              className={`text-xs text-gray-500 bg-white text-right order-1 ${
+              className={`text-xs text-gray-500 bg-white text-right order-1 flex items-center ${
                 message.sender === userId ? "text-right" : "text-start"
               }`}
             >
               {selectedChat?.members && message.sender !== userId
                 ? `${name},`
                 : ""}{" "}
-              {currentTime}
+             <FaRegClock className="mr-1" /> {currentTime}
             </div>
           )}
         </div>
@@ -1167,12 +1168,12 @@ const RegularMessage = ({
           <div
             className={`p-2 relative ${ isSingleEmoji ? 'bg-transparent' :
               message.sender === userId
-                ? "bg-[#CCF7FF] rounded-s-lg"
-                : "bg-[#F1F1F1] rounded-e-lg "
+                ? "bg-primary-light rounded-s-lg"
+                : "bg-primary-light rounded-e-lg "
             }
-    ${showTime ? " rounded-tr-lg rounded-tl-lg" : ""}
-    ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
-    `}
+          ${showTime ? " rounded-tr-lg rounded-tl-lg" : ""}
+          ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
+          `}
           >
             <MessageContent
               message={message}
