@@ -32,7 +32,161 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
+  }
+}
+
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #e0f7fa;
+  /* Light background */
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.play-pause-btn,
+.playback-rate {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.current-time {
+  font-size: 14px;
+}
+
+.waveform {
+  flex-grow: 1;
+  /* Allow the waveform to take available space */
+  height: 10px;
+  /* Height of the progress bar */
+  background-color: #e0e0e0;
+  /* Background color for the waveform */
+  border-radius: 5px;
+  position: relative;
+  /* Positioning for inner elements */
+  overflow: hidden;
+  /* Hide overflow */
+}
+
+.progress {
+  height: 100%;
+  background-color: #007bff;
+  /* Color of the progress */
+  border-radius: 5px;
+  transition: width 0.1s;
+  /* Smooth transition for progress */
+}
+
+.active-search-result {
+  background-color: rgba(255, 255, 0, 0.3);
+  transition: background-color 0.3s ease;
+}
+
+.highlight-text {
+  background-color: yellow;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.modal_background{
+  background-color: #CDE0EC;
+}
+
+/* Hide scrollbar by default */
+.modal_scroll::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+  visibility: hidden;
+}
+
+/* Show scrollbar on hover */
+.modal_scroll:hover::-webkit-scrollbar {
+  width: 6px;
+  visibility: visible;
+}
+
+/* Track */
+.modal_scroll:hover::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+.modal_scroll:hover::-webkit-scrollbar-thumb {
+  background: #bebebe;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+.modal_scroll:hover::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Login form  */
+
+.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-BPrWId {
+  flex-grow: 0 !important;
+}
+.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb{
+  justify-content: center !important;
+}
+
+
+
+.reply-preview {
+  border-left: 4px solid rgb(156, 156, 156);
+  margin-bottom: -1px;
+}
+
+.message .reply-content {
+  border-left: 3px solid rgb(156, 156, 156);
+  opacity: 0.8;
+}
+
+.message-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-indicator {
+  font-size: 0.8rem;
+  color: rgb(156, 156, 156);
+  margin-bottom: 2px;
+}
+
+
+.highlight-message {
+  animation: highlight 2s ease-in-out;
+}
+
+@keyframes highlight {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1); /* Light blue highlight */
   }
 }
