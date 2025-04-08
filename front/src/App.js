@@ -18,6 +18,7 @@ function App() {
         <Route path="/" element={<Login />}></Route>
         <Route path="/chat" element={<Chat2 />}></Route>
         <Route path="/profile" element={<Profile />}></Route>
+        <Route path="/chatNew" element={<ChatNew />}></Route>
         {/* <Route path="/chat2" element={<Chat11 />}></Route> */}
         {/* <Route path="/front" element={<Front />}></Route> */}
         {/* <Route path="/chatNew" element={<ChatNew/>}></Route> */}

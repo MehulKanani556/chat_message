@@ -50,8 +50,8 @@ const Sidebar = ({ user }) => {
     <nav className="
       fixed md:left-0 bottom-0 md:bottom-auto
       w-full md:w-16 md:h-screen
-      bg-white dark:bg-gray-800
-      border-t md:border-t-0 md:border-r
+      bg-white dark:bg-primary-dark
+      border-t md:border-t-0 
       border-gray-400 dark:border-gray-700
       transition-all duration-300
       z-50 
@@ -74,8 +74,8 @@ const Sidebar = ({ user }) => {
               hover:bg-gray-100 dark:hover:bg-gray-700
               transition-colors duration-200
               ${location.pathname === "#"
-                ? 'bg-primary-light dark:bg-primary-dark text-white'
-                : 'text-gray-600 dark:text-primary-dark'}
+                ? 'bg-primary-light dark:bg-primary-dark/10 text-white'
+                : 'text-gray-600 dark:text-primary-light'}
             `}
             title={item.label}
           >

@@ -1417,8 +1417,21 @@ const Chat2 = () => {
     <div className="flex h-screen bg-white">
       <Sidebar user={user} />
       {/* Left Sidebar */}
-      <div className="ml-16">
-    <ChatList />
+      <div className="ml-16"
+      style={{
+        boxShadow: "0px 0px 5px 1px #80808054",
+        zIndex: 100,
+      }}>
+                <ChatList
+                  filteredUsers = {filteredUsers}
+                  currentUser={currentUser}
+                  onlineUsers={onlineUsers}
+                  setSelectedChat={setSelectedChat}
+                  setShowLeftSidebar={setShowLeftSidebar}
+                  IMG_URL={IMG_URL}
+                  selectedChat={selectedChat} // Pass selectedChat as a prop
+                />
+    {/* <ChatList /> */}
     </div>
 
       {/* Right Sidebar */}
@@ -1430,7 +1443,8 @@ const Chat2 = () => {
         >
           {selectedChat ? (
             <>
-              <div className="flex items-center justify-between p-4 border-b relative">
+              <div className="flex items-center justify-between p-4  relative dark:bg-primary-dark bg:primary-light "
+              style={{boxShadow:'0px 0px 5px 1px #80808054'}} >
                 <div className="flex items-center">
                   {/* Add back button for mobile */}
                   {window.innerWidth <= 767 && (
@@ -1455,7 +1469,7 @@ const Chat2 = () => {
                     </button>
                   )}
                   <div
-                    className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center cursor-pointer"
+                    className="w-10 h-10 rounded-full bg-primary  overflow-hidden flex items-center justify-center cursor-pointer"
                     onClick={() => {
                       if (
                         selectedChat?.photo &&
@@ -1499,7 +1513,7 @@ const Chat2 = () => {
                       }
                     }}
                   >
-                    <div className="font-medium">
+                    <div className="font-medium dark:text-primary-light">
                       {selectedChat?.userName || "Select a chat"}
                     </div>
                     {selectedChat?.members ? (
@@ -1515,7 +1529,7 @@ const Chat2 = () => {
                         }`}
                       >
                         {onlineUsers.includes(selectedChat?._id)
-                          ? "Active now"
+                          ? "Online"
                           : "Offline"}
                       </div>
                     )}
@@ -1759,7 +1773,7 @@ const Chat2 = () => {
               {/* {console.log("replyingTo",replyingTo)} */}
 
               <div
-                className="flex-1 overflow-y-auto p-4 modal_scroll"
+                className="flex-1 overflow-y-auto p-4 modal_scroll bg-primary-light dark:bg-primary-dark scrollbar-hide"
                 style={{
                   height:
                     selectedFiles.length > 0
@@ -1769,7 +1783,7 @@ const Chat2 = () => {
                         replyingTo?.content?.fileType?.startsWith("image/")
                         ? "calc(100vh - 280px)"
                         : "calc(100vh -  225px)"
-                      : "calc(100vh - 175px)",
+                      : "calc(100vh - 172px)",
                 }}
                 ref={messagesContainerRef}
               >
@@ -1932,7 +1946,7 @@ const Chat2 = () => {
               )}
               {/*========== Message Input ==========*/}
               {selectedChat && (
-                <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0 border">
+                <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
                   <form
                     onSubmit={handleSubmit}
                     className={`flex items-center gap-2 ${
@@ -1942,8 +1956,7 @@ const Chat2 = () => {
                     } px-4 py-2 w-full max-w-full`}
                   >
                     <div
-                      className="flex-1 min-w-0 p-2 rounded-md"
-                      style={{ backgroundColor: "#e5e7eb" }}
+                      className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10"
                     >
                       {" "}
                       {/* Add container with min-width */}
@@ -1957,7 +1970,7 @@ const Chat2 = () => {
                             ? "Edit message..."
                             : "Type a message..."
                         }
-                        className="w-full px-2 py-1 outline-none text-black bg-transparent"
+                        className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
                         onKeyDown={async (e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();

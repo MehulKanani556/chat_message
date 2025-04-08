@@ -1149,29 +1149,15 @@ const RegularMessage = ({
               </div>
             )}
           </div>
-
-          {showTime && (
-            <div
-              className={`text-xs text-gray-500 bg-white text-right order-1 flex items-center ${
-                message.sender === userId ? "text-right" : "text-start"
-              }`}
-            >
-              {selectedChat?.members && message.sender !== userId
-                ? `${name},`
-                : ""}{" "}
-             <FaRegClock className="mr-1" /> {currentTime}
-            </div>
-          )}
         </div>
-
         <div className="flex">
           <div
-            className={`p-2 relative ${ isSingleEmoji ? 'bg-transparent' :
+            className={`p-2 pl-3 relative min-w-[100px] ${ isSingleEmoji ? 'bg-transparent' :
               message.sender === userId
-                ? "bg-primary-light rounded-s-lg"
-                : "bg-primary-light rounded-e-lg "
+                ? "bg-primary/50 rounded-s-xl"
+                : "bg-primary rounded-e-xl "
             }
-          ${showTime ? " rounded-tr-lg rounded-tl-lg" : ""}
+          ${showTime ? " rounded-tr-xl rounded-tl-xl" : ""}
           ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
           `}
           >
@@ -1185,6 +1171,21 @@ const RegularMessage = ({
               messages={messages}
               allUsers={allUsers}
             />
+
+            {showTime && (
+            <div
+              className={`text-[11px] flex  text-gray-500 text-right order-1 w-full mt-1`}
+              style={{
+                justifyContent: "flex-end",
+                alignItems: "center"
+              }}
+            >
+              {selectedChat?.members && message.sender !== userId
+                ? `${name},`
+                : ""}{" "}
+             <FaRegClock className="mr-[2px]" /> {currentTime}
+            </div>
+          )}
 
             {message.edited && (
               <div

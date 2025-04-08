@@ -263,7 +263,7 @@ const Chat2 = () => {
     if (searchInput) {
       // Filter people
       const matchingPeople = allUsers.filter((user) =>
-        user.userName.toLowerCase().includes(searchInput.toLowerCase())
+        user?.userName?.toLowerCase().includes(searchInput.toLowerCase())
       );
       setFilteredUsers(matchingPeople);
 
