@@ -22,7 +22,7 @@ import {
   FaFile,
   FaFileAudio,
 } from "react-icons/fa";
-import { PiDotsThreeBold } from "react-icons/pi";
+import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
 import { MdCallEnd, MdOutlineModeEdit, MdGroupAdd, MdReport } from "react-icons/md";
 import { RiShutDownLine } from "react-icons/ri";
 import {
@@ -31,7 +31,7 @@ import {
   LuScreenShareOff,
 } from "react-icons/lu";
 import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo, GoMute } from "react-icons/go";
+import { GoDeviceCameraVideo, GoMute, GoPlusCircle } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
 import {
@@ -44,6 +44,7 @@ import {
   IoArchiveOutline,
   IoCallOutline,
   IoCameraOutline,
+  IoMicOutline,
   IoPersonCircleOutline,
 } from "react-icons/io5";
 import { useSocket } from "../hooks/useSocket";
@@ -121,9 +122,8 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
-                  selectedUsers.includes(user._id) ? "order-first" : ""
-                }`}
+                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? "order-first" : ""
+                  }`}
                 onClick={() => {
                   if (selectedUsers.includes(user._id)) {
                     setSelectedUsers(
@@ -146,7 +146,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                     <span className="text-blue-500 font-medium">
                       {user.userName && user.userName.includes(" ")
                         ? user.userName.split(" ")[0][0] +
-                          user.userName.split(" ")[1][0]
+                        user.userName.split(" ")[1][0]
                         : user.userName[0]}
                     </span>
                   )}
@@ -165,7 +165,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(user._id)}
-                    onChange={() => {}} // Handled by parent div click
+                    onChange={() => { }} // Handled by parent div click
                     className="w-4 h-4 rounded border-gray-300 text-blue-500 
                            focus:ring-blue-500 focus:ring-offset-0"
                   />
@@ -192,11 +192,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   onClick={() => onSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
-                  ${
-                    selectedUsers.length === 0
+                  ${selectedUsers.length === 0
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                    }`}
                 >
                   Forward
                 </button>
@@ -214,7 +213,7 @@ const Chat2 = () => {
     useSelector((state) => state.user);
   const [selectedTab, setSelectedTab] = useState("All");
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -1407,7 +1406,7 @@ const Chat2 = () => {
         setMenuOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -1437,9 +1436,8 @@ const Chat2 = () => {
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <div
-          className={`${
-            showLeftSidebar ? "hidden md:block" : "block"
-          } flex-1 flex flex-col`}
+          className={`${showLeftSidebar ? "hidden md:block" : "block"
+            } flex-1 flex flex-col`}
         >
           {selectedChat ? (
             <>
@@ -1493,10 +1491,10 @@ const Chat2 = () => {
                     ) : (
                       <span className="text-white text-xl font-bold">
                         {selectedChat?.userName &&
-                        selectedChat?.userName.includes(" ")
-                          ? selectedChat?.userName.split(" ")[0][0] +
-                            selectedChat?.userName.split(" ")[1][0]
-                          : selectedChat?.userName[0]}
+                          selectedChat?.userName.includes(" ")
+                          ? selectedChat?.userName.split(" ")?.[0][0] +
+                          selectedChat?.userName.split(" ")?.[1][0]
+                          : selectedChat?.userName?.[0]}
                       </span>
                     )}
                   </div>
@@ -1522,11 +1520,10 @@ const Chat2 = () => {
                       </div>
                     ) : (
                       <div
-                        className={`text-sm ${
-                          onlineUsers.includes(selectedChat?._id)
+                        className={`text-sm ${onlineUsers.includes(selectedChat?._id)
                             ? "text-green-500"
                             : "text-gray-500"
-                        }`}
+                          }`}
                       >
                         {onlineUsers.includes(selectedChat?._id)
                           ? "Online"
@@ -1607,29 +1604,29 @@ const Chat2 = () => {
                       data-tooltip-delay="0"
                       data-tooltip-duration="0"
                     />
-                   <PiDotsThreeBold 
-                        className="text-2xl cursor-pointer "
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        title="More options"
-                        data-tooltip="More options"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
-                      {menuOpen && (
-                        <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
-                          <ul>
-                            <li  onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <MdOutlineDeleteSweep className="text-lg"  /> Delete
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <GoMute className="text-lg" /> Muted
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <IoArchiveOutline className="text-lg" /> Archive
-                            </li>
-                          </ul>
-                        </div>
-                      )}
+                    <PiDotsThreeBold
+                      className="text-2xl cursor-pointer "
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      title="More options"
+                      data-tooltip="More options"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    {menuOpen && (
+                      <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
+                        <ul>
+                          <li onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <MdOutlineDeleteSweep className="text-lg" /> Delete
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <GoMute className="text-lg" /> Muted
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <IoArchiveOutline className="text-lg" /> Archive
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   {/* Show three dots menu on mobile */}
@@ -1841,7 +1838,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-excel" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     ) {
                       fileIcon = (
                         <FaFileExcel className="w-20 h-20 text-gray-500" />
@@ -1849,7 +1846,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/msword" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     ) {
                       fileIcon = (
                         <FaFileWord className="w-20 h-20 text-gray-500" />
@@ -1857,7 +1854,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-powerpoint" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     ) {
                       fileIcon = (
                         <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
@@ -1949,11 +1946,10 @@ const Chat2 = () => {
                 <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
                   <form
                     onSubmit={handleSubmit}
-                    className={`flex items-center gap-2 ${
-                      replyingTo || selectedFiles.length > 0
+                    className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
                         ? "rounded-b-lg"
                         : "rounded-lg"
-                    } px-4 py-2 w-full max-w-full`}
+                      } px-4 py-2 w-full max-w-full`}
                   >
                     <div
                       className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10"
@@ -1989,28 +1985,26 @@ const Chat2 = () => {
                     </div>
                     <button
                       type="button"
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
                       aria-label="Add emoji"
                       onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                     >
-                      <FaRegSmile className="w-5 h-5 text-gray-500" />
+                      <PiSmiley className="w-6 h-6 " />
                     </button>
                     {isEmojiPickerOpen && (
                       <div
                         ref={emojiPickerRef}
-                        className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
+                        className="absolute bg-white border rounded shadow-lg p-1 bottom-[70px]"
                       >
                         <EmojiPicker
                           onEmojiClick={onEmojiClick}
                           previewConfig={{
                             showPreview: false,
                           }}
-                          width={`${
-                            window.innerWidth < 768 ? "250px" : "300px"
-                          }`}
-                          height={`${
-                            window.innerWidth < 768 ? "300px" : "400px"
-                          }`}
+                          width={`${window.innerWidth < 768 ? "250px" : "300px"
+                            }`}
+                          height={`${window.innerWidth < 768 ? "300px" : "400px"
+                            }`}
                           emojiSize={20}
                           emojiStyle="facebook"
                           lazyLoadEmojis={true}
@@ -2022,7 +2016,7 @@ const Chat2 = () => {
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <input
                         id="file-upload"
-                        type="file"
+                        type="file" 
                         multiple
                         accept="*/*"
                         className="hidden"
@@ -2030,35 +2024,38 @@ const Chat2 = () => {
                       />
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         aria-label="Attach file"
                         onClick={() =>
                           document.getElementById("file-upload").click()
                         }
                       >
                         {selectedFiles && selectedFiles.length > 0 ? (
-                          <FaPlusCircle className="w-5 h-5 text-gray-500" />
+                          <GoPlusCircle className="w-6 h-6 " />
                         ) : (
-                          <FaPaperclip className="w-5 h-5 text-gray-500" />
+                          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                            <path d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+
+                          // <FaPaperclip className=" text-gray-500" />
                         )}
                       </button>
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         aria-label="Voice message"
                         onClick={handleVoiceMessage}
                       >
-                        <FaMicrophone
-                          className={`w-5 h-5 ${
-                            isRecording ? "text-red-500" : "text-gray-500"
-                          }`}
+                        <IoMicOutline
+                          className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                            }`}
                         />
                       </button>
                       {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
                       <button
                         type="submit"
-                        className="p-2 hover:bg-gray-100  transition-colors text-xl"
-                        style={{ color: "#3B82F6" }}
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl"
+                        // style={{ color: "#3B82F6" }}
                         aria-label="Send message...."
                         onClick={() => {
                           if (selectedFiles.length > 0) {
@@ -2067,7 +2064,8 @@ const Chat2 = () => {
                           }
                         }}
                       >
-                        <LuSendHorizontal />
+                       <svg width={20} height={20} x={0} y={0} viewBox="0 0 32 32" style={{enableBackground: 'new 0 0 24 24'}} xmlSpace="preserve" className><g><path d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z" fill="#000000" opacity={1} data-original="#000000" className /></g></svg>
+
                       </button>
                       {/* )} */}
                       {editingMessage && (
@@ -2106,30 +2104,26 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
             ? ""
             : "hidden"
-        }`}
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
+          className={`flex-1 relative ${isReceiving
               ? "flex items-center justify-center"
               : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+              )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2289,9 +2283,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2301,9 +2294,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2332,8 +2324,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
+                allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2442,9 +2434,8 @@ const Chat2 = () => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${
-                          isChecked ? "order-first" : ""
-                        }`}
+                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
+                          }`}
                         onClick={() => {
                           if (!isChecked) {
                             setGroupNewUsers((prev) => [...prev, user._id]);
@@ -2652,9 +2643,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -2698,9 +2688,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -3207,9 +3196,8 @@ const Chat2 = () => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded ${
-                          isChecked ? "order-first" : ""
-                        }`}
+                        className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
+                          }`}
                         onClick={() => {
                           if (!isChecked) {
                             setGroupUsers((prev) => [...prev, user._id]); // Add user ID to groupUsers state
