@@ -190,3 +190,48 @@
     background-color: rgba(59, 130, 246, 0.1); /* Light blue highlight */
   }
 }
+
+/* Dark mode styles */
+.dark {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --border-color: #404040;
+}
+
+.dark .modal_background {
+  background-color: var(--bg-secondary);
+}
+
+.dark .audio-player {
+  background-color: var(--bg-secondary);
+}
+
+.dark .waveform {
+  background-color: var(--border-color);
+}
+
+.dark .modal_scroll:hover::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.dark .modal_scroll:hover::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+}
+
+.dark .modal_scroll:hover::-webkit-scrollbar-thumb:hover {
+  background: var(--text-primary);
+}
+
+.dark .reply-preview {
+  border-left-color: var(--text-secondary);
+}
+
+.dark .message .reply-content {
+  border-left-color: var(--text-secondary);
+}
+
+.dark .reply-indicator {
+  color: var(--text-secondary);
+}
