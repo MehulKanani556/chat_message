@@ -1784,7 +1784,7 @@ const Chat2 = () => {
                 }}
                 ref={messagesContainerRef}
               >
-                {visibleDate && <FloatingDateIndicator />}
+                {/* {visibleDate && <FloatingDateIndicator />} */}
                 <MessageList
                   messages={messages}
                   groupMessagesByDate={groupMessagesByDate}

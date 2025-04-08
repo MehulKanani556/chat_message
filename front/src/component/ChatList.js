@@ -1,149 +1,12 @@
 import React, { useState } from 'react';
+import { GoPencil } from 'react-icons/go';
+import { PiPencilSimpleBold } from 'react-icons/pi';
 import { VscCallIncoming, VscCallOutgoing } from 'react-icons/vsc';
 
 const ChatList = ({filteredUsers,item,currentUser,onlineUsers,IMG_URL,selectedChat,setSelectedChat,setShowLeftSidebar}) => {
-  // Sample data
-  const quickAccessUsers = [
-    { id: 1, name: 'Patrick', online: true, avatar: '/avatars/patrick.jpg' },
-    { id: 2, name: 'Doris', online: true, avatar: '/avatars/doris.jpg' },
-    { id: 3, name: 'Emily', online: true, avatar: '/avatars/emily.jpg' },
-    { id: 4, name: 'Steve', online: true, avatar: '/avatars/steve.jpg' },
-  ];
-
-  const recentChats = [
-    { 
-      id: 1, 
-      name: 'Patrick Hendricks', 
-      message: "hey! there I'm available", 
-      time: '02:50 PM', 
-      avatar: '/avatars/patrick.jpg',
-      online: true,
-      unread: 0
-    },
-    { 
-      id: 2, 
-      name: 'Mark Messer', 
-      message: 'Images', 
-      time: '10:30 AM', 
-      avatar: '/avatars/mark.jpg',
-      online: false,
-      unread: 2,
-      hasAttachment: true
-    },
-    { 
-      id: 3, 
-      name: 'General', 
-      message: 'This theme is Awesome!', 
-      time: '2:06 min', 
-      avatar: null,
-      initial: 'G',
-      online: false,
-      unread: 0
-    },
-    { 
-      id: 4, 
-      name: 'Doris Brown', 
-      message: 'typing •••', 
-      time: '10:05 PM', 
-      avatar: '/avatars/doris.jpg',
-      online: true,
-      typing: true,
-      unread: 0
-    },
-    { 
-      id: 5, 
-      name: 'Designer', 
-      message: 'Next meeting tomorrow 10.00AM', 
-      time: '2:10 min', 
-      avatar: null,
-      initial: 'D',
-      online: false,
-      unread: 1
-    },
-    { 
-      id: 6, 
-      name: 'Steve Walker', 
-      message: 'Admin-A-zip', 
-      time: '01:16 PM', 
-      avatar: '/avatars/steve.jpg',
-      online: true,
-      unread: 0
-    },
-    { 
-      id: 7, 
-      name: 'Albert Rodarte', 
-      message: 'typing •••', 
-      time: '01:05 PM', 
-      avatar: null,
-      initial: 'A',
-      online: true,
-      typing: true,
-      unread: 0
-    },
-    { 
-      id: 8, 
-      name: 'Mirta George', 
-      message: 'Yeah, Everything is fine👍', 
-      time: '02:50 min', 
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-    {
-      id: 9,
-      name: 'Mirta George',
-      message: 'Yeah, Everything is fine👍',
-      time: '02:50 min',
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-    {
-      id: 10,
-      name: 'Mirta George',
-      message: 'Yeah, Everything is fine👍',
-      time: '02:50 min',
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-    {
-      id: 11,
-      name: 'Mirta George',
-      message: 'Yeah, Everything is fine👍',
-      time: '02:50 min',
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-    {
-      id: 12,
-      name: 'Mirta George',
-      message: 'Yeah, Everything is fine👍',
-      time: '02:50 min',
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-    {
-      id: 13,
-      name: 'Mirta George',
-      message: 'Yeah, Everything is fine👍',
-      time: '02:50 min',
-      avatar: null,
-      initial: 'M',
-      online: true,
-      unread: 0
-    },
-  ];
 
   return (
-    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm ">
+    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
       <div className="p-4 pb-2">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light mb-4">Chats</h1>
         
@@ -229,8 +92,8 @@ const ChatList = ({filteredUsers,item,currentUser,onlineUsers,IMG_URL,selectedCh
                 ? [...item.messages].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
                 : null;
                 return (
-          <div key={item._id} className={`px-3 py-2    hover:bg-primary  hover:dark:bg-primary/30 cursor-pointer rounded-md mb-2
-          ${selectedChat?._id === item._id ?'bg-primary dark:bg-primary/30' : "bg-white dark:bg-primary-dark/50"}`}
+          <div key={item._id} className={`px-3 py-2    hover:bg-primary  hover:dark:bg-primary/85 cursor-pointer rounded-md mb-2
+          ${selectedChat?._id === item._id ?'bg-primary dark:bg-primary/85' : "bg-white dark:bg-primary-dark/50"}`}
           onClick={() => {
             setSelectedChat(item);
             if (window.innerWidth <= 425) {
@@ -410,6 +273,13 @@ const ChatList = ({filteredUsers,item,currentUser,onlineUsers,IMG_URL,selectedCh
             </div>
           </div>
         )})}
+      </div>
+
+      <div className='bg-primary w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center' 
+      style={{
+        alignItems:"center"
+      }}>
+      <GoPencil />
       </div>
     </div>
   );

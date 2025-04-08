@@ -1,13 +1,13 @@
-import './App.css';
-import Chat11 from './pages/Chat11';
-import Login from './pages/Login';
-import { Provider } from 'react-redux';
-import { Route, Routes } from 'react-router-dom';
-import { configureStore } from './redux/Store';
-import Chat2 from './pages/Chat2';
-import Front from './component/Front';
-import ChatNew from './pages/ChatNew';
-import Profile from './component/Profile';
+import "./App.css";
+import Chat11 from "./pages/Chat11";
+import Login from "./pages/Login";
+import { Provider } from "react-redux";
+import { Route, Routes } from "react-router-dom";
+import { configureStore } from "./redux/Store";
+import Chat2 from "./pages/Chat2";
+import Front from "./component/Front";
+import ChatNew from "./pages/ChatNew";
+import Profile from "./component/Profile";
 
 function App() {
   const { store, persistor } = configureStore();

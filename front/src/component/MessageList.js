@@ -157,14 +157,14 @@ const MessageList = ({
 
 const DateHeader = ({ date }) => (
   <div
-    className="flex justify-center items-center gap-2 my-4 text-gray-500 date-header px-2"
+    className="flex justify-center items-center my-4  date-header px-2"
     data-date={date}
-  >
-    <div className="sm:block flex-1 h-[1px] bg-gray-400 max-w-[300px]" />
-    <span className="text-gray-600 text-xs sm:text-sm whitespace-nowrap px-2 sm:px-5 py-1 rounded-full">
+  > 
+    <div className="sm:block flex-1 h-[1px] bg-gray-300  dark:bg-gray-500   max-w-[45%]" />
+    <span className=" text-xs sm:text-sm whitespace-nowrap px-2 sm:px-5 py-1 rounded-full  bg-gray-300 dark:bg-gray-500">
       {date === new Date().toLocaleDateString("en-GB") ? "Today" : date}
     </span>
-    <div className="sm:block flex-1 h-[1px] bg-gray-400 max-w-[300px]" />
+    <div className="sm:block flex-1 h-[1px] bg-gray-300 dark:bg-gray-500 max-w-[45%]" />
   </div>
 );
 
@@ -1152,7 +1152,7 @@ const RegularMessage = ({
         </div>
         <div className="flex">
           <div
-            className={`p-2 pl-3 relative min-w-[100px] ${ isSingleEmoji ? 'bg-transparent' :
+            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${ isSingleEmoji ? 'bg-transparent' :
               message.sender === userId
                 ? "bg-primary/50 rounded-s-xl"
                 : "bg-primary rounded-e-xl "
@@ -1174,7 +1174,7 @@ const RegularMessage = ({
 
             {showTime && (
             <div
-              className={`text-[11px] flex  text-gray-500 text-right order-1 w-full mt-1`}
+              className={`text-[11px] flex  text-gray-700 dark:text-gray-400 text-right order-1 w-full mt-1`}
               style={{
                 justifyContent: "flex-end",
                 alignItems: "center"
