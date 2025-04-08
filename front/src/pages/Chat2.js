@@ -23,11 +23,7 @@ import {
   FaFileAudio,
 } from "react-icons/fa";
 import { PiDotsThreeBold } from "react-icons/pi";
-import {
-  MdCallEnd,
-  MdOutlineModeEdit,
-  MdGroupAdd,
-} from "react-icons/md";
+import { MdCallEnd, MdOutlineModeEdit, MdGroupAdd, MdReport } from "react-icons/md";
 import { RiShutDownLine } from "react-icons/ri";
 import {
   LuScreenShare,
@@ -35,12 +31,17 @@ import {
   LuScreenShareOff,
 } from "react-icons/lu";
 import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo } from "react-icons/go";
+import { GoDeviceCameraVideo, GoMute } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
-import { BsFillMicFill, BsFillMicMuteFill, BsThreeDotsVertical } from "react-icons/bs";
+import {
+  BsFillMicFill,
+  BsFillMicMuteFill,
+  BsThreeDotsVertical,
+} from "react-icons/bs";
 import { RxCross2 } from "react-icons/rx";
 import {
+  IoArchiveOutline,
   IoCallOutline,
   IoCameraOutline,
   IoPersonCircleOutline,
@@ -70,131 +71,143 @@ import { MdOutlineDeleteSweep } from "react-icons/md";
 import ChatItem from "../component/ChatItem";
 import MessageList from "../component/MessageList";
 import Profile from "../component/Profile";
+import Sidebar from "../component/SideBar";
+import { BiBlock } from "react-icons/bi";
+import ChatList from "../component/ChatList";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user) =>
     user.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-
-  return show && (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all modal_background">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Forward Message</h2>
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              onClick={onClose}
-            >
-              <ImCross className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
-
-          {/* Search Box */}
-          <div className="mt-4 relative">
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          </div>
-        </div>
-
-        {/* User List */}
-        <div className="max-h-[300px] overflow-y-auto p-4 space-y-2 modal_scroll flex flex-col">
-          {filteredUsers.map((user) => (
-            <div
-              key={user._id}
-              className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? 'order-first' : ''}`}
-              onClick={() => {
-                if (selectedUsers.includes(user._id)) {
-                  setSelectedUsers(selectedUsers.filter(id => id !== user._id));
-                } else {
-                  setSelectedUsers([...selectedUsers, user._id]);
-                }
-              }}
-            >
-              {/* User Avatar */}
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                {user.photo ? (
-                  <img
-                    src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                    alt={user.userName}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-blue-500 font-medium">
-                    {user.userName && user.userName.includes(" ")
-                      ? user.userName.split(" ")[0][0] + user.userName.split(" ")[1][0]
-                      : user.userName[0]}
-                  </span>
-                )}
-              </div>
-
-              {/* User Details */}
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-800">{user.userName}</h3>
-                {user.status && (
-                  <p className="text-sm text-gray-500">{user.status}</p>
-                )}
-              </div>
-
-              {/* Checkbox */}
-              <div className="flex items-center justify-center w-6 h-6">
-                <input
-                  type="checkbox"
-                  checked={selectedUsers.includes(user._id)}
-                  onChange={() => { }} // Handled by parent div click
-                  className="w-4 h-4 rounded border-gray-300 text-blue-500 
-                           focus:ring-blue-500 focus:ring-offset-0"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t bg-gray-50 rounded-b-xl modal_background">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">
-              {selectedUsers.length} user{selectedUsers.length !== 1 ? 's' : ''} selected
-            </span>
-            <div className="space-x-3">
+  return (
+    show && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all modal_background">
+          {/* Header */}
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Forward Message
+              </h2>
               <button
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Cancel
+                <ImCross className="w-4 h-4 text-gray-500" />
               </button>
-              <button
-                onClick={() => onSubmit(selectedUsers)}
-                disabled={selectedUsers.length === 0}
-                className={`px-4 py-2 rounded-lg transition-colors
-                  ${selectedUsers.length === 0
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
+            </div>
+
+            {/* Search Box */}
+            <div className="mt-4 relative">
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+
+          {/* User List */}
+          <div className="max-h-[300px] overflow-y-auto p-4 space-y-2 modal_scroll flex flex-col">
+            {filteredUsers.map((user) => (
+              <div
+                key={user._id}
+                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
+                  selectedUsers.includes(user._id) ? "order-first" : ""
+                }`}
+                onClick={() => {
+                  if (selectedUsers.includes(user._id)) {
+                    setSelectedUsers(
+                      selectedUsers.filter((id) => id !== user._id)
+                    );
+                  } else {
+                    setSelectedUsers([...selectedUsers, user._id]);
+                  }
+                }}
+              >
+                {/* User Avatar */}
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                  {user.photo ? (
+                    <img
+                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                      alt={user.userName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-blue-500 font-medium">
+                      {user.userName && user.userName.includes(" ")
+                        ? user.userName.split(" ")[0][0] +
+                          user.userName.split(" ")[1][0]
+                        : user.userName[0]}
+                    </span>
+                  )}
+                </div>
+
+                {/* User Details */}
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-800">{user.userName}</h3>
+                  {user.status && (
+                    <p className="text-sm text-gray-500">{user.status}</p>
+                  )}
+                </div>
+
+                {/* Checkbox */}
+                <div className="flex items-center justify-center w-6 h-6">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user._id)}
+                    onChange={() => {}} // Handled by parent div click
+                    className="w-4 h-4 rounded border-gray-300 text-blue-500 
+                           focus:ring-blue-500 focus:ring-offset-0"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t bg-gray-50 rounded-b-xl modal_background">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">
+                {selectedUsers.length} user
+                {selectedUsers.length !== 1 ? "s" : ""} selected
+              </span>
+              <div className="space-x-3">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => onSubmit(selectedUsers)}
+                  disabled={selectedUsers.length === 0}
+                  className={`px-4 py-2 rounded-lg transition-colors
+                  ${
+                    selectedUsers.length === 0
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
                   }`}
-              >
-                Forward
-              </button>
+                >
+                  Forward
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    )
   );
 };
-
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -264,9 +277,10 @@ const Chat2 = () => {
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState({
     messageId: null,
-    position: null
+    position: null,
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const searchRef = useRef(null); // Define searchRef
   const mobileMenuRef = useRef(null);
@@ -316,14 +330,13 @@ const Chat2 = () => {
     addMessageReaction,
   } = useSocket(currentUser, localVideoRef, remoteVideoRef, allUsers);
 
-
   // ====================auth=======================
 
   useEffect(() => {
     if (!currentUser) {
       navigate("/");
     }
-  }, [])
+  }, []);
 
   //===========get all users===========
   useEffect(() => {
@@ -596,10 +609,16 @@ const Chat2 = () => {
       ) {
         setIsEmojiPickerOpen(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
         setMobileMenuOpen(false);
       }
-      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(event.target)
+      ) {
         setIsSearchBoxOpen(false);
       }
     };
@@ -1364,13 +1383,12 @@ const Chat2 = () => {
     };
   }, []); // Add this effect to handle clicks outside
 
-
   // ======================Download file =====================
   const handleDownload = (fileUrl, fileName) => {
     const durl = `${IMG_URL}${fileUrl}`;
     fetch(durl)
-      .then(response => response.blob())
-      .then(blob => {
+      .then((response) => response.blob())
+      .then((blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -1380,459 +1398,38 @@ const Chat2 = () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       })
-      .catch(error => console.error("Download error:", error));
+      .catch((error) => console.error("Download error:", error));
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuOpen && !event.target.closest('.text-2xl.cursor-pointer')) {
+        setMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
   return (
     <div className="flex h-screen bg-white">
+      <Sidebar user={user} />
       {/* Left Sidebar */}
-      <div
-        className={`${showLeftSidebar ? "block" : "hidden"
-          } w-full md:w-96 border-r flex flex-col`}
-      >
-        {showProfileInSidebar ? (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto">
-              <Profile />
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="relative profile-dropdown">
-              <div
-                className="flex items-center p-4 border-b cursor-pointer hover:bg-gray-100  mt-4"
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              >
-                {/* <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden"> */}
-                <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center border border-gray-500">
-                  {user?.photo && user.photo !== "null" ? (
-                    <img
-                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                      alt="Profile"
-                      className="object-fill w-full h-full"
-                    />
-                  ) : (
-                    <span className="text-white text-2xl font-bold capitalize">
-                      {user?.userName && user?.userName.includes(" ")
-                        ? user?.userName.split(" ")[0][0] +
-                        user?.userName.split(" ")[1][0]
-                        : user?.userName[0]}
-                    </span>
-                  )}
-                </div>
-                {/* </div> */}
-                <div className="ml-3 flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium">{user?.userName}</span>
-                      <p className="mb-0 text-xs">{user?.email}</p>
-                    </div>
-                    <PiDotsThreeBold />
-                  </div>
-                </div>
-              </div>
-
-              {isProfileDropdownOpen && (
-                <div className="absolute top-full left-0 w-[85%] bg-white border shadow-lg z-50 ml-5 rounded-[10px]">
-                  <div
-                    className="p-3 hover:bg-gray-100 border-t"
-                    onClick={() => {
-                      setIsProfileDropdownOpen(false);
-                      setShowProfileInSidebar(true);
-                    }}
-                  >
-                    <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                      <FaRegUser className="w-5 h-5" />
-                      <span>Profile</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className="p-3 hover:bg-gray-100 border-t"
-                    onClick={() => setIsLogoutModalOpen(true)}
-                  >
-                    <div className="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                      <RiShutDownLine className="w-5 h-5" />
-                      <span>Logout</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 border-b relative" ref={searchRef}>
-              <div className="flex items-center bg-gray-100 rounded-md p-2">
-                <FaSearch className="w-5 h-5 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="People, groups"
-                  className="bg-transparent ml-2 outline-none flex-1"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onFocus={() => setIsSearchDropdownOpen(true)}
-                />
-              </div>
-
-              {/* ********************************** Search Dropdown ********************************** */}
-              {isSearchDropdownOpen && (
-                <div className="absolute left-0 top-[65px] right-0 bg-white mt-2 shadow-lg z-50 min-h-[782px]">
-                  {/* Tabs */}
-                  <div className="flex border-b">
-                    <button
-                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "All"
-                        ? "text-gray-700 border-b-2 border-blue-500"
-                        : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      onClick={() => setActiveSearchTab("All")}
-                    >
-                      All
-                    </button>
-                    <button
-                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "People"
-                        ? "text-gray-700 border-b-2 border-blue-500"
-                        : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      onClick={() => setActiveSearchTab("People")}
-                    >
-                      People
-                    </button>
-                    <button
-                      className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "Groups"
-                        ? "text-gray-700 border-b-2 border-blue-500"
-                        : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      onClick={() => setActiveSearchTab("Groups")}
-                    >
-                      Groups
-                    </button>
-                  </div>
-
-                  {/* Search hint */}
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    Quickly search for people, messages and groups.
-                  </div>
-
-                  {/* Content based on active tab */}
-                  {(activeSearchTab === "All" || activeSearchTab === "People") && (
-                    <div className="p-2">
-                      <div className="text-xs font-medium text-gray-500 px-2 mb-2">
-                        People
-                      </div>
-                      {filteredUsers.length > 0 ? (
-                        <>
-                          {/* Show only first 4 users in All tab, or all users in People tab */}
-                          {filteredUsers
-                            .filter((user) => !user.members)
-                            .slice(0, activeSearchTab === "All" ? 4 : undefined)
-                            .map((user) => (
-                              <div
-                                key={user._id}
-                                className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer font-semibold"
-                                onClick={() => {
-                                  setSelectedChat(user);
-                                  setIsSearchDropdownOpen(false);
-                                  setSearchInput("");
-                                }}
-                              >
-                                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
-                                  {user?.photo ? (
-                                    <img
-                                      src={`${IMG_URL}${user.photo.replace(
-                                        /\\/g,
-                                        "/"
-                                      )}`}
-                                      alt="Profile"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  ) : (
-                                    <span className="text-sm font-medium">
-                                      {user.userName.charAt(0).toUpperCase()}
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-sm">{user.userName}</span>
-                                {onlineUsers.includes(user._id) && (
-                                  <div className="w-2 h-2 bg-green-500 rounded-full ml-2"></div>
-                                )}
-                              </div>
-                            ))}
-
-                          {/* Show View All button only in All tab and if there are more than 4 users */}
-                          {activeSearchTab === "All" &&
-                            filteredUsers.filter((user) => !user.members).length >
-                            4 && (
-                              <div
-                                className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
-                                onClick={() => {
-                                  setActiveSearchTab("People");
-                                }}
-                              >
-                                View All People (
-                                {
-                                  filteredUsers.filter((user) => !user.members)
-                                    .length
-                                }
-                                )
-                              </div>
-                            )}
-                        </>
-                      ) : (
-                        <div className="p-2 text-center text-gray-500">
-                          No matching people found
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {(activeSearchTab === "All" || activeSearchTab === "Groups") && (
-                    <div className="p-2 border-t">
-                      <div className="text-xs font-medium text-gray-500 px-2 mb-2">
-                        Groups
-                      </div>
-                      {/* Create New Group Button */}
-                      <div
-                        className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                        onClick={() => {
-                          setIsGroupCreateModalOpen(true);
-                          setIsSearchDropdownOpen(false);
-                        }}
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-gray-300 flex items-center justify-center mr-2">
-                          <FaUserPlus className="text-gray-600" />
-                        </div>
-                        <span className="text-sm font-semibold">
-                          Create New Group
-                        </span>
-                      </div>
-
-                      {/* List of Groups */}
-                      {groups.length > 0 ? (
-                        <>
-                          {/* Show only first 4 groups in All tab, or all groups in Groups tab */}
-                          {groups
-                            .slice(0, activeSearchTab === "All" ? 4 : undefined)
-                            .map((group) => (
-                              <div
-                                key={group._id}
-                                className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                                onClick={() => {
-                                  if (group.members?.includes(currentUser)) {
-                                    setSelectedChat(group);
-                                    setIsSearchDropdownOpen(false);
-                                    setSearchInput("");
-                                  } else {
-                                    // Handle non-member click - maybe show a join request dialog
-                                    alert("You are not a member of this group");
-                                  }
-                                }}
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-2">
-                                  {group?.photo ? (
-                                    <img
-                                      src={`${IMG_URL}${group.photo.replace(
-                                        /\\/g,
-                                        "/"
-                                      )}`}
-                                      alt="Group"
-                                      className="w-8 h-8 rounded-lg object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-sm font-medium">
-                                      {group.userName.charAt(0).toUpperCase()}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <span className="text-sm font-medium">
-                                    {group.userName}
-                                  </span>
-                                  <div className="flex items-center">
-                                    <span className="text-xs text-gray-500">
-                                      {group.members?.length} members
-                                    </span>
-                                    {!group.members?.includes(currentUser) && (
-                                      <span className="ml-2 text-xs text-blue-500">
-                                        • Not a member
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-
-                          {/* Show View All button only in All tab and if there are more than 4 groups */}
-                          {activeSearchTab === "All" && groups.length > 4 && (
-                            <div
-                              className="p-2 text-center text-blue-500 hover:text-blue-600 cursor-pointer font-medium"
-                              onClick={() => {
-                                setActiveSearchTab("Groups");
-                              }}
-                            >
-                              View All Groups ({groups.length})
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="p-2 text-center text-gray-500">
-                          No groups found
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Add a "No results" message when neither people nor groups are found */}
-                  {searchInput &&
-                    filteredUsers.length === 0 &&
-                    filteredGroups.length === 0 && (
-                      <div className="p-4 text-center text-gray-500">
-                        No results found for "{searchInput}"
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-around p-4 border-b">
-              <div
-                className={`${filteredUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
-                  } flex flex-col items-center cursor-pointer`}
-                onClick={() => handleFilter("chat")}
-              >
-                <FaCommentDots className="w-6 h-6" />
-                <span className="text-xs mt-1">Chat</span>
-              </div>
-              <div
-                className={`${callUsers.length > 0 ? "text-blue-500  " : "text-gray-500 "
-                  } flex flex-col items-center  cursor-pointer`}
-                onClick={() => handleFilter("call")}
-              >
-                <FaPhone className="w-6 h-6" />
-                <span className="text-xs mt-1">Calls</span>
-              </div>
-              <div
-                className="flex flex-col items-center text-gray-500 cursor-pointer"
-                onClick={() => setIsGroupCreateModalOpen(true)}
-              >
-                <FaUsers className="w-6 h-6" />
-                <span className="text-xs mt-1">+Group</span>
-              </div>
-              {/* <div className="flex flex-col items-center text-gray-500">
-                <FaBell className="w-6 h-6" />
-                <span className="text-xs mt-1">Notifications</span>
-              </div> */}
-            </div>
-
-            {callUsers.length == 0 && (
-              <div className="flex px-10 space-x-4 border-b justify-between">
-                <button
-                  className={`py-2 ${selectedTab === "All" ? "border-b-2 border-blue-500" : ""
-                    }`}
-                  onClick={() => setSelectedTab("All")}
-                >
-                  All
-                </button>
-                <button
-                  className={`py-2 ${selectedTab === "Chats" ? "border-b-2 border-blue-500" : ""
-                    }`}
-                  onClick={() => setSelectedTab("Chats")}
-                >
-                  Chats
-                </button>
-                <button
-                  className={`py-2 ${selectedTab === "Unread" ? "border-b-2 border-blue-500" : ""
-                    }`}
-                  onClick={() => setSelectedTab("Unread")}
-                >
-                  Unread
-                </button>
-              </div>
-            )}
-
-            <div className="flex-1 overflow-y-auto modal_scroll cursor-pointer">
-              {filteredUsers
-                .slice()
-                .sort((a, b) => {
-                  // Prioritize the current user
-                  if (a._id === currentUser) return -1;
-                  if (b._id === currentUser) return 1;
-
-                  const lastMessageA = Array.isArray(a.messages)
-                    ? [...a.messages].sort(
-                      (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
-                    )[0]
-                    : null;
-                  const lastMessageB = Array.isArray(b.messages)
-                    ? [...b.messages].sort(
-                      (x, y) => new Date(y.createdAt) - new Date(x.createdAt)
-                    )[0]
-                    : null;
-
-                  // New sorting logic for no messages
-                  if (!lastMessageA && !lastMessageB) {
-                    return new Date(b.createdAt) - new Date(a.createdAt); // Sort by createdAt if both have no messages
-                  }
-                  if (!lastMessageA) return 1; // If A has no messages, B comes first
-                  if (!lastMessageB) return -1; // If B has no messages, A comes first
-
-                  return (
-                    new Date(lastMessageB.createdAt) -
-                    new Date(lastMessageA.createdAt)
-                  );
-                })
-                .map((item) => (
-                  <ChatItem
-                    key={item._id}
-                    item={item}
-                    currentUser={currentUser}
-                    onlineUsers={onlineUsers}
-                    setSelectedChat={setSelectedChat}
-                    setShowLeftSidebar={setShowLeftSidebar}
-                    IMG_URL={IMG_URL}
-                    selectedChat={selectedChat} // Pass selectedChat as a prop
-                  />
-                ))}
-
-              {callUsers &&
-                callUsers
-                  .map((item) => ({
-                    ...item,
-                    lastMessageTimestamp:
-                      item.messages.length > 0
-                        ? new Date(
-                          item.messages[
-                            item.messages.length - 1
-                          ].content.timestamp
-                        )
-                        : null,
-                  }))
-                  .filter((item) => item.lastMessageTimestamp) // Filter out users without messages
-                  .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp) // Sort by last message timestamp
-                  .map((item) => (
-                    <ChatItem
-                      key={item._id}
-                      item={item}
-                      currentUser={currentUser}
-                      onlineUsers={onlineUsers}
-                      setSelectedChat={setSelectedChat}
-                      setShowLeftSidebar={setShowLeftSidebar}
-                      IMG_URL={IMG_URL}
-                      selectedChat={selectedChat} // Pass selectedChat as a prop
-                    />
-                  ))}
-            </div>
-          </>
-        )}
-      </div>
+      <div className="ml-16">
+    <ChatList />
+    </div>
 
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <div
-          className={`${showLeftSidebar ? "hidden md:block" : "block"
-            } flex-1 flex flex-col`}
+          className={`${
+            showLeftSidebar ? "hidden md:block" : "block"
+          } flex-1 flex flex-col`}
         >
           {selectedChat ? (
             <>
-
-
               <div className="flex items-center justify-between p-4 border-b relative">
                 <div className="flex items-center">
                   {/* Add back button for mobile */}
@@ -1882,9 +1479,9 @@ const Chat2 = () => {
                     ) : (
                       <span className="text-white text-xl font-bold">
                         {selectedChat?.userName &&
-                          selectedChat?.userName.includes(" ")
+                        selectedChat?.userName.includes(" ")
                           ? selectedChat?.userName.split(" ")[0][0] +
-                          selectedChat?.userName.split(" ")[1][0]
+                            selectedChat?.userName.split(" ")[1][0]
                           : selectedChat?.userName[0]}
                       </span>
                     )}
@@ -1911,10 +1508,11 @@ const Chat2 = () => {
                       </div>
                     ) : (
                       <div
-                        className={`text-sm ${onlineUsers.includes(selectedChat?._id)
-                          ? "text-green-500"
-                          : "text-gray-500"
-                          }`}
+                        className={`text-sm ${
+                          onlineUsers.includes(selectedChat?._id)
+                            ? "text-green-500"
+                            : "text-gray-500"
+                        }`}
                       >
                         {onlineUsers.includes(selectedChat?._id)
                           ? "Active now"
@@ -1925,7 +1523,7 @@ const Chat2 = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   {/* Show regular icons on larger screens */}
-                  <div className="hidden md:flex items-center space-x-4 ">
+                  <div className="hidden md:flex items-center space-x-4 text-gray-500">
                     <IoMdSearch
                       className="w-6 h-6 cursor-pointer"
                       onClick={() => setIsSearchBoxOpen((prev) => !prev)}
@@ -1935,14 +1533,14 @@ const Chat2 = () => {
                       data-tooltip-duration="0"
                     />
 
-                    <MdOutlineDeleteSweep
+                    {/* <MdOutlineDeleteSweep
                       onClick={() => setIsClearChatModalOpen(true)}
                       title="Clear chat"
                       data-tooltip="Clear chat"
                       data-tooltip-delay="0"
                       data-tooltip-duration="0"
                       className="w-7 h-7 cursor-pointer hover:text-red-600 text-4xl"
-                    />
+                    /> */}
                     {isSharing ? (
                       <LuScreenShareOff
                         title="Stop sharing"
@@ -1995,9 +1593,30 @@ const Chat2 = () => {
                       data-tooltip-delay="0"
                       data-tooltip-duration="0"
                     />
+                   <PiDotsThreeBold 
+                        className="text-2xl cursor-pointer "
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        title="More options"
+                        data-tooltip="More options"
+                        data-tooltip-delay="0"
+                        data-tooltip-duration="0"
+                      />
+                      {menuOpen && (
+                        <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
+                          <ul>
+                            <li  onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                              <MdOutlineDeleteSweep className="text-lg"  /> Delete
+                            </li>
+                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                              <GoMute className="text-lg" /> Muted
+                            </li>
+                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                              <IoArchiveOutline className="text-lg" /> Archive
+                            </li>
+                          </ul>
+                        </div>
+                      )}
                   </div>
-
-
 
                   {/* Show three dots menu on mobile */}
                   <div className="md:hidden relative mobile-menu flex items-center gap-2">
@@ -2014,12 +1633,12 @@ const Chat2 = () => {
                       onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     />
 
-
-
                     {mobileMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg z-50" ref={mobileMenuRef}>
+                      <div
+                        className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg z-50"
+                        ref={mobileMenuRef}
+                      >
                         <div className="py-2 w-48">
-
                           <button
                             className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
                             onClick={() => {
@@ -2089,7 +1708,11 @@ const Chat2 = () => {
                 {isSearchBoxOpen && (
                   <div
                     className="absolute top-24 right-0 left-[50%] max-w-[500px] w-full bg-white shadow-lg p-4 z-50 flex items-center border-rounded"
-                    style={{ padding: "5px 25px", borderRadius: "30px", transform: "translate(-50%, -50%)" }}
+                    style={{
+                      padding: "5px 25px",
+                      borderRadius: "30px",
+                      transform: "translate(-50%, -50%)",
+                    }}
                     ref={searchBoxRef}
                   >
                     <FaSearch className="text-gray-500 mr-2" />
@@ -2142,10 +1765,11 @@ const Chat2 = () => {
                     selectedFiles.length > 0
                       ? "calc(100vh -  275px)"
                       : replyingTo
-                        ? replyingTo?.content?.fileType && replyingTo?.content?.fileType?.startsWith("image/")
-                          ? "calc(100vh - 250px)"
-                          : "calc(100vh -  225px)"
-                        : "calc(100vh - 180px)",
+                      ? replyingTo?.content?.fileType &&
+                        replyingTo?.content?.fileType?.startsWith("image/")
+                        ? "calc(100vh - 280px)"
+                        : "calc(100vh -  225px)"
+                      : "calc(100vh - 175px)",
                 }}
                 ref={messagesContainerRef}
               >
@@ -2184,7 +1808,7 @@ const Chat2 = () => {
                 />
               </div>
               {selectedFiles && selectedFiles.length > 0 && (
-                <div className="flex w-full max-w-4xl mx-auto px-4 ">
+                <div className="flex w-full  mx-auto">
                   {selectedFiles.map((file, index) => {
                     const fileUrl = URL.createObjectURL(file); // Create a URL for the file
                     let fileIcon;
@@ -2203,7 +1827,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-excel" ||
                       file.type ===
-                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     ) {
                       fileIcon = (
                         <FaFileExcel className="w-20 h-20 text-gray-500" />
@@ -2211,7 +1835,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/msword" ||
                       file.type ===
-                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     ) {
                       fileIcon = (
                         <FaFileWord className="w-20 h-20 text-gray-500" />
@@ -2219,7 +1843,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-powerpoint" ||
                       file.type ===
-                      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     ) {
                       fileIcon = (
                         <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
@@ -2266,7 +1890,7 @@ const Chat2 = () => {
               )}
 
               {replyingTo && (
-                <div className="w-full max-w-4xl mx-auto px-4">
+                <div className="w-full">
                   <div className="bg-gray-100 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
                     <div>
                       <div className="text-sm text-blue-500 font-medium">
@@ -2282,16 +1906,19 @@ const Chat2 = () => {
                           replyingTo.content.fileType === "image/jpeg"
                         )}
                         {replyingTo.content.content}
-                        {replyingTo?.content?.fileType && replyingTo?.content?.fileType?.startsWith("image/") && (
-                          <img
-                            src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
-                            alt=""
-                            className="h-10"
-                          />
-                        )}
+                        {replyingTo?.content?.fileType &&
+                          replyingTo?.content?.fileType?.startsWith(
+                            "image/"
+                          ) && (
+                            <img
+                              src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                                /\\/g,
+                                "/"
+                              )}`}
+                              alt=""
+                              className="h-10"
+                            />
+                          )}
                       </div>
                     </div>
                     <button
@@ -2305,41 +1932,19 @@ const Chat2 = () => {
               )}
               {/*========== Message Input ==========*/}
               {selectedChat && (
-                <div className="w-full max-w-4xl mx-auto px-4 mb-5 md:mb-0">
+                <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0 border">
                   <form
                     onSubmit={handleSubmit}
-                    className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0 ? "rounded-b-lg" : "rounded-lg"
-                      } px-4 py-2 shadow w-full max-w-full`}
-                    style={{ backgroundColor: "#e5e7eb" }}
+                    className={`flex items-center gap-2 ${
+                      replyingTo || selectedFiles.length > 0
+                        ? "rounded-b-lg"
+                        : "rounded-lg"
+                    } px-4 py-2 w-full max-w-full`}
                   >
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Add emoji"
-                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    <div
+                      className="flex-1 min-w-0 p-2 rounded-md"
+                      style={{ backgroundColor: "#e5e7eb" }}
                     >
-                      <FaRegSmile className="w-5 h-5 text-gray-500" />
-                    </button>
-                    {isEmojiPickerOpen && (
-                      <div
-                        ref={emojiPickerRef}
-                        className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
-                      >
-                        <EmojiPicker
-                          onEmojiClick={onEmojiClick}
-                          previewConfig={{
-                            showPreview: false,
-                          }}
-                          width={`${window.innerWidth < 768 ? "250px" : "300px"}`}
-                          height={`${window.innerWidth < 768 ? "300px" : "400px"}`}
-                          emojiSize={20}
-                          emojiStyle="facebook"
-                          lazyLoadEmojis={true}
-                          searchDisabled={window.innerWidth < 768}
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
                       {" "}
                       {/* Add container with min-width */}
                       <input
@@ -2348,7 +1953,9 @@ const Chat2 = () => {
                         value={messageInput}
                         onChange={handleInputChange}
                         placeholder={
-                          editingMessage ? "Edit message..." : "Type a message"
+                          editingMessage
+                            ? "Edit message..."
+                            : "Type a message..."
                         }
                         className="w-full px-2 py-1 outline-none text-black bg-transparent"
                         onKeyDown={async (e) => {
@@ -2367,6 +1974,37 @@ const Chat2 = () => {
                         }}
                       />
                     </div>
+                    <button
+                      type="button"
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                      aria-label="Add emoji"
+                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    >
+                      <FaRegSmile className="w-5 h-5 text-gray-500" />
+                    </button>
+                    {isEmojiPickerOpen && (
+                      <div
+                        ref={emojiPickerRef}
+                        className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
+                      >
+                        <EmojiPicker
+                          onEmojiClick={onEmojiClick}
+                          previewConfig={{
+                            showPreview: false,
+                          }}
+                          width={`${
+                            window.innerWidth < 768 ? "250px" : "300px"
+                          }`}
+                          height={`${
+                            window.innerWidth < 768 ? "300px" : "400px"
+                          }`}
+                          emojiSize={20}
+                          emojiStyle="facebook"
+                          lazyLoadEmojis={true}
+                          searchDisabled={window.innerWidth < 768}
+                        />
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <input
@@ -2398,26 +2036,27 @@ const Chat2 = () => {
                         onClick={handleVoiceMessage}
                       >
                         <FaMicrophone
-                          className={`w-5 h-5 ${isRecording ? "text-red-500" : "text-gray-500"
-                            }`}
+                          className={`w-5 h-5 ${
+                            isRecording ? "text-red-500" : "text-gray-500"
+                          }`}
                         />
                       </button>
-                      {(messageInput != "" || selectedFiles.length > 0) && (
-                        <button
-                          type="submit"
-                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          style={{ backgroundColor: "#3B82F6", color: "white" }}
-                          aria-label="Send message"
-                          onClick={() => {
-                            if (selectedFiles.length > 0) {
-                              handleMultipleFileUpload(selectedFiles); // Upload selected files
-                              setSelectedFiles([]); // Clear selected files after sending
-                            }
-                          }}
-                        >
-                          <LuSendHorizontal />
-                        </button>
-                      )}
+                      {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
+                      <button
+                        type="submit"
+                        className="p-2 hover:bg-gray-100  transition-colors text-xl"
+                        style={{ color: "#3B82F6" }}
+                        aria-label="Send message...."
+                        onClick={() => {
+                          if (selectedFiles.length > 0) {
+                            handleMultipleFileUpload(selectedFiles); // Upload selected files
+                            setSelectedFiles([]); // Clear selected files after sending
+                          }
+                        }}
+                      >
+                        <LuSendHorizontal />
+                      </button>
+                      {/* )} */}
                       {editingMessage && (
                         <button
                           onClick={() => {
@@ -2454,24 +2093,30 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-          }`}
+        className={`flex-grow flex flex-col max-h-screen ${
+          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+            ? ""
+            : "hidden"
+        }`}
       >
         <div
-          className={`flex-1 relative ${isReceiving
-            ? "flex items-center justify-center"
-            : `grid gap-4 ${getGridColumns(
-              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-            )}`
-            }`}
+          className={`flex-1 relative ${
+            isReceiving
+              ? "flex items-center justify-center"
+              : `grid gap-4 ${getGridColumns(
+                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+                )}`
+          }`}
         >
           {/* Local video */}
           <div
-            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"} ${isReceiving ? "hidden" : ""
-              } ${remoteStreams.size === 1
+            className={` ${
+              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+            } ${isReceiving ? "hidden" : ""} ${
+              remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-              }`}
+            }`}
           >
             <video
               ref={localVideoRef}
@@ -2605,7 +2250,6 @@ const Chat2 = () => {
             </>
           )} */}
 
-
           {/* Controls */}
           {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
             <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2">
@@ -2632,8 +2276,9 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                      } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${
+                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                    } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2643,8 +2288,9 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                      } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${
+                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                    } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2673,8 +2319,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-                allUsers.find((user) => user._id === incomingCall.fromEmail)
-                  ?.photo !== "null" ? (
+              allUsers.find((user) => user._id === incomingCall.fromEmail)
+                ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2783,8 +2429,9 @@ const Chat2 = () => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
-                          }`}
+                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${
+                          isChecked ? "order-first" : ""
+                        }`}
                         onClick={() => {
                           if (!isChecked) {
                             setGroupNewUsers((prev) => [...prev, user._id]);
@@ -2992,8 +2639,9 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
-                      } `}
+                    className={`text-gray-800 cursor-pointer ${
+                      !user?.dob ? "text-sm" : ""
+                    } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -3037,8 +2685,9 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
-                      } `}
+                    className={`text-gray-800 cursor-pointer ${
+                      !user?.phone ? "text-sm" : ""
+                    } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -3165,16 +2814,16 @@ const Chat2 = () => {
                                 {message.content.fileType.includes("pdf") ? (
                                   <FaFilePdf className="w-12 h-12 text-red-500" />
                                 ) : message.content.fileType.includes(
-                                  "word"
-                                ) ? (
+                                    "word"
+                                  ) ? (
                                   <FaFileWord className="w-12 h-12 text-blue-500" />
                                 ) : message.content.fileType.includes(
-                                  "excel"
-                                ) ? (
+                                    "excel"
+                                  ) ? (
                                   <FaFileExcel className="w-12 h-12 text-green-500" />
                                 ) : message.content.fileType.includes(
-                                  "audio"
-                                ) ? (
+                                    "audio"
+                                  ) ? (
                                   <FaFileAudio className="w-12 h-12 text-purple-500" />
                                 ) : (
                                   <FaFile className="w-12 h-12 text-gray-500" />
@@ -3545,8 +3194,9 @@ const Chat2 = () => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
-                          }`}
+                        className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded ${
+                          isChecked ? "order-first" : ""
+                        }`}
                         onClick={() => {
                           if (!isChecked) {
                             setGroupUsers((prev) => [...prev, user._id]); // Add user ID to groupUsers state
@@ -3616,7 +3266,10 @@ const Chat2 = () => {
           <div className="bg-white rounded-lg p-4 w-96 modal_background">
             <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h2 className="text-lg font-bold">Add Participants</h2>
-              <button className="text-gray-500 hover:text-gray-700" onClick={() => setParticipantOpen(false)}>
+              <button
+                className="text-gray-500 hover:text-gray-700"
+                onClick={() => setParticipantOpen(false)}
+              >
                 <ImCross />
               </button>
             </div>
@@ -3640,10 +3293,7 @@ const Chat2 = () => {
                       <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
                         {user?.photo && user.photo !== "null" ? (
                           <img
-                            src={`${IMG_URL}${user.photo.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
+                            src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
                             alt={`${user.userName}`}
                             className="object-cover h-full w-full"
                           />

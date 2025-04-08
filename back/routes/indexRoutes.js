@@ -1,6 +1,19 @@
 const express = require("express");
-const { createUser, getAllUsers, getAllMessageUsers, updateUser, getSingleUser, getAllCallUsers } = require("../controller/userController");
-const { userLogin, googleLogin,forgotPassword,verifyOtp,changePassword } = require("../auth/auth");
+const {
+  createUser,
+  getAllUsers,
+  getAllMessageUsers,
+  updateUser,
+  getSingleUser,
+  getAllCallUsers,
+} = require("../controller/userController");
+const {
+  userLogin,
+  googleLogin,
+  forgotPassword,
+  verifyOtp,
+  changePassword,
+} = require("../auth/auth");
 const { auth } = require("../helper/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
 const {
@@ -12,7 +25,15 @@ const {
 } = require("../controller/messageController");
 const upload = require("../helper/upload");
 const uploadController = require("../controller/uploadController");
-const { createGroup, updateGroup, deleteGroup, getAllGroups, getGroupById, leaveGroup, addParticipants } = require("../controller/groupController");
+const {
+  createGroup,
+  updateGroup,
+  deleteGroup,
+  getAllGroups,
+  getGroupById,
+  leaveGroup,
+  addParticipants,
+} = require("../controller/groupController");
 
 const indexRoutes = express.Router();
 
@@ -20,9 +41,9 @@ const indexRoutes = express.Router();
 
 indexRoutes.post("/usrLogin", userLogin);
 indexRoutes.post("/google-login", googleLogin);
-indexRoutes.post('/forgotPassword', forgotPassword)
-indexRoutes.post('/verifyOtp', verifyOtp)
-indexRoutes.post('/changePassword', changePassword)
+indexRoutes.post("/forgotPassword", forgotPassword);
+indexRoutes.post("/verifyOtp", verifyOtp);
+indexRoutes.post("/changePassword", changePassword);
 
 // User Routes
 
@@ -31,13 +52,18 @@ indexRoutes.get("/allUsers", auth, getAllUsers);
 indexRoutes.get("/allMessageUsers", auth, getAllMessageUsers);
 indexRoutes.get("/allCallUsers", auth, getAllCallUsers);
 indexRoutes.put("/editUser/:id", auth, upload.single("photo"), updateUser);
-indexRoutes.get("/singleUser/:id", auth, getSingleUser)
+indexRoutes.get("/singleUser/:id", auth, getSingleUser);
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);
-indexRoutes.put("/updateGroup/:groupId", auth,upload.single("photo"), updateGroup);
+indexRoutes.put(
+  "/updateGroup/:groupId",
+  auth,
+  upload.single("photo"),
+  updateGroup
+);
 indexRoutes.delete("/deleteGroup/:groupId", auth, deleteGroup);
-indexRoutes.get("/allGroups",  getAllGroups);
+indexRoutes.get("/allGroups", getAllGroups);
 indexRoutes.get("/getGroupById/:groupId", auth, getGroupById);
 indexRoutes.post("/leaveGroup", auth, leaveGroup);
 indexRoutes.post("/addParticipants", auth, addParticipants);
@@ -48,7 +74,13 @@ indexRoutes.post("/allMessages", auth, getAllMessages);
 indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
 indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
 indexRoutes.post("/clearChat", auth, clearChat);
+// AI Chat Routes
 // File upload endpoint
-indexRoutes.post("/upload",auth,upload.single("file"),uploadController.uploadFile);
+indexRoutes.post(
+  "/upload",
+  auth,
+  upload.single("file"),
+  uploadController.uploadFile
+);
 
 module.exports = indexRoutes;
