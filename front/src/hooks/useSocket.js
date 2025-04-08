@@ -1261,13 +1261,14 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   // ===========================cleanup Connection=============================
 
   const cleanupConnection = () => {
-    if (streamRef.current) {
+    // Safely cleanup stream
+    if (streamRef?.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
 
-    // Cleanup all peer connections
-    if (peerRef.current) {
+    // Safely cleanup peer connections
+    if (peerRef?.current) {
       Object.values(peerRef.current).forEach((peer) => {
         if (peer && typeof peer.destroy === "function") {
           peer.destroy();
@@ -1276,13 +1277,15 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       peerRef.current = {};
     }
 
-    if (localVideoRef.current) {
+    // Safely cleanup video refs
+    if (localVideoRef?.current) {
       localVideoRef.current.srcObject = null;
     }
-    if (remoteVideoRef.current) {
+    if (remoteVideoRef?.current) {
       remoteVideoRef.current.srcObject = null;
     }
 
+    // Reset states
     setIsSharing(false);
     setIsReceiving(false);
     setPeerEmail("");

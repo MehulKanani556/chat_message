@@ -70,10 +70,11 @@ import Front from "../component/Front";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import ChatItem from "../component/ChatItem";
 import MessageList from "../component/MessageList";
-import Profile from "../component/Profile";
+import Profile from '../component/Profile';
 import Sidebar from "../component/SideBar";
 import { BiBlock } from "react-icons/bi";
 import ChatList from "../component/ChatList";
+import Groups from "../component/Group";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
@@ -121,9 +122,8 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
-                  selectedUsers.includes(user._id) ? "order-first" : ""
-                }`}
+                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? "order-first" : ""
+                  }`}
                 onClick={() => {
                   if (selectedUsers.includes(user._id)) {
                     setSelectedUsers(
@@ -146,7 +146,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                     <span className="text-blue-500 font-medium">
                       {user.userName && user.userName.includes(" ")
                         ? user.userName.split(" ")[0][0] +
-                          user.userName.split(" ")[1][0]
+                        user.userName.split(" ")[1][0]
                         : user.userName[0]}
                     </span>
                   )}
@@ -165,7 +165,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(user._id)}
-                    onChange={() => {}} // Handled by parent div click
+                    onChange={() => { }} // Handled by parent div click
                     className="w-4 h-4 rounded border-gray-300 text-blue-500 
                            focus:ring-blue-500 focus:ring-offset-0"
                   />
@@ -192,11 +192,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   onClick={() => onSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
-                  ${
-                    selectedUsers.length === 0
+                  ${selectedUsers.length === 0
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                    }`}
                 >
                   Forward
                 </button>
@@ -288,6 +287,8 @@ const Chat2 = () => {
 
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [showProfileInSidebar, setShowProfileInSidebar] = useState(false);
+
+  const [showGroups, setShowGroups] = useState(false);
 
   //===========Use the custom socket hook===========
   const {
@@ -1407,26 +1408,91 @@ const Chat2 = () => {
         setMenuOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    // Set showLeftSidebar to true when no chat is selected
+    if (!selectedChat) {
+      setShowLeftSidebar(true);
+    }
+  }, [selectedChat]);
+
+  useEffect(() => {
+    // Listen for the resetSelectedChat event
+    const handleResetSelectedChat = () => {
+      setSelectedChat(null);
+      setShowLeftSidebar(true);
+    };
+
+    window.addEventListener('resetSelectedChat', handleResetSelectedChat);
+
+    return () => {
+      window.removeEventListener('resetSelectedChat', handleResetSelectedChat);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Listen for the showChatList event
+    const handleShowChatList = (event) => {
+      setShowGroups(false);
+      if (event.detail?.selectedChat) {
+        setSelectedChat(event.detail.selectedChat);
+      }
+      if (event.detail?.openGroupCreateModal) {
+        setIsGroupCreateModalOpen(true);
+      }
+    };
+
+    window.addEventListener('showChatList', handleShowChatList);
+
+    return () => {
+      window.removeEventListener('showChatList', handleShowChatList);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Listen for the showGroups event
+    const handleShowGroups = () => {
+      setShowGroups(true);
+      setSelectedChat(null);
+    };
+
+    window.addEventListener('showGroups', handleShowGroups);
+
+    return () => {
+      window.removeEventListener('showGroups', handleShowGroups);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-white">
-      <Sidebar user={user} />
+      <Sidebar
+        user={user}
+        onProfileClick={(userId) => {
+          // Find the ChatList component and set the selected profile
+          const chatListElement = document.querySelector('.ml-16');
+          if (chatListElement) {
+            // Dispatch the custom event to show the profile
+            const event = new CustomEvent('showProfile', { detail: { userId } });
+            window.dispatchEvent(event);
+          }
+        }}
+      />
       {/* Left Sidebar */}
       <div className="ml-16">
-    <ChatList />
-    </div>
+        {showGroups ? <Groups /> : <ChatList />}
+      </div>
 
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <div
-          className={`${
-            showLeftSidebar ? "hidden md:block" : "block"
-          } flex-1 flex flex-col`}
+          className={`${showLeftSidebar ? "hidden md:block" : "block"
+            } flex-1 flex flex-col`}
         >
           {selectedChat ? (
             <>
@@ -1479,9 +1545,9 @@ const Chat2 = () => {
                     ) : (
                       <span className="text-white text-xl font-bold">
                         {selectedChat?.userName &&
-                        selectedChat?.userName.includes(" ")
+                          selectedChat?.userName.includes(" ")
                           ? selectedChat?.userName.split(" ")[0][0] +
-                            selectedChat?.userName.split(" ")[1][0]
+                          selectedChat?.userName.split(" ")[1][0]
                           : selectedChat?.userName[0]}
                       </span>
                     )}
@@ -1508,11 +1574,10 @@ const Chat2 = () => {
                       </div>
                     ) : (
                       <div
-                        className={`text-sm ${
-                          onlineUsers.includes(selectedChat?._id)
-                            ? "text-green-500"
-                            : "text-gray-500"
-                        }`}
+                        className={`text-sm ${onlineUsers.includes(selectedChat?._id)
+                          ? "text-green-500"
+                          : "text-gray-500"
+                          }`}
                       >
                         {onlineUsers.includes(selectedChat?._id)
                           ? "Active now"
@@ -1593,29 +1658,29 @@ const Chat2 = () => {
                       data-tooltip-delay="0"
                       data-tooltip-duration="0"
                     />
-                   <PiDotsThreeBold 
-                        className="text-2xl cursor-pointer "
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        title="More options"
-                        data-tooltip="More options"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
-                      {menuOpen && (
-                        <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
-                          <ul>
-                            <li  onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <MdOutlineDeleteSweep className="text-lg"  /> Delete
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <GoMute className="text-lg" /> Muted
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <IoArchiveOutline className="text-lg" /> Archive
-                            </li>
-                          </ul>
-                        </div>
-                      )}
+                    <PiDotsThreeBold
+                      className="text-2xl cursor-pointer "
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      title="More options"
+                      data-tooltip="More options"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    {menuOpen && (
+                      <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
+                        <ul>
+                          <li onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <MdOutlineDeleteSweep className="text-lg" /> Delete
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <GoMute className="text-lg" /> Muted
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <IoArchiveOutline className="text-lg" /> Archive
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   {/* Show three dots menu on mobile */}
@@ -1765,11 +1830,11 @@ const Chat2 = () => {
                     selectedFiles.length > 0
                       ? "calc(100vh -  275px)"
                       : replyingTo
-                      ? replyingTo?.content?.fileType &&
-                        replyingTo?.content?.fileType?.startsWith("image/")
-                        ? "calc(100vh - 280px)"
-                        : "calc(100vh -  225px)"
-                      : "calc(100vh - 175px)",
+                        ? replyingTo?.content?.fileType &&
+                          replyingTo?.content?.fileType?.startsWith("image/")
+                          ? "calc(100vh - 280px)"
+                          : "calc(100vh -  225px)"
+                        : "calc(100vh - 175px)",
                 }}
                 ref={messagesContainerRef}
               >
@@ -1827,7 +1892,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-excel" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     ) {
                       fileIcon = (
                         <FaFileExcel className="w-20 h-20 text-gray-500" />
@@ -1835,7 +1900,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/msword" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     ) {
                       fileIcon = (
                         <FaFileWord className="w-20 h-20 text-gray-500" />
@@ -1843,7 +1908,7 @@ const Chat2 = () => {
                     } else if (
                       file.type === "application/vnd.ms-powerpoint" ||
                       file.type ===
-                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     ) {
                       fileIcon = (
                         <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
@@ -1935,11 +2000,10 @@ const Chat2 = () => {
                 <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0 border">
                   <form
                     onSubmit={handleSubmit}
-                    className={`flex items-center gap-2 ${
-                      replyingTo || selectedFiles.length > 0
-                        ? "rounded-b-lg"
-                        : "rounded-lg"
-                    } px-4 py-2 w-full max-w-full`}
+                    className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
+                      ? "rounded-b-lg"
+                      : "rounded-lg"
+                      } px-4 py-2 w-full max-w-full`}
                   >
                     <div
                       className="flex-1 min-w-0 p-2 rounded-md"
@@ -1992,12 +2056,10 @@ const Chat2 = () => {
                           previewConfig={{
                             showPreview: false,
                           }}
-                          width={`${
-                            window.innerWidth < 768 ? "250px" : "300px"
-                          }`}
-                          height={`${
-                            window.innerWidth < 768 ? "300px" : "400px"
-                          }`}
+                          width={`${window.innerWidth < 768 ? "250px" : "300px"
+                            }`}
+                          height={`${window.innerWidth < 768 ? "300px" : "400px"
+                            }`}
                           emojiSize={20}
                           emojiStyle="facebook"
                           lazyLoadEmojis={true}
@@ -2036,9 +2098,8 @@ const Chat2 = () => {
                         onClick={handleVoiceMessage}
                       >
                         <FaMicrophone
-                          className={`w-5 h-5 ${
-                            isRecording ? "text-red-500" : "text-gray-500"
-                          }`}
+                          className={`w-5 h-5 ${isRecording ? "text-red-500" : "text-gray-500"
+                            }`}
                         />
                       </button>
                       {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
@@ -2093,30 +2154,26 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
-            ? ""
-            : "hidden"
-        }`}
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+          ? ""
+          : "hidden"
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
-              ? "flex items-center justify-center"
-              : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+          className={`flex-1 relative ${isReceiving
+            ? "flex items-center justify-center"
+            : `grid gap-4 ${getGridColumns(
+              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+            )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2276,9 +2333,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2288,9 +2344,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2319,8 +2374,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
+                allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2429,9 +2484,8 @@ const Chat2 = () => {
                     return (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${
-                          isChecked ? "order-first" : ""
-                        }`}
+                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
+                          }`}
                         onClick={() => {
                           if (!isChecked) {
                             setGroupNewUsers((prev) => [...prev, user._id]);
@@ -2639,9 +2693,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -2685,9 +2738,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -2700,7 +2752,7 @@ const Chat2 = () => {
       )}
 
       {/*Other User Profile Modal */}
-      {/* {isUserProfileModalOpen && (
+      {isUserProfileModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-96 modal_background">
             <div className="flex justify-between items-center pb-2 p-4">
@@ -2814,16 +2866,16 @@ const Chat2 = () => {
                                 {message.content.fileType.includes("pdf") ? (
                                   <FaFilePdf className="w-12 h-12 text-red-500" />
                                 ) : message.content.fileType.includes(
-                                    "word"
-                                  ) ? (
+                                  "word"
+                                ) ? (
                                   <FaFileWord className="w-12 h-12 text-blue-500" />
                                 ) : message.content.fileType.includes(
-                                    "excel"
-                                  ) ? (
+                                  "excel"
+                                ) ? (
                                   <FaFileExcel className="w-12 h-12 text-green-500" />
                                 ) : message.content.fileType.includes(
-                                    "audio"
-                                  ) ? (
+                                  "audio"
+                                ) ? (
                                   <FaFileAudio className="w-12 h-12 text-purple-500" />
                                 ) : (
                                   <FaFile className="w-12 h-12 text-gray-500" />
@@ -2860,7 +2912,7 @@ const Chat2 = () => {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
 
 
@@ -2896,7 +2948,7 @@ const Chat2 = () => {
       )} */}
 
       {/* group Profile Modal */}
-      {isGroupModalOpen && (
+      {/* {isGroupModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-96 modal_background ">
             <div className="flex justify-between items-center pb-2 p-4">
@@ -3126,140 +3178,8 @@ const Chat2 = () => {
             </div>
           </div>
         </div>
-      )}
-      {isGroupCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-96 modal_background">
-            <div className="flex justify-between items-center pb-2 p-4">
-              <h2 className="text-lg font-bold">Create Group</h2>
-              <button
-                onClick={() => setIsGroupCreateModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ImCross />
-              </button>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="relative w-24 h-24 rounded-full bg-gray-300 overflow-hidden mt-4 group">
-                <img
-                  src={
-                    groupPhoto
-                      ? URL.createObjectURL(groupPhoto)
-                      : require("../img/group.png")
-                  }
-                  alt="Profile"
-                  className="cursor-pointer object-cover w-full h-full rounded-full"
-                  onClick={() => document.getElementById("fileInput").click()}
-                />
-                <input
-                  type="file"
-                  id="fileInput"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const file = e.target.files[0];
-                      setGroupPhoto(file);
-                    }
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <MdOutlineModeEdit
-                    className="text-white text-4xl cursor-pointer"
-                    onClick={() => document.getElementById("fileInput").click()}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <input
-                  type="text"
-                  placeholder="Group Name"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  className="mt-2 text-xl font-semibold bg-transparent border-none outline-none text-center"
-                  autoFocus // This will focus the input when isEditing is true
-                />
-              </div>
-            </div>
-            <div className="mt-4 p-4">
-              <div className="flex items-center justify-between p-2 border-b border-gray-400">
-                <span className="text-gray-600 font-bold">Participants</span>
-                <span className="text-gray-800 ">{groupUsers.length || 0}</span>
-              </div>
-              <div className="flex flex-col max-h-48 overflow-y-auto cursor-pointer modal_scroll">
-                {allUsers
-                  .filter((user) => user._id !== currentUser)
-                  .map((user, index) => {
-                    const isChecked = groupUsers.includes(user._id); // Check if user is already selected
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded ${
-                          isChecked ? "order-first" : ""
-                        }`}
-                        onClick={() => {
-                          if (!isChecked) {
-                            setGroupUsers((prev) => [...prev, user._id]); // Add user ID to groupUsers state
-                          } else {
-                            setGroupUsers((prev) =>
-                              prev.filter((id) => id !== user._id)
-                            ); // Remove user ID from groupUsers state
-                          }
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                            {user?.photo && user.photo !== "null" ? (
-                              <img
-                                src={`${IMG_URL}${user.photo.replace(
-                                  /\\/g,
-                                  "/"
-                                )}`}
-                                alt={`${user.userName}`}
-                                className="object-cover h-full w-full"
-                              />
-                            ) : (
-                              <span className="text-gray-900 text-lg font-bold">
-                                {user.userName
-                                  .split(" ")
-                                  .map((n) => n[0].toUpperCase())
-                                  .join("")}
-                              </span>
-                            )}
-                          </div>
-                          <span>{user.userName}</span>
-                        </div>
-                        <input
-                          id={`checkbox-${user._id}`}
-                          type="checkbox"
-                          checked={isChecked} // Set checkbox state based on selection
-                          readOnly // Make checkbox read-only to prevent direct interaction
-                          className="form-checkbox rounded-full"
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            borderRadius: "50%",
-                            border: "2px solid #ccc",
-                            backgroundColor: "#fff",
-                            cursor: "pointer",
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-              </div>
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={() => handleCreateGroup()}
-                  className="bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600"
-                >
-                  Create Group
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      )} */}
+
       {/* Add Participant to call Modal */}
       {participantOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

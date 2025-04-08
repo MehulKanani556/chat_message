@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp, FaPaperclip } from 'react-icons/fa';
 import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
@@ -7,198 +7,245 @@ import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser } from '../redux/slice/user.slice';
 
-const Profile = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [isEditing, setIsEditing] = useState(false);
-  const user = useSelector((state) => state.user.user);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [userInfoOpen, setUserInfoOpen] = useState(true);
-  const [filesOpen, setFilesOpen] = useState(false);
+const Profile = ({ userId, onBack }) => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { userId: urlUserId } = useParams();
+    const [isEditing, setIsEditing] = useState(false);
+    const currentUser = useSelector((state) => state.user.user);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [userInfoOpen, setUserInfoOpen] = useState(true);
+    const [filesOpen, setFilesOpen] = useState(false);
+    const [user, setUser] = useState(null);
 
+    // Determine which user ID to use (from props, URL params, or current user)
+    const targetUserId = userId || urlUserId || (currentUser ? currentUser._id : null);
 
-  const [profileData, setProfileData] = useState({
-    name: user?.userName || 'User',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    bio: user?.bio || 'No bio available',
-    profileImage: user?.photo ? `${IMG_URL}${user.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
-  });
-  const [tempData, setTempData] = useState({ ...profileData });
+    const [profileData, setProfileData] = useState({
+        name: 'User',
+        email: '',
+        phone: '',
+        bio: 'No bio available',
+        profileImage: 'https://via.placeholder.com/150',
+    });
+    const [tempData, setTempData] = useState({ ...profileData });
 
-  useEffect(() => {
-    // Update profile data when user data changes
-    if (user) {
-      setProfileData({
-        name: user.userName || 'User',
-        email: user.email || '',
-        phone: user.phone || '',
-        bio: user.bio || 'No bio available',
-        profileImage: user.photo ? `${IMG_URL}${user.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
-      });
-      setTempData({
-        name: user.userName || 'User',
-        email: user.email || '',
-        phone: user.phone || '',
-        bio: user.bio || 'No bio available',
-        profileImage: user.photo ? `${IMG_URL}${user.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
-      });
-    }
-  }, [user]);
+    useEffect(() => {
+        // If we have a targetUserId and it's different from the current user
+        if (targetUserId && (!currentUser || targetUserId !== currentUser._id)) {
+            // Fetch user data from API
+            const fetchUserData = async () => {
+                try {
+                    setIsLoading(true);
+                    console.log('Fetching user data for ID:', targetUserId);
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${targetUserId}`);
+                    const userData = response.data;
 
-  const handleEdit = () => {
-    setTempData({ ...profileData });
-    setIsEditing(true);
-  };
+                    setUser(userData);
+                    setProfileData({
+                        name: userData.userName || 'User',
+                        email: userData.email || '',
+                        phone: userData.phone || '',
+                        bio: userData.bio || 'No bio available',
+                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                    });
+                    setTempData({
+                        name: userData.userName || 'User',
+                        email: userData.email || '',
+                        phone: userData.phone || '',
+                        bio: userData.bio || 'No bio available',
+                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                    });
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
 
-  const handleSave = async () => {
-    try {
-      setIsLoading(true);
+            fetchUserData();
+        } else if (currentUser) {
+            // Use current user data
+            console.log('Using current user data:', currentUser._id);
+            setUser(currentUser);
+            setProfileData({
+                name: currentUser.userName || 'User',
+                email: currentUser.email || '',
+                phone: currentUser.phone || '',
+                bio: currentUser.bio || 'No bio available',
+                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+            });
+            setTempData({
+                name: currentUser.userName || 'User',
+                email: currentUser.email || '',
+                phone: currentUser.phone || '',
+                bio: currentUser.bio || 'No bio available',
+                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+            });
+        }
+    }, [currentUser, targetUserId]);
 
-      // Create form data for the update
-      const formData = new FormData();
-      formData.append('userName', tempData.name);
-      formData.append('email', tempData.email);
-      formData.append('phone', tempData.phone);
-      formData.append('bio', tempData.bio);
+    const handleEdit = () => {
+        setTempData({ ...profileData });
+        setIsEditing(true);
+    };
 
-      // If there's a new image file, append it
-      if (tempData.photoFile) {
-        formData.append('photo', tempData.photoFile);
-      }
+    const handleSave = async () => {
+        try {
+            setIsLoading(true);
 
-      // Dispatch the update action
-      await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
+            // Create form data for the update
+            const formData = new FormData();
+            formData.append('userName', tempData.name);
+            formData.append('email', tempData.email);
+            formData.append('phone', tempData.phone);
+            formData.append('bio', tempData.bio);
 
-      setProfileData({
-        ...tempData,
-        profileImage: tempData.photoFile ? URL.createObjectURL(tempData.photoFile) : tempData.profileImage
-      });
+            // If there's a new image file, append it
+            if (tempData.photoFile) {
+                formData.append('photo', tempData.photoFile);
+            }
 
-      setIsEditing(false);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setIsLoading(false);
-    }
-  };
+            // Dispatch the update action
+            await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
 
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
+            setProfileData({
+                ...tempData,
+                profileImage: tempData.photoFile ? URL.createObjectURL(tempData.photoFile) : tempData.profileImage
+            });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setTempData({ ...tempData, [name]: value });
-  };
+            setIsEditing(false);
+            setIsLoading(false);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTempData({
-          ...tempData,
-          profileImage: reader.result,
-          photoFile: file
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+            // If onBack is provided, call it after saving
+            if (onBack) {
+                onBack();
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setIsLoading(false);
+        }
+    };
 
-  const toggleAccordion = () => {
-    setIsOpen(!isOpen);
-  };
+    const handleCancel = () => {
+        setIsEditing(false);
 
-  return (
-    <div className="bg-white h-full overflow-y-auto">
-      <div className="bg-white overflow-hidden">
-        {/* Profile Header */}
-        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm max-w-xs mx-auto">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
-              <img src={profileData.profileImage} alt="Profile" />
+        // If onBack is provided, call it when canceling
+        if (onBack) {
+            onBack();
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setTempData({ ...tempData, [name]: value });
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setTempData({
+                    ...tempData,
+                    profileImage: reader.result,
+                    photoFile: file
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const toggleAccordion = () => {
+        setIsOpen(!isOpen);
+    };
+
+    return (
+        <div className="bg-[#F5F7FB] h-screen overflow-y-auto">
+            <div className="bg-[#F5F7FB] overflow-hidden">
+                {/* Profile Header */}
+                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto">
+                    <div className="relative">
+                        <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
+                            <img src={profileData.profileImage} alt="Profile" />
+                        </div>
+                    </div>
+
+                    <h2 className="text-lg font-medium text-gray-800 mt-2">{profileData.name}</h2>
+
+                    <div className="flex items-center mt-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                        <span className="text-sm text-gray-500">Active</span>
+                    </div>
+                </div>
+
+                {/* Profile Content */}
+                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8">
+                    <p>
+                        If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
+                    </p>
+                    {/* Main accordion header */}
+                    <div
+                        className="p-4 cursor-pointer flex items-center justify-between"
+                        onClick={toggleAccordion}
+                    >
+                    </div>
+
+                    {/* Accordion content */}
+                    <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow">
+                        {/* User Info Section */}
+                        <div className="border-b border-gray-700">
+                            <button
+                                className="w-full px-4 py-3 flex justify-between items-center"
+                                onClick={() => setUserInfoOpen(!userInfoOpen)}
+                            >
+                                <div className="flex items-center space-x-2 text-black">
+                                    <CgProfile />
+                                    <span className="font-medium text-black">About</span>
+                                </div>
+                                {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                            </button>
+
+                            {userInfoOpen && (
+                                <div className="px-4 pb-4 pt-1">
+                                    <div className="mb-4">
+                                        <p className="text-gray-400 text-sm">Name</p>
+                                        <p className="text-black font-semibold">{profileData.name}</p>
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <p className="text-gray-400 text-sm">Email</p>
+                                        <p className="text-black font-semibold">{profileData.email}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Files Section */}
+                        <div>
+                            <button
+                                className="w-full px-4 py-3 flex justify-between items-center"
+                                onClick={() => setFilesOpen(!filesOpen)}
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <FaPaperclip size={18} className="text-gray-400" />
+                                    <span className="font-medium text-black">Attached Files</span>
+                                </div>
+                                {filesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                            </button>
+
+                            {filesOpen && (
+                                <div className="px-4 py-4">
+                                    <p className="text-gray-400 italic">No files attached</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <h2 className="text-lg font-medium text-gray-800 mt-2">{profileData.name}</h2>
-
-          <div className="flex items-center mt-1">
-            <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-            <span className="text-sm text-gray-500">Active</span>
-          </div>
         </div>
-
-        {/* Profile Content */}
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm">
-          {/* Main accordion header */}
-          <div
-            className="p-4 cursor-pointer flex items-center justify-between"
-            onClick={toggleAccordion}
-          >
-          </div>
-
-          {/* Accordion content */}
-          <div className="w-full max-w-md bg-white rounded shadow">
-            {/* User Info Section */}
-            <div className="border-b">
-              <button
-                className="w-full px-4 py-3 flex justify-between items-center"
-                onClick={() => setUserInfoOpen(!userInfoOpen)}
-              >
-                <div className="flex items-center space-x-2">
-                  <CgProfile />
-                  <span className="font-medium">About</span>
-                </div>
-                {userInfoOpen ? <FaChevronUp size={18} /> : <FaChevronDown size={18} />}
-              </button>
-
-              {userInfoOpen && (
-                <div className="px-4 pb-4 pt-1">
-                  <div className="mb-4">
-                    <p className="text-gray-500 text-sm">Name</p>
-                    <p className="text-black font-semibold">{profileData.name}</p>
-                  </div>
-
-                  <div className="mb-4">
-                    <p className="text-gray-500 text-sm">E-mail</p>
-                    <p className="text-black font-semibold">{profileData.email}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-gray-500 text-sm">location</p>
-                    <p className="text-black font-semibold">India</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Files Section */}
-            <div>
-              <button
-                className="w-full px-4 py-3 flex justify-between items-center"
-                onClick={() => setFilesOpen(!filesOpen)}
-              >
-                <div className="flex items-center space-x-2">
-                  <FaPaperclip size={18} className="text-gray-500" />
-                  <span className="font-medium">Attached Files</span>
-                </div>
-                {filesOpen ? <FaChevronUp size={18} /> : <FaChevronDown size={18} />}
-              </button>
-
-              {filesOpen && (
-                <div className="px-4 py-4">
-                  <p className="text-gray-500 italic">No files attached</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Profile; 
