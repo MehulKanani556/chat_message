@@ -1985,7 +1985,7 @@ const Chat2 = () => {
                     </div>
                     <button
                       type="button"
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                      className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500 dark:hover:text-black rounded-full transition-colors flex-shrink-0"
                       aria-label="Add emoji"
                       onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                     >
@@ -2024,7 +2024,7 @@ const Chat2 = () => {
                       />
                       <button
                         type="button"
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
                         aria-label="Attach file"
                         onClick={() =>
                           document.getElementById("file-upload").click()
@@ -2042,7 +2042,7 @@ const Chat2 = () => {
                       </button>
                       <button
                         type="button"
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
                         aria-label="Voice message"
                         onClick={handleVoiceMessage}
                       >
@@ -2054,7 +2054,7 @@ const Chat2 = () => {
                       {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
                       <button
                         type="submit"
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
                         // style={{ color: "#3B82F6" }}
                         aria-label="Send message...."
                         onClick={() => {
@@ -2064,7 +2064,7 @@ const Chat2 = () => {
                           }
                         }}
                       >
-                       <svg width={20} height={20} x={0} y={0} viewBox="0 0 32 32" style={{enableBackground: 'new 0 0 24 24'}} xmlSpace="preserve" className><g><path d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z" fill="#000000" opacity={1} data-original="#000000" className /></g></svg>
+                       <svg width={20} height={20} x={0} y={0} viewBox="0 0 32 32" style={{enableBackground: 'new 0 0 24 24'}} xmlSpace="preserve" className><g><path d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z" fill="currentColor" opacity={1} data-original="#000000" className /></g></svg>
 
                       </button>
                       {/* )} */}
@@ -2088,7 +2088,7 @@ const Chat2 = () => {
               {showScrollToBottom && (
                 <button
                   type="button"
-                  className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg"
+                  className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
                   onClick={scrollToBottom}
                   aria-label="Send to Bottom"
                 >
