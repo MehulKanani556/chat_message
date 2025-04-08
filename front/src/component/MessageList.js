@@ -12,7 +12,7 @@ import {
 import { MdPhoneEnabled } from "react-icons/md";
 import { GoDeviceCameraVideo } from "react-icons/go";
 import { BiShare, BiReply } from "react-icons/bi";
-import { VscCopy } from "react-icons/vsc";
+import { VscCopy, VscEye } from "react-icons/vsc";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { CiSquareRemove } from "react-icons/ci";
 import {
@@ -379,14 +379,14 @@ const MessageStatus = ({ message, userId }) => (
       message.showTime ? "bottom-3" : "-bottom-2"
     } right-0`}
   >
-    {message.status === "sent" && (
-      <IoCheckmarkCircleOutline className="text-xl mr-1 text-gray-600 font-bold" />
-    )}
-    {message.status === "delivered" && (
+    {/* {message.status === "sent" && (
       <IoCheckmarkDoneCircleOutline className="text-xl mr-1 text-gray-600 font-bold" />
+    )} */}
+    {message.status === "delivered" && (
+      <IoCheckmarkCircleOutline className="text-md mr-1 text-gray-600 font-bold" />
     )}
     {message.status === "read" && (
-      <IoCheckmarkDoneCircle className="text-xl mr-1 text-blue-500 font-bold" />
+      <VscEye className="text-xl mx-1 text-blue-500 font-bold" />
     )}
   </div>
 );
