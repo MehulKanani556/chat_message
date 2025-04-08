@@ -192,7 +192,7 @@ const ChatList = () => {
       </div>
       
       {/* Chat list - scrollable area */}
-      <div className="overflow-y-auto max-h-[calc(100vh-140px)]">
+      <div className="overflow-y-auto max-h-[calc(100vh-150px)]">
         {recentChats.map(chat => (
           <div key={chat.id} className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
             <div className="flex items-center">

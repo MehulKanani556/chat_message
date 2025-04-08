@@ -84,7 +84,7 @@ const Sidebar = ({ user }) => {
         ))}
 
         {/* Profile Image at Bottom (only visible on desktop) */}
-        <div className=" md:flex mt-auto mb-4  md:flex-col">
+        <div className=" md:flex mt-auto mb-4  md:flex-col items-center">
           <button
             onClick={toggleTheme}
             className={`
@@ -101,7 +101,7 @@ const Sidebar = ({ user }) => {
           >
             {isDarkMode ? <BsMoonStars size={20} /> : <MdOutlineWbSunny size={20} />}
           </button>
-          <div className="w-9 h-9 rounded-full bg-gray-300 ml-1 overflow-hidden flex items-center justify-center border border-gray-500">
+          <div className="w-10 h-10 rounded-full bg-gray-300  overflow-hidden flex items-center justify-center border border-gray-500">
             {user?.photo && user.photo !== "null" ? (
               <img
                 src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
