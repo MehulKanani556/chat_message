@@ -214,7 +214,7 @@ const Chat2 = () => {
     useSelector((state) => state.user);
   const [selectedTab, setSelectedTab] = useState("All");
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(true);
+  const [selectedChat, setSelectedChat] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -1944,7 +1944,7 @@ const Chat2 = () => {
                 />
               </div>
               {selectedFiles && selectedFiles.length > 0 && (
-                <div className="flex w-full  mx-auto">
+                <div className="flex w-full  mx-auto dark:bg-primary-dark/15">
                   {selectedFiles.map((file, index) => {
                     const fileUrl = URL.createObjectURL(file); // Create a URL for the file
                     let fileIcon;
@@ -2026,8 +2026,8 @@ const Chat2 = () => {
               )}
 
               {replyingTo && (
-                <div className="w-full">
-                  <div className="bg-gray-100 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                <div className="w-full dark:bg-primary-dark/15">
+                  <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
                     <div>
                       <div className="text-sm text-blue-500 font-medium">
                         Replying to{" "}
@@ -2216,7 +2216,7 @@ const Chat2 = () => {
                 showScrollToBottom && (
                   <button
                     type="button"
-                    className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
+                    className="fixed bottom-20 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
                     onClick={scrollToBottom}
                     aria-label="Send to Bottom"
                   >
