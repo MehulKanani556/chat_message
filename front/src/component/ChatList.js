@@ -3,87 +3,58 @@ import { PiPencilSimpleBold } from 'react-icons/pi';
 import { VscCallIncoming, VscCallOutgoing } from 'react-icons/vsc';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserProfile from './Profile';
 const ChatList = ({ filteredUsers, item, currentUser, onlineUsers, IMG_URL, selectedChat, setSelectedChat, setShowLeftSidebar }) => {
 
-
-  const navigate = useNavigate();
-  const [selectedProfile, setSelectedProfile] = useState(null);
-
-  // Add event listener for the custom event
-  useEffect(() => {
-    const handleShowProfile = (event) => {
-      const { userId } = event.detail;
-      console.log('Profile event received:', userId);
-      setSelectedProfile(userId);
-    };
-
-    window.addEventListener('showProfile', handleShowProfile);
-
-    return () => {
-      window.removeEventListener('showProfile', handleShowProfile);
-    };
-  }, []);
-
-
-  const handleProfileClick = (userId) => {
-    setSelectedProfile(userId);
-  };
-
-  const handleBackFromProfile = () => {
-    console.log('Back from profile clicked');
-    setSelectedProfile(null);
-  };
-
   return (
-    <div className="w-[380px] bg-[#F5F7FB] rounded-lg shadow-sm">
-      {selectedProfile ? (
-        <div className="h-full">
-          <div className="p-4 pb-2 flex items-center">
-            <button
-              onClick={handleBackFromProfile}
-              className="mr-4 p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 className="text-lg font-semibold text-gray-800">Profile</h1>
-          </div>
-          <UserProfile userId={selectedProfile} onBack={handleBackFromProfile} />
-        </div>
-      ) : (
+    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
         <>
-          <div className="p-4 pb-2">
-            <h1 className="text-lg font-semibold text-gray-800 mb-4">Chats</h1>
-
-            {/* Search bar */}
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Search messages or users"
-                className="w-full py-2 pl-10 pr-4 bg-gray-100 rounded-lg text-gray-600 focus:outline-none"
-              />
-              <svg
-                className="absolute left-3 top-2.5 text-gray-400"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+      <div className="p-4 pb-2">
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light mb-4">Chats</h1>
+        
+        {/* Search bar */}
+        <div className="relative mb-4">
+          <input 
+            type="text" 
+            placeholder="Search messages or users" 
+            className="w-full py-2 pl-10 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10  focus:outline-none"
+          />
+          <svg 
+            className="absolute left-3 top-2.5 text-gray-400" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        
+        {/* Quick access contacts */}
+        {/* <div className="flex justify-between mb-6">
+          {quickAccessUsers.map(user => (
+            <div key={user.id} className="flex flex-col items-center">
+              <div className="relative">
+                <img 
+                  src={user.avatar} 
+                  alt={user.name} 
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                {user.online && (
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                )}
+              </div>
+              <span className="text-xs text-gray-600 mt-1">{user.name}</span>
             </div>
-
-
-            <div className="text-gray-700 font-medium dark:text-primary-light">Recent</div>
-            {/* </div> */}
-          </div>
+          ))}
+        </div> */}
+        
+        <div className="text-gray-700 font-medium dark:text-primary-light">Recent</div>
+      </div>
 
           {/* Chat list - scrollable area */}
           <div className="overflow-y-auto h-[calc(100vh-150px)] p-3 scrollbar-hide">
@@ -313,7 +284,6 @@ const ChatList = ({ filteredUsers, item, currentUser, onlineUsers, IMG_URL, sele
             <GoPencil />
           </div>
         </>
-      )}
     </div>
   );
 };

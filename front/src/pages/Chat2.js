@@ -1456,17 +1456,60 @@ const Chat2 = () => {
     };
   }, []);
 
+  // const [showGroups, setShowGroups] = useState(false);
+  // const [selectedChat, setSelectedChat] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
+
+
   useEffect(() => {
     // Listen for the showGroups event
     const handleShowGroups = () => {
       setShowGroups(true);
-      setSelectedChat(null);
+      setSelectedChat(false);
+      setShowProfile(false);
+      setShowSettings(false);
+      setShowLanguage(false);
     };
 
+    const handleShowProfile = () => {
+      setShowGroups(false);
+      setSelectedChat(false);
+      setShowProfile(true);
+      setShowSettings(false);
+      setShowLanguage(false);
+    };
+
+    const handleShowChatList = () => {
+      setShowGroups(false);
+      setSelectedChat(true);
+      setShowProfile(false);
+      setShowSettings(false);
+      setShowLanguage(false);
+    };
+
+    const handleShowSettings = () => {
+      setShowGroups(false);
+      setSelectedChat(false);
+      setShowProfile(false);
+      setShowSettings(true);
+      setShowLanguage(false);
+    };
+
+
     window.addEventListener('showGroups', handleShowGroups);
+    window.addEventListener('showProfile', handleShowProfile);
+    window.addEventListener('showChatList', handleShowChatList);
+    window.addEventListener('showSettings', handleShowSettings);
+    // window.addEventListener('showLanguage', handleShowLanguage);
 
     return () => {
       window.removeEventListener('showGroups', handleShowGroups);
+      window.removeEventListener('showProfile', handleShowProfile);
+      window.removeEventListener('showChatList', handleShowChatList);
+      window.removeEventListener('showSettings', handleShowSettings);
+      // window.removeEventListener('showLanguage', handleShowLanguage);
     };
   }, []);
 
@@ -1502,7 +1545,9 @@ const Chat2 = () => {
         {/* <ChatList /> */}
         {/* </div>
       <div className="ml-16"> */}
-        {showGroups ? <Groups /> : <ChatList
+      {showGroups && <Groups />}
+      {showProfile && <Profile />}
+      {selectedChat && <ChatList
           filteredUsers={filteredUsers}
           currentUser={currentUser}
           onlineUsers={onlineUsers}

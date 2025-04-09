@@ -43,16 +43,35 @@ const Sidebar = ({ user, onProfileClick }) => {
     }
   };
 
+  const [activeItem, setActiveItem] = useState(null);
+
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
-    { icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick: handleProfileClick },
-    { icon: <BsChatDots size={20} />, path: "/chat", label: "chat" },
+    { icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick:() => {
+      const event = new CustomEvent('showProfile');
+      window.dispatchEvent(event);
+      setActiveItem("Profile");
+    }},
+    { icon: <BsChatDots size={20} />, path: "#", label: "chat", onClick: () => {
+      const event = new CustomEvent('showChatList');
+      window.dispatchEvent(event);
+      setActiveItem("chat");
+    }},
     { icon: <BsPeople size={20} />, path: "#", label: "Groups", onClick: () => {
       const event = new CustomEvent('showGroups');
       window.dispatchEvent(event);
+      setActiveItem("Groups");
     }},
-    { icon: <BsGear size={20} />, path: "/chat", label: "Settings" },
-    { icon: <BsGlobe size={20} />, path: "/chat", label: "Language" },
+    { icon: <BsGear size={20} />, path: "#", label: "Settings", onClick: () => {
+      const event = new CustomEvent('showSettings');
+      window.dispatchEvent(event);
+      setActiveItem("Settings");
+    }},
+    { icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
+      const event = new CustomEvent('showLanguage');
+      window.dispatchEvent(event);
+      setActiveItem("Language");
+    }},
     // { icon: <BsMoonStars size={20} />, path: "/chat", label: "Theme" },
   ];
 
@@ -75,23 +94,22 @@ const Sidebar = ({ user, onProfileClick }) => {
         gap-1 md:gap-6
       ">
         {menuItems.map((item, index) => (
-          <Link
+          <div
             key={index}
             to={item.path}
             className={`
               relative flex items-center justify-center
-              w-10 h-10 rounded-full
-              hover:bg-gray-100 dark:hover:bg-gray-700
+              w-10 h-10 font-bold rounded-full
               transition-colors duration-200
-              ${location.pathname === "#"
-                ? 'bg-primary-light dark:bg-primary-dark/10 text-white'
-                : 'text-gray-600 dark:text-primary-light'}
+              ${activeItem === item.label
+                ? 'bg-primary-light dark:bg-primary-dark/10 text-primary'
+                : 'text-gray-800 dark:text-primary-light'}
             `}
             title={item.label}
             onClick={item.onClick}
           >
             {item.icon}
-          </Link>
+          </div>
         ))}
 
         {/* Profile Image at Bottom (only visible on desktop) */}
@@ -102,7 +120,6 @@ const Sidebar = ({ user, onProfileClick }) => {
               relative flex items-center justify-center
               mb-3
               w-10 h-10 rounded-full
-              hover:bg-gray-100 dark:hover:bg-gray-700
               transition-colors duration-200
               ${isDarkMode
                 ? 'bg-primary-light dark:bg-primary-dark text-white'
@@ -110,7 +127,7 @@ const Sidebar = ({ user, onProfileClick }) => {
             `}
             title="theme"
           >
-            {isDarkMode ? <BsMoonStars size={20} /> : <MdOutlineWbSunny size={20} />}
+            {isDarkMode ? <MdOutlineWbSunny size={20} /> :  <BsMoonStars size={20} />}
           </button>
           <div className="w-10 h-10 rounded-full bg-gray-300  overflow-hidden flex items-center justify-center border border-gray-500">
             {user?.photo && user.photo !== "null" ? (

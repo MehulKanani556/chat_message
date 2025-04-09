@@ -64,28 +64,19 @@ const Groups = () => {
         const event = new CustomEvent('showChatList');
         window.dispatchEvent(event);
     };
-
-
-
     return (
-        <div className="h-screen w-[380px] bg-[#F5F7FB]">
+        <div className="h-screen w-[380px] bg-[#F5F7FB] dark:bg-primary-dark/95">
             <div className="p-4">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center">
-                        <button
-                            onClick={handleBack}
-                            className="mr-4 p-2 rounded-full hover:bg-gray-100"
-                        >
-                            <FaArrowLeft className="h-5 w-5 text-gray-600" />
-                        </button>
-                        <h1 className="text-xl font-semibold text-gray-800">Groups</h1>
+                        <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Groups</h1>
                     </div>
                     <button
                         onClick={handleCreateGroup}
-                        className="p-2 rounded-full hover:bg-gray-100"
+                        className="w-5 h-5 rounded-full hover:text-primary dark:text-primary-light"
                     >
-                        <FaUserPlus className="h-6 w-6 text-gray-600" />
+                        <FaUserPlus className="hover:text-primary" />
                     </button>
                 </div>
 
@@ -101,7 +92,7 @@ const Groups = () => {
                         placeholder="Search groups..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-600"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-200 dark:bg-primary-light/15 dark:text-primary-light rounded-md focus:outline-none  text-gray-600"
                     />
                 </div>
 

@@ -7,10 +7,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser } from '../redux/slice/user.slice';
 
-const Profile = ({ userId, onBack }) => {
+const Profile = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { userId: urlUserId } = useParams();
+    const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId"));
     const [isEditing, setIsEditing] = useState(false);
     const currentUser = useSelector((state) => state.user.user);
     const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ const Profile = ({ userId, onBack }) => {
     const [user, setUser] = useState(null);
 
     // Determine which user ID to use (from props, URL params, or current user)
-    const targetUserId = userId || urlUserId || (currentUser ? currentUser._id : null);
+    const targetUserId =  urlUserId || (currentUser ? currentUser._id : null);
 
     const [profileData, setProfileData] = useState({
         name: 'User',
@@ -119,9 +119,9 @@ const Profile = ({ userId, onBack }) => {
             setIsLoading(false);
 
             // If onBack is provided, call it after saving
-            if (onBack) {
-                onBack();
-            }
+            // if (onBack) {
+            //     onBack();
+            // }
         } catch (error) {
             console.error('Error updating profile:', error);
             setIsLoading(false);
@@ -131,10 +131,10 @@ const Profile = ({ userId, onBack }) => {
     const handleCancel = () => {
         setIsEditing(false);
 
-        // If onBack is provided, call it when canceling
-        if (onBack) {
-            onBack();
-        }
+        // // If onBack is provided, call it when canceling
+        // if (onBack) {
+        //     onBack();
+        // }
     };
 
     const handleInputChange = (e) => {
@@ -162,26 +162,31 @@ const Profile = ({ userId, onBack }) => {
     };
 
     return (
-        <div className="bg-[#F5F7FB] h-screen overflow-y-auto">
-            <div className="bg-[#F5F7FB] overflow-hidden">
+        <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
+             <div>
+          <div className="p-4 pb-2 flex items-center">
+            <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Profile</h1>
+          </div>
+        </div>
+            <div className="bg-[#F5F7FB] overflow-hidden dark:bg-primary-dark/95">
                 {/* Profile Header */}
-                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto">
+                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto dark:bg-primary-dark/95">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
                             <img src={profileData.profileImage} alt="Profile" />
                         </div>
                     </div>
 
-                    <h2 className="text-lg font-medium text-gray-800 mt-2">{profileData.name}</h2>
+                    <h2 className="text-lg font-medium text-gray-800 dark:text-primary-light mt-2">{profileData.name}</h2>
 
                     <div className="flex items-center mt-1">
                         <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                        <span className="text-sm text-gray-500">Active</span>
+                        <span className="text-sm text-gray-500 dark:text-primary-light">Active</span>
                     </div>
                 </div>
 
                 {/* Profile Content */}
-                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8">
+                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8 dark:bg-primary-dark/95 dark:text-primary-light">
                     <p>
                         If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
                     </p>
@@ -193,16 +198,16 @@ const Profile = ({ userId, onBack }) => {
                     </div>
 
                     {/* Accordion content */}
-                    <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow">
+                    <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
                         {/* User Info Section */}
-                        <div className="border-b border-gray-700">
+                        <div className="border-b border-gray-300">
                             <button
                                 className="w-full px-4 py-3 flex justify-between items-center"
                                 onClick={() => setUserInfoOpen(!userInfoOpen)}
                             >
-                                <div className="flex items-center space-x-2 text-black">
+                                <div className="flex items-center space-x-2">
                                     <CgProfile />
-                                    <span className="font-medium text-black">About</span>
+                                    <span className="font-medium ">About</span>
                                 </div>
                                 {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
@@ -229,8 +234,8 @@ const Profile = ({ userId, onBack }) => {
                                 onClick={() => setFilesOpen(!filesOpen)}
                             >
                                 <div className="flex items-center space-x-2">
-                                    <FaPaperclip size={18} className="text-gray-400" />
-                                    <span className="font-medium text-black">Attached Files</span>
+                                    <FaPaperclip size={18} className=" " />
+                                    <span className="font-medium">Attached Files</span>
                                 </div>
                                 {filesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
