@@ -3,12 +3,12 @@ import { IMG_URL } from "../utils/baseUrl";
 
 const Front = ({ data }) => {
     return (
-        <div className=" bg-white p-8">
+        <div className=" bg-white p-8 dark:bg-primary-dark h-full">
             {/* Header Section */}
             <div className="max-w-4xl mx-auto justify-items-center">
                 <div className="flex items-center gap-4 mb-12 justify-items-center">
                     <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gray-300 overflow-hidden mt-4 border border-gray-500">
+                        <div className="w-24 h-24 rounded-full bg-gray-300 dark:bg-primary-dark overflow-hidden mt-4 border border-gray-500">
                             {data?.photo && data?.photo != "null" ? (
                                 <>
                                     <img src={`${IMG_URL}${data?.photo.replace(
@@ -30,7 +30,7 @@ const Front = ({ data }) => {
                 <h2 className="text-lg text-gray-700 mb-8 text-center">Here are some quick actions to get you started</h2>
 
                 <div className="grid md:grid-cols-1 gap-6 justify-items-center">
-                    <div className="p-6 border rounded-lg bg-white shadow-sm">
+                    <div className="p-6 border rounded-lg bg-white dark:bg-primary-dark shadow-sm">
                         <div className="flex flex-col items-center text-center">
                             <div className="mb-4">
 

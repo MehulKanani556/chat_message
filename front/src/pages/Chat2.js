@@ -1531,7 +1531,7 @@ const Chat2 = () => {
       <div className="ml-16"
         style={{
           boxShadow: "0px 0px 5px 1px #80808054",
-          zIndex: 100,
+
         }}>
         {/* <ChatList
           filteredUsers={filteredUsers}
@@ -1545,23 +1545,27 @@ const Chat2 = () => {
         {/* <ChatList /> */}
         {/* </div>
       <div className="ml-16"> */}
-      {showGroups && <Groups />}
+      {showGroups && <Groups 
+       setSelectedChat={setSelectedChat}
+       selectedChat={selectedChat}
+       />}
       {showProfile && <Profile />}
       {selectedChat && <ChatList
-          filteredUsers={filteredUsers}
+          allMessageUsers={allMessageUsers}
           currentUser={currentUser}
           onlineUsers={onlineUsers}
           setSelectedChat={setSelectedChat}
           setShowLeftSidebar={setShowLeftSidebar}
           IMG_URL={IMG_URL}
           selectedChat={selectedChat}
+          allUsers={allUsers}
         />}
       </div>
 
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <div
-          className={`${showLeftSidebar ? "hidden md:block" : "block"
+          className={` ${showLeftSidebar ? "hidden md:block" : "block"
             } flex-1 flex flex-col`}
         >
           {selectedChat ? (
@@ -1626,9 +1630,9 @@ const Chat2 = () => {
                   <div
                     className="ml-3 cursor-pointer"
                     onClick={() => {
-                      // console.log("selectedChat", selectedChat);
+                      console.log("selectedChat", selectedChat);
                       if (selectedChat?.members) {
-                        // console.log("selectedChat");
+                        console.log("selectedChat");
                         setIsGroupModalOpen(true);
                       } else {
                         setIsUserProfileModalOpen(true);
@@ -2212,8 +2216,7 @@ const Chat2 = () => {
               )}
 
               {/* Show Send to Bottom button only if user has scrolled up */}
-              {
-                showScrollToBottom && (
+              {showScrollToBottom && (
                   <button
                     type="button"
                     className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
@@ -2222,8 +2225,7 @@ const Chat2 = () => {
                   >
                     <FaArrowDown className="w-5 h-5" />
                   </button>
-                )
-              }
+                ) }
             </>
           ) : (
             <Front data={user} />
@@ -3034,9 +3036,9 @@ const Chat2 = () => {
       )} */}
 
       {/* group Profile Modal */}
-      {/* {isGroupModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-96 modal_background ">
+    {isGroupModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-white dark:bg-opacity-10 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-96 dark:bg-primary-dark dark:text-primary-light ">
             <div className="flex justify-between items-center pb-2 p-4">
               <h2 className="text-lg font-bold">Profile</h2>
               <button
@@ -3173,9 +3175,9 @@ const Chat2 = () => {
               </div>
             </div>
             <div className="mt-4 p-4">
-              <div className="flex items-center justify-between p-2 border-b border-gray-400">
-                <span className="text-gray-600 font-bold">Participants</span>
-                <span className="text-gray-800 ">
+              <div className="flex items-center justify-between p-2 border-b border-gray-400 dark:border-primary-light/20">
+                <span className="text-gray-600 dark:text-primary-light/80 font-bold ">Participants</span>
+                <span className="text-gray-800 dark:text-primary-light/80 ">
                   {selectedChat?.members.length}
                 </span>
               </div>
@@ -3188,10 +3190,10 @@ const Chat2 = () => {
                     setIsModalOpen(true);
                   }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2 font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-primary-light/20 flex items-center justify-center mr-2 font-bold">
                     +
                   </div>
-                  <span className="text-gray-800 font-bold">
+                  <span className="text-gray-800 dark:text-primary-light/80 font-bold">
                     Add participants
                   </span>
                 </div>
@@ -3215,7 +3217,7 @@ const Chat2 = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text-gray-800">{user?.userName}</span>
+                      <span className="text-gray-800 dark:text-primary-light/80">{user?.userName}</span>
                       <button
                         className="ml-auto text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs border border-red-500 rounded-full px-2 py-1"
                         onClick={() => {
@@ -3265,6 +3267,7 @@ const Chat2 = () => {
           </div>
         </div>
       )}
+      {/*
       {isGroupCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-96 modal_background">
