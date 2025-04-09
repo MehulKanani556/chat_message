@@ -76,6 +76,7 @@ import Sidebar from "../component/SideBar";
 import { BiBlock } from "react-icons/bi";
 import ChatList from "../component/ChatList";
 import Groups from "../component/Group";
+import Setting from "../component/Setting";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
@@ -1533,21 +1534,10 @@ const Chat2 = () => {
           boxShadow: "0px 0px 5px 1px #80808054",
           zIndex: 100,
         }}>
-        {/* <ChatList
-          filteredUsers={filteredUsers}
-          currentUser={currentUser}
-          onlineUsers={onlineUsers}
-          setSelectedChat={setSelectedChat}
-          setShowLeftSidebar={setShowLeftSidebar}
-          IMG_URL={IMG_URL}
-          selectedChat={selectedChat} // Pass selectedChat as a prop
-        /> */}
-        {/* <ChatList /> */}
-        {/* </div>
-      <div className="ml-16"> */}
-      {showGroups && <Groups />}
-      {showProfile && <Profile />}
-      {selectedChat && <ChatList
+        {showGroups && <Groups />}
+        {showProfile && <Profile />}
+        {showSettings && <Setting />}
+        {selectedChat && <ChatList
           filteredUsers={filteredUsers}
           currentUser={currentUser}
           onlineUsers={onlineUsers}
@@ -2119,7 +2109,7 @@ const Chat2 = () => {
                     {isEmojiPickerOpen && (
                       <div
                         ref={emojiPickerRef}
-                        className="absolute bg-white border rounded shadow-lg p-1 bottom-[70px]"
+                        className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
                       >
                         <EmojiPicker
                           onEmojiClick={onEmojiClick}
@@ -2216,7 +2206,7 @@ const Chat2 = () => {
                 showScrollToBottom && (
                   <button
                     type="button"
-                    className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
+                    className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg"
                     onClick={scrollToBottom}
                     aria-label="Send to Bottom"
                   >
