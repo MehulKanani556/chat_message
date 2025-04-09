@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState,useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BsChatDots,
   BsPeople,
@@ -12,8 +12,9 @@ import {
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import { MdOutlineWbSunny } from 'react-icons/md';
 
-const Sidebar = ({ user }) => {
+const Sidebar = ({ user, onProfileClick }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -36,11 +37,20 @@ const Sidebar = ({ user }) => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
 
+  const handleProfileClick = () => {
+    if (onProfileClick) {
+      onProfileClick(user?._id);
+    }
+  };
+
   const menuItems = [
-    { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
-    { icon: <BsPerson size={20} />, path: "/chat", label: "Contacts" },
-    { icon: <BsPeopleFill size={20} />, path: "/chat", label: "Profile" },
-    { icon: <BsPeople size={20} />, path: "/chat", label: "Groups" },
+    // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
+    { icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick: handleProfileClick },
+    { icon: <BsChatDots size={20} />, path: "/chat", label: "chat" },
+    { icon: <BsPeople size={20} />, path: "#", label: "Groups", onClick: () => {
+      const event = new CustomEvent('showGroups');
+      window.dispatchEvent(event);
+    }},
     { icon: <BsGear size={20} />, path: "/chat", label: "Settings" },
     { icon: <BsGlobe size={20} />, path: "/chat", label: "Language" },
     // { icon: <BsMoonStars size={20} />, path: "/chat", label: "Theme" },
@@ -78,6 +88,7 @@ const Sidebar = ({ user }) => {
                 : 'text-gray-600 dark:text-primary-light'}
             `}
             title={item.label}
+            onClick={item.onClick}
           >
             {item.icon}
           </Link>
@@ -107,6 +118,7 @@ const Sidebar = ({ user }) => {
                 src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
                 alt="Profile"
                 className="object-fill w-full h-full"
+                onClick={handleProfileClick}
               />
             ) : (
               <span className="text-black text-lg font-bold capitalize">
