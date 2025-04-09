@@ -1572,9 +1572,9 @@ const Chat2 = () => {
                       <span className="text-white text-xl font-bold">
                         {selectedChat?.userName &&
                           selectedChat?.userName.includes(" ")
-                          ? selectedChat?.userName.split(" ")[0][0] +
-                          selectedChat?.userName.split(" ")[1][0]
-                          : selectedChat?.userName[0]}
+                          ? selectedChat?.userName.split(" ")?.[0][0] +
+                          selectedChat?.userName.split(" ")?.[1][0]
+                          : selectedChat?.userName?.[0]}
                       </span>
                     )}
                   </div>
@@ -2161,109 +2161,109 @@ const Chat2 = () => {
                         </button>
                       )
                     }
-                {/* </div > */}
+                    {/* </div > */}
                   </form >
+                </div >
+              )}
+
+              {/* Show Send to Bottom button only if user has scrolled up */}
+              {
+                showScrollToBottom && (
+                  <button
+                    type="button"
+                    className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
+                    onClick={scrollToBottom}
+                    aria-label="Send to Bottom"
+                  >
+                    <FaArrowDown className="w-5 h-5" />
+                  </button>
+                )
+              }
+            </>
+          ) : (
+            <Front data={user} />
+          )
+          }
         </div >
       )}
 
-      {/* Show Send to Bottom button only if user has scrolled up */}
-      {
-        showScrollToBottom && (
-          <button
-            type="button"
-            className="fixed bottom-20 right-4 p-2 bg-blue-500/50 text-white rounded-full shadow-lg "
-            onClick={scrollToBottom}
-            aria-label="Send to Bottom"
+      {/*========== screen share ==========*/}
+      <div
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+          ? ""
+          : "hidden"
+          }`}
+      >
+        <div
+          className={`flex-1 relative ${isReceiving
+            ? "flex items-center justify-center"
+            : `grid gap-4 ${getGridColumns(
+              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+            )}`
+            }`}
+        >
+          {/* Local video */}
+          <div
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
+                ? "max-w-30 absolute top-2 right-2 z-10"
+                : "relative"
+              }`}
           >
-            <FaArrowDown className="w-5 h-5" />
-          </button>
-        )
-      }
-    </>
-  ) : (
-    <Front data={user} />
-  )
-}
-        </div >
-      )}
-
-{/*========== screen share ==========*/ }
-<div
-  className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
-    ? ""
-    : "hidden"
-    }`}
->
-  <div
-    className={`flex-1 relative ${isReceiving
-      ? "flex items-center justify-center"
-      : `grid gap-4 ${getGridColumns(
-        parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-      )}`
-      }`}
-  >
-    {/* Local video */}
-    <div
-      className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-        } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
-          ? "max-w-30 absolute top-2 right-2 z-10"
-          : "relative"
-        }`}
-    >
-      <video
-        ref={localVideoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-contain"
-        style={{
-          maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
-        }}
-      />
-      <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500  px-3 py-1 rounded-full text-center">
-        You
-      </div>
-    </div>
-
-    {/* Remote videos */}
-    {isReceiving ? (
-      <div className="w-full h-full">
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full max-h-[80vh] object-contain"
-        />
-      </div>
-    ) : (
-      <>
-        {Array.from(remoteStreams).map(([participantId, stream]) => (
-          <div key={participantId} className="relative w-full">
             <video
+              ref={localVideoRef}
               autoPlay
               playsInline
-              className="w-full h-full object-contain max-h-[80vh]"
-              ref={(el) => {
-                if (el) {
-                  el.srcObject = stream;
-                }
+              muted
+              className="w-full h-full object-contain"
+              style={{
+                maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
               }}
             />
-            <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-              {allUsers
-                .find((user) => user._id === participantId)
-                ?.userName.charAt(0)
-                .toUpperCase() +
-                allUsers
-                  .find((user) => user._id === participantId)
-                  ?.userName.slice(1) || "Participant"}
+            <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500  px-3 py-1 rounded-full text-center">
+              You
             </div>
           </div>
-        ))}
-      </>
-    )}
 
-    {/* 
+          {/* Remote videos */}
+          {isReceiving ? (
+            <div className="w-full h-full">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full max-h-[80vh] object-contain"
+              />
+            </div>
+          ) : (
+            <>
+              {Array.from(remoteStreams).map(([participantId, stream]) => (
+                <div key={participantId} className="relative w-full">
+                  <video
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-contain max-h-[80vh]"
+                    ref={(el) => {
+                      if (el) {
+                        el.srcObject = stream;
+                      }
+                    }}
+                  />
+                  <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
+                    {allUsers
+                      .find((user) => user._id === participantId)
+                      ?.userName.charAt(0)
+                      .toUpperCase() +
+                      allUsers
+                        .find((user) => user._id === participantId)
+                        ?.userName.slice(1) || "Participant"}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* 
           {isReceiving ? (
             <div className="w-full h-full">
               {!isCameraOn ? (
@@ -2342,624 +2342,624 @@ const Chat2 = () => {
             </>
           )} */}
 
-    {/* Controls */}
-    {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
-      <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2">
-        <button
-          onClick={() => {
-            if (!callAccept && selectedChat) {
-              if (isVideoCalling || isVoiceCalling) {
-                isVideoCalling
-                  ? rejectVoiceCall(selectedChat._id, "video")
-                  : rejectVoiceCall(selectedChat._id, "voice");
-              }
-            } else {
-              if (isVideoCalling || isVoiceCalling) {
-                isVideoCalling ? endVideoCall() : endVoiceCall();
-              }
-            }
-            cleanupConnection();
-          }}
-          className="bg-red-500 h-10 w-10  text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
-        >
-          <MdCallEnd className="text-xl " />
-        </button>
-        {(isVideoCalling || isVoiceCalling) && (
-          <>
-            <button
-              onClick={toggleCamera}
-              className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                } text-white ${isVideoCalling ? "" : "hidden"}`}
-            >
-              {isCameraOn ? (
-                <FiCamera className="text-xl " />
-              ) : (
-                <FiCameraOff className="text-xl " />
+          {/* Controls */}
+          {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
+            <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2">
+              <button
+                onClick={() => {
+                  if (!callAccept && selectedChat) {
+                    if (isVideoCalling || isVoiceCalling) {
+                      isVideoCalling
+                        ? rejectVoiceCall(selectedChat._id, "video")
+                        : rejectVoiceCall(selectedChat._id, "voice");
+                    }
+                  } else {
+                    if (isVideoCalling || isVoiceCalling) {
+                      isVideoCalling ? endVideoCall() : endVoiceCall();
+                    }
+                  }
+                  cleanupConnection();
+                }}
+                className="bg-red-500 h-10 w-10  text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
+              >
+                <MdCallEnd className="text-xl " />
+              </button>
+              {(isVideoCalling || isVoiceCalling) && (
+                <>
+                  <button
+                    onClick={toggleCamera}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
+                  >
+                    {isCameraOn ? (
+                      <FiCamera className="text-xl " />
+                    ) : (
+                      <FiCameraOff className="text-xl " />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleMicrophone}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
+                  >
+                    {isMicrophoneOn ? (
+                      <BsFillMicFill className="text-xl " />
+                    ) : (
+                      <BsFillMicMuteFill className="text-xl " />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setParticipantOpen(true)}
+                    className="w-10 grid place-content-center rounded-full h-10 bg-blue-500 text-white hover:bg-blue-600"
+                  >
+                    <MdGroupAdd className="text-xl" />
+                  </button>
+                </>
               )}
-            </button>
-            <button
-              onClick={toggleMicrophone}
-              className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                } text-white`}
-            >
-              {isMicrophoneOn ? (
-                <BsFillMicFill className="text-xl " />
-              ) : (
-                <BsFillMicMuteFill className="text-xl " />
-              )}
-            </button>
-            <button
-              onClick={() => setParticipantOpen(true)}
-              className="w-10 grid place-content-center rounded-full h-10 bg-blue-500 text-white hover:bg-blue-600"
-            >
-              <MdGroupAdd className="text-xl" />
-            </button>
-          </>
-        )}
-      </div>
-    )}
-  </div>
-</div>
-
-{/* ========= incoming call ========= */ }
-{
-  incomingCall && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-black rounded-lg p-6 w-72 text-center">
-        <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden">
-          {/* Profile image or default avatar */}
-          {allUsers.find((user) => user._id === incomingCall.fromEmail)
-            ?.photo &&
-            allUsers.find((user) => user._id === incomingCall.fromEmail)
-              ?.photo !== "null" ? (
-            <img
-              src={`${IMG_URL}${allUsers
-                .find((user) => user._id === incomingCall.fromEmail)
-                ?.photo.replace(/\\/g, "/")}`} // Replace with actual user profile image
-              alt="Caller"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-300 grid place-content-center">
-              <IoPersonCircleOutline className="text-4xl" />
             </div>
           )}
         </div>
-        <h3 className="text-2xl text-white mb-2">
-          {
-            allUsers.find((user) => user._id === incomingCall.fromEmail)
-              ?.userName
-          }
-        </h3>
-        <p className="text-gray-400 mb-8 animate-pulse">
-          Incoming {incomingCall.type} call...
-        </p>
-        <div className="flex justify-center gap-8">
-          {/* {console.log(incomingCall.type)} */}
-
-          <button
-            onClick={
-              incomingCall.type === "video"
-                ? acceptVideoCall
-                : acceptVoiceCall
-            }
-            className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-          >
-            <FaPhone className="text-xl" />
-          </button>
-          <button
-            onClick={() => rejectVideoCall(incomingCall.type)}
-            className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-          >
-            <MdCallEnd className="text-xl" />
-          </button>
-        </div>
       </div>
-    </div>
-  )
-}
 
-{
-  incomingShare && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-black rounded-lg p-6 w-72 text-center">
-        <h3 className="text-2xl text-gray-300 mb-2 ">
-          Incoming Screen <br /> Request...
-        </h3>
-        <p className="text-gray-400 mb-8">
-          {
-            allUsers.find((user) => user._id === incomingShare.fromEmail)
-              ?.userName
-          }
-        </p>
-        <div className="flex justify-center gap-8">
-          <button
-            onClick={() => acceptScreenShare()}
-            className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-          >
-            <LuScreenShare className="w-6 h-6 cursor-pointer" />
-          </button>
-          <button
-            onClick={() => {
-              setIncomingShare(null);
-              cleanupConnection();
-            }}
-            className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-          >
-            <LuScreenShareOff className="text-xl" />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+      {/* ========= incoming call ========= */}
+      {
+        incomingCall && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-black rounded-lg p-6 w-72 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden">
+                {/* Profile image or default avatar */}
+                {allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo &&
+                  allUsers.find((user) => user._id === incomingCall.fromEmail)
+                    ?.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${allUsers
+                      .find((user) => user._id === incomingCall.fromEmail)
+                      ?.photo.replace(/\\/g, "/")}`} // Replace with actual user profile image
+                    alt="Caller"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-300 grid place-content-center">
+                    <IoPersonCircleOutline className="text-4xl" />
+                  </div>
+                )}
+              </div>
+              <h3 className="text-2xl text-white mb-2">
+                {
+                  allUsers.find((user) => user._id === incomingCall.fromEmail)
+                    ?.userName
+                }
+              </h3>
+              <p className="text-gray-400 mb-8 animate-pulse">
+                Incoming {incomingCall.type} call...
+              </p>
+              <div className="flex justify-center gap-8">
+                {/* {console.log(incomingCall.type)} */}
 
-{/*========== Group Modal ==========*/ }
-{
-  isModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg w-96 p-4 modal_background">
-        <div className="flex justify-between items-center border-b pb-2">
-          <h2 className="text-lg font-bold">Add to Group</h2>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            {/* &times; */}
-            <ImCross />
-          </button>
-        </div>
-        <div className="mt-4">
-          {/* <input
+                <button
+                  onClick={
+                    incomingCall.type === "video"
+                      ? acceptVideoCall
+                      : acceptVoiceCall
+                  }
+                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+                >
+                  <FaPhone className="text-xl" />
+                </button>
+                <button
+                  onClick={() => rejectVideoCall(incomingCall.type)}
+                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <MdCallEnd className="text-xl" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        incomingShare && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-black rounded-lg p-6 w-72 text-center">
+              <h3 className="text-2xl text-gray-300 mb-2 ">
+                Incoming Screen <br /> Request...
+              </h3>
+              <p className="text-gray-400 mb-8">
+                {
+                  allUsers.find((user) => user._id === incomingShare.fromEmail)
+                    ?.userName
+                }
+              </p>
+              <div className="flex justify-center gap-8">
+                <button
+                  onClick={() => acceptScreenShare()}
+                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+                >
+                  <LuScreenShare className="w-6 h-6 cursor-pointer" />
+                </button>
+                <button
+                  onClick={() => {
+                    setIncomingShare(null);
+                    cleanupConnection();
+                  }}
+                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <LuScreenShareOff className="text-xl" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/*========== Group Modal ==========*/}
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white rounded-lg w-96 p-4 modal_background">
+              <div className="flex justify-between items-center border-b pb-2">
+                <h2 className="text-lg font-bold">Add to Group</h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  {/* &times; */}
+                  <ImCross />
+                </button>
+              </div>
+              <div className="mt-4">
+                {/* <input
                 type="text"
                 placeholder="Search"
                 className="w-full p-2 border rounded mb-4"
               /> */}
-          {/* {console.log(groupUsers)} */}
-          <div className=" flex flex-col cursor-pointer space-y-2 h-80 overflow-y-auto modal_scroll">
-            {allUsers
-              .filter((user) => !groupUsers.includes(user._id)) // Filter out already selected users
-              .map((user, index) => {
-                const isChecked = groupNewUsers.includes(user._id); // Check if user is already selected
-                return (
-                  <div
-                    key={index}
-                    className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
-                      }`}
-                    onClick={() => {
-                      if (!isChecked) {
-                        setGroupNewUsers((prev) => [...prev, user._id]);
-                      } else {
-                        setGroupNewUsers((prev) =>
-                          prev.filter((id) => id !== user._id)
-                        ); // Remove user ID from groupUsers state
-                      }
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
-                        {user?.photo && user.photo !== "null" ? (
-                          <img
-                            src={`${IMG_URL}${user.photo.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
-                            alt={`${user.userName}`}
-                            className="object-cover h-full w-full"
+                {/* {console.log(groupUsers)} */}
+                <div className=" flex flex-col cursor-pointer space-y-2 h-80 overflow-y-auto modal_scroll">
+                  {allUsers
+                    .filter((user) => !groupUsers.includes(user._id)) // Filter out already selected users
+                    .map((user, index) => {
+                      const isChecked = groupNewUsers.includes(user._id); // Check if user is already selected
+                      return (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
+                            }`}
+                          onClick={() => {
+                            if (!isChecked) {
+                              setGroupNewUsers((prev) => [...prev, user._id]);
+                            } else {
+                              setGroupNewUsers((prev) =>
+                                prev.filter((id) => id !== user._id)
+                              ); // Remove user ID from groupUsers state
+                            }
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
+                              {user?.photo && user.photo !== "null" ? (
+                                <img
+                                  src={`${IMG_URL}${user.photo.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`}
+                                  alt={`${user.userName}`}
+                                  className="object-cover h-full w-full"
+                                />
+                              ) : (
+                                <span className="text-gray-900 text-lg font-bold">
+                                  {user.userName
+                                    .split(" ")
+                                    .map((n) => n[0].toUpperCase())
+                                    .join("")}
+                                </span>
+                              )}
+                            </div>
+                            <span>{user.userName}</span>
+                          </div>
+                          <input
+                            id={`checkbox-${user._id}`}
+                            type="checkbox"
+                            checked={isChecked} // Set checkbox state based on selection
+                            readOnly // Make checkbox read-only to prevent direct interaction
+                            className="form-checkbox rounded-full"
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: "2px solid #ccc",
+                              backgroundColor: "#fff",
+                              cursor: "pointer",
+                            }}
                           />
-                        ) : (
-                          <span className="text-gray-900 text-lg font-bold">
-                            {user.userName
-                              .split(" ")
-                              .map((n) => n[0].toUpperCase())
-                              .join("")}
-                          </span>
-                        )}
-                      </div>
-                      <span>{user.userName}</span>
-                    </div>
-                    <input
-                      id={`checkbox-${user._id}`}
-                      type="checkbox"
-                      checked={isChecked} // Set checkbox state based on selection
-                      readOnly // Make checkbox read-only to prevent direct interaction
-                      className="form-checkbox rounded-full"
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+              <div className="mt-4 flex justify-center">
+                {selectedChat?.members ? (
+                  <button
+                    onClick={() => handleAddParticipants()}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
+                  >
+                    Add Participants
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleCreateGroup()}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
+                  >
+                    Done
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Profile Modal */}
+      {
+        isProfileModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-96 modal_background">
+              <div className="flex justify-between items-center pb-2 p-4">
+                <h2 className="text-lg font-bold">Profile</h2>
+                <button
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
+                  {user?.photo && user.photo !== "null" ? (
+                    <img
+                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                      alt="Profile"
+                      className="object-cover w-24 h-24  rounded-full"
+                    />
+                  ) : (
+                    <div
+                      className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
                       style={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "50%",
-                        border: "2px solid #ccc",
-                        backgroundColor: "#fff",
-                        cursor: "pointer",
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
                       }}
+                    >
+                      <IoCameraOutline className="text-3xl cursor-pointer" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <MdOutlineModeEdit
+                      className="text-white text-3xl cursor-pointer"
+                      onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
                     />
                   </div>
-                );
-              })}
-          </div>
-        </div>
-        <div className="mt-4 flex justify-center">
-          {selectedChat?.members ? (
-            <button
-              onClick={() => handleAddParticipants()}
-              className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
-            >
-              Add Participants
-            </button>
-          ) : (
-            <button
-              onClick={() => handleCreateGroup()}
-              className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
-            >
-              Done
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
-{/* Profile Modal */ }
-{
-  isProfileModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-96 modal_background">
-        <div className="flex justify-between items-center pb-2 p-4">
-          <h2 className="text-lg font-bold">Profile</h2>
-          <button
-            onClick={() => setIsProfileModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <ImCross />
-          </button>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
-            {user?.photo && user.photo !== "null" ? (
-              <img
-                src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                alt="Profile"
-                className="object-cover w-24 h-24  rounded-full"
-              />
-            ) : (
-              <div
-                className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                }}
-              >
-                <IoCameraOutline className="text-3xl cursor-pointer" />
-              </div>
-            )}
-            <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <MdOutlineModeEdit
-                className="text-white text-3xl cursor-pointer"
-                onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
-              />
-            </div>
-
-            {isDropdownOpen && (
-              <div
-                ref={dropdownRef}
-                className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
-              >
-                <ul>
-                  <li
-                    className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                    onClick={() =>
-                      document.getElementById("file-input").click()
-                    } // Trigger file input click
-                  >
-                    Upload Photo
-                  </li>
-                  <li
-                    className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                    onClick={() => {
-                      dispatch(
-                        updateUser({
-                          id: currentUser,
-                          values: { photo: null },
-                        })
-                      );
-                    }}
-                  >
-                    Remove Photo
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="flex mt-2 items-center justify-between gap-4">
-            {isEditingUserName ? (
-              <input
-                type="text"
-                value={!editedUserName ? user?.userName : editedUserName}
-                onChange={handleUserNameChange}
-                onBlur={handleUserNameBlur}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleUserNameBlur();
-                  }
-                }}
-                className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                autoFocus
-              />
-            ) : (
-              <h3 className="text-xl font-semibold">{user?.userName}</h3>
-            )}
-            <MdOutlineModeEdit
-              className="cursor-pointer"
-              onClick={handleEditClick}
-            />
-          </div>
-        </div>
-        <div className="mt-4 p-4">
-          <div className="flex items-center justify-between p-2 border-b mb-2">
-            <span className="text-gray-600 font-bold">Skype Name</span>
-            <span className="text-gray-800">{user?.userName}</span>
-          </div>
-          <div className="flex items-center justify-between p-2 border-b mb-2">
-            <span className="text-gray-600 font-bold">Birthday</span>
-            {isEditingDob ? (
-              <input
-                type="date"
-                value={!editedDob ? user.dob : editedDob}
-                onChange={(e) => setEditedDob(e.target.value)}
-                onBlur={() => {
-                  setIsEditingDob(false);
-                  // Optionally, dispatch an action to update the dob in the store
-                  dispatch(
-                    updateUser({
-                      id: currentUser,
-                      values: { dob: editedDob },
-                    })
-                  );
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    setIsEditingDob(false);
-                    // Optionally, dispatch an action to update the dob in the store
-                    dispatch(
-                      updateUser({
-                        id: currentUser,
-                        values: { dob: editedDob },
-                      })
-                    );
-                  }
-                }}
-                className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                autoFocus
-              />
-            ) : (
-              <span
-                className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
-                  } `}
-                onClick={() => setIsEditingDob(true)}
-              >
-                {new Date(user?.dob).toLocaleDateString() || "Add dob"}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center justify-between p-2 mb-2">
-            <span className="text-gray-600 font-bold">Phone Number</span>
-            {isEditingPhone ? (
-              <span>
-                <input
-                  type="text"
-                  value={!editedPhone ? user.phone : editedPhone}
-                  onChange={(e) => setEditedPhone(e.target.value)}
-                  max={12}
-                  onBlur={() => {
-                    setIsEditingPhone(false);
-                    // Optionally, dispatch an action to update the phone number in the store
-                    dispatch(
-                      updateUser({
-                        id: currentUser,
-                        values: { phone: editedPhone },
-                      })
-                    );
-                  }}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      setIsEditingPhone(false);
-                      // Optionally, dispatch an action to update the phone number in the store
-                      dispatch(
-                        updateUser({
-                          id: currentUser,
-                          values: { phone: editedPhone },
-                        })
-                      );
-                    }
-                  }}
-                  className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                  autoFocus
-                />
-              </span>
-            ) : (
-              <span
-                className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
-                  } `}
-                onClick={() => setIsEditingPhone(true)}
-              >
-                {user?.phone || "Add phone number"}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-{/*Other User Profile Modal */ }
-{
-  isUserProfileModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-96 modal_background">
-        <div className="flex justify-between items-center pb-2 p-4">
-          <h2 className="text-lg font-bold">{selectedChat?.userName}</h2>
-          <button
-            onClick={() => setIsUserProfileModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <ImCross />
-          </button>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
-            {selectedChat?.photo && selectedChat.photo !== "null" ? (
-              <img
-                src={`${IMG_URL}${selectedChat?.photo}`}
-                alt="Profile"
-                className="object-cover w-24 h-24  rounded-full"
-              />
-            ) : (
-              <div
-                className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                }}
-              >
-                <IoCameraOutline className="text-3xl cursor-pointer" />
-              </div>
-            )}
-          </div>
-          <div className="flex mt-2 items-center justify-between gap-4">
-            <h3 className="text-xl font-semibold">
-              {selectedChat?.userName}
-            </h3>
-          </div>
-        </div>
-        <div className="mt-4 px-4 py-2">
-          <div className="flex items-center justify-between p-2 border-b ">
-            <span className="text-gray-600 font-bold">Skype Name</span>
-            <span className="text-gray-800">{selectedChat?.userName}</span>
-          </div>
-          <div className="flex items-center justify-between p-2 border-b ">
-            <span className="text-gray-600 font-bold">Email</span>
-            <span className="text-gray-800">{selectedChat?.email}</span>
-          </div>
-          <div className="flex items-center justify-between p-2 border-b ">
-            <span className="text-gray-600 font-bold">Phone Number</span>
-            <span className="text-gray-800">
-              {selectedChat?.phone || "--"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-2 border-b ">
-            <span className="text-gray-600 font-bold">Birthday</span>
-            <span className="text-gray-800">
-              {selectedChat?.dob
-                ? new Date(selectedChat?.dob).toLocaleDateString()
-                : "--"}
-            </span>
-          </div>
-        </div>
-        <div className="px-4 py-2">
-          <h3 className="text-md text-gray-600 font-bold mb-4 ml-2">
-            Shared Media
-          </h3>
-          <div className="max-h-[250px] justify-center overflow-y-auto pr-2 modal_scroll">
-            <div className="grid grid-cols-3 gap-2 items-center">
-              {messages.filter(
-                (message) => message.content?.type === "file"
-              ).length > 0 ? (
-                messages
-                  .filter((message) => message.content?.type === "file")
-                  .map((message, index) => {
-                    if (message.content?.fileType?.includes("image/")) {
-                      // Display images in square format
-                      return (
-                        <div
-                          key={index}
-                          className="relative group aspect-square"
+                  {isDropdownOpen && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
+                    >
+                      <ul>
+                        <li
+                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                          onClick={() =>
+                            document.getElementById("file-input").click()
+                          } // Trigger file input click
                         >
-                          <img
-                            src={`${IMG_URL}${message.content.fileUrl.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
-                            alt={message.content.content}
-                            className="w-full h-full object-cover rounded-lg cursor-pointer"
-                            onClick={() =>
-                              handleImageClick(
-                                `${IMG_URL}${message.content.fileUrl.replace(
-                                  /\\/g,
-                                  "/"
-                                )}`
-                              )
-                            }
-                          />
-                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                            {message.content.content}
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      // Display other file types in square format
-                      return (
-                        <div
-                          key={index}
-                          className="relative bg-gray-100 rounded-lg aspect-square p-3 flex flex-col items-center justify-center group"
+                          Upload Photo
+                        </li>
+                        <li
+                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            dispatch(
+                              updateUser({
+                                id: currentUser,
+                                values: { photo: null },
+                              })
+                            );
+                          }}
                         >
-                          <div className="flex-1 flex items-center justify-center">
-                            {message.content.fileType.includes("pdf") ? (
-                              <FaFilePdf className="w-12 h-12 text-red-500" />
-                            ) : message.content.fileType.includes(
-                              "word"
-                            ) ? (
-                              <FaFileWord className="w-12 h-12 text-blue-500" />
-                            ) : message.content.fileType.includes(
-                              "excel"
-                            ) ? (
-                              <FaFileExcel className="w-12 h-12 text-green-500" />
-                            ) : message.content.fileType.includes(
-                              "audio"
-                            ) ? (
-                              <FaFileAudio className="w-12 h-12 text-purple-500" />
-                            ) : (
-                              <FaFile className="w-12 h-12 text-gray-500" />
-                            )}
-                          </div>
-
-                          <div className="w-full px-2 text-center">
-                            <p className="text-xs font-medium break-words line-clamp-2 hover:line-clamp-none group-hover:text-blue-600">
-                              {message.content.content}
-                            </p>
-                          </div>
-
-                          <a
-                            href={`${IMG_URL}${message.content.fileUrl.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
-                            download={message.content.content}
-                            className="absolute top-2 right-2 text-blue-500 hover:text-blue-600 bg-white rounded-full p-1 shadow-sm"
-                          >
-                            <FaDownload className="w-4 h-4" />
-                          </a>
-                        </div>
-                      );
-                    }
-                  })
-              ) : (
-                <div className="col-span-3 text-center text-gray-600">
-                  No media
+                          Remove Photo
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="flex mt-2 items-center justify-between gap-4">
+                  {isEditingUserName ? (
+                    <input
+                      type="text"
+                      value={!editedUserName ? user?.userName : editedUserName}
+                      onChange={handleUserNameChange}
+                      onBlur={handleUserNameBlur}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleUserNameBlur();
+                        }
+                      }}
+                      className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3 className="text-xl font-semibold">{user?.userName}</h3>
+                  )}
+                  <MdOutlineModeEdit
+                    className="cursor-pointer"
+                    onClick={handleEditClick}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 p-4">
+                <div className="flex items-center justify-between p-2 border-b mb-2">
+                  <span className="text-gray-600 font-bold">Skype Name</span>
+                  <span className="text-gray-800">{user?.userName}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 border-b mb-2">
+                  <span className="text-gray-600 font-bold">Birthday</span>
+                  {isEditingDob ? (
+                    <input
+                      type="date"
+                      value={!editedDob ? user.dob : editedDob}
+                      onChange={(e) => setEditedDob(e.target.value)}
+                      onBlur={() => {
+                        setIsEditingDob(false);
+                        // Optionally, dispatch an action to update the dob in the store
+                        dispatch(
+                          updateUser({
+                            id: currentUser,
+                            values: { dob: editedDob },
+                          })
+                        );
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          setIsEditingDob(false);
+                          // Optionally, dispatch an action to update the dob in the store
+                          dispatch(
+                            updateUser({
+                              id: currentUser,
+                              values: { dob: editedDob },
+                            })
+                          );
+                        }
+                      }}
+                      className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                        } `}
+                      onClick={() => setIsEditingDob(true)}
+                    >
+                      {new Date(user?.dob).toLocaleDateString() || "Add dob"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-2 mb-2">
+                  <span className="text-gray-600 font-bold">Phone Number</span>
+                  {isEditingPhone ? (
+                    <span>
+                      <input
+                        type="text"
+                        value={!editedPhone ? user.phone : editedPhone}
+                        onChange={(e) => setEditedPhone(e.target.value)}
+                        max={12}
+                        onBlur={() => {
+                          setIsEditingPhone(false);
+                          // Optionally, dispatch an action to update the phone number in the store
+                          dispatch(
+                            updateUser({
+                              id: currentUser,
+                              values: { phone: editedPhone },
+                            })
+                          );
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            setIsEditingPhone(false);
+                            // Optionally, dispatch an action to update the phone number in the store
+                            dispatch(
+                              updateUser({
+                                id: currentUser,
+                                values: { phone: editedPhone },
+                              })
+                            );
+                          }
+                        }}
+                        className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                        autoFocus
+                      />
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                        } `}
+                      onClick={() => setIsEditingPhone(true)}
+                    >
+                      {user?.phone || "Add phone number"}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-{/* Logout Modal */ }
-{/* {isLogoutModalOpen && (
+        )
+      }
+
+      {/*Other User Profile Modal */}
+      {
+        isUserProfileModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-96 modal_background">
+              <div className="flex justify-between items-center pb-2 p-4">
+                <h2 className="text-lg font-bold">{selectedChat?.userName}</h2>
+                <button
+                  onClick={() => setIsUserProfileModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
+                  {selectedChat?.photo && selectedChat.photo !== "null" ? (
+                    <img
+                      src={`${IMG_URL}${selectedChat?.photo}`}
+                      alt="Profile"
+                      className="object-cover w-24 h-24  rounded-full"
+                    />
+                  ) : (
+                    <div
+                      className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
+                      }}
+                    >
+                      <IoCameraOutline className="text-3xl cursor-pointer" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex mt-2 items-center justify-between gap-4">
+                  <h3 className="text-xl font-semibold">
+                    {selectedChat?.userName}
+                  </h3>
+                </div>
+              </div>
+              <div className="mt-4 px-4 py-2">
+                <div className="flex items-center justify-between p-2 border-b ">
+                  <span className="text-gray-600 font-bold">Skype Name</span>
+                  <span className="text-gray-800">{selectedChat?.userName}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 border-b ">
+                  <span className="text-gray-600 font-bold">Email</span>
+                  <span className="text-gray-800">{selectedChat?.email}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 border-b ">
+                  <span className="text-gray-600 font-bold">Phone Number</span>
+                  <span className="text-gray-800">
+                    {selectedChat?.phone || "--"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-2 border-b ">
+                  <span className="text-gray-600 font-bold">Birthday</span>
+                  <span className="text-gray-800">
+                    {selectedChat?.dob
+                      ? new Date(selectedChat?.dob).toLocaleDateString()
+                      : "--"}
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 py-2">
+                <h3 className="text-md text-gray-600 font-bold mb-4 ml-2">
+                  Shared Media
+                </h3>
+                <div className="max-h-[250px] justify-center overflow-y-auto pr-2 modal_scroll">
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    {messages.filter(
+                      (message) => message.content?.type === "file"
+                    ).length > 0 ? (
+                      messages
+                        .filter((message) => message.content?.type === "file")
+                        .map((message, index) => {
+                          if (message.content?.fileType?.includes("image/")) {
+                            // Display images in square format
+                            return (
+                              <div
+                                key={index}
+                                className="relative group aspect-square"
+                              >
+                                <img
+                                  src={`${IMG_URL}${message.content.fileUrl.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`}
+                                  alt={message.content.content}
+                                  className="w-full h-full object-cover rounded-lg cursor-pointer"
+                                  onClick={() =>
+                                    handleImageClick(
+                                      `${IMG_URL}${message.content.fileUrl.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`
+                                    )
+                                  }
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {message.content.content}
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            // Display other file types in square format
+                            return (
+                              <div
+                                key={index}
+                                className="relative bg-gray-100 rounded-lg aspect-square p-3 flex flex-col items-center justify-center group"
+                              >
+                                <div className="flex-1 flex items-center justify-center">
+                                  {message.content.fileType.includes("pdf") ? (
+                                    <FaFilePdf className="w-12 h-12 text-red-500" />
+                                  ) : message.content.fileType.includes(
+                                    "word"
+                                  ) ? (
+                                    <FaFileWord className="w-12 h-12 text-blue-500" />
+                                  ) : message.content.fileType.includes(
+                                    "excel"
+                                  ) ? (
+                                    <FaFileExcel className="w-12 h-12 text-green-500" />
+                                  ) : message.content.fileType.includes(
+                                    "audio"
+                                  ) ? (
+                                    <FaFileAudio className="w-12 h-12 text-purple-500" />
+                                  ) : (
+                                    <FaFile className="w-12 h-12 text-gray-500" />
+                                  )}
+                                </div>
+
+                                <div className="w-full px-2 text-center">
+                                  <p className="text-xs font-medium break-words line-clamp-2 hover:line-clamp-none group-hover:text-blue-600">
+                                    {message.content.content}
+                                  </p>
+                                </div>
+
+                                <a
+                                  href={`${IMG_URL}${message.content.fileUrl.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`}
+                                  download={message.content.content}
+                                  className="absolute top-2 right-2 text-blue-500 hover:text-blue-600 bg-white rounded-full p-1 shadow-sm"
+                                >
+                                  <FaDownload className="w-4 h-4" />
+                                </a>
+                              </div>
+                            );
+                          }
+                        })
+                    ) : (
+                      <div className="col-span-3 text-center text-gray-600">
+                        No media
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      {/* Logout Modal */}
+      {/* {isLogoutModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-5 modal_background">
             <h3 className="text-lg font-semibold mb-4">
@@ -2988,8 +2988,8 @@ const Chat2 = () => {
         </div>
       )} */}
 
-{/* group Profile Modal */ }
-{/* {isGroupModalOpen && (
+      {/* group Profile Modal */}
+      {/* {isGroupModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-96 modal_background ">
             <div className="flex justify-between items-center pb-2 p-4">
@@ -3353,165 +3353,165 @@ const Chat2 = () => {
         </div>
       )}
 {/* Add Participant to call Modal */ }
-{
-  participantOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-4 w-96 modal_background">
-        <div className="flex justify-between items-center mb-4 border-b pb-2">
-          <h2 className="text-lg font-bold">Add Participants</h2>
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            onClick={() => setParticipantOpen(false)}
-          >
-            <ImCross />
-          </button>
-        </div>
-        <div className="max-h-96 overflow-y-auto mt-4 modal_scroll">
-          {allUsers
-            .filter(
-              (user) =>
-                !callParticipants.has(user._id) && user._id !== userId
-            )
-            .map((user) => (
-              <div
-                key={user._id}
-                className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                onClick={() => {
-                  // console.log("user", user);
-                  inviteToCall(user._id);
-                  setParticipantOpen(false);
-                }}
-              >
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
-                    {user?.photo && user.photo !== "null" ? (
-                      <img
-                        src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                        alt={`${user.userName}`}
-                        className="object-cover h-full w-full"
-                      />
-                    ) : (
-                      <span className="text-gray-900 text-lg font-bold">
-                        {user.userName
-                          .split(" ")
-                          .map((n) => n[0].toUpperCase())
-                          .join("")}
-                      </span>
-                    )}
-                  </div>
-                  <span className="ml-2">{user.userName}</span>
-                </div>
+      {
+        participantOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-4 w-96 modal_background">
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 className="text-lg font-bold">Add Participants</h2>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setParticipantOpen(false)}
+                >
+                  <ImCross />
+                </button>
               </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+              <div className="max-h-96 overflow-y-auto mt-4 modal_scroll">
+                {allUsers
+                  .filter(
+                    (user) =>
+                      !callParticipants.has(user._id) && user._id !== userId
+                  )
+                  .map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      onClick={() => {
+                        // console.log("user", user);
+                        inviteToCall(user._id);
+                        setParticipantOpen(false);
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
+                          {user?.photo && user.photo !== "null" ? (
+                            <img
+                              src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                              alt={`${user.userName}`}
+                              className="object-cover h-full w-full"
+                            />
+                          ) : (
+                            <span className="text-gray-900 text-lg font-bold">
+                              {user.userName
+                                .split(" ")
+                                .map((n) => n[0].toUpperCase())
+                                .join("")}
+                            </span>
+                          )}
+                        </div>
+                        <span className="ml-2">{user.userName}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )
+      }
 
-{/* Add a hidden file input for photo upload */ }
-<input
-  type="file"
-  id="file-input"
-  style={{ display: "none" }}
-  accept="image/*"
-  onChange={(e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Handle the file upload logic here
-      dispatch(updateUser({ id: currentUser, values: { photo: file } }));
-    }
-  }}
-/>
+      {/* Add a hidden file input for photo upload */}
+      <input
+        type="file"
+        id="file-input"
+        style={{ display: "none" }}
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            // Handle the file upload logic here
+            dispatch(updateUser({ id: currentUser, values: { photo: file } }));
+          }
+        }}
+      />
 
-{
-  isProfileImageModalOpen && selectedProfileImage && (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="relative w-full h-full flex items-center justify-center p-8">
-        <img
-          src={selectedProfileImage}
-          alt="Profile"
-          className="max-w-full max-h-full object-contain"
-        />
-        <button
-          onClick={() => setIsProfileImageModalOpen(false)}
-          className="absolute top-4 right-4 text-white hover:text-gray-300"
-        >
-          <ImCross className="w-6 h-6" />
-        </button>
-      </div>
-    </div>
-  )
-}
+      {
+        isProfileImageModalOpen && selectedProfileImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <img
+                src={selectedProfileImage}
+                alt="Profile"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button
+                onClick={() => setIsProfileImageModalOpen(false)}
+                className="absolute top-4 right-4 text-white hover:text-gray-300"
+              >
+                <ImCross className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        )
+      }
 
-{/* Image Modal */ }
-{
-  isImageModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="relative w-full h-full flex items-center justify-center p-8">
-        <img
-          src={selectedImage}
-          alt="Full Size"
-          className="w-full h-full object-contain "
-        />
-        <button
-          onClick={() => setIsImageModalOpen(false)}
-          className="absolute top-4 right-4 text-white text-2xl"
-        >
-          <ImCross />
-        </button>
-      </div>
-    </div>
-  )
-}
+      {/* Image Modal */}
+      {
+        isImageModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <img
+                src={selectedImage}
+                alt="Full Size"
+                className="w-full h-full object-contain "
+              />
+              <button
+                onClick={() => setIsImageModalOpen(false)}
+                className="absolute top-4 right-4 text-white text-2xl"
+              >
+                <ImCross />
+              </button>
+            </div>
+          </div>
+        )
+      }
 
-{/* Forward Modal */ }
-{
-  showForwardModal && (
-    <ForwardModal
-      show={showForwardModal}
-      onClose={() => setShowForwardModal(false)}
-      onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
-      users={allUsers}
-    />
-  )
-}
+      {/* Forward Modal */}
+      {
+        showForwardModal && (
+          <ForwardModal
+            show={showForwardModal}
+            onClose={() => setShowForwardModal(false)}
+            onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
+            users={allUsers}
+          />
+        )
+      }
 
-{/* delete message modal */ }
-{
-  isClearChatModalOpen && (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 modal_background">
-        <h3 className=" mb-4 flex justify-between">
-          <p className="text-lg font-bold">Clear Chat</p>
-          <button
-            onClick={() => setIsClearChatModalOpen(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <ImCross />
-          </button>
-        </h3>
-        <p className="text-gray-600 mb-6 font-semibold text-center">
-          Are you sure you want to clear this chat?
-        </p>
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => setIsClearChatModalOpen(false)}
-            className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded font-semibold"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleClearChat}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold"
-          >
-            Clear Chat
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+      {/* delete message modal */}
+      {
+        isClearChatModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 modal_background">
+              <h3 className=" mb-4 flex justify-between">
+                <p className="text-lg font-bold">Clear Chat</p>
+                <button
+                  onClick={() => setIsClearChatModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </h3>
+              <p className="text-gray-600 mb-6 font-semibold text-center">
+                Are you sure you want to clear this chat?
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsClearChatModalOpen(false)}
+                  className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold"
+                >
+                  Clear Chat
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
     </div >
   );
 };
