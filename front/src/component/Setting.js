@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser } from '../redux/slice/user.slice';
+import { MdEdit } from 'react-icons/md';
 
 const Setting = () => {
     const navigate = useNavigate();
@@ -22,7 +23,10 @@ const Setting = () => {
     const [editingField, setEditingField] = useState(null);
     const [profilePhotoPrivacy, setProfilePhotoPrivacy] = useState('Everyone');
     const [privacyDropdownOpen, setPrivacyDropdownOpen] = useState(false);
+    const [groupsPrivacyDropdownOpen, setGroupsPrivacyDropdownOpen] = useState(false);
     const [lastSeenPrivacy, setLastSeenPrivacy] = useState(true);
+    const [editedUserName, setEditedUserName] = useState(user?.userName || "");
+    const [isEditingUserName, setIsEditingUserName] = useState(false);
 
     // Determine which user ID to use (from props, URL params, or current user)
     const targetUserId = urlUserId || (currentUser ? currentUser._id : null);
@@ -148,15 +152,22 @@ const Setting = () => {
     };
 
     const handleImageUpload = (e) => {
+        console.log('File selected:', e.target.files[0]);
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
+                console.log('File loaded:', reader.result);
                 setTempData({
                     ...tempData,
                     profileImage: reader.result,
                     photoFile: file
                 });
+                // Also update profileData to show the image immediately
+                setProfileData(prev => ({
+                    ...prev,
+                    profileImage: reader.result
+                }));
             };
             reader.readAsDataURL(file);
         }
@@ -188,12 +199,18 @@ const Setting = () => {
             }
 
             // Dispatch the update action
-            await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
+            const result = await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
 
+            // Update local state
             setProfileData({
                 ...tempData,
                 profileImage: tempData.photoFile ? URL.createObjectURL(tempData.photoFile) : tempData.profileImage
             });
+
+            // Update user state in Redux
+            if (result && result.user) {
+                setUser(result.user);
+            }
 
             setEditingField(null);
             setIsLoading(false);
@@ -203,9 +220,19 @@ const Setting = () => {
         }
     };
 
-    const handleCancelEdit = () => {
-        setEditingField(null);
-    };
+    // const handleUserNameChange = (e) => {
+    //     setEditedUserName(e.target.value);
+    // };
+
+
+    // const handleUserNameBlur = () => {
+    //     setIsEditingUserName(false);
+    //     // Optionally, dispatch an action to update the username in the store
+    //     // dispatch(updateUserName(editedUserName));
+    //     dispatch(
+    //         updateUser({ id: currentUser, values: { userName: editedUserName } })
+    //     );
+    // };
 
     return (
         <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
@@ -220,6 +247,19 @@ const Setting = () => {
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
                             <img src={profileData.profileImage} alt="Profile" />
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="profileImageInput"
+                            onChange={handleImageUpload}
+                        />
+                        <div 
+                            className='absolute bottom-5 right-0 bg-[#C4C8D0] rounded-full p-1 cursor-pointer w-8 h-8 flex items-center justify-center'
+                            onClick={() => document.getElementById('profileImageInput').click()}
+                        >
+                            <MdEdit size={16} />
                         </div>
                     </div>
 
@@ -260,31 +300,13 @@ const Setting = () => {
                                     <div className="mb-4">
                                         <div className="flex justify-between items-center">
                                             <p className="text-gray-400 text-sm">Name</p>
-                                            {editingField === 'name' ? (
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => handleSaveField('name')}
-                                                        className="text-green-500 hover:text-green-600"
-                                                        disabled={isLoading}
-                                                    >
-                                                        <FaCheck size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={handleCancelEdit}
-                                                        className="text-red-500 hover:text-red-600"
-                                                    >
-                                                        <FaTimes size={16} />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleEditField('name')}
-                                                    className="text-black dark:text-white flex items-center gap-2"
-                                                >
-                                                    <FaEdit size={16} />
-                                                    Edit
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={() => handleEditField('name')}
+                                                className="text-black dark:text-white flex items-center gap-2"
+                                            >
+                                                <FaEdit size={16} />
+                                                Edit
+                                            </button>
                                         </div>
                                         {editingField === 'name' ? (
                                             <input
@@ -292,6 +314,12 @@ const Setting = () => {
                                                 name="name"
                                                 value={tempData.name}
                                                 onChange={handleInputChange}
+                                                onBlur={() => handleSaveField('name')}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleSaveField('name');
+                                                    }
+                                                }}
                                                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-primary-dark/80 dark:text-primary-light"
                                                 autoFocus
                                             />
@@ -341,13 +369,13 @@ const Setting = () => {
 
                                             {privacyDropdownOpen && (
                                                 <div
-                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800"
+                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 z-10"
                                                     role="menu"
                                                     aria-orientation="vertical"
                                                     aria-labelledby="options-menu"
                                                 >
                                                     <div className="py-1 z-50" role="none">
-                                                        {['Everyone', 'Selected', 'Nobody'].map((option) => (
+                                                        {['Everyone', 'Nobody'].map((option) => (
                                                             <button
                                                                 key={option}
                                                                 onClick={() => {
@@ -367,19 +395,6 @@ const Setting = () => {
                                         </div>
                                     </div>
 
-                                    {/* <div className="flex justify-between items-center mb-2">
-                                        <p className="text-gray-400 text-sm">Last Seen</p>
-                                        <div className="relative inline-block text-left">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
-                                                onClick={() => setLastSeenPrivacy(!lastSeenPrivacy)}
-                                            >
-                                                {lastSeenPrivacy ? 'On' : 'Off'}
-                                            </button>
-                                        </div>
-                                    </div> */}
-
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-gray-400 text-sm">Groups</p>
                                         <div className="relative inline-block text-left">
@@ -389,15 +404,15 @@ const Setting = () => {
                                                     className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
                                                     id="options-menu"
                                                     aria-haspopup="true"
-                                                    aria-expanded={privacyDropdownOpen}
-                                                    onClick={() => setPrivacyDropdownOpen(!privacyDropdownOpen)}
+                                                    aria-expanded={groupsPrivacyDropdownOpen}
+                                                    onClick={() => setGroupsPrivacyDropdownOpen(!groupsPrivacyDropdownOpen)}
                                                 >
                                                     {profilePhotoPrivacy}
-                                                    {privacyDropdownOpen ? <FaChevronUp className="-mr-1 ml-2 h-5 w-5" /> : <FaChevronDown className="-mr-1 ml-2 h-5 w-5" />}
+                                                    {groupsPrivacyDropdownOpen ? <FaChevronUp className="-mr-1 ml-2 h-5 w-5" /> : <FaChevronDown className="-mr-1 ml-2 h-5 w-5" />}
                                                 </button>
                                             </div>
 
-                                            {privacyDropdownOpen && (
+                                            {groupsPrivacyDropdownOpen && (
                                                 <div
                                                     className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800"
                                                     role="menu"
@@ -405,12 +420,12 @@ const Setting = () => {
                                                     aria-labelledby="options-menu"
                                                 >
                                                     <div className="py-1 z-50" role="none">
-                                                        {['Everyone', 'Selected', 'Nobody'].map((option) => (
+                                                        {['Everyone', 'Nobody'].map((option) => (
                                                             <button
                                                                 key={option}
                                                                 onClick={() => {
                                                                     setProfilePhotoPrivacy(option);
-                                                                    setPrivacyDropdownOpen(false);
+                                                                    setGroupsPrivacyDropdownOpen(false);
                                                                 }}
                                                                 className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
                                                                     } block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white`}
@@ -429,7 +444,7 @@ const Setting = () => {
                         </div>
 
                         {/* Notifications Section */}
-                        <div className="border-b border-gray-300">
+                        {/* <div className="border-b border-gray-300">
                             <button
                                 className="w-full px-4 py-3 flex justify-between items-center"
                                 onClick={() => setNotificationsOpen(!notificationsOpen)}
@@ -456,7 +471,7 @@ const Setting = () => {
                                     </div>
                                 </div>
                             )}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

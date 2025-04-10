@@ -20,7 +20,7 @@ const Profile = () => {
     const [user, setUser] = useState(null);
 
     // Determine which user ID to use (from props, URL params, or current user)
-    const targetUserId =  urlUserId || (currentUser ? currentUser._id : null);
+    const targetUserId = urlUserId || (currentUser ? currentUser._id : null);
 
     const [profileData, setProfileData] = useState({
         name: 'User',
@@ -30,6 +30,19 @@ const Profile = () => {
         profileImage: 'https://via.placeholder.com/150',
     });
     const [tempData, setTempData] = useState({ ...profileData });
+
+    // Update profile data when currentUser changes
+    useEffect(() => {
+        if (currentUser) {
+            setProfileData({
+                name: currentUser.userName || 'User',
+                email: currentUser.email || '',
+                phone: currentUser.phone || '',
+                bio: currentUser.bio || 'No bio available',
+                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+            });
+        }
+    }, [currentUser]);
 
     useEffect(() => {
         // If we have a targetUserId and it's different from the current user
@@ -163,14 +176,13 @@ const Profile = () => {
 
     return (
         <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
-             <div>
-          <div className="p-4 pb-2 flex items-center">
-            <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Profile</h1>
-          </div>
-        </div>
-            <div className="bg-[#F5F7FB] overflow-hidden dark:bg-primary-dark/95">
-                {/* Profile Header */}
-                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto dark:bg-primary-dark/95">
+            <div>
+                <div className="p-4 pb-2 flex items-center">
+                    <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Profile</h1>
+                </div>
+            </div>
+            <div className=" overflow-hidde">
+                <div className="flex flex-col items-center justify-center p-6   border-b border-gray-300 dark:border-primary-light/15">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
                             <img src={profileData.profileImage} alt="Profile" />
@@ -185,50 +197,35 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Profile Content */}
-                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8 dark:bg-primary-dark/95 dark:text-primary-light">
+                <div className="max-w-md mx-auto  rounded-lg shadow-sm p-8  dark:text-primary-light">
                     <p>
                         If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
                     </p>
-                    {/* Main accordion header */}
                     <div
                         className="p-4 cursor-pointer flex items-center justify-between"
                         onClick={toggleAccordion}
                     >
                     </div>
 
-                    {/* Accordion content */}
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
-                        {/* User Info Section */}
                         <div className="border-b border-gray-300">
-                            <button
-                                className="w-full px-4 py-3 flex justify-between items-center"
-                                onClick={() => setUserInfoOpen(!userInfoOpen)}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <CgProfile />
-                                    <span className="font-medium ">About</span>
-                                </div>
-                                {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                            </button>
 
                             {userInfoOpen && (
                                 <div className="px-4 pb-4 pt-1">
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Name</p>
-                                        <p className="text-black font-semibold">{profileData.name}</p>
+                                        <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
                                     </div>
 
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Email</p>
-                                        <p className="text-black font-semibold">{profileData.email}</p>
+                                        <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Files Section */}
-                        <div>
+                        {/* <div>
                             <button
                                 className="w-full px-4 py-3 flex justify-between items-center"
                                 onClick={() => setFilesOpen(!filesOpen)}
@@ -245,7 +242,7 @@ const Profile = () => {
                                     <p className="text-gray-400 italic">No files attached</p>
                                 </div>
                             )}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
