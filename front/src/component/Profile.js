@@ -210,7 +210,7 @@ const Profile = () => {
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
                         <div className="border-b border-gray-300">
 
-                            {userInfoOpen && (
+                           
                                 <div className="px-4 pb-4 pt-1">
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Name</p>
@@ -222,7 +222,7 @@ const Profile = () => {
                                         <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
                                     </div>
                                 </div>
-                            )}
+                            
                         </div>
 
                         {/* <div>
