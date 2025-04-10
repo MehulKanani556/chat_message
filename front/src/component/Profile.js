@@ -212,7 +212,7 @@ const Profile = () => {
                                 {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
 
-                            {userInfoOpen && (
+                           
                                 <div className="px-4 pb-4 pt-1">
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Name</p>
@@ -224,7 +224,7 @@ const Profile = () => {
                                         <p className="text-black font-semibold">{profileData.email}</p>
                                     </div>
                                 </div>
-                            )}
+                            
                         </div>
 
                         {/* Files Section */}

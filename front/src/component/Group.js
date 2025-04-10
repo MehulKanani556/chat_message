@@ -10,13 +10,12 @@ import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
 
 
-const Groups = ({setSelectedChat, selectedChat}) => {
+const Groups = ({setSelectedChat, selectedChat, isGroupCreateModalOpen, setIsGroupCreateModalOpen}) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
     const { groups, loading } = useSelector((state) => state.user);
     const currentUser = useSelector((state) => state.user.user?._id);
-    const [isGroupCreateModalOpen, setIsGroupCreateModalOpen] = useState(false);
     const [groupName, setGroupName] = useState("");
     const [groupUsers, setGroupUsers] = useState([]);
     const [groupPhoto, setGroupPhoto] = useState(null);
@@ -95,7 +94,7 @@ const Groups = ({setSelectedChat, selectedChat}) => {
                     />
                 </div>
 
-                {isGroupCreateModalOpen && (
+                {/* {isGroupCreateModalOpen && (
                     <div className="fixed inset-0 bg-black dark:bg-white dark:bg-opacity-10 bg-opacity-50  flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg w-96 dark:bg-primary-dark">
                       <div className="flex justify-between items-center pb-2 p-4">
@@ -226,7 +225,7 @@ const Groups = ({setSelectedChat, selectedChat}) => {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Groups List */}
                 <div className="space-y-3">

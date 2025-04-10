@@ -109,10 +109,10 @@ const ChatList = ({
                 return (
                   <div
                     key={item._id}
-                    className={`px-3 py-2    hover:bg-primary  hover:dark:bg-primary/85 cursor-pointer rounded-md mb-2
+                    className={`px-3 py-2    hover:bg-primary  hover:dark:bg-primary/85 hover:text-white cursor-pointer rounded-md mb-2
                     ${
                       selectedChat?._id === item._id
-                        ? "bg-primary dark:bg-primary/85"
+                        ? "bg-primary dark:bg-primary/85 text-white"
                         : "bg-white dark:bg-primary-dark/50"
                     }`}
                     onClick={() => {
@@ -145,7 +145,7 @@ const ChatList = ({
 
                       <div className="flex-1">
                         <div className="flex justify-between">
-                          <span className="font-medium text-gray-800 dark:text-primary-light">
+                          <span className="font-medium dark:text-primary-light">
                             {" "}
                             {item._id === currentUser
                               ? `${item.userName} (You)`
