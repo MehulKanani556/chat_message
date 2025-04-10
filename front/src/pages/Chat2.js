@@ -51,6 +51,7 @@ import {
   IoCameraOutline,
   IoMicOutline,
   IoPersonCircleOutline,
+  IoVideocamOutline,
 } from "react-icons/io5";
 import { useSocket } from "../hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
@@ -133,9 +134,8 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
-                  selectedUsers.includes(user._id) ? "order-first" : ""
-                }`}
+                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? "order-first" : ""
+                  }`}
                 onClick={() => {
                   if (selectedUsers.includes(user._id)) {
                     setSelectedUsers(
@@ -158,7 +158,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                     <span className="text-blue-500 font-medium">
                       {user.userName && user.userName.includes(" ")
                         ? user.userName.split(" ")[0][0] +
-                          user.userName.split(" ")[1][0]
+                        user.userName.split(" ")[1][0]
                         : user.userName[0]}
                     </span>
                   )}
@@ -177,7 +177,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(user._id)}
-                    onChange={() => {}} // Handled by parent div click
+                    onChange={() => { }} // Handled by parent div click
                     className="w-4 h-4 rounded border-gray-300 text-blue-500 
                            focus:ring-blue-500 focus:ring-offset-0"
                   />
@@ -204,11 +204,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   onClick={() => onSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
-                  ${
-                    selectedUsers.length === 0
+                  ${selectedUsers.length === 0
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                    }`}
                 >
                   Forward
                 </button>
@@ -1566,16 +1565,15 @@ const Chat2 = () => {
             allUsers={allUsers}
           />
         )}
-         {showSettings && <Setting />}
+        {showSettings && <Setting />}
       </div>
 
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           <div
-            className={` ${
-              showLeftSidebar ? "hidden md:block" : "block"
-            } flex-1 flex flex-col`}
+            className={` ${showLeftSidebar ? "hidden md:block" : "block"
+              } flex-1 flex flex-col`}
           >
             {selectedChat ? (
               <>
@@ -1634,9 +1632,9 @@ const Chat2 = () => {
                       ) : (
                         <span className="text-white text-xl font-bold">
                           {selectedChat?.userName &&
-                          selectedChat?.userName.includes(" ")
+                            selectedChat?.userName.includes(" ")
                             ? selectedChat?.userName.split(" ")?.[0][0] +
-                              selectedChat?.userName.split(" ")?.[1][0]
+                            selectedChat?.userName.split(" ")?.[1][0]
                             : selectedChat?.userName?.[0]}
                         </span>
                       )}
@@ -1663,11 +1661,10 @@ const Chat2 = () => {
                         </div>
                       ) : (
                         <div
-                          className={`text-sm ${
-                            onlineUsers.includes(selectedChat?._id)
+                          className={`text-sm ${onlineUsers.includes(selectedChat?._id)
                               ? "text-green-500"
                               : "text-gray-500"
-                          }`}
+                            }`}
                         >
                           {onlineUsers.includes(selectedChat?._id)
                             ? "Online"
@@ -1676,19 +1673,20 @@ const Chat2 = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    {/* Show regular icons on larger screens */}
-                    <div className="hidden md:flex items-center space-x-4 text-gray-500">
-                      <IoMdSearch
-                        className="w-6 h-6 cursor-pointer"
-                        onClick={() => setIsSearchBoxOpen((prev) => !prev)}
-                        title="Find"
-                        data-tooltip="Find"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
+                </div>
+                <div className="flex items-center space-x-4">
+                  {/* Show regular icons on larger screens */}
+                  <div className="hidden md:flex items-center gap-4 dark:text-white">
+                    <IoMdSearch
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => setIsSearchBoxOpen((prev) => !prev)}
+                      title="Find"
+                      data-tooltip="Find"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
 
-                      {/* <MdOutlineDeleteSweep
+                    {/* <MdOutlineDeleteSweep
                       onClick={() => setIsClearChatModalOpen(true)}
                       title="Clear chat"
                       data-tooltip="Clear chat"
@@ -1696,948 +1694,687 @@ const Chat2 = () => {
                       data-tooltip-duration="0"
                       className="w-7 h-7 cursor-pointer hover:text-red-600 text-4xl"
                     /> */}
-                      {isSharing ? (
-                        <LuScreenShareOff
-                          title="Stop sharing"
-                          data-tooltip="Stop sharing"
-                          data-tooltip-delay="0"
-                          data-tooltip-duration="0"
-                          className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 animate-bounce"
-                          onClick={() => cleanupConnection()}
-                        />
-                      ) : (
-                        <LuScreenShare
-                          title="Screen sharing"
-                          data-tooltip="Screen sharing"
-                          data-tooltip-delay="0"
-                          data-tooltip-duration="0"
-                          className="w-6 h-6 cursor-pointer"
-                          onClick={() => handleStartScreenShare()}
-                        />
-                      )}
-                      {selectedChat?.members && (
-                        <MdGroupAdd
-                          title="Add to group"
-                          data-tooltip="Add to group"
-                          data-tooltip-delay="0"
-                          data-tooltip-duration="0"
-                          className="w-6 h-6 cursor-pointer"
-                          onClick={() => {
-                            if (selectedChat?.members) {
-                              setGroupUsers(selectedChat?.members);
-                            } else {
-                              setGroupUsers([selectedChat?._id]);
-                            }
-                            setIsModalOpen(true);
-                          }}
-                        />
-                      )}
-                      <GoDeviceCameraVideo
-                        className="w-6 h-6 cursor-pointer"
-                        onClick={() => handleMakeCall("video")}
-                        title="Video Call"
-                        data-tooltip="Video Call"
+                    {isSharing ? (
+                      <LuScreenShareOff
+                        title="Stop sharing"
+                        data-tooltip="Stop sharing"
+                        data-tooltip-delay="0"
+                        data-tooltip-duration="0"
+                        className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 animate-bounce"
+                        onClick={() => cleanupConnection()}
+                      />
+                    ) : (
+                      // <LuScreenShare
+                      //   title="Screen sharing"
+                      //   data-tooltip="Screen sharing"
+                      //   data-tooltip-delay="0"
+                      //   data-tooltip-duration="0"
+                      //   className="w-6 h-6 cursor-pointer"
+                      //   onClick={() => handleStartScreenShare()}
+                      // />
+                      <div className="w-6 h-6 cursor-pointer" onClick={() => handleStartScreenShare()}>
+                        <svg width={24} height={24} x={0} y={0} viewBox="0 0 32 32" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path d="M14.592 8.39a2.453 2.453 0 0 1 2.817 0l4.764 3.339a1 1 0 0 1-1.148 1.639l-5.024-3.522-5.024 3.522a1 1 0 0 1-1.148-1.639l4.764-3.339z" fill="currentColor" opacity={1} data-original="#000000" /><path d="M15 8.742h2v10.815a1 1 0 0 1-2 0z" fill="currentColor" opacity={1} data-original="#000000" /><path d="M25 25H7c-3.309 0-6-2.691-6-6V9c0-3.308 2.691-6 6-6h18c3.309 0 6 2.691 6 6v10c0 3.309-2.691 6-6 6zM7 5C4.794 5 3 6.794 3 9v10c0 2.206 1.794 4 4 4h18c2.206 0 4-1.794 4-4V9c0-2.206-1.794-4-4-4z" fill="currentColor" opacity={1} data-original="#000000" /><path d="M19 29h-6c-1.654 0-3-1.346-3-3v-3h12v3c0 1.654-1.346 3-3 3zm-7-4v1a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1z" fill="currentColor" opacity={1} data-original="#000000" /></g></svg>
+                      </div>
+                    )}
+                    {selectedChat?.members && (
+                      <MdGroupAdd
+                        title="Add to group"
+                        data-tooltip="Add to group"
                         data-tooltip-delay="0"
                         data-tooltip-duration="0"
                       />
-                      <IoCallOutline
-                        className="w-6 h-6 cursor-pointer"
-                        onClick={() => handleMakeCall("voice")}
-                        title="Voice Call"
-                        data-tooltip="Voice Call"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
-                      <PiDotsThreeBold
-                        className="text-2xl cursor-pointer "
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        title="More options"
-                        data-tooltip="More options"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
-                      {menuOpen && (
-                        <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
-                          <ul>
-                            <li
-                              onClick={() => setIsClearChatModalOpen(true)}
-                              className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                            >
-                              <MdOutlineDeleteSweep className="text-lg" />{" "}
-                              Delete
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <GoMute className="text-lg" /> Muted
-                            </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
-                              <IoArchiveOutline className="text-lg" /> Archive
-                            </li>
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Show three dots menu on mobile */}
-                    <div className="md:hidden relative mobile-menu flex items-center gap-2">
-                      <IoMdSearch
-                        className="w-6 h-6 cursor-pointer"
-                        onClick={() => setIsSearchBoxOpen((prev) => !prev)}
-                        title="Find"
-                        data-tooltip="Find"
-                        data-tooltip-delay="0"
-                        data-tooltip-duration="0"
-                      />
-                      <BsThreeDotsVertical
-                        className="w-6 h-6 cursor-pointer"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                      />
-
-                      {mobileMenuOpen && (
-                        <div
-                          className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg z-50"
-                          ref={mobileMenuRef}
-                        >
-                          <div className="py-2 w-48">
-                            <button
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                              onClick={() => {
-                                setIsClearChatModalOpen(true);
-                                setMobileMenuOpen(false);
-                              }}
-                            >
-                              <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                              <span>Clear Chat</span>
-                            </button>
-
-                            <button
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                              onClick={() => {
-                                handleStartScreenShare();
-                                setMobileMenuOpen(false);
-                              }}
-                            >
-                              <LuScreenShare className="w-5 h-5 mr-2" />
-                              <span>Screen Share</span>
-                            </button>
-
-                            {selectedChat?.members && (
-                              <button
-                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                onClick={() => {
-                                  if (selectedChat?.members) {
-                                    setGroupUsers(selectedChat?.members);
-                                  } else {
-                                    setGroupUsers([selectedChat?._id]);
-                                  }
-                                  setIsModalOpen(true);
-                                  setMobileMenuOpen(false);
-                                }}
-                              >
-                                <MdGroupAdd className="w-5 h-5 mr-2" />
-                                <span>Add to Group</span>
-                              </button>
-                            )}
-
-                            <button
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                              onClick={() => {
-                                handleMakeCall("video");
-                                setMobileMenuOpen(false);
-                              }}
-                            >
-                              <GoDeviceCameraVideo className="w-5 h-5 mr-2" />
-                              <span>Video Call</span>
-                            </button>
-
-                            <button
-                              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
-                              onClick={() => {
-                                handleMakeCall("voice");
-                                setMobileMenuOpen(false);
-                              }}
-                            >
-                              <IoCallOutline className="w-5 h-5 mr-2" />
-                              <span>Voice Call</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    <IoVideocamOutline
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => handleMakeCall("video")}
+                      title="Video Call"
+                      data-tooltip="Video Call"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    <IoCallOutline
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => handleMakeCall("voice")}
+                      title="Voice Call"
+                      data-tooltip="Voice Call"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    <BsThreeDotsVertical
+                      className="text-2xl cursor-pointer "
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      title="More options"
+                      data-tooltip="More options"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    {menuOpen && (
+                      <div className="absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
+                        <ul>
+                          <li onClick={() => setIsClearChatModalOpen(true)} className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <MdOutlineDeleteSweep className="text-lg" /> Delete
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <GoMute className="text-lg" /> Muted
+                          </li>
+                          <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            <IoArchiveOutline className="text-lg" /> Archive
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  {isSearchBoxOpen && (
-                    <div
-                      className="absolute top-24 right-0 left-[50%] max-w-[500px] w-full bg-white shadow-lg p-4 z-50 flex items-center border-rounded"
-                      style={{
-                        padding: "5px 25px",
-                        borderRadius: "30px",
-                        transform: "translate(-50%, -50%)",
+
+                  {/* Show three dots menu on mobile */}
+                  <div className="md:hidden relative mobile-menu flex items-center gap-2">
+                    <IoMdSearch
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => setIsSearchBoxOpen((prev) => !prev)}
+                      title="Find"
+                      data-tooltip="Find"
+                      data-tooltip-delay="0"
+                      data-tooltip-duration="0"
+                    />
+                    <BsThreeDotsVertical
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    />
+
+                    {mobileMenuOpen && (
+                      <div
+                        className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg z-50"
+                        ref={mobileMenuRef}
+                      >
+                        <div className="py-2 w-48">
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                            onClick={() => {
+                              setIsClearChatModalOpen(true);
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                            <span>Clear Chat</span>
+                          </button>
+
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                            onClick={() => {
+                              handleStartScreenShare();
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <LuScreenShare className="w-5 h-5 mr-2" />
+                            <span>Screen Share</span>
+                          </button>
+
+                          {selectedChat?.members && (
+                            <button
+                              className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                              onClick={() => {
+                                if (selectedChat?.members) {
+                                  setGroupUsers(selectedChat?.members);
+                                } else {
+                                  setGroupUsers([selectedChat?._id]);
+                                }
+                                setIsModalOpen(true);
+                                setMobileMenuOpen(false);
+                              }}
+                            >
+                              <MdGroupAdd className="w-5 h-5 mr-2" />
+                              <span>Add to Group</span>
+                            </button>
+                          )}
+
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                            onClick={() => {
+                              handleMakeCall("video");
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <GoDeviceCameraVideo className="w-5 h-5 mr-2" />
+                            <span>Video Call</span>
+                          </button>
+
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
+                            onClick={() => {
+                              handleMakeCall("voice");
+                              setMobileMenuOpen(false);
+                            }}
+                          >
+                            <IoCallOutline className="w-5 h-5 mr-2" />
+                            <span>Voice Call</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {isSearchBoxOpen && (
+                  <div
+                    className="absolute top-24 right-0 left-[50%] max-w-[500px] w-full bg-white shadow-lg p-4 z-50 flex items-center border-rounded"
+                    style={{
+                      padding: "5px 25px",
+                      borderRadius: "30px",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                    ref={searchBoxRef}
+                  >
+                    <FaSearch className="text-gray-500 mr-2" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="flex-1 p-2 outline-none min-w-[20px]"
+                      value={searchInputbox}
+                      onChange={(e) => {
+                        setSearchInputbox(e.target.value);
+                        setCurrentSearchIndex(0); // Reset current search index
                       }}
-                      ref={searchBoxRef}
+                    />
+                    <span className="mx-2 text-gray-500">
+                      {totalMatches > 0
+                        ? `${currentSearchIndex + 1} / ${totalMatches}`
+                        : "0 / 0"}
+                    </span>
+                    <button
+                      className="text-black hover:text-gray-700 ms-5"
+                      onClick={() => handleSearchNavigation("up")}
                     >
-                      <FaSearch className="text-gray-500 mr-2" />
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        className="flex-1 p-2 outline-none min-w-[20px]"
-                        value={searchInputbox}
-                        onChange={(e) => {
-                          setSearchInputbox(e.target.value);
-                          setCurrentSearchIndex(0); // Reset current search index
-                        }}
+                      <IoIosArrowUp />
+                    </button>
+                    <button
+                      className="text-black hover:text-gray-700"
+                      onClick={() => handleSearchNavigation("down")}
+                    >
+                      <IoIosArrowDown />
+                    </button>
+                    <button
+                      className="text-black hover:text-gray-700 ms-5"
+                      onClick={() => {
+                        setIsSearchBoxOpen(false);
+                        setSearchInputbox(""); // Clear the input box
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+          
+            {/*========== Messages ==========*/}
+            {/* {console.log("replyingTo",replyingTo)} */}
+
+            <div
+              className="flex-1 overflow-y-auto p-4 modal_scroll bg-primary-light dark:bg-primary-dark scrollbar-hide"
+              style={{
+                height:
+                  selectedFiles.length > 0
+                    ? "calc(100vh -  275px)"
+                    : replyingTo
+                      ? replyingTo?.content?.fileType &&
+                        replyingTo?.content?.fileType?.startsWith("image/")
+                        ? "calc(100vh - 280px)"
+                        : "calc(100vh -  225px)"
+                      : "calc(100vh - 172px)",
+              }}
+              ref={messagesContainerRef}
+            >
+              {/* {visibleDate && <FloatingDateIndicator />} */}
+              <MessageList
+                messages={messages}
+                groupMessagesByDate={groupMessagesByDate}
+                userId={userId}
+                handleMakeCall={handleMakeCall}
+                handleContextMenu={handleContextMenu}
+                handleDropdownToggle={handleDropdownToggle}
+                handleEditMessage={handleEditMessage}
+                handleDeleteMessage={handleDeleteMessage}
+                handleCopyMessage={handleCopyMessage}
+                handleReplyMessage={handleReplyMessage}
+                handleForwardMessage={handleForwardMessage}
+                highlightText={highlightText}
+                searchInputbox={searchInputbox}
+                activeMessageId={activeMessageId}
+                contextMenu={contextMenu}
+                setContextMenu={setContextMenu}
+                setActiveMessageId={setActiveMessageId}
+                allUsers={allUsers}
+                selectedChat={selectedChat}
+                IMG_URL={IMG_URL}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+                addMessageReaction={addMessageReaction}
+                setSelectedFiles={setSelectedFiles}
+                selectedFiles={selectedFiles}
+                setReplyingTo={setReplyingTo}
+                replyingTo={replyingTo}
+                setMessageInput={setMessageInput}
+                messageInput={messageInput}
+                handleImageClick={handleImageClick}
+              />
+            </div>
+            {selectedFiles && selectedFiles.length > 0 && (
+              <div className="flex w-full  mx-auto">
+                {selectedFiles.map((file, index) => {
+                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                  let fileIcon;
+                  if (file.type.startsWith("image/")) {
+                    fileIcon = (
+                      <img
+                        src={fileUrl}
+                        alt={`Selected ${index}`}
+                        className="w-20 h-20 object-cover mb-1"
                       />
-                      <span className="mx-2 text-gray-500">
-                        {totalMatches > 0
-                          ? `${currentSearchIndex + 1} / ${totalMatches}`
-                          : "0 / 0"}
-                      </span>
-                      <button
-                        className="text-black hover:text-gray-700 ms-5"
-                        onClick={() => handleSearchNavigation("up")}
+                    );
+                  } else if (file.type === "application/pdf") {
+                    fileIcon = (
+                      <FaFilePdf className="w-20 h-20 text-gray-500" />
+                    ); // PDF file icon
+                  } else if (
+                    file.type === "application/vnd.ms-excel" ||
+                    file.type ===
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  ) {
+                    fileIcon = (
+                      <FaFileExcel className="w-20 h-20 text-gray-500" />
+                    ); // Excel file icon
+                  } else if (
+                    file.type === "application/msword" ||
+                    file.type ===
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  ) {
+                    fileIcon = (
+                      <FaFileWord className="w-20 h-20 text-gray-500" />
+                    ); // Word file icon
+                  } else if (
+                    file.type === "application/vnd.ms-powerpoint" ||
+                    file.type ===
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                  ) {
+                    fileIcon = (
+                      <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
+                    ); // PowerPoint file icon
+                  } else if (file.type === "application/zip") {
+                    fileIcon = (
+                      <FaFileArchive className="w-20 h-20 text-gray-500" />
+                    ); // ZIP file icon
+                  } else {
+                    fileIcon = (
+                      <FaPaperclip className="w-20 h-20 text-gray-500" />
+                    ); // Generic file icon
+                  }
+                  return (
+                    <div className=" rounded-t-lg bg-[#e5e7eb] w-full p-2">
+                      <div
+                        key={index}
+                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
                       >
-                        <IoIosArrowUp />
-                      </button>
-                      <button
-                        className="text-black hover:text-gray-700"
-                        onClick={() => handleSearchNavigation("down")}
-                      >
-                        <IoIosArrowDown />
-                      </button>
-                      <button
-                        className="text-black hover:text-gray-700 ms-5"
-                        onClick={() => {
-                          setIsSearchBoxOpen(false);
-                          setSearchInputbox(""); // Clear the input box
+                        {fileIcon}
+                        <div className="w-20 text-sm text-ellipsis  text-nowrap ">
+                          {file.name}
+                        </div>{" "}
+                        {/* Display file name */}
+                        <span className="text-xs text-gray-500">
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </span>{" "}
+                        {/* Display file size */}
+                        <button
+                          className="absolute top-1 right-1 bg-white rounded-full"
+                          onClick={() => {
+                            setSelectedFiles(
+                              selectedFiles.filter((_, i) => i !== index)
+                            );
+                          }}
+                        >
+                          <RxCross2 />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {replyingTo && (
+              <div className="w-full dark:bg-primary-dark/15">
+                <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                  <div>
+                    <div className="text-sm text-blue-500 font-medium">
+                      Replying to{" "}
+                      {
+                        allUsers.find(
+                          (user) => user._id === replyingTo.sender
+                        )?.userName
+                      }
+                    </div>
+                    <div className="text-gray-600 text-sm line-clamp-2">
+                      {console.log(
+                        replyingTo.content.fileType === "image/jpeg"
+                      )}
+                      {replyingTo.content.content}
+                      {replyingTo?.content?.fileType &&
+                        replyingTo?.content?.fileType?.startsWith(
+                          "image/"
+                        ) && (
+                          <img
+                            src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                              /\\/g,
+                              "/"
+                            )}`}
+                            alt=""
+                            className="h-10"
+                          />
+                        )}
+                    </div>
+                    <button
+                      onClick={() => setReplyingTo(null)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <RxCross2 size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/*========== Message Input ==========*/}
+            {selectedChat && (
+              <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
+                <form
+                  onSubmit={handleSubmit}
+                  className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
+                      ? "rounded-b-lg"
+                      : "rounded-lg"
+                    } px-4 py-2 w-full max-w-full`}
+                >
+                  <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                    {" "}
+                    {/* Add container with min-width */}
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={messageInput}
+                      onChange={handleInputChange}
+                      placeholder={
+                        editingMessage
+                          ? "Edit message..."
+                          : "Type a message..."
+                      }
+                      className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+
+                          if (selectedFiles.length > 0) {
+                            await handleMultipleFileUpload(selectedFiles); // Upload selected files
+                            setSelectedFiles([]); // Clear selected files after sending
+                          }
+                          await handleSubmit(e);
+                        } else if (e.key === "Escape" && editingMessage) {
+                          setEditingMessage(null);
+                          setMessageInput("");
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500 dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                    aria-label="Add emoji"
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                  >
+                    <PiSmiley className="w-6 h-6 " />
+                  </button>
+                  {isEmojiPickerOpen && (
+                    <div
+                      ref={emojiPickerRef}
+                      className="absolute bg-white border rounded shadow-lg p-1 bottom-[70px]"
+                    >
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        previewConfig={{
+                          showPreview: false,
                         }}
+                        width={`${window.innerWidth < 768 ? "250px" : "300px"
+                          }`}
+                        height={`${window.innerWidth < 768 ? "300px" : "400px"
+                          }`}
+                        emojiSize={20}
+                        emojiStyle="facebook"
+                        lazyLoadEmojis={true}
+                        searchDisabled={window.innerWidth < 768}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <input
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      accept="*/*"
+                      className="hidden"
+                      onChange={handleInputChange}
+                    />
+                    <button
+                      type="button"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
+                      aria-label="Attach file"
+                      onClick={() =>
+                        document.getElementById("file-upload").click()
+                      }
+                    >
+                      {selectedFiles && selectedFiles.length > 0 ? (
+                        <GoPlusCircle className="w-6 h-6 " />
+                      ) : (
+                        <svg
+                          width={24}
+                          height={24}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+
+                        // <FaPaperclip className=" text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
+                      aria-label="Voice message"
+                      onClick={handleVoiceMessage}
+                    >
+                      <IoMicOutline
+                        className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                          }`}
+                      />
+                    </button>
+                    {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
+                    <button
+                      type="submit"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
+                      // style={{ color: "#3B82F6" }}
+                      // aria - label="Send message...."
+                      onClick={async (e) => {
+                        if (selectedFiles.length > 0) {
+                          handleMultipleFileUpload(selectedFiles); // Upload selected files
+                          setSelectedFiles([]); // Clear selected files after sending
+                          await handleSubmit(e);
+                        } else if (e.key === "Escape" && editingMessage) {
+                          setEditingMessage(null);
+                          setMessageInput("");
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                    aria-label="Add emoji"
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                  >
+                    <PiSmiley className="w-6 h-6 " />
+                  </button>
+                  {isEmojiPickerOpen && (
+                    <div
+                      ref={emojiPickerRef}
+                      className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
+                    >
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        previewConfig={{
+                          showPreview: false,
+                        }}
+                      >
+                        <svg
+                          width={20}
+                          height={20}
+                          x={0}
+                          y={0}
+                          viewBox="0 0 32 32"
+                          style={{ enableBackground: "new 0 0 24 24" }}
+                          xmlSpace="preserve"
+                          className
+                        >
+                          <g>
+                            <path
+                              d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
+                              fill="currentColor"
+                              opacity={1}
+                              data-original="#000000"
+                              className
+                            />
+                          </g>
+                        </svg>
+                      </EmojiPicker>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <input
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      accept="*/*"
+                      className="hidden"
+                      onChange={handleInputChange}
+                    />
+                    <button
+                      type="button"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                      aria-label="Attach file"
+                      onClick={() =>
+                        document.getElementById("file-upload").click()
+                      }
+                    >
+                      {selectedFiles && selectedFiles.length > 0 ? (
+                        <GoPlusCircle className="w-6 h-6 " />
+                      ) : (
+                        <svg width={24} height={24} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                          <path d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+
+                        // <FaPaperclip className=" text-gray-500" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                      aria-label="Voice message"
+                      onClick={handleVoiceMessage}
+                    >
+                      <IoMicOutline
+                        className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                          }`}
+                      />
+                    </button >
+                    {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
+                    <button
+                      type="submit"
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                      // style={{ color: "#3B82F6" }}
+                      // aria - label="Send message...."
+                      onClick={() => {
+                        if (selectedFiles.length > 0) {
+                          handleMultipleFileUpload(selectedFiles); // Upload selected files
+                          setSelectedFiles([]); // Clear selected files after sending
+                        }
+                      }}
+                    >
+                      <svg width={20} height={20} x={0} y={0} viewBox="0 0 32 32" style={{ enableBackground: 'new 0 0 24 24' }} xmlSpace="preserve" className><g><path d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z" fill="currentColor" opacity={1} data-original="#000000" className /></g></svg>
+                    </button>
+                  </div>
+                  {/* )} */}
+                  {
+                    editingMessage && (
+                      <button
+                        onClick={() => {
+                          setEditingMessage(null);
+                          setMessageInput("");
+                        }}
+                        className="ml-2 text-gray-500"
                       >
                         Cancel
                       </button>
-                    </div>
-                  )}
-                </div>
-                {/*========== Messages ==========*/}
-                {/* {console.log("replyingTo",replyingTo)} */}
-
-                <div
-                  className="flex-1 overflow-y-auto p-4 modal_scroll bg-primary-light dark:bg-primary-dark scrollbar-hide"
-                  style={{
-                    height:
-                      selectedFiles.length > 0
-                        ? "calc(100vh -  275px)"
-                        : replyingTo
-                        ? replyingTo?.content?.fileType &&
-                          replyingTo?.content?.fileType?.startsWith("image/")
-                          ? "calc(100vh - 280px)"
-                          : "calc(100vh -  225px)"
-                        : "calc(100vh - 172px)",
-                  }}
-                  ref={messagesContainerRef}
-                >
-                  {/* {visibleDate && <FloatingDateIndicator />} */}
-                  <MessageList
-                    messages={messages}
-                    groupMessagesByDate={groupMessagesByDate}
-                    userId={userId}
-                    handleMakeCall={handleMakeCall}
-                    handleContextMenu={handleContextMenu}
-                    handleDropdownToggle={handleDropdownToggle}
-                    handleEditMessage={handleEditMessage}
-                    handleDeleteMessage={handleDeleteMessage}
-                    handleCopyMessage={handleCopyMessage}
-                    handleReplyMessage={handleReplyMessage}
-                    handleForwardMessage={handleForwardMessage}
-                    highlightText={highlightText}
-                    searchInputbox={searchInputbox}
-                    activeMessageId={activeMessageId}
-                    contextMenu={contextMenu}
-                    setContextMenu={setContextMenu}
-                    setActiveMessageId={setActiveMessageId}
-                    allUsers={allUsers}
-                    selectedChat={selectedChat}
-                    IMG_URL={IMG_URL}
-                    showEmojiPicker={showEmojiPicker}
-                    setShowEmojiPicker={setShowEmojiPicker}
-                    addMessageReaction={addMessageReaction}
-                    setSelectedFiles={setSelectedFiles}
-                    selectedFiles={selectedFiles}
-                    setReplyingTo={setReplyingTo}
-                    replyingTo={replyingTo}
-                    setMessageInput={setMessageInput}
-                    messageInput={messageInput}
-                    handleImageClick={handleImageClick}
-                  />
-                </div>
-                {selectedFiles && selectedFiles.length > 0 && (
-                  <div className="flex w-full  mx-auto">
-                    {selectedFiles.map((file, index) => {
-                      const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                      let fileIcon;
-                      if (file.type.startsWith("image/")) {
-                        fileIcon = (
-                          <img
-                            src={fileUrl}
-                            alt={`Selected ${index}`}
-                            className="w-20 h-20 object-cover mb-1"
-                          />
-                        );
-                      } else if (file.type === "application/pdf") {
-                        fileIcon = (
-                          <FaFilePdf className="w-20 h-20 text-gray-500" />
-                        ); // PDF file icon
-                      } else if (
-                        file.type === "application/vnd.ms-excel" ||
-                        file.type ===
-                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                      ) {
-                        fileIcon = (
-                          <FaFileExcel className="w-20 h-20 text-gray-500" />
-                        ); // Excel file icon
-                      } else if (
-                        file.type === "application/msword" ||
-                        file.type ===
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      ) {
-                        fileIcon = (
-                          <FaFileWord className="w-20 h-20 text-gray-500" />
-                        ); // Word file icon
-                      } else if (
-                        file.type === "application/vnd.ms-powerpoint" ||
-                        file.type ===
-                          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                      ) {
-                        fileIcon = (
-                          <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
-                        ); // PowerPoint file icon
-                      } else if (file.type === "application/zip") {
-                        fileIcon = (
-                          <FaFileArchive className="w-20 h-20 text-gray-500" />
-                        ); // ZIP file icon
-                      } else {
-                        fileIcon = (
-                          <FaPaperclip className="w-20 h-20 text-gray-500" />
-                        ); // Generic file icon
-                      }
-                      return (
-                        <div className=" rounded-t-lg bg-[#e5e7eb] w-full p-2">
-                          <div
-                            key={index}
-                            className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
-                          >
-                            {fileIcon}
-                            <div className="w-20 text-sm text-ellipsis  text-nowrap ">
-                              {file.name}
-                            </div>{" "}
-                            {/* Display file name */}
-                            <span className="text-xs text-gray-500">
-                              {(file.size / (1024 * 1024)).toFixed(2)} MB
-                            </span>{" "}
-                            {/* Display file size */}
-                            <button
-                              className="absolute top-1 right-1 bg-white rounded-full"
-                              onClick={() => {
-                                setSelectedFiles(
-                                  selectedFiles.filter((_, i) => i !== index)
-                                );
-                              }}
-                            >
-                              <RxCross2 />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-               
-                  
-
-              {replyingTo && (
-                <div className="w-full dark:bg-primary-dark/15">
-                  <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
-                    <div>
-                      <div className="text-sm text-blue-500 font-medium">
-                        Replying to{" "}
-                        {
-                          allUsers.find(
-                            (user) => user._id === replyingTo.sender
-                          )?.userName
-                        }
-                      </div>
-                      <div className="text-gray-600 text-sm line-clamp-2">
-                        {console.log(
-                          replyingTo.content.fileType === "image/jpeg"
-                        )}
-                        {replyingTo.content.content}
-                        {replyingTo?.content?.fileType &&
-                          replyingTo?.content?.fileType?.startsWith(
-                            "image/"
-                          ) && (
-                            <img
-                              src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
-                                /\\/g,
-                                "/"
-                              )}`}
-                              alt=""
-                              className="h-10"
-                            />
-                          )}
-                      </div>
-                      <button
-                        onClick={() => setReplyingTo(null)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        <RxCross2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-                {/*========== Message Input ==========*/}
-                {selectedChat && (
-                  <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
-                    <form
-                      onSubmit={handleSubmit}
-                      className={`flex items-center gap-2 ${
-                        replyingTo || selectedFiles.length > 0
-                          ? "rounded-b-lg"
-                          : "rounded-lg"
-                      } px-4 py-2 w-full max-w-full`}
-                    >
-                      <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
-                        {" "}
-                        {/* Add container with min-width */}
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={messageInput}
-                          onChange={handleInputChange}
-                          placeholder={
-                            editingMessage
-                              ? "Edit message..."
-                              : "Type a message..."
-                          }
-                          className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-
-                              if (selectedFiles.length > 0) {
-                                await handleMultipleFileUpload(selectedFiles); // Upload selected files
-                                setSelectedFiles([]); // Clear selected files after sending
-                              }
-                              await handleSubmit(e);
-                            } else if (e.key === "Escape" && editingMessage) {
-                              setEditingMessage(null);
-                              setMessageInput("");
-                            }
-                          }}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500 dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                        aria-label="Add emoji"
-                        onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                      >
-                        <PiSmiley className="w-6 h-6 " />
-                      </button>
-                      {isEmojiPickerOpen && (
-                        <div
-                          ref={emojiPickerRef}
-                          className="absolute bg-white border rounded shadow-lg p-1 bottom-[70px]"
-                        >
-                          <EmojiPicker
-                            onEmojiClick={onEmojiClick}
-                            previewConfig={{
-                              showPreview: false,
-                            }}
-                            width={`${
-                              window.innerWidth < 768 ? "250px" : "300px"
-                            }`}
-                            height={`${
-                              window.innerWidth < 768 ? "300px" : "400px"
-                            }`}
-                            emojiSize={20}
-                            emojiStyle="facebook"
-                            lazyLoadEmojis={true}
-                            searchDisabled={window.innerWidth < 768}
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <input
-                          id="file-upload"
-                          type="file"
-                          multiple
-                          accept="*/*"
-                          className="hidden"
-                          onChange={handleInputChange}
-                        />
-                        <button
-                          type="button"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
-                          aria-label="Attach file"
-                          onClick={() =>
-                            document.getElementById("file-upload").click()
-                          }
-                        >
-                          {selectedFiles && selectedFiles.length > 0 ? (
-                            <GoPlusCircle className="w-6 h-6 " />
-                          ) : (
-                            <svg
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-
-                            // <FaPaperclip className=" text-gray-500" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
-                          aria-label="Voice message"
-                          onClick={handleVoiceMessage}
-                        >
-                          <IoMicOutline
-                            className={`w-6 h-6 ${
-                              isRecording ? "text-red-500" : ""
-                            }`}
-                          />
-                        </button>
-                        {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
-                        <button
-                          type="submit"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-gray-500 dark:hover:text-black"
-                          // style={{ color: "#3B82F6" }}
-                          // aria - label="Send message...."
-                          onClick={async (e) => {
-                            if (selectedFiles.length > 0) {
-                              handleMultipleFileUpload(selectedFiles); // Upload selected files
-                              setSelectedFiles([]); // Clear selected files after sending
-                              await handleSubmit(e);
-                          } else if (e.key === "Escape" && editingMessage) {
-                            setEditingMessage(null);
-                            setMessageInput("");
-                          }
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-500 dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                      aria-label="Add emoji"
-                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                    >
-                      <PiSmiley className="w-6 h-6 " />
-                    </button>
-                    {isEmojiPickerOpen && (
-                      <div
-                        ref={emojiPickerRef}
-                        className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
-                      >
-                        <EmojiPicker
-                          onEmojiClick={onEmojiClick}
-                          previewConfig={{
-                            showPreview: false,
-                          }}
-                        >
-                          <svg
-                            width={20}
-                            height={20}
-                            x={0}
-                            y={0}
-                            viewBox="0 0 32 32"
-                            style={{ enableBackground: "new 0 0 24 24" }}
-                            xmlSpace="preserve"
-                            className
-                          >
-                            <g>
-                              <path
-                                d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
-                                fill="currentColor"
-                                opacity={1}
-                                data-original="#000000"
-                                className
-                              />
-                            </g>
-                          </svg>
-                        </EmojiPicker>
-                      </div>
                     )}
-                      {editingMessage && (
-                        <button
-                          onClick={() => {
-                            setEditingMessage(null);
-                            setMessageInput("");
-                          }}
-                          className="ml-2 text-gray-500"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      {/* </div > */}
-                    </form>
-                  </div>
-                )}
+                  {/* </div > */}
+                </form>
+              </div>
+            )}
 
-                {/* Show Send to Bottom button only if user has scrolled up */}
-                {showScrollToBottom && (
-                  <button
-                    type="button"
-                    className="fixed bottom-20 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
-                    onClick={scrollToBottom}
-                    aria-label="Send to Bottom"
-                  >
-                    <FaArrowDown className="w-5 h-5" />
-                  </button>
-                )}
-              </>
-            ) : (
-              <Front data={user} />
-            )}
-          </div>
-
-          <div
-            className={`${
-              ((isGroupModalOpen || isModalOpen || isGroupCreateModalOpen) && selectedChat.members) || (isUserProfileModalOpen && !selectedChat.members) ? "w-[380px] " : "w-0"
-            } transition-all duration-300`}
-            style={{
-              boxShadow: "0px 0px 5px 1px #80808054",
-            }}
-          >
-            {isGroupModalOpen && (
-              // <div className="bg-white  dark:bg-primary-dark dark:text-primary-light h-full">
-              //   <div className="flex justify-between items-center pb-2 p-4">
-              //     <h2 className="text-lg font-bold">Profile</h2>
-              //     <button
-              //       onClick={() => setIsGroupModalOpen(false)}
-              //       className="text-gray-500 hover:text-gray-700"
-              //     >
-              //       <ImCross />
-              //     </button>
-              //   </div>
-              //   <div className="flex flex-col items-center">
-              //     <div className="relative w-24 h-24 rounded-full bg-gray-300 overflow-hidden mt-4">
-              //       {selectedChat?.photo && selectedChat.photo !== "null" ? (
-              //         <img
-              //           src={`${IMG_URL}${selectedChat?.photo}`}
-              //           alt="Profile"
-              //           className="cursor-pointer object-cover w-full h-full rounded-full"
-              //           onClick={() =>
-              //             document.getElementById("fileInput").click()
-              //           }
-              //         />
-              //       ) : (
-              //         <div className="text-gray-900 text-lg font-bold flex w-24 h-24 justify-center items-center">
-              //           {selectedChat?.userName
-              //             .split(" ")
-              //             .map((n) => n[0].toUpperCase())
-              //             .join("")}
-              //         </div>
-              //       )}
-
-              //       <input
-              //         type="file"
-              //         id="fileInput"
-              //         className="hidden"
-              //         accept="image/*"
-              //         onChange={async (e) => {
-              //           if (e.target.files && e.target.files[0]) {
-              //             const file = e.target.files[0];
-              //             setGroupPhoto(file);
-              //             try {
-              //               await dispatch(
-              //                 updateGroup({
-              //                   groupId: selectedChat._id,
-              //                   photo: file,
-              //                 })
-              //               ); // Dispatch the update action
-              //               socket.emit("update-group", {
-              //                 groupId: selectedChat._id,
-              //                 members: selectedChat?.members.filter(
-              //                   (id) => id !== userId
-              //                 ),
-              //               });
-              //               await dispatch(getAllMessageUsers());
-              //             } catch (error) {
-              //               console.error(
-              //                 "Failed to update group photo:",
-              //                 error
-              //               );
-              //             }
-              //           }
-              //         }}
-              //       />
-              //       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-200">
-              //         <MdOutlineModeEdit
-              //           className="text-white text-4xl cursor-pointer"
-              //           onClick={() =>
-              //             document.getElementById("fileInput").click()
-              //           }
-              //         />
-              //       </div>
-              //     </div>
-              //     <div className="flex items-center justify-between">
-              //       {isEditing ? (
-              //         <input
-              //           type="text"
-              //           value={editedUserName}
-              //           onChange={(e) => setEditedUserName(e.target.value)}
-              //           onBlur={() => {
-              //             dispatch(
-              //               updateGroup({
-              //                 groupId: selectedChat._id,
-              //                 userName: editedUserName,
-              //                 members: selectedChat?.members,
-              //               })
-              //             );
-              //             socket.emit("update-group", {
-              //               groupId: selectedChat._id,
-              //               members: selectedChat?.members.filter(
-              //                 (id) => id !== userId
-              //               ),
-              //             });
-              //             dispatch(getAllMessageUsers());
-              //             setIsEditing(false);
-              //           }}
-              //           onKeyPress={(e) => {
-              //             if (e.key === "Enter") {
-              //               dispatch(
-              //                 updateGroup({
-              //                   groupId: selectedChat._id,
-              //                   userName: editedUserName,
-              //                   members: selectedChat?.members,
-              //                 })
-              //               );
-              //               socket.emit("update-group", {
-              //                 groupId: selectedChat._id,
-              //                 members: selectedChat?.members.filter(
-              //                   (id) => id !== userId
-              //                 ),
-              //               });
-              //               dispatch(getAllMessageUsers());
-              //               setIsEditing(false);
-              //             }
-              //           }}
-              //           className="mt-2 text-xl font-semibold bg-transparent border-none outline-none text-center"
-              //           autoFocus // This will focus the input when isEditing is true
-              //         />
-              //       ) : (
-              //         <>
-              //           <h3
-              //             className="mt-2 text-xl font-semibold cursor-pointer"
-              //             onClick={() => {
-              //               setIsEditing(true);
-              //               setEditedUserName(selectedChat?.userName);
-              //             }}
-              //           >
-              //             {selectedChat?.userName}
-              //           </h3>
-              //           <MdOutlineModeEdit
-              //             className="cursor-pointer"
-              //             onClick={() => {
-              //               setIsEditing(true);
-              //               setEditedUserName(selectedChat?.userName);
-              //             }}
-              //           />
-              //         </>
-              //       )}
-              //     </div>
-              //     <div className="text-gray-500 mt-1">
-              //       Created by{" "}
-              //       {allUsers?.find(
-              //         (user) => user._id == selectedChat?.createdBy
-              //       )?.userName || "Unknown User"}
-              //     </div>
-              //   </div>
-              //   <div className="mt-4 p-4">
-              //     <div className="flex items-center justify-between p-2 border-b border-gray-400 dark:border-primary-light/20">
-              //       <span className="text-gray-600 dark:text-primary-light/80 font-bold ">
-              //         Participants
-              //       </span>
-              //       <span className="text-gray-800 dark:text-primary-light/80 ">
-              //         {selectedChat?.members.length}
-              //       </span>
-              //     </div>
-              //     <div className="flex flex-col max-h-48 overflow-y-auto modal_scroll">
-              //       <div
-              //         className="flex items-center p-2 cursor-pointer"
-              //         onClick={() => {
-              //           setGroupUsers(selectedChat?.members);
-              //           setIsGroupModalOpen(false);
-              //           setIsModalOpen(true);
-              //         }}
-              //       >
-              //         <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-primary-light/20 flex items-center justify-center mr-2 font-bold">
-              //           +
-              //         </div>
-              //         <span className="text-gray-800 dark:text-primary-light/80 font-bold">
-              //           Add participants
-              //         </span>
-              //       </div>
-              //       {selectedChat?.members.map((member, index) => {
-              //         const user = allUsers.find((user) => user._id === member);
-              //         return (
-              //           <div
-              //             key={index}
-              //             className="flex items-center p-2 group"
-              //           >
-              //             <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-              //               {user?.photo && user.photo !== "null" ? (
-              //                 <img
-              //                   src={`${IMG_URL}${user.photo.replace(
-              //                     /\\/g,
-              //                     "/"
-              //                   )}`}
-              //                   alt={`${user.userName}`}
-              //                   className="object-cover h-full w-full"
-              //                 />
-              //               ) : (
-              //                 <span className="text-gray-900 text-lg font-bold">
-              //                   {user.userName
-              //                     .split(" ")
-              //                     .map((n) => n[0].toUpperCase())
-              //                     .join("")}
-              //                 </span>
-              //               )}
-              //             </div>
-              //             <span className="text-gray-800 dark:text-primary-light/80">
-              //               {user?.userName}
-              //             </span>
-              //             <button
-              //               className="ml-auto text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs border border-red-500 rounded-full px-2 py-1"
-              //               onClick={() => {
-              //                 dispatch(
-              //                   leaveGroup({
-              //                     groupId: selectedChat._id,
-              //                     userId: user._id,
-              //                     removeId: userId,
-              //                   })
-              //                 );
-              //                 socket.emit("update-group", {
-              //                   groupId: selectedChat._id,
-              //                   members: selectedChat?.members.filter(
-              //                     (id) => id !== user._id
-              //                   ),
-              //                 });
-              //                 dispatch(getAllMessageUsers());
-              //               }}
-              //             >
-              //               Remove
-              //             </button>
-              //           </div>
-              //         );
-              //       })}
-              //     </div>
-              //     <div className="flex items-center justify-between p-2">
-              //       <span
-              //         className="text-red-600 font-bold cursor-pointer"
-              //         onClick={() => {
-              //           dispatch(
-              //             leaveGroup({
-              //               groupId: selectedChat._id,
-              //               userId: userId,
-              //             })
-              //           );
-              //           socket.emit("update-group", {
-              //             groupId: selectedChat._id,
-              //             members: selectedChat?.members.filter(
-              //               (id) => id !== userId
-              //             ),
-              //           });
-              //           dispatch(getAllMessageUsers());
-              //           setIsGroupModalOpen(false);
-              //         }}
-              //       >
-              //         Leave Group
-              //       </span>
-              //     </div>
-              //   </div>
-              // </div>
-              <GroupProfile
-                selectedChat={selectedChat}
-                setIsGroupModalOpen={setIsGroupModalOpen}
-                setIsModalOpen={setIsModalOpen}
-                setGroupUsers={setGroupUsers}
-                allUsers={allUsers}
-                userId={userId}
-                socket={socket}
-                IMG_URL={IMG_URL}
-              />
-            )}
-            {isModalOpen && (
-              <AddParticipants
-                selectedChat={selectedChat}
-                setIsModalOpen={setIsModalOpen}
-                allUsers={allUsers}
-                userId={userId}
-                socket={socket}
-                groupUsers={groupUsers}
-                setGroupUsers={setGroupUsers}
-              />
-            )}
-            {isGroupCreateModalOpen && (
-              <CreatedGroup
-                isOpen={isGroupCreateModalOpen}
-                onClose={() => setIsGroupCreateModalOpen(false)}
-                allUsers={allUsers}
-                currentUser={currentUser}
-                socket={socket}
-              />
-            )}
-            {isUserProfileModalOpen && !selectedChat.members && (
-              <ProfileUser
-                isOpen={isUserProfileModalOpen}
-                onClose={() => setIsUserProfileModalOpen(false)}
-                selectedChat={selectedChat}
-                messages={messages}
-                handleImageClick={handleImageClick}
-              />
-            )}
-          </div>
+            {/* Show Send to Bottom button only if user has scrolled up */}
+            {showScrollToBottom && (
+              <button
+                type="button"
+                className="fixed bottom-20 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
+                onClick={scrollToBottom}
+                aria-label="Send to Bottom"
+              >
+                <FaArrowDown className="w-5 h-5" />
+              </button>
+            )
+            }
+          </>
+          ) : (
+          <Front data={user} />
+          )
+          }
+        </div >
         </>
       )}
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
             ? ""
             : "hidden"
-        }`}
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
+          className={`flex-1 relative ${isReceiving
               ? "flex items-center justify-center"
               : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+              )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2797,9 +2534,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2809,9 +2545,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2833,60 +2568,61 @@ const Chat2 = () => {
       </div>
 
       {/* ========= incoming call ========= */}
-      {incomingCall && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-black rounded-lg p-6 w-72 text-center">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden">
-              {/* Profile image or default avatar */}
-              {allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
-                <img
-                  src={`${IMG_URL}${allUsers
-                    .find((user) => user._id === incomingCall.fromEmail)
-                    ?.photo.replace(/\\/g, "/")}`} // Replace with actual user profile image
-                  alt="Caller"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-300 grid place-content-center">
-                  <IoPersonCircleOutline className="text-4xl" />
-                </div>
-              )}
-            </div>
-            <h3 className="text-2xl text-white mb-2">
-              {
-                allUsers.find((user) => user._id === incomingCall.fromEmail)
-                  ?.userName
-              }
-            </h3>
-            <p className="text-gray-400 mb-8 animate-pulse">
-              Incoming {incomingCall.type} call...
-            </p>
-            <div className="flex justify-center gap-8">
-              {/* {console.log(incomingCall.type)} */}
-
-              <button
-                onClick={
-                  incomingCall.type === "video"
-                    ? acceptVideoCall
-                    : acceptVoiceCall
+      {
+        incomingCall && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+            <div className="bg-black rounded-lg p-6 w-72 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden">
+                {/* Profile image or default avatar */}
+                {allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo &&
+                  allUsers.find((user) => user._id === incomingCall.fromEmail)
+                    ?.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${allUsers
+                      .find((user) => user._id === incomingCall.fromEmail)
+                      ?.photo.replace(/\\/g, "/")}`} // Replace with actual user profile image
+                    alt="Caller"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-300 grid place-content-center">
+                    <IoPersonCircleOutline className="text-4xl" />
+                  </div>
+                )}
+              </div>
+              <h3 className="text-2xl text-white mb-2">
+                {
+                  allUsers.find((user) => user._id === incomingCall.fromEmail)
+                    ?.userName
                 }
-                className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-              >
-                <FaPhone className="text-xl" />
-              </button>
-              <button
-                onClick={() => rejectVideoCall(incomingCall.type)}
-                className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-              >
-                <MdCallEnd className="text-xl" />
-              </button>
+              </h3>
+              <p className="text-gray-400 mb-8 animate-pulse">
+                Incoming {incomingCall.type} call...
+              </p>
+              <div className="flex justify-center gap-8">
+                {/* {console.log(incomingCall.type)} */}
+
+                <button
+                  onClick={
+                    incomingCall.type === "video"
+                      ? acceptVideoCall
+                      : acceptVoiceCall
+                  }
+                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+                >
+                  <FaPhone className="text-xl" />
+                </button>
+                <button
+                  onClick={() => rejectVideoCall(incomingCall.type)}
+                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <MdCallEnd className="text-xl" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {incomingShare && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -3076,9 +2812,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -3122,9 +2857,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
