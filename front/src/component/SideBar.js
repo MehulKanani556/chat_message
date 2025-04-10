@@ -43,7 +43,13 @@ const Sidebar = ({ user, onProfileClick }) => {
     }
   };
 
-  const [activeItem, setActiveItem] = useState(null);
+  const [activeItem, setActiveItem] = useState("chat");
+
+  useEffect(() => {
+    const event = new CustomEvent('showChatList');
+    window.dispatchEvent(event);
+    setActiveItem("chat");
+  }, []);
 
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },

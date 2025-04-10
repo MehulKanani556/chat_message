@@ -168,9 +168,9 @@ const Profile = () => {
             <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Profile</h1>
           </div>
         </div>
-            <div className="bg-[#F5F7FB] overflow-hidden dark:bg-primary-dark/95">
+            <div className=" overflow-hidde">
                 {/* Profile Header */}
-                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto dark:bg-primary-dark/95">
+                <div className="flex flex-col items-center justify-center p-6   border-b border-gray-300 dark:border-primary-light/15">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
                             <img src={profileData.profileImage} alt="Profile" />
@@ -186,7 +186,7 @@ const Profile = () => {
                 </div>
 
                 {/* Profile Content */}
-                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8 dark:bg-primary-dark/95 dark:text-primary-light">
+                <div className="max-w-md mx-auto  rounded-lg shadow-sm p-8  dark:text-primary-light">
                     <p>
                         If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
                     </p>
@@ -212,7 +212,7 @@ const Profile = () => {
                                 {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
 
-                            {userInfoOpen && (
+                           
                                 <div className="px-4 pb-4 pt-1">
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Name</p>
@@ -224,7 +224,7 @@ const Profile = () => {
                                         <p className="text-black font-semibold">{profileData.email}</p>
                                     </div>
                                 </div>
-                            )}
+                            
                         </div>
 
                         {/* Files Section */}
