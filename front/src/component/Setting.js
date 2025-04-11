@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser } from '../redux/slice/user.slice';
-import { MdEdit } from 'react-icons/md';
+import { MdEdit, MdModeEdit } from 'react-icons/md';
 
 const Setting = () => {
     const navigate = useNavigate();
@@ -32,11 +32,11 @@ const Setting = () => {
     const targetUserId = urlUserId || (currentUser ? currentUser._id : null);
 
     const [profileData, setProfileData] = useState({
-        name: 'User',
+        name: '',
         email: '',
         phone: '',
-        bio: 'No bio available',
-        profileImage: 'https://via.placeholder.com/150',
+        bio: '',
+        profileImage: '',
     });
     const [tempData, setTempData] = useState({ ...profileData });
 
@@ -53,18 +53,18 @@ const Setting = () => {
 
                     setUser(userData);
                     setProfileData({
-                        name: userData.userName || 'User',
+                        name: userData.userName || '',
                         email: userData.email || '',
                         phone: userData.phone || '',
-                        bio: userData.bio || 'No bio available',
-                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                        bio: userData.bio || '',
+                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : '',
                     });
                     setTempData({
-                        name: userData.userName || 'User',
+                        name: userData.userName || '',
                         email: userData.email || '',
                         phone: userData.phone || '',
-                        bio: userData.bio || 'No bio available',
-                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                        bio: userData.bio || '',
+                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : '',
                     });
                 } catch (error) {
                     console.error('Error fetching user data:', error);
@@ -79,18 +79,18 @@ const Setting = () => {
             console.log('Using current user data:', currentUser._id);
             setUser(currentUser);
             setProfileData({
-                name: currentUser.userName || 'User',
+                name: currentUser.userName || '',
                 email: currentUser.email || '',
                 phone: currentUser.phone || '',
-                bio: currentUser.bio || 'No bio available',
-                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                bio: currentUser.bio || '',
+                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : '',
             });
             setTempData({
-                name: currentUser.userName || 'User',
+                name: currentUser.userName || '',
                 email: currentUser.email || '',
                 phone: currentUser.phone || '',
-                bio: currentUser.bio || 'No bio available',
-                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : 'https://via.placeholder.com/150',
+                bio: currentUser.bio || '',
+                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : '',
             });
         }
     }, [currentUser, targetUserId]);
@@ -157,7 +157,6 @@ const Setting = () => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                console.log('File loaded:', reader.result);
                 setTempData({
                     ...tempData,
                     profileImage: reader.result,
@@ -168,8 +167,33 @@ const Setting = () => {
                     ...prev,
                     profileImage: reader.result
                 }));
+                // Automatically save the image when uploaded
+                handleSaveImage(file);
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSaveImage = async (file) => {
+        try {
+            setIsLoading(true);
+
+            // Dispatch the update action
+            const result = await dispatch(updateUser({ id: user._id, values: { photo: file } })).unwrap();
+
+            // Update local state
+            if (result && result.user) {
+                setUser(result.user);
+                setProfileData(prev => ({
+                    ...prev,
+                    profileImage: result.user.photo ? `${IMG_URL}${result.user.photo.replace(/\\/g, "/")}` : prev.profileImage
+                }));
+            }
+
+            setIsLoading(false);
+        } catch (error) {
+            console.error('Error updating profile image:', error);
+            setIsLoading(false);
         }
     };
 
@@ -186,20 +210,21 @@ const Setting = () => {
         try {
             setIsLoading(true);
 
-            // Create form data for the update
-            const formData = new FormData();
-            formData.append('userName', tempData.name);
-            formData.append('email', tempData.email);
-            formData.append('phone', tempData.phone);
-            formData.append('bio', tempData.bio);
+            // Prepare the update object
+            const updateObject = {
+                userName: tempData.name,
+                email: tempData.email,
+                phone: tempData.phone,
+                bio: tempData.bio,
+            };
 
-            // If there's a new image file, append it
+            // If there's a new image file, add it to the update object
             if (tempData.photoFile) {
-                formData.append('photo', tempData.photoFile);
+                updateObject.photo = tempData.photoFile;
             }
 
             // Dispatch the update action
-            const result = await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
+            const result = await dispatch(updateUser({ id: user._id, values: updateObject })).unwrap();
 
             // Update local state
             setProfileData({
@@ -235,7 +260,7 @@ const Setting = () => {
     // };
 
     return (
-        <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
+        <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full  relative">
             <div>
                 <div className="p-4 pb-2 flex items-center">
                     <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Settings</h1>
@@ -243,10 +268,16 @@ const Setting = () => {
             </div>
             <div className="bg-[#F5F7FB] overflow-hidden dark:bg-primary-dark/95 h-[100vh]">
                 {/* Profile Header */}
-                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg shadow-sm max-w-xs mx-auto dark:bg-primary-dark/95">
-                    <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-pink-100 overflow-hidden mb-3">
-                            <img src={profileData.profileImage} alt="Profile" />
+                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg max-w-xs mx-auto dark:bg-primary-dark/95">
+                    <div className="relative group">
+                        <div className="w-24 h-24 relative rounded-full bg-pink-100 overflow-hidden mb-3">
+                            <img src={profileData.profileImage} alt="Profile" className='h-full w-full object-cover' />
+                            <div
+                                className='absolute inset-0 bg-[#C4C8D0]/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer'
+                                onClick={() => document.getElementById('profileImageInput').click()}
+                            >
+                                <MdEdit size={24} className="text-white" />
+                            </div>
                         </div>
                         <input
                             type="file"
@@ -255,12 +286,6 @@ const Setting = () => {
                             id="profileImageInput"
                             onChange={handleImageUpload}
                         />
-                        <div 
-                            className='absolute bottom-5 right-0 bg-[#C4C8D0] rounded-full p-1 cursor-pointer w-8 h-8 flex items-center justify-center'
-                            onClick={() => document.getElementById('profileImageInput').click()}
-                        >
-                            <MdEdit size={16} />
-                        </div>
                     </div>
 
                     <h2 className="text-lg font-medium text-gray-800 dark:text-primary-light mt-2">{profileData.name}</h2>
@@ -272,13 +297,13 @@ const Setting = () => {
                 </div>
 
                 {/* Profile Content */}
-                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg shadow-sm p-8 dark:bg-primary-dark/95 dark:text-primary-light">
+                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg p-8 dark:bg-primary-dark/95 dark:text-primary-light">
                     {/* Main accordion header */}
-                    <div
+                    {/* <div
                         className="p-4 cursor-pointer flex items-center justify-between"
                         onClick={toggleAccordion}
                     >
-                    </div>
+                    </div> */}
 
                     {/* Accordion content */}
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
@@ -290,7 +315,7 @@ const Setting = () => {
                             >
                                 <div className="flex items-center space-x-2">
                                     {/* <CgProfile /> */}
-                                    <span className="font-medium ">Personal Info</span>
+                                    <span className="text-lg font-medium ">Personal Info</span>
                                 </div>
                                 {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
@@ -298,16 +323,8 @@ const Setting = () => {
                             {userInfoOpen && (
                                 <div className="px-4 pb-4 pt-1">
                                     <div className="mb-4">
-                                        <div className="flex justify-between items-center">
-                                            <p className="text-gray-400 text-sm">Name</p>
-                                            <button
-                                                onClick={() => handleEditField('name')}
-                                                className="text-black dark:text-white flex items-center gap-2"
-                                            >
-                                                <FaEdit size={16} />
-                                                Edit
-                                            </button>
-                                        </div>
+
+                                        <p className="text-gray-400 text-sm">Name</p>
                                         {editingField === 'name' ? (
                                             <input
                                                 type="text"
@@ -320,11 +337,57 @@ const Setting = () => {
                                                         handleSaveField('name');
                                                     }
                                                 }}
-                                                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-primary-dark/80 dark:text-primary-light"
+                                                className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
                                                 autoFocus
                                             />
                                         ) : (
-                                            <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
+                                            <div className='relative'>
+
+                                                <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
+                                                <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
+                                                    <button
+                                                        onClick={() => handleEditField('name')}
+                                                        className="text-black dark:text-white flex items-center gap-2"
+                                                    >
+                                                        <MdModeEdit size={16} />
+
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mb-4">
+
+                                        <p className="text-gray-400 text-sm">About</p>
+                                        {editingField === 'bio' ? (
+                                            <input
+                                                type="text"
+                                                name="bio"
+                                                value={tempData.bio}
+                                                onChange={handleInputChange}
+                                                onBlur={() => handleSaveField('bio')}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleSaveField('bio');
+                                                    }
+                                                }}
+                                                className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <div className='relative'>
+
+                                                <p className="text-black font-semibold dark:text-primary-light">{profileData.bio || "Add bio"}</p>
+                                                <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
+                                                    <button
+                                                        onClick={() => handleEditField('bio')}
+                                                        className="text-black dark:text-white flex items-center gap-2"
+                                                    >
+                                                        <MdModeEdit size={16} />
+
+                                                    </button>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
 

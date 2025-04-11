@@ -310,6 +310,7 @@ export const updateUser = createAsyncThunk(
     Object.keys(values).forEach((key) => {
       formData.append(key, values[key]);
     });
+    console.log("id",id,values)
     try {
       const response = await axios.put(`${BASE_URL}/editUser/${id}`, formData, {
         headers: {

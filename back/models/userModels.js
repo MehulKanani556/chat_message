@@ -27,6 +27,9 @@ const userSchema = mongoose.Schema(
     dob: {
       type: Date,
     },
+    bio: {
+      type: String,
+    },
     isAI: {
       type: Boolean,
       default: false,
