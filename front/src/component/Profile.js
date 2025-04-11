@@ -31,6 +31,20 @@ const Profile = () => {
     });
     const [tempData, setTempData] = useState({ ...profileData });
 
+    useEffect(() => {
+        const handleShowProfile = (event) => {
+            const userId = event.detail?.userId;
+            if (userId) {
+                setUrlUserId(userId);
+            }
+        };
+
+        window.addEventListener('showProfile', handleShowProfile);
+        return () => {
+            window.removeEventListener('showProfile', handleShowProfile);
+        };
+    }, []);
+
     // Update profile data when currentUser changes
     useEffect(() => {
         if (currentUser) {
@@ -45,9 +59,7 @@ const Profile = () => {
     }, [currentUser]);
 
     useEffect(() => {
-        // If we have a targetUserId and it's different from the current user
         if (targetUserId && (!currentUser || targetUserId !== currentUser._id)) {
-            // Fetch user data from API
             const fetchUserData = async () => {
                 try {
                     setIsLoading(true);
@@ -131,10 +143,6 @@ const Profile = () => {
             setIsEditing(false);
             setIsLoading(false);
 
-            // If onBack is provided, call it after saving
-            // if (onBack) {
-            //     onBack();
-            // }
         } catch (error) {
             console.error('Error updating profile:', error);
             setIsLoading(false);
@@ -143,11 +151,6 @@ const Profile = () => {
 
     const handleCancel = () => {
         setIsEditing(false);
-
-        // // If onBack is provided, call it when canceling
-        // if (onBack) {
-        //     onBack();
-        // }
     };
 
     const handleInputChange = (e) => {
