@@ -30,9 +30,9 @@ const userSchema = mongoose.Schema(
     bio: {
       type: String,
     },
-    isAI: {
-      type: Boolean,
-      default: false,
+    archiveUsers: {
+      type: Array,
+      default: [],
     },
   },
   {
