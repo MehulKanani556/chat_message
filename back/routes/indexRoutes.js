@@ -6,6 +6,7 @@ const {
   updateUser,
   getSingleUser,
   getAllCallUsers,
+  archiveUser,
 } = require("../controller/userController");
 const {
   userLogin,
@@ -53,6 +54,7 @@ indexRoutes.get("/allMessageUsers", auth, getAllMessageUsers);
 indexRoutes.get("/allCallUsers", auth, getAllCallUsers);
 indexRoutes.put("/editUser/:id", auth, upload.single("photo"), updateUser);
 indexRoutes.get("/singleUser/:id", auth, getSingleUser);
+indexRoutes.post("/archiveUser", auth, archiveUser);
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);

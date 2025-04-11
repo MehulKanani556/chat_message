@@ -27,9 +27,9 @@ const userSchema = mongoose.Schema(
     dob: {
       type: Date,
     },
-    isAI: {
-      type: Boolean,
-      default: false,
+    archiveUsers: {
+      type: Array,
+      default: [],
     },
   },
   {

@@ -3,6 +3,9 @@ import { PiPencilSimpleBold } from "react-icons/pi";
 import { VscCallIncoming, VscCallOutgoing } from "react-icons/vsc";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { FaChevronDown } from "react-icons/fa";
+import { RiArrowUpDownLine } from "react-icons/ri";
 const ChatList = ({
   allMessageUsers,
   item,
@@ -16,11 +19,23 @@ const ChatList = ({
 }) => {
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [archive, setArchive] = useState(false);
+  const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
+  const {user} =
+  useSelector((state) => state.user);
 
-  // Filter users based on search input
-  const filteredMessageUsers = allMessageUsers.filter((user) =>
-    user.userName.toLowerCase().includes(searchInput.toLowerCase())
-  );
+    useEffect(() => {
+      let filteredUsers = [];
+      if(archive){
+        filteredUsers = allMessageUsers.filter(item => user.archiveUsers.includes(item._id))
+        filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
+      }else{
+        filteredUsers = allMessageUsers.filter(item => !user.archiveUsers.includes(item._id))
+        filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
+      }
+      setFilteredMessageUsers(filteredUsers);
+      console.log(filteredUsers);
+    }, [archive, searchInput, allMessageUsers]);
 
   // Filter all users based on search input
   const filteredAllUsers = allUsers.filter(
@@ -62,16 +77,22 @@ const ChatList = ({
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
           </div>
-          <div className="text-gray-700 font-medium dark:text-primary-light">
-            {!findUser ? "Recent" : "All Users"}
+          <div className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2" onClick={() => {
+            if(!findUser){
+              setArchive(!archive)
+            }
+          }}>
+            {!findUser ? `${archive ? `Archived`  : "Recent"}` : "All Users"}
+            {!findUser && <RiArrowUpDownLine/>}
           </div>
         </div>
 
         {/* Chat list - scrollable area */}
         {!findUser ? (
           <div className="overflow-y-auto h-[calc(100vh-150px)] p-3 scrollbar-hide">
-            {filteredMessageUsers
-              .slice()
+           { 
+             filteredMessageUsers
+             .slice()
               .sort((a, b) => {
                 // Prioritize the current user
                 if (a._id === currentUser) return -1;
