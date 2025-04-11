@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BsChatDots,
@@ -17,6 +17,10 @@ const Sidebar = ({ user, onProfileClick }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
 
   // Check saved theme on first load
   useEffect(() => {
@@ -37,29 +41,35 @@ const Sidebar = ({ user, onProfileClick }) => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleProfileClick = () => {
-    if (onProfileClick) {
-      onProfileClick(user?._id);
-    }
+    setShowDropdown(!showDropdown);
   };
 
-  const [activeItem, setActiveItem] = useState("chat");
-
-  useEffect(() => {
-    const event = new CustomEvent('showChatList');
-    window.dispatchEvent(event);
-    setActiveItem("chat");
-  }, []);
+  const [activeItem, setActiveItem] = useState(null);
 
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
-    {
-      icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick: () => {
-        const event = new CustomEvent('showProfile');
-        window.dispatchEvent(event);
-        setActiveItem("Profile");
-      }
-    },
+    // {
+    //   icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick: () => {
+    //     const event = new CustomEvent('showProfile');
+    //     window.dispatchEvent(event);
+    //     setActiveItem("Profile");
+    //   }
+    // },
     {
       icon: <BsChatDots size={20} />, path: "#", label: "chat", onClick: () => {
         const event = new CustomEvent('showChatList');
@@ -74,22 +84,29 @@ const Sidebar = ({ user, onProfileClick }) => {
         setActiveItem("Groups");
       }
     },
-    {
-      icon: <BsGear size={20} />, path: "#", label: "Settings", onClick: () => {
-        const event = new CustomEvent('showSettings');
-        window.dispatchEvent(event);
-        setActiveItem("Settings");
-      }
-    },
-    {
-      icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
-        const event = new CustomEvent('showLanguage');
-        window.dispatchEvent(event);
-        setActiveItem("Language");
-      }
-    },
+    // {
+    //   icon: <BsGear size={20} />, path: "#", label: "Settings", onClick: () => {
+    //     const event = new CustomEvent('showSettings');
+    //     window.dispatchEvent(event);
+    //     setActiveItem("Settings");
+    //   }
+    // },
+    // {
+    //   icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
+    //     const event = new CustomEvent('showLanguage');
+    //     window.dispatchEvent(event);
+    //     setActiveItem("Language");
+    //   }
+    // },
     // { icon: <BsMoonStars size={20} />, path: "/chat", label: "Theme" },
   ];
+
+  // Logout
+  const handleLogout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("userId");
+    navigate("/");
+  };
 
   return (
     <nav className="
@@ -130,7 +147,7 @@ const Sidebar = ({ user, onProfileClick }) => {
         ))}
 
         {/* Profile Image at Bottom (only visible on desktop) */}
-        <div className=" md:flex mt-auto mb-4  md:flex-col items-center">
+        <div className="md:flex mt-auto mb-4 md:flex-col items-center relative" ref={dropdownRef}>
           <button
             onClick={toggleTheme}
             className={`
@@ -146,16 +163,19 @@ const Sidebar = ({ user, onProfileClick }) => {
           >
             {isDarkMode ? <MdOutlineWbSunny size={20} /> : <BsMoonStars size={20} />}
           </button>
-          <div className="w-10 h-10 rounded-full bg-gray-300  overflow-hidden flex items-center justify-center border border-gray-500">
+          <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center border border-gray-500">
             {user?.photo && user.photo !== "null" ? (
               <img
                 src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
                 alt="Profile"
-                className="object-fill w-full h-full"
+                className="object-fill w-full h-full cursor-pointer"
                 onClick={handleProfileClick}
               />
             ) : (
-              <span className="text-black text-lg font-bold capitalize">
+              <span
+                className="text-black text-lg font-bold capitalize cursor-pointer"
+                onClick={handleProfileClick}
+              >
                 {user?.userName && user?.userName.includes(" ")
                   ? user?.userName.split(" ")[0][0] +
                   user?.userName.split(" ")[1][0]
@@ -163,6 +183,63 @@ const Sidebar = ({ user, onProfileClick }) => {
               </span>
             )}
           </div>
+
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <div className="absolute right-0 md:right-auto md:left-[55px] mt-2 w-48 bg-white dark:bg-primary-dark rounded-md shadow-lg py-1 z-50">
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setShowDropdown(false);
+                    const event = new CustomEvent('showProfile');
+                    window.dispatchEvent(event);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  View Profile
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDropdown(false);
+                    setIsLogoutModalOpen(true);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Logout Modal */}
+          {isLogoutModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
+              <div className="bg-white rounded-lg p-10 dark:bg-primary-dark">
+                <h3 className="text-lg font-semibold mb-8 dark:text-gray-200">
+                  Are you sure you want to logout?
+                </h3>
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={() => setIsLogoutModalOpen(false)}
+                    className="px-4 py-2 bg-gray-500 text-white rounded"
+                    style={{ backgroundColor: "white", color: "black", border: "1px solid black" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsLogoutModalOpen(false);
+                      handleLogout();
+                    }}
+                    className="px-4 py-2 text-white rounded"
+                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </nav>

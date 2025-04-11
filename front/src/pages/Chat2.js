@@ -256,7 +256,6 @@ const Chat2 = () => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUserName, setEditedUserName] = useState(user?.userName || "");
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeMessageId, setActiveMessageId] = useState(null);
   const [isGroupCreateModalOpen, setIsGroupCreateModalOpen] = useState(false);
@@ -930,11 +929,7 @@ const Chat2 = () => {
 
   // ============================Log out ============================
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("userId");
-    navigate("/");
-  };
+
 
   const handleEditClick = () => {
     setIsEditingUserName(true);
@@ -3032,35 +3027,7 @@ const Chat2 = () => {
           </div>
         </div>
       )} */}
-      {/* Logout Modal */}
-      {/* {isLogoutModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-5 modal_background">
-            <h3 className="text-lg font-semibold mb-4">
-              Are you sure you want to logout?
-            </h3>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setIsLogoutModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded"
-                style={{ backgroundColor: "#3B82F6" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // Add your logout logic here
-                  setIsLogoutModalOpen(false);
-                  handleLogout();
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
+      
 
       {/* group Profile Modal */}
       {/* {isGroupModalOpen && (
