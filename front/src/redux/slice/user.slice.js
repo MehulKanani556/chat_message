@@ -15,7 +15,7 @@ const handleErrors = (error, dispatch, rejectWithValue) => {
 
 const initialState = {
   user: null,
-  allCallUsers:[],
+  allCallUsers: [],
   onlineUser: [],
   allUsers: [],
   allMessageUsers: [],
@@ -310,7 +310,7 @@ export const updateUser = createAsyncThunk(
     Object.keys(values).forEach((key) => {
       formData.append(key, values[key]);
     });
-    console.log("id",id,values)
+    console.log("id", id, values)
     try {
       const response = await axios.put(`${BASE_URL}/editUser/${id}`, formData, {
         headers: {
@@ -327,7 +327,7 @@ export const updateUser = createAsyncThunk(
 
 export const createGroup = createAsyncThunk(
   "user/createGroup",
-  async ({groupData, socket}, { rejectWithValue }) => {
+  async ({ groupData, socket }, { rejectWithValue }) => {
     const token = await sessionStorage.getItem("token");
     const formData = new FormData();
     Object.keys(groupData).forEach((key) => {
@@ -432,13 +432,13 @@ export const deleteGroup = createAsyncThunk(
 export const addParticipants = createAsyncThunk(
   "user/addParticipants",
   async ({ groupId, members, addedBy }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");  
+    const token = await sessionStorage.getItem("token");
     try {
       const response = await axios.post(`${BASE_URL}/addParticipants`, { groupId, members, addedBy }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }); 
+      });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -499,6 +499,40 @@ export const clearChat = createAsyncThunk(
           },
         }
       );
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+export const updateUserGroupToJoin = createAsyncThunk(
+  "user/updateUserGroupToJoin",
+  async ({ id, groupToJoin }, { rejectWithValue }) => {
+    const token = await sessionStorage.getItem("token");
+    try {
+      const response = await axios.post(`${BASE_URL}/updateUserGroupToJoin/${id}`, { groupToJoin }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+export const updateUserProfilePhotoPrivacy = createAsyncThunk(
+  "user/updateUserProfilePhotoPrivacy",
+  async ({ id, profilePhoto }, { rejectWithValue }) => {
+    const token = await sessionStorage.getItem("token");
+    try {
+      const response = await axios.post(`${BASE_URL}/updateUserProfilePhotoPrivacy/${id}`, { profilePhoto }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -755,6 +789,26 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to retrieve call users";
+      })
+      .addCase(updateUserGroupToJoin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "User group to join updated successfully";
+      })
+      .addCase(updateUserGroupToJoin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message = action.payload?.message || "Failed to update user group to join";
+      })
+      .addCase(updateUserProfilePhotoPrivacy.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "User profile photo privacy updated successfully";
+      })
+      .addCase(updateUserProfilePhotoPrivacy.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message = action.payload?.message || "Failed to update user profile photo privacy";
       });
   },
 });

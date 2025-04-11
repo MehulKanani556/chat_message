@@ -98,7 +98,6 @@ const Sidebar = ({ user, onProfileClick }) => {
     //     setActiveItem("Language");
     //   }
     // },
-    // { icon: <BsMoonStars size={20} />, path: "/chat", label: "Theme" },
   ];
 
   // Logout
@@ -191,12 +190,12 @@ const Sidebar = ({ user, onProfileClick }) => {
                 <button
                   onClick={() => {
                     setShowDropdown(false);
-                    const event = new CustomEvent('showProfile');
+                    const event = new CustomEvent('showSettings');
                     window.dispatchEvent(event);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  View Profile
+                  Profile
                 </button>
                 <button
                   onClick={() => {

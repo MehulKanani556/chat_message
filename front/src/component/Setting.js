@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp, FaPaperclip, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
 import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
-import { updateUser } from '../redux/slice/user.slice';
+import { updateUser, updateUserGroupToJoin, updateUserProfilePhotoPrivacy } from '../redux/slice/user.slice';
 import { MdEdit, MdModeEdit } from 'react-icons/md';
 
 const Setting = () => {
@@ -27,6 +27,27 @@ const Setting = () => {
     const [lastSeenPrivacy, setLastSeenPrivacy] = useState(true);
     const [editedUserName, setEditedUserName] = useState(user?.userName || "");
     const [isEditingUserName, setIsEditingUserName] = useState(false);
+
+    // Add refs for the dropdowns
+    const privacyDropdownRef = useRef(null);
+    const groupsDropdownRef = useRef(null);
+
+    // Add useEffect for handling clicks outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (privacyDropdownRef.current && !privacyDropdownRef.current.contains(event.target)) {
+                setPrivacyDropdownOpen(false);
+            }
+            if (groupsDropdownRef.current && !groupsDropdownRef.current.contains(event.target)) {
+                setGroupsPrivacyDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Determine which user ID to use (from props, URL params, or current user)
     const targetUserId = urlUserId || (currentUser ? currentUser._id : null);
@@ -415,11 +436,11 @@ const Setting = () => {
                                 <div className='px-4 pb-4 pt-1 relative'>
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-gray-400 text-sm">Profile Photo</p>
-                                        <div className="relative inline-block text-left">
+                                        <div className="relative inline-block text-left" ref={privacyDropdownRef}>
                                             <div>
                                                 <button
                                                     type="button"
-                                                    className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
+                                                    className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
                                                     id="options-menu"
                                                     aria-haspopup="true"
                                                     aria-expanded={privacyDropdownOpen}
@@ -444,6 +465,7 @@ const Setting = () => {
                                                                 onClick={() => {
                                                                     setProfilePhotoPrivacy(option);
                                                                     setPrivacyDropdownOpen(false);
+                                                                    dispatch(updateUserProfilePhotoPrivacy({ id: user._id, profilePhoto: option }));
                                                                 }}
                                                                 className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
                                                                     } block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white`}
@@ -460,11 +482,11 @@ const Setting = () => {
 
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-gray-400 text-sm">Groups</p>
-                                        <div className="relative inline-block text-left">
+                                        <div className="relative inline-block text-left" ref={groupsDropdownRef}>
                                             <div>
                                                 <button
                                                     type="button"
-                                                    className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
+                                                    className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
                                                     id="options-menu"
                                                     aria-haspopup="true"
                                                     aria-expanded={groupsPrivacyDropdownOpen}
@@ -477,7 +499,7 @@ const Setting = () => {
 
                                             {groupsPrivacyDropdownOpen && (
                                                 <div
-                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800"
+                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black dark:bg-gray-800"
                                                     role="menu"
                                                     aria-orientation="vertical"
                                                     aria-labelledby="options-menu"
@@ -489,6 +511,7 @@ const Setting = () => {
                                                                 onClick={() => {
                                                                     setProfilePhotoPrivacy(option);
                                                                     setGroupsPrivacyDropdownOpen(false);
+                                                                    dispatch(updateUserGroupToJoin({ id: user._id, groupToJoin: option }));
                                                                 }}
                                                                 className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
                                                                     } block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white`}

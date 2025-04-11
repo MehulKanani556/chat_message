@@ -693,3 +693,62 @@ exports.getAllCallUsers = async (req, res) => {
     });
   }
 };
+
+exports.updateUserGroupToJoin = async (req, res) => {
+  try {
+    const updatedUser = await user.findByIdAndUpdate(
+      req.params.id,
+      { $set: { groupToJoin: req.body.groupToJoin } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "User privacy updated successfully",
+      users: updatedUser,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+
+exports.updateUserProfilePhotoPrivacy = async (req, res) => {
+  try {
+    const updatedUser = await user.findByIdAndUpdate(
+      req.params.id,
+      { $set: { profilePhoto: req.body.profilePhoto } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "User profile photo privacy updated successfully",
+      users: updatedUser,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+

@@ -6,6 +6,8 @@ const {
   updateUser,
   getSingleUser,
   getAllCallUsers,
+  updateUserGroupToJoin,
+  updateUserProfilePhotoPrivacy,
 } = require("../controller/userController");
 const {
   userLogin,
@@ -44,7 +46,8 @@ indexRoutes.post("/google-login", googleLogin);
 indexRoutes.post("/forgotPassword", forgotPassword);
 indexRoutes.post("/verifyOtp", verifyOtp);
 indexRoutes.post("/changePassword", changePassword);
-
+indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
+indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
 // User Routes
 
 indexRoutes.post("/createUser", createUser);

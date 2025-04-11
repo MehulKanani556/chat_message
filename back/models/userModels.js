@@ -25,7 +25,7 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     dob: {
-      type: Date,
+      type: Date, 
     },
     bio: {
       type: String,
@@ -33,6 +33,14 @@ const userSchema = mongoose.Schema(
     isAI: {
       type: Boolean,
       default: false,
+    },
+    groupToJoin: {
+      type: String,
+      default: "everyone",
+    },
+    profilePhoto: {
+      type: String,
+      default: "everyone",
     },
   },
   {
