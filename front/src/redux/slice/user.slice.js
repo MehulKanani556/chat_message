@@ -22,8 +22,8 @@ const initialState = {
   messages: [],
   groups: [],
   isAuthenticated:
-    !!sessionStorage.getItem("token") &&
-    sessionStorage.getItem("role") === "admin",
+  !!sessionStorage.getItem("token") &&
+  sessionStorage.getItem("role") === "admin",
   loading: false,
   error: null,
   loggedIn: false,
@@ -446,8 +446,6 @@ export const addParticipants = createAsyncThunk(
   }
 );
 
-
-
 export const leaveGroup = createAsyncThunk(
   "user/leaveGroup",
   async ({ groupId, userId, removeId }, { rejectWithValue }) => {
@@ -474,6 +472,23 @@ export const getOnlineUsers = createAsyncThunk(
     try {
       const token = await sessionStorage.getItem("token");
       const response = await axios.get(`${BASE_URL}/online-users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+export const archiveUser = createAsyncThunk(
+  "user/archiveUser",
+  async ({ selectedUserId }, { rejectWithValue }) => {
+    const token = await sessionStorage.getItem("token");
+    try {
+      const response = await axios.post(`${BASE_URL}/archiveUser`, { selectedUserId }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

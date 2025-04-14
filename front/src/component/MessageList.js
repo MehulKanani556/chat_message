@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FaPhone,
   FaRegSmile,
@@ -317,23 +317,80 @@ const AudioMessage = ({ message, userId, IMG_URL }) => (
   </div>
 );
 
-const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }) => (
-  <div className={`max-w-[300px]`}>
-    <div className="flex items-center">
-      <a
-        href={`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
-        download={message?.content?.content}
-        className="ml-2 text-blue-500 hover:underline"
-      >
-        <FaDownload className="w-6 h-6" />
-      </a>
-      <div className="ml-3">
-        <div className="font-medium">{highlightText(message?.content?.content, searchInputbox)}</div>
-        <div className="text-sm text-gray-500">{message?.content?.size}</div>
+const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }) => {
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    try {
+      const response = await fetch(`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`);
+      const contentLength = response.headers.get('content-length');
+      const total = parseInt(contentLength, 10);
+      let loaded = 0;
+
+      const reader = response.body.getReader();
+      const chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        loaded += value.length;
+        setDownloadProgress((loaded / total) * 100);
+      }
+
+      const blob = new Blob(chunks);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = message?.content?.content;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+    }
+  };
+
+  return (
+    <div className={`max-w-[300px]`}>
+      <div className="flex items-center flex-col">
+        <div className="relative inline-flex items-center justify-center">
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="ml-2 p-2 dark:text-primary-light hover:underline disabled:opacity-50 relative"
+          >
+            <FaDownload className="w-6 h-6" />
+            {isDownloading && (
+              
+              <div className="absolute -inset-4 flex items-center justify-center">
+                <svg className="w-12 h-12" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="2" />
+                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray={`${downloadProgress}, 100`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.3s ease 0s', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+                </svg>
+               
+              </div>
+            )}
+          </button>
+        </div>
+        <div className="ml-3">
+          <div className="font-medium">{highlightText(message?.content?.content, searchInputbox)}</div>
+          <div className="text-sm dark:text-gray-300">{message?.content?.size}</div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   const messageContent = message?.content?.content;
@@ -613,7 +670,7 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                   d="M13.963 7H7v12h6.759c.63 0 1.241-.611 1.241-1.161V8c0-.55-.467-1-1.037-1"
                 ></path>
                 <path
-                  d="M13 18H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1"
+                  d="M13 18H3a1 1 0 0 1-1-1V7c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1"
                   fill="#107C41"
                 ></path>
                 <path

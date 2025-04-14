@@ -70,7 +70,7 @@ const CreatedGroup = ({
   };
 
   return (
-      <div className="bg-white rounded-lg  dark:bg-primary-dark">
+      <div className="bg-white  dark:bg-primary-dark w-full h-full">
         <div className="flex justify-between items-center pb-2 p-4">
           <h2 className="text-lg font-bold dark:text-primary-light">
             Create Group

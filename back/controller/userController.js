@@ -39,7 +39,6 @@ exports.createUser = async (req, res) => {
     return res.status(500).json({ status: 500, message: error.message });
   }
 };
-
 exports.getAllUsers = async (req, res) => {
   try {
     let page = parseInt(req.query.page);
@@ -79,7 +78,6 @@ exports.getAllUsers = async (req, res) => {
     return res.status(500).json({ status: 500, message: error.message });
   }
 };
-
 // exports.getAllMessageUsers = async (req, res) => {
 
 //   try {
@@ -273,8 +271,6 @@ exports.getAllUsers = async (req, res) => {
 //     });
 //   }
 // };
-
-
 
 exports.getAllMessageUsers = async (req, res) => {
   try {
@@ -538,9 +534,6 @@ exports.getAllMessageUsers = async (req, res) => {
     });
   }
 };
-
-
-
 exports.updateUser = async (req, res) => {
   try {
     // Include the photo field in the update
@@ -573,7 +566,6 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
-
 exports.getSingleUser = async (req, res) => {
   try {
     const users = await user.findById(req.params.id);
@@ -597,8 +589,6 @@ exports.getSingleUser = async (req, res) => {
     });
   }
 };
-
-
 exports.getAllCallUsers = async (req, res) => {
   try {
     const pipeline = [
