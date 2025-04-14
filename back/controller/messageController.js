@@ -10,6 +10,7 @@ exports.saveMessage = async (messageData) => {
       content: messageData.content,
       forwardedFrom: messageData.forwardedFrom,
       replyTo: messageData.replyTo,
+      isBlocked: messageData.isBlocked,
     });
     await message.save();
     return message;

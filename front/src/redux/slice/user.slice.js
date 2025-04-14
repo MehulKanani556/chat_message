@@ -5,8 +5,6 @@ import { BASE_URL } from "../../utils/baseUrl";
 // import { Socket } from "socket.io-client";
 // import { enqueueSnackbar } from 'notistack';
 
-
-
 const handleErrors = (error, dispatch, rejectWithValue) => {
   const errorMessage = error.response?.data?.message || "An error occurred";
 
@@ -15,15 +13,15 @@ const handleErrors = (error, dispatch, rejectWithValue) => {
 
 const initialState = {
   user: null,
-  allCallUsers:[],
+  allCallUsers: [],
   onlineUser: [],
   allUsers: [],
   allMessageUsers: [],
   messages: [],
   groups: [],
   isAuthenticated:
-  !!sessionStorage.getItem("token") &&
-  sessionStorage.getItem("role") === "admin",
+    !!sessionStorage.getItem("token") &&
+    sessionStorage.getItem("role") === "admin",
   loading: false,
   error: null,
   loggedIn: false,
@@ -310,7 +308,7 @@ export const updateUser = createAsyncThunk(
     Object.keys(values).forEach((key) => {
       formData.append(key, values[key]);
     });
-    console.log("id",id,values)
+    console.log("id", id, values);
     try {
       const response = await axios.put(`${BASE_URL}/editUser/${id}`, formData, {
         headers: {
@@ -327,7 +325,7 @@ export const updateUser = createAsyncThunk(
 
 export const createGroup = createAsyncThunk(
   "user/createGroup",
-  async ({groupData, socket}, { rejectWithValue }) => {
+  async ({ groupData, socket }, { rejectWithValue }) => {
     const token = await sessionStorage.getItem("token");
     const formData = new FormData();
     Object.keys(groupData).forEach((key) => {
@@ -432,13 +430,17 @@ export const deleteGroup = createAsyncThunk(
 export const addParticipants = createAsyncThunk(
   "user/addParticipants",
   async ({ groupId, members, addedBy }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");  
+    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(`${BASE_URL}/addParticipants`, { groupId, members, addedBy }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }); 
+      const response = await axios.post(
+        `${BASE_URL}/addParticipants`,
+        { groupId, members, addedBy },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -488,11 +490,15 @@ export const archiveUser = createAsyncThunk(
   async ({ selectedUserId }, { rejectWithValue }) => {
     const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(`${BASE_URL}/archiveUser`, { selectedUserId }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post(
+        `${BASE_URL}/archiveUser`,
+        { selectedUserId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -508,6 +514,27 @@ export const clearChat = createAsyncThunk(
       const response = await axios.post(
         `${BASE_URL}/clearChat`,
         { selectedId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+export const blockUser = createAsyncThunk(
+  "user/blockUser",
+  async ({ selectedUserId }, { rejectWithValue }) => {
+    try {
+      const token = await sessionStorage.getItem("token");
+      const response = await axios.post(
+        `${BASE_URL}/blockUser`,
+        { selectedUserId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -656,7 +683,8 @@ const userSlice = createSlice({
       .addCase(getOnlineUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to retrieve online users";
+        state.message =
+          action.payload?.message || "Failed to retrieve online users";
       })
       .addCase(getAllMessages.fulfilled, (state, action) => {
         state.messages = action.payload;
@@ -667,7 +695,8 @@ const userSlice = createSlice({
       .addCase(getAllMessages.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to retrieve messages";
+        state.message =
+          action.payload?.message || "Failed to retrieve messages";
       })
       .addCase(getAllMessages.pending, (state) => {
         state.loading = true;
@@ -677,7 +706,8 @@ const userSlice = createSlice({
       .addCase(deleteMessage.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.message = action.payload?.message || "Message deleted successfully";
+        state.message =
+          action.payload?.message || "Message deleted successfully";
       })
       .addCase(deleteMessage.rejected, (state, action) => {
         state.loading = false;
@@ -703,7 +733,8 @@ const userSlice = createSlice({
       .addCase(getAllMessageUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to retrieve message users";
+        state.message =
+          action.payload?.message || "Failed to retrieve message users";
       })
       .addCase(getAllGroups.fulfilled, (state, action) => {
         state.groups = action.payload;
@@ -769,7 +800,8 @@ const userSlice = createSlice({
       .addCase(getAllCallUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to retrieve call users";
+        state.message =
+          action.payload?.message || "Failed to retrieve call users";
       })
       .addCase(archiveUser.fulfilled, (state, action) => {
         state.loading = false;
@@ -780,6 +812,17 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to archive user";
+      })
+      .addCase(blockUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "User block status updated successfully";
+      })
+      .addCase(blockUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message =
+          action.payload?.message || "Failed to update block status";
       });
   },
 });
