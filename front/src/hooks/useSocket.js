@@ -171,16 +171,17 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         return;
       }
 
-      console.log("messageeeeeeeeeeeeeeeee", message);
+      // console.log("messageeeeeeeeeeeeeeeee", message);
 
       const messageData = {
         senderId: userId,
         receiverId,
         content: message.data,
         replyTo: message.replyTo,
+        isBlocked: message.isBlocked,
       };
 
-      console.log("Sending message:", messageData);
+      // console.log("Sending message:", messageData);
 
       socketRef.current.emit("private-message", messageData);
 
@@ -1340,7 +1341,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         content:message.content,
         forwardedFrom: message.sender,
       };
-      console.log("messageData", messageData);
+      console.log("messageDatabbbbbbbb", messageData);
 
       socketRef.current.emit("forward-message", messageData);
       resolve();

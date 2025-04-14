@@ -28,6 +28,7 @@ import {
   MdOutlineModeEdit,
   MdGroupAdd,
   MdReport,
+  MdOutlineBlock,
 } from "react-icons/md";
 import { RiShutDownLine } from "react-icons/ri";
 import {
@@ -71,6 +72,7 @@ import {
   addParticipants,
   getAllCallUsers,
   archiveUser,
+  blockUser,
 } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
@@ -302,7 +304,9 @@ const Chat2 = () => {
 
   const [showGroups, setShowGroups] = useState(false);
 
-  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+  const [notificationPermission, setNotificationPermission] = useState(
+    Notification.permission
+  );
 
   //===========Use the custom socket hook===========
   const {
@@ -428,7 +432,38 @@ const Chat2 = () => {
     const notification = new Notification(notificationTitle, {
       body: notificationBody,
       icon: "/logo.png", // Use your app's icon
+      requireInteraction: true, // Prevents the notification from closing automatically
+      silent: false, // Allows the notification to make a sound
+      vibrate: [200, 100, 200], // Vibrates the device for the specified duration
+      tag: "new-message", // Identifies the notification
+      renotify: true, // Allows the notification to be re-shown if it's already active
+      // badge: "/logo.png", // Sets the badge icon for the notification
+      // image: "/logo.png", // Sets the image for the notification
+      // actions: [
+      //   { action: "reply", title: "Reply" },
+      //   { action: "dismiss", title: "Dismiss" }
+      // ], // Adds actions to the notification
+      dir: "auto", // Sets the direction of the text
+      lang: "en-US", // Sets the language of the notification
+      timestamp: new Date().getTime(), // Sets the timestamp of the notification
     });
+    // const notification = new Notification(notificationTitle, {
+    //   body: notificationBody,
+    //   icon: "/logo.png",
+    //   requireInteraction: true,
+    //   vibrate: [200, 100, 200],
+    //   tag: "new-message",
+    //   renotify: true,
+    //   actions: [
+    //     { action: "reply", title: "Reply" },
+    //     { action: "dismiss", title: "Dismiss" }
+    //   ],
+    //   data: {
+    //     messageId: message._id,
+    //     sender: senderName,
+    //     senderId: message.sender
+    //   }
+    // });
 
     // Close notification after 5 seconds
     setTimeout(() => {
@@ -510,6 +545,7 @@ const Chat2 = () => {
           (msg) =>
             msg.sender === selectedChat._id &&
             (msg.status === "sent" || msg.status === "delivered")
+            && !msg.isBlocked
         )
         .map((msg) => msg._id);
       // console.log("unreadMessages", unreadMessages, messages);
@@ -558,9 +594,13 @@ const Chat2 = () => {
           dispatch(getAllMessages({ selectedId: selectedChat._id }));
         }
 
-        if (message.type !== "status" && message.type !== "read" && message.type !== "reaction") {
+        if (
+          message.type !== "status" &&
+          message.type !== "read" &&
+          message.type !== "reaction"
+        ) {
           // Find sender name
-          const sender = allUsers.find(user => user._id === message.sender);
+          const sender = allUsers.find((user) => user._id === message.sender);
           const senderName = sender ? sender.userName : "Someone";
 
           // Show notification
@@ -645,19 +685,22 @@ const Chat2 = () => {
         console.error("Failed to update message:", error);
       }
     } else {
+
+      const isBlockedByRecipient = selectedChat.blockedUsers?.includes(currentUser);
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
         !selectedChat
       )
         return;
 
-      console.log("data", data);
+      // console.log("data", data);
 
       try {
         const messageData = {
           data,
-          replyTo: replyingTo,
+          isBlocked: isBlockedByRecipient
         };
+
         const status = await sendPrivateMessage(selectedChat._id, messageData);
         dispatch(getAllMessages({ selectedId: selectedChat._id }));
         dispatch(getAllMessageUsers());
@@ -882,9 +925,13 @@ const Chat2 = () => {
           dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
         }
       }
-      if (message.type !== "status" && message.type !== "read" && message.type !== "reaction") {
+      if (
+        message.type !== "status" &&
+        message.type !== "read" &&
+        message.type !== "reaction"
+      ) {
         // Find sender name
-        const sender = allUsers.find(user => user._id === message.sender);
+        const sender = allUsers.find((user) => user._id === message.sender);
         const senderName = sender ? sender.userName : "Someone";
 
         // Show notification
@@ -987,6 +1034,7 @@ const Chat2 = () => {
   const groupMessagesByDate = (messages) => {
     const groups = {};
     messages.forEach((message) => {
+      if (message.isBlocked && message.sender !== currentUser) return;
       const date = new Date(message.createdAt).toLocaleDateString("en-GB");
       if (!groups[date]) {
         groups[date] = [];
@@ -1027,8 +1075,6 @@ const Chat2 = () => {
   };
 
   // ============================Log out ============================
-
-
 
   const handleEditClick = () => {
     setIsEditingUserName(true);
@@ -1406,9 +1452,10 @@ const Chat2 = () => {
   };
   // console.log("aaaaaa-------", callUsers);
   // clear chat
-  const handleClearChat = () => {
-    dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
-      dispatch(getAllMessages({ selectedId: selectedChat._id }));
+  const handleClearChat = async () => {
+    await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
+     dispatch(getAllMessages({ selectedId: selectedChat._id }));
+     dispatch(getAllMessageUsers());
       setIsClearChatModalOpen(false);
     });
   };
@@ -1896,9 +1943,9 @@ const Chat2 = () => {
                               <MdOutlineDeleteSweep className="text-lg" />{" "}
                               Delete
                             </li>
-                            <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                            {/* <li className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
                               <GoMute className="text-lg" /> Muted
-                            </li>
+                            </li> */}
                             <li
                               className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                               onClick={async () => {
@@ -1914,6 +1961,23 @@ const Chat2 = () => {
                               {user.archiveUsers.includes(selectedChat?._id)
                                 ? "UnArchive"
                                 : "Archive"}
+                            </li>
+                            <li
+                              className="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                              onClick={async () => {
+                                await dispatch(
+                                  blockUser({
+                                    selectedUserId: selectedChat?._id,
+                                  })
+                                );
+                                await dispatch(getUser(currentUser));
+                                await dispatch(getAllMessageUsers());
+                              }}
+                            >
+                              <MdOutlineBlock className="text-lg" />
+                              {user.blockedUsers?.includes(selectedChat?._id)
+                                ? "Unblock"
+                                : "Block"}
                             </li>
                           </ul>
                         </div>
@@ -2238,61 +2302,170 @@ const Chat2 = () => {
 
                 {/*========== Message Input ==========*/}
                 {selectedChat && (
-                  <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
-                    <form
-                      onSubmit={handleSubmit}
-                      className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
-                          ? "rounded-b-lg"
-                          : "rounded-lg"
+                    user.blockedUsers?.includes(selectedChat._id) ? (
+                      <div className="w-full mx-auto px-4 py-2 mb-5 md:mb-0 dark:bg-primary-dark/95 text-white">
+                        <div className="text-center text-red-700 mb-2">
+                        This user is blocked.
+                        </div>
+                        <div className="flex justify-center items-center gap-4 mb-4">
+                          <button className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"  onClick={() => {
+                                setIsClearChatModalOpen(true);
+                            }}>
+                            Delete Chat
+                          </button>
+                          
+                          <button className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"  onClick={async () => {
+                                await dispatch(
+                                  blockUser({
+                                    selectedUserId: selectedChat?._id,
+                                  })
+                                );
+                                await dispatch(getUser(currentUser));
+                                await dispatch(getAllMessageUsers());
+                              }}>
+                            Unblock
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0 dark:bg-primary-dark">
+                      <form
+                        onSubmit={handleSubmit}
+                        className={`flex items-center gap-2 ${
+                          replyingTo || selectedFiles.length > 0
+                            ? "rounded-b-lg"
+                            : "rounded-lg"
                         } px-4 py-2 w-full max-w-full`}
-                    >
-                      <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
-                        {" "}
-                        {/* Add container with min-width */}
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={messageInput}
-                          onChange={handleInputChange}
-                          placeholder={
-                            editingMessage
-                              ? "Edit message..."
-                              : "Type a message..."
-                          }
-                          className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
+                      >
+                        <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={messageInput}
+                            onChange={handleInputChange}
+                            placeholder={
+                              editingMessage
+                                ? "Edit message..."
+                                : "Type a message..."
+                            }
+                            className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
 
+                                if (selectedFiles.length > 0) {
+                                  await handleMultipleFileUpload(selectedFiles); // Upload selected files
+                                  setSelectedFiles([]); // Clear selected files after sending
+                                }
+                                await handleSubmit(e);
+                              } else if (e.key === "Escape" && editingMessage) {
+                                setEditingMessage(null);
+                                setMessageInput("");
+                              }
+                            }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                          aria-label="Add emoji"
+                          onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                        >
+                          <PiSmiley className="w-6 h-6 " />
+                        </button>
+                        {isEmojiPickerOpen && (
+                          <div
+                            ref={emojiPickerRef}
+                            className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
+                          >
+                            <EmojiPicker
+                              onEmojiClick={onEmojiClick}
+                              previewConfig={{
+                                showPreview: false,
+                              }}
+                            >
+                              <svg
+                                width={20}
+                                height={20}
+                                x={0}
+                                y={0}
+                                viewBox="0 0 32 32"
+                                style={{ enableBackground: "new 0 0 24 24" }}
+                                xmlSpace="preserve"
+                                className
+                              >
+                                <g>
+                                  <path
+                                    d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
+                                    fill="currentColor"
+                                    opacity={1}
+                                    data-original="#000000"
+                                    className
+                                  />
+                                </g>
+                              </svg>
+                            </EmojiPicker>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <input
+                            id="file-upload"
+                            type="file"
+                            multiple
+                            accept="*/*"
+                            className="hidden"
+                            onChange={handleInputChange}
+                          />
+                          <button
+                            type="button"
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                            aria-label="Attach file"
+                            onClick={() =>
+                              document.getElementById("file-upload").click()
+                            }
+                          >
+                            {selectedFiles && selectedFiles.length > 0 ? (
+                              <GoPlusCircle className="w-6 h-6 " />
+                            ) : (
+                              <svg
+                                width={24}
+                                height={24}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-6 h-6"
+                              >
+                                <path
+                                  d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                            aria-label="Voice message"
+                            onClick={handleVoiceMessage}
+                          >
+                            <IoMicOutline
+                              className={`w-6 h-6 ${
+                                isRecording ? "text-red-500" : ""
+                              }`}
+                            />
+                          </button>
+                          <button
+                            type="submit"
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                            onClick={() => {
                               if (selectedFiles.length > 0) {
-                                await handleMultipleFileUpload(selectedFiles); // Upload selected files
+                                handleMultipleFileUpload(selectedFiles); // Upload selected files
                                 setSelectedFiles([]); // Clear selected files after sending
                               }
-                              await handleSubmit(e);
-                            } else if (e.key === "Escape" && editingMessage) {
-                              setEditingMessage(null);
-                              setMessageInput("");
-                            }
-                          }}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                        aria-label="Add emoji"
-                        onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                      >
-                        <PiSmiley className="w-6 h-6 " />
-                      </button>
-                      {isEmojiPickerOpen && (
-                        <div
-                          ref={emojiPickerRef}
-                          className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
-                        >
-                          <EmojiPicker
-                            onEmojiClick={onEmojiClick}
-                            previewConfig={{
-                              showPreview: false,
                             }}
                           >
                             <svg
@@ -2315,111 +2488,22 @@ const Chat2 = () => {
                                 />
                               </g>
                             </svg>
-                          </EmojiPicker>
+                          </button>
                         </div>
-                      )}
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <input
-                          id="file-upload"
-                          type="file"
-                          multiple
-                          accept="*/*"
-                          className="hidden"
-                          onChange={handleInputChange}
-                        />
-                        <button
-                          type="button"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                          aria-label="Attach file"
-                          onClick={() =>
-                            document.getElementById("file-upload").click()
-                          }
-                        >
-                          {selectedFiles && selectedFiles.length > 0 ? (
-                            <GoPlusCircle className="w-6 h-6 " />
-                          ) : (
-                            <svg
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-
-                            // <FaPaperclip className=" text-gray-500" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                          aria-label="Voice message"
-                          onClick={handleVoiceMessage}
-                        >
-                          <IoMicOutline
-                            className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
-                              }`}
-                          />
-                        </button>
-                        {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
-                        <button
-                          type="submit"
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                          // style={{ color: "#3B82F6" }}
-                          // aria - label="Send message...."
-                          onClick={() => {
-                            if (selectedFiles.length > 0) {
-                              handleMultipleFileUpload(selectedFiles); // Upload selected files
-                              setSelectedFiles([]); // Clear selected files after sending
-                            }
-                          }}
-                        >
-                          <svg
-                            width={20}
-                            height={20}
-                            x={0}
-                            y={0}
-                            viewBox="0 0 32 32"
-                            style={{ enableBackground: "new 0 0 24 24" }}
-                            xmlSpace="preserve"
-                            className
+                        {editingMessage && (
+                          <button
+                            onClick={() => {
+                              setEditingMessage(null);
+                              setMessageInput("");
+                            }}
+                            className="ml-2 text-gray-500"
                           >
-                            <g>
-                              <path
-                                d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
-                                fill="currentColor"
-                                opacity={1}
-                                data-original="#000000"
-                                className
-                              />
-                            </g>
-                          </svg>
-                        </button>
+                            Cancel
+                          </button>
+                        )}
+                      </form>
                       </div>
-                      {/* )} */}
-                      {editingMessage && (
-                        <button
-                          onClick={() => {
-                            setEditingMessage(null);
-                            setMessageInput("");
-                          }}
-                          className="ml-2 text-gray-500"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      {/* </div > */}
-                    </form>
-                  </div>
+                    )
                 )}
 
                 {/* Show Send to Bottom button only if user has scrolled up */}
