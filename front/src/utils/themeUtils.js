@@ -2,7 +2,7 @@
 
 // Default primary color
 const DEFAULT_PRIMARY_COLOR = "#7269FF";
-const DEFAULT_PRIMARY_RGB = "114, 105, 255";
+const DEFAULT_PRIMARY_RGB = "114 105 255";
 
 // Convert hex to RGB
 const hexToRgb = (hex) => {
