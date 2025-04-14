@@ -25,6 +25,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicrophoneOn, setIsMicrophoneOn] = useState(false);
   const [voiceCallData, setVoiceCallData] = useState(null);
+  const [cameraStatus, setCameraStatus] = useState({});
   const streamRef = useRef(null);
   const [callAccept, setCallAccept] = useState(false);
   const [callParticipants, setCallParticipants] = useState(new Set());
@@ -78,7 +79,17 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     if (streamRef.current) {
       const videoTracks = streamRef.current.getVideoTracks();
       videoTracks.forEach((track) => (track.enabled = !track.enabled));
-      setIsCameraOn((prev) => !prev);
+      const newStatus = !isCameraOn;
+      setIsCameraOn(newStatus);
+      
+      // Emit camera status change to other users
+      if (socketRef.current?.connected) {
+        console.log(`[Camera Status] User ${userId} is ${newStatus ? 'turning ON' : 'turning OFF'} their camera`);
+        socketRef.current.emit("camera-status-change", {
+          userId,
+          isCameraOn: newStatus
+        });
+      }
     }
   };
 
@@ -1336,6 +1347,25 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     });
   };
 
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    // Add camera status change listener
+    socketRef.current.on("camera-status-change", ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
+      console.log(`[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? 'ON' : 'OFF'}`);
+      setCameraStatus(prev => ({
+        ...prev,
+        [remoteUserId]: remoteCameraStatus
+      }));
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("camera-status-change");
+      }
+    };
+  }, [socketRef.current]);
+
   return {
     socket: socketRef.current,
     isConnected,
@@ -1381,6 +1411,8 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     voiceCallData,
     setVoiceCallData,
     forwardMessage,
-    addMessageReaction
+    addMessageReaction,
+    cameraStatus,
+    setCameraStatus
   };
 };
