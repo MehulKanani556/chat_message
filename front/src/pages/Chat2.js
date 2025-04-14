@@ -137,9 +137,8 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
-                  selectedUsers.includes(user._id) ? "order-first" : ""
-                }`}
+                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? "order-first" : ""
+                  }`}
                 onClick={() => {
                   if (selectedUsers.includes(user._id)) {
                     setSelectedUsers(
@@ -162,7 +161,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                     <span className="text-blue-500 font-medium">
                       {user.userName && user.userName.includes(" ")
                         ? user.userName.split(" ")[0][0] +
-                          user.userName.split(" ")[1][0]
+                        user.userName.split(" ")[1][0]
                         : user.userName[0]}
                     </span>
                   )}
@@ -181,7 +180,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(user._id)}
-                    onChange={() => {}} // Handled by parent div click
+                    onChange={() => { }} // Handled by parent div click
                     className="w-4 h-4 rounded border-gray-300 text-blue-500 
                            focus:ring-blue-500 focus:ring-offset-0"
                   />
@@ -208,11 +207,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   onClick={() => onSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
-                  ${
-                    selectedUsers.length === 0
+                  ${selectedUsers.length === 0
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                    }`}
                 >
                   Forward
                 </button>
@@ -321,35 +319,64 @@ const Chat2 = () => {
     sendGroupMessage,
     isVideoCalling,
     incomingCall,
+    setIncomingCall,
     cleanupConnection,
+    peerEmail,
+    setPeerEmail,
+    hasWebcam,
+    hasMicrophone,
     isCameraOn,
-    isMicrophoneOn,
     startSharing,
     startVideoCall,
     acceptVideoCall,
-    rejectVideoCall,
-    rejectVoiceCall,
     endVideoCall,
     isSharing,
+    setIsSharing,
     isReceiving,
+    setIsReceiving,
     toggleCamera,
     toggleMicrophone,
     markMessageAsRead,
+    rejectVideoCall,
+    rejectVoiceCall,
     incomingShare,
     setIncomingShare,
     acceptScreenShare,
-    isVoiceCalling,
     startVoiceCall,
     acceptVoiceCall,
     endVoiceCall,
+    isVoiceCalling,
     callAccept,
     remoteStreams,
     inviteToCall,
     callParticipants,
+    isMicrophoneOn,
     voiceCallData,
+    setVoiceCallData,
     forwardMessage,
     addMessageReaction,
-  } = useSocket(currentUser, localVideoRef, remoteVideoRef, allUsers);
+    cameraStatus,
+    setCameraStatus
+  } = useSocket(user?._id, localVideoRef, remoteVideoRef, allUsers);
+
+  // Add camera status listener
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("camera-status-change", ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
+      console.log(`[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? 'ON' : 'OFF'}`);
+      setCameraStatus(prev => ({
+        ...prev,
+        [remoteUserId]: remoteCameraStatus
+      }));
+    });
+
+    return () => {
+      if (socket) {
+        socket.off("camera-status-change");
+      }
+    };
+  }, [socket]);
 
   // ====================auth=======================
 
@@ -1686,9 +1713,8 @@ const Chat2 = () => {
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           <div
-            className={` ${
-              showLeftSidebar ? "hidden md:block" : "block"
-            } flex-1 flex flex-col`}
+            className={` ${showLeftSidebar ? "hidden md:block" : "block"
+              } flex-1 flex flex-col`}
           >
             {selectedChat ? (
               <>
@@ -1735,7 +1761,7 @@ const Chat2 = () => {
                         }
                       }}
                     >
-                      {selectedChat?.photo && selectedChat.photo !== "null" ? (
+                      {selectedChat?.photo && selectedChat.photo !== "null" && selectedChat?.profilePhoto == "Everyone" ? (
                         <img
                           src={`${IMG_URL}${selectedChat.photo.replace(
                             /\\/g,
@@ -1747,9 +1773,9 @@ const Chat2 = () => {
                       ) : (
                         <span className="text-white text-xl font-bold">
                           {selectedChat?.userName &&
-                          selectedChat?.userName.includes(" ")
+                            selectedChat?.userName.includes(" ")
                             ? selectedChat?.userName.split(" ")?.[0][0] +
-                              selectedChat?.userName.split(" ")?.[1][0]
+                            selectedChat?.userName.split(" ")?.[1][0]
                             : selectedChat?.userName?.[0]}
                         </span>
                       )}
@@ -1776,11 +1802,10 @@ const Chat2 = () => {
                         </div>
                       ) : (
                         <div
-                          className={`text-sm ${
-                            onlineUsers.includes(selectedChat?._id)
+                          className={`text-sm ${onlineUsers.includes(selectedChat?._id)
                               ? "text-green-500"
                               : "text-gray-500"
-                          }`}
+                            }`}
                         >
                           {onlineUsers.includes(selectedChat?._id)
                             ? "Online"
@@ -2108,11 +2133,11 @@ const Chat2 = () => {
                       selectedFiles.length > 0
                         ? "calc(100vh -  275px)"
                         : replyingTo
-                        ? replyingTo?.content?.fileType &&
-                          replyingTo?.content?.fileType?.startsWith("image/")
-                          ? "calc(100vh - 280px)"
-                          : "calc(100vh -  225px)"
-                        : "calc(100vh - 172px)",
+                          ? replyingTo?.content?.fileType &&
+                            replyingTo?.content?.fileType?.startsWith("image/")
+                            ? "calc(100vh - 280px)"
+                            : "calc(100vh -  225px)"
+                          : "calc(100vh - 172px)",
                   }}
                   ref={messagesContainerRef}
                 >
@@ -2171,7 +2196,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/vnd.ms-excel" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       ) {
                         fileIcon = (
                           <FaFileExcel className="w-20 h-20 text-gray-500" />
@@ -2179,7 +2204,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/msword" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       ) {
                         fileIcon = (
                           <FaFileWord className="w-20 h-20 text-gray-500" />
@@ -2187,7 +2212,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/vnd.ms-powerpoint" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                       ) {
                         fileIcon = (
                           <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
@@ -2498,13 +2523,12 @@ const Chat2 = () => {
             )}
           </div>
           <div
-            className={`${
-              ((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
-              isGroupCreateModalOpen ||
-              (isUserProfileModalOpen && !selectedChat.members)
+            className={`${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+                isGroupCreateModalOpen ||
+                (isUserProfileModalOpen && !selectedChat.members)
                 ? "w-[380px] "
                 : "w-0"
-            } transition-all duration-300`}
+              } transition-all duration-300`}
             style={{
               boxShadow: "0px 0px 5px 1px #80808054",
             }}
@@ -2556,30 +2580,26 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
             ? ""
             : "hidden"
-        }`}
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
+          className={`flex-1 relative ${isReceiving
               ? "flex items-center justify-center"
               : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+              )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2608,72 +2628,13 @@ const Chat2 = () => {
             </div>
           ) : (
             <>
-              {Array.from(remoteStreams).map(([participantId, stream]) => (
-                <div key={participantId} className="relative w-full">
-                  <video
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-contain max-h-[80vh]"
-                    ref={(el) => {
-                      if (el) {
-                        el.srcObject = stream;
-                      }
-                    }}
-                  />
-                  <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                    {allUsers
-                      .find((user) => user._id === participantId)
-                      ?.userName.charAt(0)
-                      .toUpperCase() +
-                      allUsers
-                        .find((user) => user._id === participantId)
-                        ?.userName.slice(1) || "Participant"}
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-
-          {/* 
-          {isReceiving ? (
-            <div className="w-full h-full">
-              {!isCameraOn ? (
-                <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                  <div className="w-32 h-32 rounded-full overflow-hidden">
-                    {user?.photo && user.photo !== "null" ? (
-                      <img
-                        src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-                        <span className="text-white text-4xl">
-                          {user?.userName?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full max-h-[80vh] object-contain"
-                />
-              )}
-            </div>
-          ) : (
-            <>
               {Array.from(remoteStreams).map(([participantId, stream]) => {
                 const participant = allUsers.find((user) => user._id === participantId);
-                const videoTrack = stream.getVideoTracks()[0];
-                const isVideoEnabled = videoTrack && videoTrack.enabled;
+                const isCameraEnabled = cameraStatus?.[participantId] !== false;
 
                 return (
                   <div key={participantId} className="relative w-full">
-                    {isVideoEnabled ? (
+                    {isCameraEnabled ? (
                       <video
                         autoPlay
                         playsInline
@@ -2685,7 +2646,7 @@ const Chat2 = () => {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-800" style={{ maxHeight: "80vh" }}>
+                      <div className="w-full h-full flex items-center justify-center bg-primary-dark" style={{ maxHeight: "80vh" }}>
                         <div className="w-32 h-32 rounded-full overflow-hidden">
                           {participant?.photo && participant.photo !== "null" ? (
                             <img
@@ -2706,12 +2667,15 @@ const Chat2 = () => {
                     <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
                       {participant?.userName?.charAt(0).toUpperCase() +
                         participant?.userName?.slice(1) || "Participant"}
+                      {!isCameraEnabled && (
+                        <span className="ml-2 text-sm">(Camera Off)</span>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </>
-          )} */}
+          )}
 
           {/* Controls */}
           {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
@@ -2739,9 +2703,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2751,9 +2714,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2782,8 +2744,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
+                allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2997,9 +2959,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -3043,9 +3004,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -3127,30 +3087,30 @@ const Chat2 = () => {
 
       {((isProfileImageModalOpen && selectedProfileImage) ||
         (isImageModalOpen && selectedImage)) && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative w-full h-full flex items-center justify-center p-8">
-            <img
-              src={
-                isProfileImageModalOpen ? selectedProfileImage : selectedImage
-              }
-              alt="Profile"
-              className="max-w-full max-h-full object-contain"
-            />
-            <button
-              onClick={() => {
-                if (isProfileImageModalOpen) {
-                  setIsProfileImageModalOpen(false);
-                } else if (isImageModalOpen) {
-                  setIsImageModalOpen(false);
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <img
+                src={
+                  isProfileImageModalOpen ? selectedProfileImage : selectedImage
                 }
-              }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <ImCross className="w-6 h-6" />
-            </button>
+                alt="Profile"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button
+                onClick={() => {
+                  if (isProfileImageModalOpen) {
+                    setIsProfileImageModalOpen(false);
+                  } else if (isImageModalOpen) {
+                    setIsImageModalOpen(false);
+                  }
+                }}
+                className="absolute top-4 right-4 text-white hover:text-gray-300"
+              >
+                <ImCross className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {/* Forward Modal */}
       {showForwardModal && (
         <ForwardModal

@@ -147,7 +147,8 @@ const ChatList = ({
                   >
                     <div className="flex items-center">
                       <div className="relative mr-3">
-                        {item?.photo && item.photo !== "null" && !item?.blockedUsers?.includes(currentUser) ? (
+                        {console.log("iiiiii",item)}
+                        {item?.photo && item.photo !== "null" && !item?.blockedUsers?.includes(currentUser)&& (item?.profilePhoto=="Everyone" || item._id === currentUser)? (
                           <img
                             src={`${IMG_URL}${item.photo.replace(/\\/g, "/")}`}
                             alt="Profile"
@@ -788,7 +789,7 @@ const ChatList = ({
                 >
                   <div className="flex items-center">
                     <div className="relative mr-3">
-                      {item?.photo && item.photo !== "null" ? (
+                      {item?.photo && item.photo !== "null" && (item?.profilePhoto == "Everyone") ? (
                         <img
                           src={`${IMG_URL}${item.photo.replace(/\\/g, "/")}`}
                           alt="Profile"
