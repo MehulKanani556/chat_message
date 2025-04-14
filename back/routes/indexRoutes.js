@@ -8,6 +8,7 @@ const {
   getAllCallUsers,
   updateUserGroupToJoin,
   updateUserProfilePhotoPrivacy,
+  archiveUser,
 } = require("../controller/userController");
 const {
   userLogin,
@@ -36,6 +37,7 @@ const {
   leaveGroup,
   addParticipants,
 } = require("../controller/groupController");
+
 
 const indexRoutes = express.Router();
 

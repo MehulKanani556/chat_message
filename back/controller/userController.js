@@ -742,3 +742,32 @@ exports.updateUserProfilePhotoPrivacy = async (req, res) => {
   }
 };
 
+exports.archiveUser = async (req, res) => {
+  try {
+    const { selectedUserId } = req.body;
+    const currentUser = req.user._id;
+    const userdata = await user.findById(currentUser);
+    if (!userdata) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+    if (userdata.archiveUsers.includes(selectedUserId)) {
+      userdata.archiveUsers = userdata.archiveUsers.filter(id => id !== selectedUserId);
+    } else {
+      userdata.archiveUsers.push(selectedUserId);
+    }
+    await userdata.save();
+    return res.status(200).json({
+      status: 200,
+      message: "User archived successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
