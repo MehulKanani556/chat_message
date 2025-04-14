@@ -27,10 +27,10 @@ const ChatList = ({
     useEffect(() => {
       let filteredUsers = [];
       if(archive){
-        filteredUsers = allMessageUsers.filter(item => user.archiveUsers.includes(item._id))
+        filteredUsers = allMessageUsers.filter(item => user?.archiveUsers.includes(item._id))
         filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
       }else{
-        filteredUsers = allMessageUsers.filter(item => !user.archiveUsers.includes(item._id))
+        filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers.includes(item._id))
         filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
       }
       setFilteredMessageUsers(filteredUsers);
