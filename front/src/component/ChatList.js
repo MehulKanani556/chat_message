@@ -27,14 +27,13 @@ const ChatList = ({
     useEffect(() => {
       let filteredUsers = [];
       if(archive){
-        filteredUsers = allMessageUsers.filter(item => user?.archiveUsers.includes(item._id))
+        filteredUsers = allMessageUsers.filter(item => user?.archiveUsers?.includes(item._id))
         filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
       }else{
-        filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers.includes(item._id))
+        filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers?.includes(item._id))
         filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
       }
       setFilteredMessageUsers(filteredUsers);
-      console.log(filteredUsers);
     }, [archive, searchInput, allMessageUsers]);
 
   // Filter all users based on search input
@@ -127,6 +126,9 @@ const ChatList = ({
                       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
                     )[0]
                   : null;
+                  if(lastMessage?.deletedFor?.includes(currentUser) && lastMessage?.receiver == currentUser && lastMessage?.sender != currentUser){
+                    return null;
+                  }
                 return (
                   <div
                     key={item._id}
@@ -145,7 +147,7 @@ const ChatList = ({
                   >
                     <div className="flex items-center">
                       <div className="relative mr-3">
-                        {item?.photo && item.photo !== "null" ? (
+                        {item?.photo && item.photo !== "null" && !item?.blockedUsers?.includes(currentUser) ? (
                           <img
                             src={`${IMG_URL}${item.photo.replace(/\\/g, "/")}`}
                             alt="Profile"

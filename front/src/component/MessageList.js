@@ -95,6 +95,11 @@ const MessageList = ({
                   minute: "2-digit",
                   hour12: false,
                 });
+                console.log("message", message);
+                if (message.isBlocked && message.sender !== userId) {
+                  console.log("message.isBlocked", message.isBlocked);
+                  return;
+                }
 
                 if (message.content?.type === "system") {
                   return <SystemMessage key={message._id} message={message} />;

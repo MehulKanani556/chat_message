@@ -86,6 +86,21 @@ const messageSchema = mongoose.Schema(
         },
       },
     ],
+    messageType: {
+      type: String,
+      enum: ["text", "file", "image"],
+      default: "text",
+    },
+    fileMetadata: {
+      originalName: String,
+      encryptedName: String,
+      mimeType: String,
+      iv: String,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

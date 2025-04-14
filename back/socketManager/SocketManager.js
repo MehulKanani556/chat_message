@@ -69,7 +69,7 @@ function getSocketByUserId(userId) {
 }
 
 async function handlePrivateMessage(socket, data) {
-  const { senderId, receiverId, content,  replyTo } = data;
+  const { senderId, receiverId, content,  replyTo, isBlocked } = data;
 
   try {
     console.log("replyTo", replyTo);
@@ -81,10 +81,11 @@ async function handlePrivateMessage(socket, data) {
       content: content,
       replyTo: replyTo,
       status: "sent", // Add initial status
+      isBlocked: isBlocked,
     });
 
     const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
+    if (receiverSocketId && !isBlocked) {
       socket.to(receiverSocketId).emit("receive-message", {
         _id: savedMessage._id,
         sender: senderId,

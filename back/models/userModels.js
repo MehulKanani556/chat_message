@@ -42,6 +42,10 @@ const userSchema = mongoose.Schema(
       type: String,
       default: "everyone",
     },
+    blockedUsers: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: true,
