@@ -404,7 +404,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
     try {
       const key = 'chat';
-      console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
+      // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
       // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
       const encodedText = messageContent.split('data:')[1];
       const decodedText = atob(encodedText);
@@ -413,7 +413,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
         result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
       }
       messageContent = result;
-      console.log(messageContent)
+      // console.log(messageContent)
     } catch (error) {
       console.error('Decryption error:', error);
     }

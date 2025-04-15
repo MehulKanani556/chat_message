@@ -44,6 +44,26 @@ const ChatList = ({
       user.userName.toLowerCase().includes(searchInput.toLowerCase())
   );
 
+  // Add decryption function
+  const decryptMessage = (content) => {
+    if (typeof content === 'string' && content.startsWith('data:')) {
+      try {
+        const key = 'chat';
+        const encodedText = content.split('data:')[1];
+        const decodedText = atob(encodedText);
+        let result = '';
+        for (let i = 0; i < decodedText.length; i++) {
+          result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+      } catch (error) {
+        console.error('Decryption error:', error);
+        return content;
+      }
+    }
+    return content;
+  };
+
   return (
     <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
       <>
@@ -368,7 +388,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.fileType ===
@@ -430,7 +450,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.fileType ===
@@ -488,7 +508,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.fileType ===
@@ -540,7 +560,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.fileType ===
@@ -592,7 +612,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.fileType ===
@@ -667,7 +687,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : item?.messages?.[0]?.content.type ===
@@ -708,7 +728,7 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content.content}
+                                      {decryptMessage(item?.messages?.[0]?.content.content)}
                                     </span>
                                   </span>
                                 ) : (
@@ -721,16 +741,15 @@ const ChatList = ({
                                         maxWidth: "150px",
                                       }}
                                     >
-                                      {item?.messages?.[0]?.content?.content?.replace(
+                                      {decryptMessage(item?.messages?.[0]?.content?.content?.replace(
                                         /\*\*/g,
                                         ""
-                                      )}
+                                      ))}
                                     </span>
                                   </span>
                                 )}
                               </>
                             )}
-                            {/* <span className={chat.typing ? "text-purple-500" : ""}>{chat.message}</span> */}
                           </div>
                           {item.messages?.filter(
                             (message) =>
@@ -824,7 +843,7 @@ const ChatList = ({
           </div>
         )}
         <div
-          className="bg-primary w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center"
+          className="bg-primary cursor-pointer w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center"
           style={{
             alignItems: "center",
           }}

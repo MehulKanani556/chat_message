@@ -59,7 +59,7 @@ const Sidebar = ({ user, onProfileClick }) => {
     setShowDropdown(!showDropdown);
   };
 
-  const [activeItem, setActiveItem] = useState(null);
+  const [activeItem, setActiveItem] = useState("chat");
 
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
