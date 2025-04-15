@@ -4,6 +4,26 @@ import Peer from "simple-peer";
 import { getAllMessages, getAllMessageUsers, setOnlineuser } from "../redux/slice/user.slice";
 import { useDispatch } from "react-redux";
 
+// Simple encryption/decryption functions
+const encryptMessage = (text) => {
+  const key = 'chat';
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return btoa(result); // Convert to base64 for safe transmission
+};
+
+const decryptMessage = (encryptedText) => {
+  const key = 'chat';
+  const decodedText = atob(encryptedText);
+  let result = '';
+  for (let i = 0; i < decodedText.length; i++) {
+    result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return result;
+};
+
 const SOCKET_SERVER_URL = "http://localhost:4000"; // Move to environment variable in production
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
@@ -171,23 +191,34 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         return;
       }
 
-      // console.log("messageeeeeeeeeeeeeeeee", message);
+      try {
+        // Check if message is already encrypted
+        let content = message.data.content;
+        if (!content.startsWith('data:')) {
+          // Encrypt the message content if it's not already encrypted
+          const key = 'chat';
+          let result = '';
+          for (let i = 0; i < content.length; i++) {
+            result += String.fromCharCode(content.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+          }
+          content = 'data:' + btoa(result);
+        }
 
-      const messageData = {
-        senderId: userId,
-        receiverId,
-        content: message.data,
-        replyTo: message.replyTo,
-        isBlocked: message.isBlocked,
-      };
+        const messageData = {
+          senderId: userId,
+          receiverId,
+          content: {type:message.data.type,content:content},
+          replyTo: message.replyTo,
+          isBlocked: message.isBlocked,
+        };
+        socketRef.current.emit("private-message", messageData);
 
-      // console.log("Sending message:", messageData);
-
-      socketRef.current.emit("private-message", messageData);
-
-      socketRef.current.once("message-sent-status", (status) => {
-        resolve(status);
-      });
+        socketRef.current.once("message-sent-status", (status) => {
+          resolve(status);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
@@ -225,7 +256,15 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
     const messageHandler = (message) => {
       console.log("Received message:", message);
-      // markMessageAsRead(message._id);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 
@@ -246,11 +285,29 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
     const messageUpdatedHandler = (message) => {
       console.log("Received message updated:", message);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 
     const groupMessageHandler = (message) => {
       console.log("Received group message:", message);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 

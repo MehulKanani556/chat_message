@@ -95,7 +95,7 @@ const MessageList = ({
                   minute: "2-digit",
                   hour12: false,
                 });
-                console.log("message", message);
+                // console.log("message", message);
                 if (message.isBlocked && message.sender !== userId) {
                   console.log("message.isBlocked", message.isBlocked);
                   return;
@@ -398,7 +398,27 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
 };
 
 const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
-  const messageContent = message?.content?.content;
+  let messageContent = message?.content?.content;
+  
+  // Decrypt the message if it's encrypted
+  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+    try {
+      const key = 'chat';
+      console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
+      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+      const encodedText = messageContent.split('data:')[1];
+      const decodedText = atob(encodedText);
+      let result = '';
+      for (let i = 0; i < decodedText.length; i++) {
+        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      messageContent = result;
+      console.log(messageContent)
+    } catch (error) {
+      console.error('Decryption error:', error);
+    }
+  }
+
   // Check if message contains only a single emoji
   const isSingleEmoji = messageContent?.match(/^\p{Emoji}$/gu);
 
@@ -408,7 +428,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
     >
       <div className="flex-1 flex flex-col">
         <p className="flex-1">
-          {messageContent.split(/(\p{Emoji})/gu).map((part, index) => {
+          {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
             // Check if the part is an emoji
             if (part.match(/\p{Emoji}/gu)) {
               return (
