@@ -200,52 +200,28 @@ const Profile = () => {
                     </div>
                 </div>
 
-                <div className="max-w-md mx-auto  rounded-lg shadow-sm p-8  dark:text-primary-light">
-                    <p>
-                        If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
-                    </p>
-                    <div
-                        className="p-4 cursor-pointer flex items-center justify-between"
-                        onClick={toggleAccordion}
-                    >
+                <div className="max-w-md mx-auto rounded-lg shadow-sm p-8 dark:text-primary-light">
+                    <div className="mb-6">
+                        <h3 className="text-gray-400 text-sm mb-2">About</h3>
+                        <p className="text-black font-semibold dark:text-primary-light">
+                            {profileData.bio || "No bio available"}
+                        </p>
                     </div>
 
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
                         <div className="border-b border-gray-300">
-
-                           
-                                <div className="px-4 pb-4 pt-1">
-                                    <div className="mb-4">
-                                        <p className="text-gray-400 text-sm">Name</p>
-                                        <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <p className="text-gray-400 text-sm">Email</p>
-                                        <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
-                                    </div>
+                            <div className="px-4 pb-4 pt-1">
+                                <div className="mb-4">
+                                    <p className="text-gray-400 text-sm">Name</p>
+                                    <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
                                 </div>
-                            
+
+                                <div className="mb-4">
+                                    <p className="text-gray-400 text-sm">Email</p>
+                                    <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
+                                </div>
+                            </div>
                         </div>
-
-                        {/* <div>
-                            <button
-                                className="w-full px-4 py-3 flex justify-between items-center"
-                                onClick={() => setFilesOpen(!filesOpen)}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <FaPaperclip size={18} className=" " />
-                                    <span className="font-medium">Attached Files</span>
-                                </div>
-                                {filesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                            </button>
-
-                            {filesOpen && (
-                                <div className="px-4 py-4">
-                                    <p className="text-gray-400 italic">No files attached</p>
-                                </div>
-                            )}
-                        </div> */}
                     </div>
                 </div>
             </div>

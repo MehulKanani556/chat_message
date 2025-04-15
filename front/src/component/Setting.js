@@ -22,6 +22,7 @@ const Setting = () => {
     const [user, setUser] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [profilePhotoPrivacy, setProfilePhotoPrivacy] = useState('Everyone');
+    const [groupsPrivacy, setGroupsPrivacy] = useState('Everyone');
     const [privacyDropdownOpen, setPrivacyDropdownOpen] = useState(false);
     const [groupsPrivacyDropdownOpen, setGroupsPrivacyDropdownOpen] = useState(false);
     const [lastSeenPrivacy, setLastSeenPrivacy] = useState(true);
@@ -116,56 +117,6 @@ const Setting = () => {
         }
     }, [currentUser, targetUserId]);
 
-    const handleEdit = () => {
-        setTempData({ ...profileData });
-        setIsEditing(true);
-    };
-
-    const handleSave = async () => {
-        try {
-            setIsLoading(true);
-
-            // Create form data for the update
-            const formData = new FormData();
-            formData.append('userName', tempData.name);
-            formData.append('email', tempData.email);
-            formData.append('phone', tempData.phone);
-            formData.append('bio', tempData.bio);
-
-            // If there's a new image file, append it
-            if (tempData.photoFile) {
-                formData.append('photo', tempData.photoFile);
-            }
-
-            // Dispatch the update action
-            await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
-
-            setProfileData({
-                ...tempData,
-                profileImage: tempData.photoFile ? URL.createObjectURL(tempData.photoFile) : tempData.profileImage
-            });
-
-            setIsEditing(false);
-            setIsLoading(false);
-
-            // If onBack is provided, call it after saving
-            // if (onBack) {
-            //     onBack();
-            // }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-
-        // // If onBack is provided, call it when canceling
-        // if (onBack) {
-        //     onBack();
-        // }
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -216,10 +167,6 @@ const Setting = () => {
             console.error('Error updating profile image:', error);
             setIsLoading(false);
         }
-    };
-
-    const toggleAccordion = () => {
-        setIsOpen(!isOpen);
     };
 
     const handleEditField = (fieldName) => {
@@ -287,9 +234,9 @@ const Setting = () => {
                     <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Settings</h1>
                 </div>
             </div>
-            <div className="bg-[#F5F7FB] overflow-hidden dark:bg-primary-dark/95 h-[100vh]">
+            <div className="">
                 {/* Profile Header */}
-                <div className="flex flex-col items-center justify-center p-6 bg-[#F5F7FB] rounded-lg max-w-xs mx-auto dark:bg-primary-dark/95">
+                <div className="flex flex-col items-center justify-center p-6  rounded-lg max-w-xs mx-auto">
                     <div className="relative group">
                         <div className="w-24 h-24 relative rounded-full bg-pink-100 overflow-hidden mb-3">
                             <img src={profileData.profileImage} alt="Profile" className='h-full w-full object-cover' />
@@ -318,14 +265,7 @@ const Setting = () => {
                 </div>
 
                 {/* Profile Content */}
-                <div className="max-w-md mx-auto bg-[#F5F7FB] rounded-lg p-8 dark:bg-primary-dark/95 dark:text-primary-light">
-                    {/* Main accordion header */}
-                    {/* <div
-                        className="p-4 cursor-pointer flex items-center justify-between"
-                        onClick={toggleAccordion}
-                    >
-                    </div> */}
-
+                <div className="max-w-md mx-auto  rounded-lg p-8 dark:text-primary-light">
                     {/* Accordion content */}
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
                         {/* User Info Section */}
@@ -377,8 +317,8 @@ const Setting = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="mb-4">
 
+                                    <div className="mb-4">
                                         <p className="text-gray-400 text-sm">About</p>
                                         {editingField === 'bio' ? (
                                             <input
@@ -432,6 +372,7 @@ const Setting = () => {
                                 {filesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                             </button>
 
+                            {/* profile photo */}
                             {filesOpen && (
                                 <div className='px-4 pb-4 pt-1 relative'>
                                     <div className="flex justify-between items-center mb-2">
@@ -467,7 +408,7 @@ const Setting = () => {
                                                                     setPrivacyDropdownOpen(false);
                                                                     dispatch(updateUserProfilePhotoPrivacy({ id: user._id, profilePhoto: option }));
                                                                 }}
-                                                                className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
+                                                                  className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
                                                                     } block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white`}
                                                                 role="menuitem"
                                                             >
@@ -480,6 +421,7 @@ const Setting = () => {
                                         </div>
                                     </div>
 
+                                    {/* groups */}
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-gray-400 text-sm">Groups</p>
                                         <div className="relative inline-block text-left" ref={groupsDropdownRef}>
@@ -492,14 +434,14 @@ const Setting = () => {
                                                     aria-expanded={groupsPrivacyDropdownOpen}
                                                     onClick={() => setGroupsPrivacyDropdownOpen(!groupsPrivacyDropdownOpen)}
                                                 >
-                                                    {profilePhotoPrivacy}
+                                                    {groupsPrivacy}
                                                     {groupsPrivacyDropdownOpen ? <FaChevronUp className="-mr-1 ml-2 h-5 w-5" /> : <FaChevronDown className="-mr-1 ml-2 h-5 w-5" />}
                                                 </button>
                                             </div>
 
                                             {groupsPrivacyDropdownOpen && (
                                                 <div
-                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black dark:bg-gray-800"
+                                                    className="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800"
                                                     role="menu"
                                                     aria-orientation="vertical"
                                                     aria-labelledby="options-menu"
@@ -509,11 +451,11 @@ const Setting = () => {
                                                             <button
                                                                 key={option}
                                                                 onClick={() => {
-                                                                    setProfilePhotoPrivacy(option);
+                                                                    setGroupsPrivacy(option);
                                                                     setGroupsPrivacyDropdownOpen(false);
                                                                     dispatch(updateUserGroupToJoin({ id: user._id, groupToJoin: option }));
                                                                 }}
-                                                                className={`${profilePhotoPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
+                                                                className={`${groupsPrivacy === option ? 'bg-gray-100 dark:bg-gray-700' : ''
                                                                     } block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white`}
                                                                 role="menuitem"
                                                             >

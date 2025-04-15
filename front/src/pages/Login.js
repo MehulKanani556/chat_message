@@ -9,6 +9,8 @@ import { jwtDecode } from 'jwt-decode';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
 import { ImCross } from 'react-icons/im';
 import { BiSolidErrorAlt } from "react-icons/bi";
+import { motion, AnimatePresence } from 'framer-motion';
+
 const OTPInput = ({ length = 4, onComplete, resendTimer, setResendTimer, handleVerifyOTP, handleBack, email }) => {
   const [otp, setOtp] = useState(new Array(length).fill(''));
   const [error, setError] = useState('');
@@ -90,10 +92,15 @@ const OTPInput = ({ length = 4, onComplete, resendTimer, setResendTimer, handleV
   };
 
   return (
-    <div className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-6">
-      <h1 className="text-2xl font-bold mb-6">Enter OTP</h1>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-6 rounded-2xl shadow-xl"
+    >
+      <h1 className="text-2xl font-bold mb-6 text-indigo-700">Enter OTP</h1>
       <form onSubmit={handleSubmit} className="w-full space-y-4">
-        <div className="flex justify-center space-x-2 pb-3">
+        <div className="flex justify-center space-x-3 pb-3">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -105,44 +112,36 @@ const OTPInput = ({ length = 4, onComplete, resendTimer, setResendTimer, handleV
               onChange={(e) => handleChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               onPaste={handlePaste}
-              className="w-10 h-10 text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-12 h-12 text-center border-2 border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg font-semibold transition-all duration-200"
               maxLength={1}
             />
           ))}
         </div>
         {error && <div className="text-red-500 text-center text-sm mt-1">{error}</div>}
-        {/* <div className="text-sm text-gray-500 mt-4 w-full text-center">
-          Didn't receive code?
-          <button
-            type="button"
-            onClick={() => setResendTimer(60)}
-            disabled={resendTimer > 0}
-            className="text-blue-500 hover:text-blue-600 ml-1"
-          >
-            Resend {resendTimer > 0 ? `(${resendTimer}s)` : ''}
-          </button>
-        </div> */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="submit"
-          className="w-full bg-blue-500 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-600 transition-colors"
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-3 font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
         >
           Verify
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={handleBack}
-          className="w-full bg-gray-300 text-black rounded-lg py-2.5 font-semibold hover:bg-gray-400 transition-colors mt-2"
+          className="w-full bg-gray-200 text-gray-700 rounded-lg py-3 font-semibold hover:bg-gray-300 transition-all duration-300 mt-2"
         >
           Back
-        </button>
+        </motion.button>
       </form>
-    </div>
+    </motion.div>
   );
 };
 
 const Login = () => {
-  const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [activeTab, setActiveTab] = useState('signin'); // 'signin' or 'signup'
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [forgotPasswordStep, setForgotPasswordStep] = useState(0);
@@ -152,15 +151,6 @@ const Login = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  useEffect(() => {
     if (message && error != null) {
       setModalVisible(true)
     }
@@ -168,7 +158,7 @@ const Login = () => {
       setModalVisible(false)
     }
   }, [message])
-console.log("success", error)
+  
   useEffect(() => {
     if (modalVisible) {
       const timer = setTimeout(() => {
@@ -178,12 +168,6 @@ console.log("success", error)
       return () => clearTimeout(timer);
     }
   }, [modalVisible]);
-
-
-  const togglePanel = () => {
-    setForgotPasswordStep(0);
-    setIsRightPanelActive(!isRightPanelActive);
-  };
 
   const signUpSchema = Yup.object().shape({
     userName: Yup.string().required("Name is required"),
@@ -200,32 +184,6 @@ console.log("success", error)
       .required("Password is required"),
   });
 
-  const FormContainer = ({ children, isSignUp }) => (
-    <div
-      className={`absolute top-0 h-full transition-all duration-500 ease-in-out
-      ${isMobile
-          ? `w-full ${isRightPanelActive
-            ? isSignUp
-              ? "translate-x-0"
-              : "translate-x-full"
-            : isSignUp
-              ? "translate-x-full"
-              : "translate-x-0"
-          }`
-          : `w-1/2 ${isRightPanelActive
-            ? isSignUp
-              ? "translate-x-full opacity-100 z-50"
-              : "translate-x-0 opacity-0"
-            : isSignUp
-              ? "opacity-0"
-              : "opacity-100 z-50"
-          }`
-        }`}
-    >
-      {children}
-    </div>
-  );
-
   const handleForgotPassword = () => {
     setForgotPasswordStep(1);
   };
@@ -233,14 +191,11 @@ console.log("success", error)
   const handleSendOTP = () => {
     // Logic to send OTP
     setForgotPasswordStep(2);
-    setIsRightPanelActive(!isRightPanelActive);
   };
 
   const handleVerifyOTP = () => {
     setForgotPasswordStep(3);
-
   };
-
 
   const handleChangePassword = (values) => {
     console.log(values);
@@ -249,30 +204,156 @@ console.log("success", error)
       console.log(response)
       if (response.payload.status == 200) {
         setForgotPasswordStep(0);
-        setIsRightPanelActive(!isRightPanelActive);
       }
     });
   };
 
   const handleBack = () => {
     setForgotPasswordStep(forgotPasswordStep - 1);
-    if (forgotPasswordStep === 2) {
-      setIsRightPanelActive(!isRightPanelActive);
-    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className={`bg-white rounded-xl shadow-2xl relative overflow-hidden w-full max-w-4xl min-h-[620px] md:min-h-[480px]
-        ${isRightPanelActive ? 'right-panel-active' : ''}`}>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white rounded-2xl overflow-hidden w-full max-w-md shadow-2xl"
+      >
+        {/* Tabs */}
+        <div className="flex border-b">
+          <button 
+            className={`flex-1 py-4 text-center font-medium transition-colors ${activeTab === 'signin' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setActiveTab('signin')}
+          >
+            Sign In
+          </button>
+          <button 
+            className={`flex-1 py-4 text-center font-medium transition-colors ${activeTab === 'signup' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setActiveTab('signup')}
+          >
+            Sign Up
+          </button>
+        </div>
 
-        {/* Sign Up Form */}
-        <FormContainer isSignUp={true}>
-          {forgotPasswordStep === 0 && (
+        {/* Content */}
+        <div className="p-6">
+          {forgotPasswordStep === 0 && activeTab === 'signin' && (
+            <Formik
+              initialValues={{ email: '', password: '', showPassword: false }}
+              validationSchema={signInSchema}
+              onSubmit={(values) => {
+                dispatch(login(values)).then((response) => {
+                  if (response.payload.status == 200) navigate('/chat');
+                });
+              }}
+            >
+              {({ values, errors, touched, handleChange, setFieldValue }) => (
+                <Form className="space-y-4">
+                  <motion.h1 
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl font-bold mb-6 text-indigo-700 text-center"
+                  >
+                    Welcome Back
+                  </motion.h1>
+                  
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="Email"
+                      value={values.email}
+                      onChange={handleChange}
+                      className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="relative"
+                  >
+                    <Field
+                      type={values.showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Password"
+                      value={values.password}
+                      onChange={handleChange}
+                      className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    />
+                    <div
+                      className="absolute right-3 top-3 cursor-pointer select-none text-indigo-500"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setFieldValue('showPassword', !values.showPassword);
+                      }}
+                    >
+                      {values.showPassword ? <LuEye /> : <LuEyeClosed />}
+                    </div>
+                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                  </motion.div>
+
+                  <div className="flex justify-end">
+                    <a href="#" onClick={handleForgotPassword} className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">Forgot password?</a>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-3 font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
+                  >
+                    Sign In
+                  </motion.button>
+
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <GoogleLogin
+                    onSuccess={response => {
+                      const { name, email, sub: uid, picture: photo } = jwtDecode(response.credential);
+                      console.log(jwtDecode(response.credential))
+                      dispatch(googleLogin({ uid, userName: name, email })).then((response) => {
+                        if (response.payload) navigate('/chat');
+                      });
+                    }}
+                    onFailure={console.error}
+                    render={renderProps => (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={renderProps.onClick}
+                        disabled={renderProps.disabled}
+                        className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-all duration-300"
+                      >
+                        <img src={require('../assets/google-logo.png')} alt="Google" className="w-5 h-5" />
+                        <span>Continue with Google</span>
+                      </motion.button>
+                    )}
+                  />
+                </Form>
+              )}
+            </Formik>
+          )}
+
+          {forgotPasswordStep === 0 && activeTab === 'signup' && (
             <Formik
               initialValues={{ userName: '', email: '', password: '' }}
               validationSchema={signUpSchema}
-
               onSubmit={(values) => {
                 dispatch(register(values)).then((response) => {
                   if (response.payload) navigate('/chat');
@@ -280,286 +361,103 @@ console.log("success", error)
               }}
             >
               {({ values, errors, touched, handleChange }) => (
-                <Form className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-8">
-                  <h1 className="text-2xl font-bold mb-6">Create Account</h1>
+                <Form className="space-y-4">
+                  <motion.h1 
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl font-bold mb-6 text-indigo-700 text-center"
+                  >
+                    Create Account
+                  </motion.h1>
 
-                  <div className="w-full space-y-4">
-                    <div>
-                      <Field
-                        type="text"
-                        name="userName"
-                        placeholder="User Name"
-                        value={values.userName}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <ErrorMessage name="userName" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-
-                    <div>
-                      <Field
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={values.email}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-
-                    <div>
-                      <Field
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={values.password}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-
-                  <div className="w-full mt-6">
-                    <div className="relative my-4">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
-                      </div>
-                      <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                      </div>
-                    </div>
-
-                    <GoogleLogin
-                      onSuccess={response => {
-                        const { name, email, sub: uid } = jwtDecode(response.credential);
-                        dispatch(googleLogin({ uid, userName: name, email })).then((response) => {
-                          if (response.payload) navigate('/chat');
-                        });
-                      }}
-                      onFailure={console.error}
-                      render={renderProps => (
-                        <button
-                          onClick={renderProps.onClick}
-                          disabled={renderProps.disabled}
-                          className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg p-2.5 hover:bg-gray-50 transition-colors"
-                        >
-                          <img src={require('../assets/google-logo.png')} alt="Google" className="w-5 h-5" />
-                          <span>Continue with Google</span>
-                        </button>
-                      )}
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Field
+                      type="text"
+                      name="userName"
+                      placeholder="User Name"
+                      value={values.userName}
+                      onChange={handleChange}
+                      className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     />
-                  </div>
-                </Form>
-              )}
-            </Formik>
-          )}
-          {forgotPasswordStep === 2 && (
-            <OTPInput
-              length={4}
-              onComplete={(otpValue) => {
+                    <ErrorMessage name="userName" component="div" className="text-red-500 text-sm mt-1" />
+                  </motion.div>
 
-              }}
-              resendTimer={resendTimer}
-              setResendTimer={setResendTimer}
-              handleVerifyOTP={handleVerifyOTP}
-              handleBack={handleBack}
-              email={email}
-
-            />
-          )}
-          {forgotPasswordStep === 3 && (
-            <Formik
-              initialValues={{
-                newPassword: '',
-                confirmPassword: '',
-                showNewPassword: false,
-                showConfirmPassword: false
-              }}
-              validationSchema={Yup.object({
-                newPassword: Yup.string()
-                  .min(6, 'Password must be at least 6 characters')
-                  .required('New Password is required'),
-                confirmPassword: Yup.string()
-                  .oneOf([Yup.ref('newPassword'), null], 'Passwords must match')
-                  .required('Confirm Password is required'),
-              })}
-              onSubmit={(values) => {
-                const { newPassword, confirmPassword } = values;
-                handleChangePassword({ newPassword, confirmPassword });
-              }}
-            >
-              {({ values, setFieldValue, handleChange, handleSubmit, errors, touched }) => (
-                <form onSubmit={handleSubmit} className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-6">
-                  <h1 className="text-2xl font-bold mb-6">Change Password</h1>
-                  <div className="w-full space-y-4">
-                    <div className="relative">
-                      <input
-                        type={values.showNewPassword ? "text" : "password"}
-                        name="newPassword"
-                        placeholder="New Password"
-                        value={values.newPassword}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <div
-                        className="absolute right-3 top-3 cursor-pointer select-none text-blue-500"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setFieldValue('showNewPassword', !values.showNewPassword);
-                        }}
-                      >
-                        {values.showNewPassword ? <LuEye /> : <LuEyeClosed />}
-                      </div>
-                      {errors.newPassword && touched.newPassword && (
-                        <div className="text-red-500 text-sm mt-1">{errors.newPassword}</div>
-                      )}
-                    </div>
-                    <div className="relative pb-3">
-                      <input
-                        type={values.showConfirmPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        placeholder="Confirm Password"
-                        value={values.confirmPassword}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <div
-                        className="absolute right-3 top-3 cursor-pointer select-none text-blue-500"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setFieldValue('showConfirmPassword', !values.showConfirmPassword);
-                        }}
-                      >
-                        {values.showConfirmPassword ? <LuEye /> : <LuEyeClosed />}
-                      </div>
-                      {errors.confirmPassword && touched.confirmPassword && (
-                        <div className="text-red-500 text-sm mt-1">{errors.confirmPassword}</div>
-                      )}
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Change Password
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="w-full bg-gray-300 text-black rounded-lg py-2.5 font-semibold hover:bg-gray-400 transition-colors mt-2"
-                    >
-                      Back
-                    </button>
-                  </div>
-                </form>
-              )}
-            </Formik>
-          )}
-        </FormContainer>
-
-
-        {/* Sign In Form */}
-        <FormContainer isSignUp={false}>
-          {forgotPasswordStep === 0 && (
-            <Formik
-              initialValues={{ email: '', password: '', showPassword: false }}
-              validationSchema={signInSchema}
-              onSubmit={(values) => {
-                dispatch(login(values)).then((response) => {
-
-                  if (response.payload.status == 200) navigate('/chat');
-                });
-              }}
-            >
-              {({ values, errors, touched, handleChange, setFieldValue }) => (
-                <Form className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-6">
-                  <h1 className="text-2xl font-bold mb-6">Sign In</h1>
-                  <div className="w-full space-y-4">
-                    <div>
-                      <Field
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={values.email}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-
-                    <div className="relative">
-                      <Field
-                        type={values.showPassword ? "text" : "password"}
-                        name="password"
-                        placeholder="Password"
-                        value={values.password}
-                        onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <div
-                        className="absolute right-3 top-3 cursor-pointer select-none text-blue-500"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setFieldValue('showPassword', !values.showPassword);
-                        }}
-                      >
-                        {values.showPassword ? <LuEye /> : <LuEyeClosed />}
-                      </div>
-                      <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <a href="#" onClick={handleForgotPassword} className="text-sm text-blue-500 hover:text-blue-600">Forgot password?</a>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-600 transition-colors"
-                    >
-                      Sign In
-                    </button>
-                  </div>
-
-                  <div className="w-full mt-6">
-                    <div className="relative my-4">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
-                      </div>
-                      <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                      </div>
-                    </div>
-
-                    <GoogleLogin
-                      onSuccess={response => {
-                        const { name, email, sub: uid, picture: photo } = jwtDecode(response.credential);
-                        console.log(jwtDecode(response.credential))
-                        dispatch(googleLogin({ uid, userName: name, email })).then((response) => {
-                          if (response.payload) navigate('/chat');
-                        });
-
-                      }}
-                      onFailure={console.error}
-                      render={renderProps => (
-                        <button
-                          onClick={renderProps.onClick}
-                          disabled={renderProps.disabled}
-                          className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg p-2.5 hover:bg-gray-50 transition-colors"
-                        >
-                          <img src={require('../assets/google-logo.png')} alt="Google" className="w-5 h-5" />
-                          <span className='text-right flex-grow-0'>Continue with Google</span>
-                        </button>
-                      )}
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="Email"
+                      value={values.email}
+                      onChange={handleChange}
+                      className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Field
+                      type="password"
+                      name="password"
+                      placeholder="Password"
+                      value={values.password}
+                      onChange={handleChange}
+                      className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    />
+                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                  </motion.div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-3 font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
+                  >
+                    Sign Up
+                  </motion.button>
+
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
                   </div>
+
+                  <GoogleLogin
+                    onSuccess={response => {
+                      const { name, email, sub: uid } = jwtDecode(response.credential);
+                      dispatch(googleLogin({ uid, userName: name, email })).then((response) => {
+                        if (response.payload) navigate('/chat');
+                      });
+                    }}
+                    onFailure={console.error}
+                    render={renderProps => (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={renderProps.onClick}
+                        disabled={renderProps.disabled}
+                        className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-all duration-300"
+                      >
+                        <img src={require('../assets/google-logo.png')} alt="Google" className="w-5 h-5" />
+                        <span>Continue with Google</span>
+                      </motion.button>
+                    )}
+                  />
                 </Form>
               )}
             </Formik>
@@ -585,129 +483,208 @@ console.log("success", error)
               }}
             >
               {({ handleChange, handleSubmit }) => (
-                <form onSubmit={handleSubmit} className="bg-white flex flex-col items-center justify-center px-8 md:px-10 h-full py-6">
-                  <h1 className="text-2xl font-bold mb-6">Forgot Password</h1>
-                  <div className="w-full space-y-4">
-                    <div className='pb-3'>
+                <motion.form 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  onSubmit={handleSubmit} 
+                  className="space-y-4"
+                >
+                  <h1 className="text-2xl font-bold mb-6 text-indigo-700 text-center">Forgot Password</h1>
+                  <div className="space-y-4">
+                    <div>
                       <input
                         type="email"
                         name="email"
                         placeholder="Enter your email"
                         onChange={handleChange}
-                        className="bg-gray-100 border-none px-4 py-2 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                         ref={(input) => input && input.focus()}
                       />
                       <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
                     </div>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="submit"
-                      className="w-full bg-blue-500 text-white rounded-lg py-2.5 font-semibold hover:bg-blue-600 transition-colors"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-3 font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
                     >
                       Send OTP
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={handleBack}
-                      className="w-full bg-gray-300 text-black rounded-lg py-2.5 font-semibold hover:bg-gray-400 transition-colors mt-2"
+                      className="w-full bg-gray-200 text-gray-700 rounded-lg py-3 font-semibold hover:bg-gray-300 transition-all duration-300 mt-2"
                     >
                       Back
-                    </button>
+                    </motion.button>
                   </div>
-                </form>
+                </motion.form>
               )}
             </Formik>
           )}
-        </FormContainer>
 
-        {/* Overlay Container */}
-        <div className={`absolute top-0 left-1/2 w-1/2 h-full overflow-hidden transition-transform duration-500 ease-in-out z-50
-          ${isMobile ? 'hidden' : `${isRightPanelActive ? '-translate-x-full' : ''}`}`}>
-          <div className={`bg-gradient-to-r from-blue-500 to-blue-600 text-white relative -left-full h-full w-[200%] transform 
-            ${isRightPanelActive ? 'translate-x-1/2' : 'translate-x-0'} transition-transform duration-500 ease-in-out`}>
+          {forgotPasswordStep === 2 && (
+            <OTPInput
+              length={4}
+              onComplete={(otpValue) => {
 
-            {/* Left Overlay Panel */}
-            <div
-              className={`absolute top-0 flex flex-col items-center justify-center px-8 md:px-10 text-center h-full w-1/2 transition-transform duration-500 ease-in-out
-              ${isRightPanelActive ? "translate-x-0" : "-translate-x-[20%]"}`}
+              }}
+              resendTimer={resendTimer}
+              setResendTimer={setResendTimer}
+              handleVerifyOTP={handleVerifyOTP}
+              handleBack={handleBack}
+              email={email}
+            />
+          )}
+
+          {forgotPasswordStep === 3 && (
+            <Formik
+              initialValues={{
+                newPassword: '',
+                confirmPassword: '',
+                showNewPassword: false,
+                showConfirmPassword: false
+              }}
+              validationSchema={Yup.object({
+                newPassword: Yup.string()
+                  .min(6, 'Password must be at least 6 characters')
+                  .required('New Password is required'),
+                confirmPassword: Yup.string()
+                  .oneOf([Yup.ref('newPassword'), null], 'Passwords must match')
+                  .required('Confirm Password is required'),
+              })}
+              onSubmit={(values) => {
+                const { newPassword, confirmPassword } = values;
+                handleChangePassword({ newPassword, confirmPassword });
+              }}
             >
-              <h1 className="text-3xl font-bold mb-4">Welcome Back!</h1>
-              <p className="mb-6">
-                Sign in with your personal info to stay connected with us
-              </p>
-              <button
-                onClick={togglePanel}
-                className="border-2 border-white px-8 py-2 rounded-full font-semibold hover:bg-white/10 transition-colors"
-              >
-                Sign In
-              </button>
-            </div>
-
-            {/* Right Overlay Panel */}
-            <div
-              className={`absolute top-0 right-0 flex flex-col items-center justify-center px-8 md:px-10 text-center h-full w-1/2 transition-transform duration-500 ease-in-out
-              ${isRightPanelActive ? "translate-x-[20%]" : "translate-x-0"}`}
-            >
-              <h1 className="text-3xl font-bold mb-4">Hello, Friend!</h1>
-              <p className="mb-6">
-                Begin your journey with us by entering your personal details
-              </p>
-              <button
-                onClick={togglePanel}
-                className="border-2 border-white px-8 py-2 rounded-full font-semibold hover:bg-white/10 transition-colors"
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
+              {({ values, setFieldValue, handleChange, handleSubmit, errors, touched }) => (
+                <motion.form 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  onSubmit={handleSubmit} 
+                  className="space-y-4"
+                >
+                  <h1 className="text-2xl font-bold mb-6 text-indigo-700 text-center">Change Password</h1>
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <input
+                        type={values.showNewPassword ? "text" : "password"}
+                        name="newPassword"
+                        placeholder="New Password"
+                        value={values.newPassword}
+                        onChange={handleChange}
+                        className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      />
+                      <div
+                        className="absolute right-3 top-3 cursor-pointer select-none text-indigo-500"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setFieldValue('showNewPassword', !values.showNewPassword);
+                        }}
+                      >
+                        {values.showNewPassword ? <LuEye /> : <LuEyeClosed />}
+                      </div>
+                      {errors.newPassword && touched.newPassword && (
+                        <div className="text-red-500 text-sm mt-1">{errors.newPassword}</div>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={values.showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Confirm Password"
+                        value={values.confirmPassword}
+                        onChange={handleChange}
+                        className="bg-gray-50 border border-gray-200 px-4 py-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      />
+                      <div
+                        className="absolute right-3 top-3 cursor-pointer select-none text-indigo-500"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setFieldValue('showConfirmPassword', !values.showConfirmPassword);
+                        }}
+                      >
+                        {values.showConfirmPassword ? <LuEye /> : <LuEyeClosed />}
+                      </div>
+                      {errors.confirmPassword && touched.confirmPassword && (
+                        <div className="text-red-500 text-sm mt-1">{errors.confirmPassword}</div>
+                      )}
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg py-3 font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md"
+                    >
+                      Change Password
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={handleBack}
+                      className="w-full bg-gray-200 text-gray-700 rounded-lg py-3 font-semibold hover:bg-gray-300 transition-all duration-300 mt-2"
+                    >
+                      Back
+                    </motion.button>
+                  </div>
+                </motion.form>
+              )}
+            </Formik>
+          )}
         </div>
-
-        {/* Mobile Toggle */}
-        {isMobile && (
-          <div className="absolute -bottom-3 left-0 right-0  p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center">
-            <p className="mb-3">
-              {isRightPanelActive
-                ? "Already have an account?"
-                : "Don't have an account?"}
-            </p>
-            <button
-              onClick={togglePanel}
-              className="border-2 border-white px-8 py-2 rounded-full font-semibold hover:bg-white/10 transition-colors mb-[10px]"
-            >
-              {isRightPanelActive ? "Sign In" : "Sign Up"}
-            </button>
-          </div>
-        )}
-        {/* error message  */}
+      </motion.div>
+      
+      {/* Error Message Modal */}
+      <AnimatePresence>
         {modalVisible && (
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             onClick={() => setModalVisible(false)}
           >
-            <div
-              className="bg-white rounded-lg w-96 "
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl w-96 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-end items-center pb-2 p-4">
-
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setModalVisible(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <ImCross />
-                </button>
+                </motion.button>
               </div>
               <div className='text-xl p-5 text-red-500 py-8 pt-6 text-center flex flex-col justify-center items-center'>
-                <p className='text-center text-6xl mb-3'>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className='text-center text-6xl mb-3'
+                >
                   <BiSolidErrorAlt />
-                </p>
+                </motion.p>
                 <p>
                   {typeof message === 'object' ? message.message : message}
                 </p>
-
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };

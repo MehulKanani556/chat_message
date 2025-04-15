@@ -100,19 +100,19 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
 
   return (
     show && (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all modal_background">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl w-full max-w-md transform transition-all modal_background border border-gray-200 dark:border-gray-700">
           {/* Header */}
-          <div className="p-6 border-b">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-800">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 Forward Message
               </h2>
               <button
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 onClick={onClose}
               >
-                <ImCross className="w-4 h-4 text-gray-500" />
+                <ImCross className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
 
@@ -123,10 +123,11 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl 
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                         text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
-              <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             </div>
           </div>
 
@@ -135,9 +136,8 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
             {filteredUsers.map((user) => (
               <div
                 key={user._id}
-                className={`flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer ${
-                  selectedUsers.includes(user._id) ? "order-first" : ""
-                }`}
+                className={`flex items-center p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer ${selectedUsers.includes(user._id) ? "order-first bg-indigo-50 dark:bg-indigo-900/30" : ""
+                  }`}
                 onClick={() => {
                   if (selectedUsers.includes(user._id)) {
                     setSelectedUsers(
@@ -149,7 +149,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                 }}
               >
                 {/* User Avatar */}
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center mr-3 shadow-md">
                   {user.photo ? (
                     <img
                       src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
@@ -157,10 +157,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <span className="text-blue-500 font-medium">
+                    <span className="text-white font-medium">
                       {user.userName && user.userName.includes(" ")
                         ? user.userName.split(" ")[0][0] +
-                          user.userName.split(" ")[1][0]
+                        user.userName.split(" ")[1][0]
                         : user.userName[0]}
                     </span>
                   )}
@@ -168,9 +168,9 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
 
                 {/* User Details */}
                 <div className="flex-1">
-                  <h3 className="font-medium text-gray-800">{user.userName}</h3>
+                  <h3 className="font-medium text-gray-800 dark:text-white">{user.userName}</h3>
                   {user.status && (
-                    <p className="text-sm text-gray-500">{user.status}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{user.status}</p>
                   )}
                 </div>
 
@@ -179,9 +179,9 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   <input
                     type="checkbox"
                     checked={selectedUsers.includes(user._id)}
-                    onChange={() => {}} // Handled by parent div click
-                    className="w-4 h-4 rounded border-gray-300 text-blue-500 
-                           focus:ring-blue-500 focus:ring-offset-0"
+                    onChange={() => { }} // Handled by parent div click
+                    className="w-5 h-5 rounded-full border-2 border-indigo-500 text-indigo-500 
+                           focus:ring-indigo-500 focus:ring-offset-0 checked:bg-indigo-500"
                   />
                 </div>
               </div>
@@ -189,16 +189,16 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-gray-50 rounded-b-xl modal_background">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl modal_background">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {selectedUsers.length} user
                 {selectedUsers.length !== 1 ? "s" : ""} selected
               </span>
               <div className="space-x-3">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -206,11 +206,10 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   onClick={() => onSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
-                  ${
-                    selectedUsers.length === 0
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
+                  ${selectedUsers.length === 0
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-md"
+                    }`}
                 >
                   Forward
                 </button>
@@ -360,28 +359,28 @@ const Chat2 = () => {
       requestNotificationPermission();
     }
   }, []);
-    // Function to request notification permission
-    const requestNotificationPermission = async () => {
-      try {
-        const permission = await Notification.requestPermission();
-        setNotificationPermission(permission);
-        console.log("Notification permission:", permission);
-      } catch (error) {
-        console.error("Error requesting notification permission:", error);
-      }
-    };
+  // Function to request notification permission
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      console.log("Notification permission:", permission);
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+    }
+  };
 
-     // Function to show notification for new message
+  // Function to show notification for new message
   const showMessageNotification = (message, senderName) => {
     if (notificationPermission !== "granted") return;
-    
+
     // Don't show notification if the chat is currently selected
     if (selectedChat && selectedChat._id === message.sender) return;
-    
+
     // Create notification content
     let notificationTitle = senderName || "New Message";
     let notificationBody = "";
-    
+
     // Handle different message types
     if (message.content.type === "text") {
       notificationBody = message.content.content || "New message received";
@@ -396,13 +395,13 @@ const Chat2 = () => {
     } else if (message.content.type === "call") {
       notificationBody = "Call message";
     }
-    
+
     // Create and show the notification
     const notification = new Notification(notificationTitle, {
       body: notificationBody,
       icon: "/logo.png", // Use your app's icon
     });
-    
+
     // Close notification after 5 seconds
     setTimeout(() => {
       notification.close();
@@ -535,7 +534,7 @@ const Chat2 = () => {
           // Find sender name
           const sender = allUsers.find(user => user._id === message.sender);
           const senderName = sender ? sender.userName : "Someone";
-          
+
           // Show notification
           showMessageNotification(message, senderName);
         }
@@ -546,7 +545,7 @@ const Chat2 = () => {
     return () => {
       unsubscribeMessages?.();
     };
-  }, [isConnected, selectedChat,notificationPermission,allUsers]);
+  }, [isConnected, selectedChat, notificationPermission, allUsers]);
 
   // ===========================typing=============================
 
@@ -665,7 +664,7 @@ const Chat2 = () => {
       </div>
     );
   };
-  
+
   //===========handle send group message===========
   const handleSendGroupMessage = async (data) => {
     if (data.content.trim() === "") return;
@@ -859,7 +858,7 @@ const Chat2 = () => {
         // Find sender name
         const sender = allUsers.find(user => user._id === message.sender);
         const senderName = sender ? sender.userName : "Someone";
-        
+
         // Show notification
         showMessageNotification(message, senderName);
       }
@@ -870,7 +869,7 @@ const Chat2 = () => {
     return () => {
       unsubscribeGroupMessages?.();
     };
-  }, [isConnected, selectedChat,notificationPermission,allUsers]);
+  }, [isConnected, selectedChat, notificationPermission, allUsers]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1576,6 +1575,16 @@ const Chat2 = () => {
     };
   }, []);
 
+  // Add this useEffect hook after the other useEffect hooks
+  useEffect(() => {
+    if (selectedChat && user) {
+      // If the selectedChat is the current user, update it with the latest user data
+      if (selectedChat._id === user._id) {
+        setSelectedChat(user);
+      }
+    }
+  }, [user, selectedChat?._id]);
+
   return (
     <div className="flex h-screen bg-white">
       <Sidebar
@@ -1599,18 +1608,6 @@ const Chat2 = () => {
           boxShadow: "0px 0px 5px 1px #80808054",
         }}
       >
-        {/* <ChatList
-          filteredUsers={filteredUsers}
-          currentUser={currentUser}
-          onlineUsers={onlineUsers}
-          setSelectedChat={setSelectedChat}
-          setShowLeftSidebar={setShowLeftSidebar}
-          IMG_URL={IMG_URL}
-          selectedChat={selectedChat} // Pass selectedChat as a prop
-        /> */}
-        {/* <ChatList /> */}
-        {/* </div>
-      <div className="ml-16"> */}
         {showGroups && (
           <Groups
             setSelectedChat={setSelectedChat}
@@ -1639,9 +1636,8 @@ const Chat2 = () => {
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           <div
-            className={` ${
-              showLeftSidebar ? "hidden md:block" : "block"
-            } flex-1 flex flex-col`}
+            className={` ${showLeftSidebar ? "hidden md:block" : "block"
+              } flex-1 flex flex-col`}
           >
             {selectedChat ? (
               <>
@@ -1700,9 +1696,9 @@ const Chat2 = () => {
                       ) : (
                         <span className="text-white text-xl font-bold">
                           {selectedChat?.userName &&
-                          selectedChat?.userName.includes(" ")
+                            selectedChat?.userName.includes(" ")
                             ? selectedChat?.userName.split(" ")?.[0][0] +
-                              selectedChat?.userName.split(" ")?.[1][0]
+                            selectedChat?.userName.split(" ")?.[1][0]
                             : selectedChat?.userName?.[0]}
                         </span>
                       )}
@@ -1729,11 +1725,10 @@ const Chat2 = () => {
                         </div>
                       ) : (
                         <div
-                          className={`text-sm ${
-                            onlineUsers.includes(selectedChat?._id)
-                              ? "text-green-500"
-                              : "text-gray-500"
-                          }`}
+                          className={`text-sm ${onlineUsers.includes(selectedChat?._id)
+                            ? "text-green-500"
+                            : "text-gray-500"
+                            }`}
                         >
                           {onlineUsers.includes(selectedChat?._id)
                             ? "Online"
@@ -2044,11 +2039,11 @@ const Chat2 = () => {
                       selectedFiles.length > 0
                         ? "calc(100vh -  275px)"
                         : replyingTo
-                        ? replyingTo?.content?.fileType &&
-                          replyingTo?.content?.fileType?.startsWith("image/")
-                          ? "calc(100vh - 280px)"
-                          : "calc(100vh -  225px)"
-                        : "calc(100vh - 172px)",
+                          ? replyingTo?.content?.fileType &&
+                            replyingTo?.content?.fileType?.startsWith("image/")
+                            ? "calc(100vh - 280px)"
+                            : "calc(100vh -  225px)"
+                          : "calc(100vh - 172px)",
                   }}
                   ref={messagesContainerRef}
                 >
@@ -2107,7 +2102,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/vnd.ms-excel" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       ) {
                         fileIcon = (
                           <FaFileExcel className="w-20 h-20 text-gray-500" />
@@ -2115,7 +2110,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/msword" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       ) {
                         fileIcon = (
                           <FaFileWord className="w-20 h-20 text-gray-500" />
@@ -2123,7 +2118,7 @@ const Chat2 = () => {
                       } else if (
                         file.type === "application/vnd.ms-powerpoint" ||
                         file.type ===
-                          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                       ) {
                         fileIcon = (
                           <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
@@ -2216,11 +2211,10 @@ const Chat2 = () => {
                   <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0  dark:bg-primary-dark">
                     <form
                       onSubmit={handleSubmit}
-                      className={`flex items-center gap-2 ${
-                        replyingTo || selectedFiles.length > 0
-                          ? "rounded-b-lg"
-                          : "rounded-lg"
-                      } px-4 py-2 w-full max-w-full`}
+                      className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
+                        ? "rounded-b-lg"
+                        : "rounded-lg"
+                        } px-4 py-2 w-full max-w-full`}
                     >
                       <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
                         {" "}
@@ -2342,9 +2336,8 @@ const Chat2 = () => {
                           onClick={handleVoiceMessage}
                         >
                           <IoMicOutline
-                            className={`w-6 h-6 ${
-                              isRecording ? "text-red-500" : ""
-                            }`}
+                            className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                              }`}
                           />
                         </button>
                         {/* {(messageInput != "" || selectedFiles.length > 0) && ( */}
@@ -2416,13 +2409,12 @@ const Chat2 = () => {
             )}
           </div>
           <div
-            className={`${
-              ((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+            className={`${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
               isGroupCreateModalOpen ||
               (isUserProfileModalOpen && !selectedChat.members)
-                ? "w-[380px] "
-                : "w-0"
-            } transition-all duration-300`}
+              ? "w-[380px] "
+              : "w-0"
+              } transition-all duration-300`}
             style={{
               boxShadow: "0px 0px 5px 1px #80808054",
             }}
@@ -2474,30 +2466,26 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col max-h-screen ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
-            ? ""
-            : "hidden"
-        }`}
+        className={`flex-grow flex flex-col max-h-screen ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+          ? ""
+          : "hidden"
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
-              ? "flex items-center justify-center"
-              : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+          className={`flex-1 relative ${isReceiving
+            ? "flex items-center justify-center"
+            : `grid gap-4 ${getGridColumns(
+              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+            )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2657,9 +2645,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2669,9 +2656,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-blue-500" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2700,8 +2686,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
+                allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2915,9 +2901,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -2961,9 +2946,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -3045,30 +3029,30 @@ const Chat2 = () => {
 
       {((isProfileImageModalOpen && selectedProfileImage) ||
         (isImageModalOpen && selectedImage)) && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative w-full h-full flex items-center justify-center p-8">
-            <img
-              src={
-                isProfileImageModalOpen ? selectedProfileImage : selectedImage
-              }
-              alt="Profile"
-              className="max-w-full max-h-full object-contain"
-            />
-            <button
-              onClick={() => {
-                if (isProfileImageModalOpen) {
-                  setIsProfileImageModalOpen(false);
-                } else if (isImageModalOpen) {
-                  setIsImageModalOpen(false);
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <img
+                src={
+                  isProfileImageModalOpen ? selectedProfileImage : selectedImage
                 }
-              }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <ImCross className="w-6 h-6" />
-            </button>
+                alt="Profile"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button
+                onClick={() => {
+                  if (isProfileImageModalOpen) {
+                    setIsProfileImageModalOpen(false);
+                  } else if (isImageModalOpen) {
+                    setIsImageModalOpen(false);
+                  }
+                }}
+                className="absolute top-4 right-4 text-white hover:text-gray-300"
+              >
+                <ImCross className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {/* Forward Modal */}
       {showForwardModal && (
         <ForwardModal

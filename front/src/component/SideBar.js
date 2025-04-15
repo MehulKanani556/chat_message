@@ -11,6 +11,7 @@ import {
 } from 'react-icons/bs';
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import { MdOutlineWbSunny } from 'react-icons/md';
+import { LuPhoneCall } from 'react-icons/lu';
 
 const Sidebar = ({ user, onProfileClick }) => {
   const location = useLocation();
@@ -84,13 +85,13 @@ const Sidebar = ({ user, onProfileClick }) => {
         setActiveItem("Groups");
       }
     },
-    // {
-    //   icon: <BsGear size={20} />, path: "#", label: "Settings", onClick: () => {
-    //     const event = new CustomEvent('showSettings');
-    //     window.dispatchEvent(event);
-    //     setActiveItem("Settings");
-    //   }
-    // },
+    {
+      icon: <LuPhoneCall size={20} />, path: "#", label: "Call", onClick: () => {
+        const event = new CustomEvent('showCall');
+        window.dispatchEvent(event);
+        setActiveItem("Call");
+      }
+    },
     // {
     //   icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
     //     const event = new CustomEvent('showLanguage');
