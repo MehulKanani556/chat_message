@@ -203,11 +203,20 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           }
           content = 'data:' + btoa(result);
         }
+        console.log(message)
+        
 
         const messageData = {
           senderId: userId,
           receiverId,
-          content: {type:message.data.type,content:content},
+          content: {
+            type:message.data.type,
+            content:content,
+            fileType:message.data.fileType,
+            fileUrl:message.data.fileUrl,
+            size:message.data.size,
+
+          },
           replyTo: message.replyTo,
           isBlocked: message.isBlocked,
         };

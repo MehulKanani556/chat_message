@@ -72,7 +72,7 @@ async function handlePrivateMessage(socket, data) {
   const { senderId, receiverId, content,  replyTo, isBlocked } = data;
 
   try {
-    console.log("replyTo", replyTo);
+    // console.log("replyTo", content);
     
     // Save message to database with initial status 'sent'
     const savedMessage = await saveMessage({

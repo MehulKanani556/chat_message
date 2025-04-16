@@ -5,7 +5,7 @@ import { FaPaperclip } from 'react-icons/fa';
 import { IMG_URL } from '../utils/baseUrl';
 import { IoCameraOutline } from 'react-icons/io5';
 import { ImCross } from 'react-icons/im';
-
+import { HiOutlineDownload } from "react-icons/hi";
 export default function ProfileUser({ isOpen, onClose, selectedChat, messages, handleImageClick }) {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
@@ -14,7 +14,27 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   const toggleAccordion = () => {
     setUserInfoOpen(!userInfoOpen);
   };
-
+  function decryptMessage(encryptedText) {
+    if (typeof encryptedText === 'string' && encryptedText.startsWith('data:')) {
+      try {
+        const key = 'chat';
+        // Remove the 'data:' prefix
+        const encodedText = encryptedText.split('data:')[1];
+        // Decode from base64
+        const decodedText = atob(encodedText);
+        let result = '';
+        // XOR each character with the key
+        for (let i = 0; i < decodedText.length; i++) {
+          result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+      } catch (error) {
+        console.error('Decryption error:', error);
+        return encryptedText; // Return original text if decryption fails
+      }
+    }
+    return encryptedText; // Return original text if not encrypted
+  }
   return (
     <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
       <div>
@@ -33,7 +53,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
         <div className="flex flex-col items-center justify-center p-6   border-b border-gray-300 dark:border-primary-light/15">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden mb-3">
-              {selectedChat?.photo && selectedChat.photo !== "null" ? (
+              {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
                 <img
                   src={`${IMG_URL}${selectedChat?.photo}`}
                   alt="Profile"
@@ -119,7 +139,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
               </button>
 
               {filesOpen && (
-                <div className="grid grid-cols-3 gap-2 items-center max-h-[250px] justify-center overflow-y-auto scrollbar-hide">
+                <div className="grid grid-cols-3 gap-2 p-2 items-center max-h-[250px] justify-center overflow-y-auto scrollbar-hide">
                   {messages.filter(
                     (message) => message.content?.type === "file"
                   ).length > 0 ? (
@@ -131,7 +151,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                           return (
                             <div
                               key={index}
-                              className="relative group aspect-square"
+                              className="relative group aspect-square rounded-lg bg-primary-light dark:bg-primary-dark/50 p-2"
                             >
                               <img
                                 src={`${IMG_URL}${message.content.fileUrl.replace(
@@ -150,7 +170,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                 }
                               />
                               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                {message.content.content}
+                              {decryptMessage(message.content.content)}
                               </div>
                             </div>
                           );
@@ -159,20 +179,20 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                           return (
                             <div
                               key={index}
-                              className="relative bg-gray-100 rounded-lg aspect-square p-3 flex flex-col items-center justify-center group"
+                              className="relative bg-primary-light dark:bg-primary-dark/50 rounded-lg aspect-square p-3 flex flex-col items-center justify-center group"
                             >
                               <div className="flex-1 flex items-center justify-center">
-                                {message.content.fileType.includes("pdf") ? (
+                                {message.content.fileType?.includes("pdf") ? (
                                   <FaFilePdf className="w-12 h-12 text-red-500" />
-                                ) : message.content.fileType.includes(
+                                ) : message.content.fileType?.includes(
                                   "word"
                                 ) ? (
                                   <FaFileWord className="w-12 h-12 text-blue-500" />
-                                ) : message.content.fileType.includes(
+                                ) : message.content.fileType?.includes(
                                   "excel"
                                 ) ? (
                                   <FaFileExcel className="w-12 h-12 text-green-500" />
-                                ) : message.content.fileType.includes(
+                                ) : message.content.fileType?.includes(
                                   "audio"
                                 ) ? (
                                   <FaFileAudio className="w-12 h-12 text-purple-500" />
@@ -183,7 +203,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
 
                               <div className="w-full px-2 text-center">
                                 <p className="text-xs font-medium break-words line-clamp-2 hover:line-clamp-none group-hover:text-blue-600">
-                                  {message.content.content}
+                                  {decryptMessage(message.content.content)}
                                 </p>
                               </div>
 
@@ -195,7 +215,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                 download={message.content.content}
                                 className="absolute top-2 right-2 text-blue-500 hover:text-blue-600 bg-white rounded-full p-1 shadow-sm"
                               >
-                                <FaDownload className="w-4 h-4" />
+                                <HiOutlineDownload className="w-4 h-4" />
                               </a>
                             </div>
                           );

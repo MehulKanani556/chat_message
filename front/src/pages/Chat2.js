@@ -1743,7 +1743,7 @@ const Chat2 = () => {
                         }
                       }}
                     >
-                      {selectedChat?.photo && selectedChat.photo !== "null" && selectedChat?.profilePhoto == "Everyone" ? (
+                      {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
                         <img
                           src={`${IMG_URL}${selectedChat.photo.replace(
                             /\\/g,
@@ -2113,7 +2113,7 @@ const Chat2 = () => {
                   style={{
                     height:
                       selectedFiles.length > 0
-                        ? "calc(100vh -  275px)"
+                        ? "calc(100vh -  268px)"
                         : replyingTo
                           ? replyingTo?.content?.fileType &&
                             replyingTo?.content?.fileType?.startsWith("image/")
@@ -2159,7 +2159,7 @@ const Chat2 = () => {
                 </div>
 
                 {selectedFiles && selectedFiles.length > 0 && (
-                  <div className="flex w-full  mx-auto">
+                  <div className="flex px-6  mx-auto  dark:bg-primary-dark">
                     {selectedFiles.map((file, index) => {
                       const fileUrl = URL.createObjectURL(file); // Create a URL for the file
                       let fileIcon;
@@ -2168,12 +2168,12 @@ const Chat2 = () => {
                           <img
                             src={fileUrl}
                             alt={`Selected ${index}`}
-                            className="w-20 h-20 object-cover mb-1"
+                            className="w-20 h-[40px] object-cover "
                           />
                         );
                       } else if (file.type === "application/pdf") {
                         fileIcon = (
-                          <FaFilePdf className="w-20 h-20 text-gray-500" />
+                          <FaFilePdf className="w-20 h-[40px] text-gray-500" />
                         ); // PDF file icon
                       } else if (
                         file.type === "application/vnd.ms-excel" ||
@@ -2181,7 +2181,7 @@ const Chat2 = () => {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                       ) {
                         fileIcon = (
-                          <FaFileExcel className="w-20 h-20 text-gray-500" />
+                          <FaFileExcel className="w-20 h-[40px] text-gray-500" />
                         ); // Excel file icon
                       } else if (
                         file.type === "application/msword" ||
@@ -2189,7 +2189,7 @@ const Chat2 = () => {
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                       ) {
                         fileIcon = (
-                          <FaFileWord className="w-20 h-20 text-gray-500" />
+                          <FaFileWord className="w-20 h-[40px] text-gray-500" />
                         ); // Word file icon
                       } else if (
                         file.type === "application/vnd.ms-powerpoint" ||
@@ -2197,26 +2197,26 @@ const Chat2 = () => {
                         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                       ) {
                         fileIcon = (
-                          <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
+                          <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
                         ); // PowerPoint file icon
                       } else if (file.type === "application/zip") {
                         fileIcon = (
-                          <FaFileArchive className="w-20 h-20 text-gray-500" />
+                          <FaFileArchive className="w-20 h-[40px] text-gray-500" />
                         ); // ZIP file icon
                       } else {
                         fileIcon = (
-                          <FaPaperclip className="w-20 h-20 text-gray-500" />
+                          <FaPaperclip className="w-20 h-[40px] text-gray-500" />
                         ); // Generic file icon
                       }
                       return (
-                        <div className=" rounded-t-lg bg-[#e5e7eb] w-full p-2">
+                        <div className=" dark:bg-primary-dark  p-2">
                           <div
                             key={index}
-                            className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
+                            className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
                           >
                             {fileIcon}
-                            <div className="w-20 text-sm text-ellipsis  text-nowrap ">
-                              {file.name}
+                            <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                              {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
                             </div>{" "}
                             {/* Display file name */}
                             <span className="text-xs text-gray-500">

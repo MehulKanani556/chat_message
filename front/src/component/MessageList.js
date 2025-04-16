@@ -249,6 +249,7 @@ const MessageContent = ({
   allUsers,
   messages,
 }) => {
+  console.log("aaA",message)
   if (message.replyTo) {
     return (
       <ReplyPreview
@@ -263,6 +264,7 @@ const MessageContent = ({
     );
   } else {
     if (message.content?.type === "file") {
+
       if (message.content?.fileType?.includes("image/")) {
         return (
           <ImageMessage
