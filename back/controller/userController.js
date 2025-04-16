@@ -327,10 +327,16 @@ exports.getAllMessageUsers = async (req, res) => {
           userName: { $ifNull: ["$userData.userName", null] },
           email: { $ifNull: ["$userData.email", null] },
           photo: { $ifNull: ["$userData.photo", null] },
+          profilePhoto: { $ifNull: ["$userData.profilePhoto", null] },
           createdAt: { $ifNull: ["$userData.createdAt", null] },
           phone: { $ifNull: ["$userData.phone", null] },
           dob: { $ifNull: ["$userData.dob", null] },
-          isUser: { $cond: [{ $ifNull: ["$userData._id", null] }, true, false] },
+          bio: { $ifNull: ["$userData.bio", null] },
+          archiveUsers: { $ifNull: ["$userData.archiveUsers", null] },
+          blockedUsers: { $ifNull: ["$userData.blockedUsers", null] },
+          isUser: {
+            $cond: [{ $ifNull: ["$userData._id", null] }, true, false],
+          },
         },
       },
 
@@ -350,9 +356,13 @@ exports.getAllMessageUsers = async (req, res) => {
                 userName: 1,
                 email: 1,
                 photo: 1,
+                profilePhoto: 1,
                 createdAt: 1,
                 phone: 1,
                 dob: 1,
+                bio: 1,
+                archiveUsers: 1,
+                blockedUsers: 1,
                 isUser: { $literal: true },
               },
             },
@@ -367,9 +377,13 @@ exports.getAllMessageUsers = async (req, res) => {
           userName: { $first: "$userName" },
           email: { $first: "$email" },
           photo: { $first: "$photo" },
+          profilePhoto: { $first: "$profilePhoto" },
           createdAt: { $first: "$createdAt" },
           phone: { $first: "$phone" },
           dob: { $first: "$dob" },
+          bio: { $first: "$bio" },
+          archiveUsers: { $first: "$archiveUsers" },
+          blockedUsers: { $first: "$blockedUsers" },
           isUser: { $first: "$isUser" },
         },
       },
@@ -381,8 +395,8 @@ exports.getAllMessageUsers = async (req, res) => {
           pipeline: [
             {
               $match: {
-                members: req.user._id
-              }
+                members: req.user._id,
+              },
             },
             {
               $project: {
@@ -394,11 +408,11 @@ exports.getAllMessageUsers = async (req, res) => {
                 createdBy: 1,
                 createdAt: 1,
                 photo: 1,
-              }
-            }
+              },
+            },
           ],
-          as: "groups"
-        }
+          as: "groups",
+        },
       },
 
       // Modified messages lookup for direct messages
@@ -408,43 +422,45 @@ exports.getAllMessageUsers = async (req, res) => {
           let: {
             userId: "$_id",
             currentUserId: req.user._id,
-            isUser: "$isUser"
+            isUser: "$isUser",
           },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$$isUser", true] },  // Only match direct messages when the ID belongs to a user
+                    { $eq: ["$$isUser", true] }, 
                     {
                       $or: [
                         {
                           $and: [
                             { $eq: ["$sender", "$$userId"] },
-                            { $eq: ["$receiver", "$$currentUserId"] }
-                          ]
+                            { $eq: ["$receiver", "$$currentUserId"] },
+                            { $ne: ["$isBlocked", true] },
+                          ],
                         },
                         {
                           $and: [
                             { $eq: ["$sender", "$$currentUserId"] },
-                            { $eq: ["$receiver", "$$userId"] }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
+                            { $eq: ["$receiver", "$$userId"] },
+                            // { $ne: ["$isBlocked", true] },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
             },
             {
-              $sort: { createdAt: -1 }
+              $sort: { createdAt: -1 },
             },
             {
-              $limit: 20
-            }
+              $limit: 20,
+            },
           ],
-          as: "directMessages"
-        }
+          as: "directMessages",
+        },
       },
 
       // Final projection for users
@@ -453,28 +469,33 @@ exports.getAllMessageUsers = async (req, res) => {
           _id: 1,
           userName: 1,
           email: 1,
+          profilePhoto: 1,
           photo: 1,
           createdAt: 1,
+
           phone: 1,
           dob: 1,
+          bio: 1,
+          archiveUsers: 1,
+          blockedUsers: 1,
           isUser: 1,
           directMessages: 1,
-          groups: 1
-        }
-      }
+          groups: 1,
+        },
+      },
     ];
 
     const results = await message.aggregate(pipeline);
 
     // Process the results to include group messages
-    const userResults = results.filter(item => item.isUser);
+    const userResults = results.filter((item) => item.isUser);
 
     // Extract unique groups from the results using a Map
     const uniqueGroupsMap = new Map();
 
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.groups && result.groups.length > 0) {
-        result.groups.forEach(group => {
+        result.groups.forEach((group) => {
           // Use group ID as key to ensure uniqueness
           uniqueGroupsMap.set(group._id.toString(), group);
         });
@@ -487,10 +508,11 @@ exports.getAllMessageUsers = async (req, res) => {
     // Now fetch messages for each group
     const groupsWithMessages = [];
     for (const group of uniqueGroups) {
-      const groupMessages = await message.find({
-        receiver: group._id,
-        deletedFor: { $ne: req.user._id }
-      })
+      const groupMessages = await message
+        .find({
+          receiver: group._id,
+          deletedFor: { $ne: req.user._id },
+        })
         .sort({ createdAt: -1 })
         .limit(20);
 
@@ -504,21 +526,25 @@ exports.getAllMessageUsers = async (req, res) => {
         description: group.description,
         createdBy: group.createdBy,
         isGroup: true,
-        messages: groupMessages
+        messages: groupMessages,
       });
     }
 
     // Format the user results
-    const formattedUsers = userResults.map(user => ({
+    const formattedUsers = userResults.map((user) => ({
       _id: user._id,
       userName: user.userName,
       email: user.email,
       photo: user.photo,
+      profilePhoto: user.profilePhoto,
       createdAt: user.createdAt,
       phone: user.phone,
       dob: user.dob,
+      bio: user.bio,
+      archiveUsers: user.archiveUsers,
+      blockedUsers: user.blockedUsers,
       isUser: true,
-      messages: user.directMessages || []
+      messages: user.directMessages || [],
     }));
 
     return res.status(200).json({
@@ -538,7 +564,7 @@ exports.updateUser = async (req, res) => {
   try {
     // Include the photo field in the update
     if (req.file) {
-      req.body.photo = req.file.path
+      req.body.photo = req.file.path;
     }
     const updatedUser = await user.findByIdAndUpdate(
       req.params.id,
@@ -600,8 +626,8 @@ exports.getAllCallUsers = async (req, res) => {
               $or: [{ sender: req.user._id }, { receiver: req.user._id }],
             },
             {
-              "content.type": "call" // Filter for call messages
-            }
+              "content.type": "call", // Filter for call messages
+            },
           ],
         },
       },
@@ -616,7 +642,7 @@ exports.getAllCallUsers = async (req, res) => {
               else: "$sender",
             },
           },
-          message: "$$ROOT" // Include the entire message document
+          message: "$$ROOT", // Include the entire message document
         },
       },
 
@@ -624,7 +650,7 @@ exports.getAllCallUsers = async (req, res) => {
       {
         $group: {
           _id: "$user",
-          lastMessage: { $last: "$message" } // Get the last message for each user
+          lastMessage: { $last: "$message" }, // Get the last message for each user
         },
       },
 
@@ -651,7 +677,7 @@ exports.getAllCallUsers = async (req, res) => {
           email: { $first: "$userData.email" },
           photo: { $first: "$userData.photo" },
           createdAt: { $first: "$userData.createdAt" },
-          messages: { $addToSet: "$lastMessage" } // Include messages in the final output as an array
+          messages: { $addToSet: "$lastMessage" }, // Include messages in the final output as an array
         },
       },
 
@@ -663,7 +689,7 @@ exports.getAllCallUsers = async (req, res) => {
           email: 1,
           photo: 1,
           createdAt: 1,
-          messages: 1 // Include messages in the response as an array
+          messages: 1, // Include messages in the response as an array
         },
       },
     ];
@@ -754,7 +780,9 @@ exports.archiveUser = async (req, res) => {
       });
     }
     if (userdata.archiveUsers.includes(selectedUserId)) {
-      userdata.archiveUsers = userdata.archiveUsers.filter(id => id !== selectedUserId);
+      userdata.archiveUsers = userdata.archiveUsers.filter(
+        (id) => id !== selectedUserId
+      );
     } else {
       userdata.archiveUsers.push(selectedUserId);
     }
@@ -763,6 +791,46 @@ exports.archiveUser = async (req, res) => {
       status: 200,
       message: "User archived successfully",
     });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+exports.blockUser = async (req, res) => {
+  try {
+    const { selectedUserId } = req.body;
+    const currentUser = req.user._id;
+
+    const userData = await user.findById(currentUser);
+    if (!userData) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+
+    if (userData.blockedUsers.includes(selectedUserId)) {
+      // Unblock user
+      userData.blockedUsers = userData.blockedUsers.filter(
+        (id) => id !== selectedUserId
+      );
+      await userData.save();
+      return res.status(200).json({
+        status: 200,
+        message: "User unblocked successfully",
+      });
+    } else {
+      // Block user
+      userData.blockedUsers.push(selectedUserId);
+      await userData.save();
+      return res.status(200).json({
+        status: 200,
+        message: "User blocked successfully",
+      });
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({

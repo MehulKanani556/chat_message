@@ -95,6 +95,11 @@ const MessageList = ({
                   minute: "2-digit",
                   hour12: false,
                 });
+                // console.log("message", message);
+                if (message.isBlocked && message.sender !== userId) {
+                  console.log("message.isBlocked", message.isBlocked);
+                  return;
+                }
 
                 if (message.content?.type === "system") {
                   return <SystemMessage key={message._id} message={message} />;
@@ -320,7 +325,26 @@ const AudioMessage = ({ message, userId, IMG_URL }) => (
 const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  let messageContent = message?.content?.content;
 
+  // Decrypt the message if it's encrypted
+  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+    try {
+      const key = 'chat';
+      // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
+      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+      const encodedText = messageContent.split('data:')[1];
+      const decodedText = atob(encodedText);
+      let result = '';
+      for (let i = 0; i < decodedText.length; i++) {
+        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      messageContent = result;
+      // console.log(messageContent)
+    } catch (error) {
+      console.error('Decryption error:', error);
+    }
+  }
   const handleDownload = async (e) => {
     e.preventDefault();
     setIsDownloading(true);
@@ -372,19 +396,17 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
           >
             <FaDownload className="w-6 h-6" />
             {isDownloading && (
-              
               <div className="absolute -inset-4 flex items-center justify-center">
                 <svg className="w-12 h-12" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="2" />
                   <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray={`${downloadProgress}, 100`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.3s ease 0s', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
                 </svg>
-               
               </div>
             )}
           </button>
         </div>
         <div className="ml-3">
-          <div className="font-medium">{highlightText(message?.content?.content, searchInputbox)}</div>
+          <div className="font-medium">{highlightText(messageContent, searchInputbox)}</div>
           <div className="text-sm dark:text-gray-300">{message?.content?.size}</div>
         </div>
       </div>
@@ -393,7 +415,27 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
 };
 
 const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
-  const messageContent = message?.content?.content;
+  let messageContent = message?.content?.content;
+
+  // Decrypt the message if it's encrypted
+  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+    try {
+      const key = 'chat';
+      // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
+      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+      const encodedText = messageContent.split('data:')[1];
+      const decodedText = atob(encodedText);
+      let result = '';
+      for (let i = 0; i < decodedText.length; i++) {
+        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      messageContent = result;
+      // console.log(messageContent)
+    } catch (error) {
+      console.error('Decryption error:', error);
+    }
+  }
+
   // Check if message contains only a single emoji
   const isSingleEmoji = messageContent?.match(/^\p{Emoji}$/gu);
 
@@ -403,7 +445,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
     >
       <div className="flex-1 flex flex-col">
         <p className="flex-1">
-          {messageContent.split(/(\p{Emoji})/gu).map((part, index) => {
+          {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
             // Check if the part is an emoji
             if (part.match(/\p{Emoji}/gu)) {
               return (
@@ -1212,7 +1254,7 @@ const RegularMessage = ({
           </div>
         </div> {showTime && (
           <div
-            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId?'pe-7 text-right justify-end':'text-left'}`}
+            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId ? 'pe-7 text-right justify-end' : 'text-left'}`}
             style={{
               alignItems: "center"
             }}

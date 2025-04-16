@@ -69,7 +69,7 @@ function getSocketByUserId(userId) {
 }
 
 async function handlePrivateMessage(socket, data) {
-  const { senderId, receiverId, content,  replyTo } = data;
+  const { senderId, receiverId, content,  replyTo, isBlocked } = data;
 
   try {
     console.log("replyTo", replyTo);
@@ -81,10 +81,11 @@ async function handlePrivateMessage(socket, data) {
       content: content,
       replyTo: replyTo,
       status: "sent", // Add initial status
+      isBlocked: isBlocked,
     });
 
     const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
+    if (receiverSocketId && !isBlocked) {
       socket.to(receiverSocketId).emit("receive-message", {
         _id: savedMessage._id,
         sender: senderId,
@@ -675,6 +676,29 @@ async function handleForwardMessage(socket, data) {
   }
 }
 
+// ===========================camera status=============================
+function handleCameraStatusChange(socket, data) {
+  const { userId, isCameraOn } = data;
+  
+  console.log(`[Camera Status] Backend received: User ${userId} camera status change to ${isCameraOn ? 'ON' : 'OFF'}`);
+  
+  // Get all online users except the sender
+  const onlineUsersList = Array.from(onlineUsers.entries());
+  
+  console.log(`[Camera Status] Broadcasting to ${onlineUsersList.length - 1} other users`);
+  
+  // Broadcast camera status to all other users
+  onlineUsersList.forEach(([onlineUserId, socketId]) => {
+    if (onlineUserId !== userId) {
+      console.log(`[Camera Status] Sending update to user ${onlineUserId}`);
+      socket.to(socketId).emit("camera-status-change", {
+        userId,
+        isCameraOn
+      });
+    }
+  });
+}
+
 function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
@@ -752,6 +776,9 @@ function initializeSocket(io) {
 
     // Add to socket.on handlers
     socket.on("forward-message", (data) => handleForwardMessage(socket, data));
+
+    // Add camera status handler
+    socket.on("camera-status-change", (data) => handleCameraStatusChange(socket, data));
   });
 }
 

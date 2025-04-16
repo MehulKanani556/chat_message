@@ -60,7 +60,7 @@ const Sidebar = ({ user, onProfileClick }) => {
     setShowDropdown(!showDropdown);
   };
 
-  const [activeItem, setActiveItem] = useState(null);
+  const [activeItem, setActiveItem] = useState("chat");
 
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
@@ -163,7 +163,7 @@ const Sidebar = ({ user, onProfileClick }) => {
           >
             {isDarkMode ? <MdOutlineWbSunny size={20} /> : <BsMoonStars size={20} />}
           </button>
-          <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center border border-gray-500">
+          <div className="w-10 h-10 rounded-full bg-primary overflow-hidden flex items-center justify-center border border-gray-800">
             {user?.photo && user.photo !== "null" ? (
               <img
                 src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
@@ -173,7 +173,7 @@ const Sidebar = ({ user, onProfileClick }) => {
               />
             ) : (
               <span
-                className="text-black text-lg font-bold capitalize cursor-pointer"
+                className="text-black dark:text-primary-light text-lg font-bold capitalize cursor-pointer"
                 onClick={handleProfileClick}
               >
                 {user?.userName && user?.userName.includes(" ")

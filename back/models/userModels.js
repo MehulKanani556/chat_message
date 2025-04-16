@@ -36,11 +36,15 @@ const userSchema = mongoose.Schema(
     },
     groupToJoin: {
       type: String,
-      default: "everyone",
+      default: "Everyone",
     },
     profilePhoto: {
       type: String,
-      default: "everyone",
+      default: "Everyone",
+    },
+    blockedUsers: {
+      type: Array,
+      default: [],
     },
   },
   {

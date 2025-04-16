@@ -7,6 +7,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser, updateUserGroupToJoin, updateUserProfilePhotoPrivacy } from '../redux/slice/user.slice';
 import { MdEdit, MdModeEdit } from 'react-icons/md';
+import ColorPicker from "./ColorPicker";
+import { initializePrimaryColor } from "../utils/themeUtils";
 
 const Setting = () => {
     const navigate = useNavigate();
@@ -32,6 +34,13 @@ const Setting = () => {
     // Add refs for the dropdowns
     const privacyDropdownRef = useRef(null);
     const groupsDropdownRef = useRef(null);
+
+    const [showColorPicker, setShowColorPicker] = useState(false);
+
+    // Initialize primary color on component mount
+    useEffect(() => {
+      initializePrimaryColor();
+    }, []);
 
     // Add useEffect for handling clicks outside
     useEffect(() => {
@@ -226,6 +235,9 @@ const Setting = () => {
     //         updateUser({ id: currentUser, values: { userName: editedUserName } })
     //     );
     // };
+    const toggleColorPicker = () => {
+        setShowColorPicker(!showColorPicker);
+      };
 
     return (
         <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full  relative">
@@ -470,6 +482,29 @@ const Setting = () => {
                                 </div>
                             )}
                         </div>
+                           {/* Theme Color Section */}
+            <div className="border-b border-gray-300">
+              <button
+                className="w-full px-4 py-3 flex justify-between items-center"
+                onClick={toggleColorPicker}
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="w-4 h-4 rounded-full bg-primary"></span>
+                  <span className="font-medium">Theme Color</span>
+                </div>
+                {showColorPicker ? (
+                  <FaChevronUp size={12} />
+                ) : (
+                  <FaChevronDown size={12} />
+                )}
+              </button>
+
+              {showColorPicker && (
+                <div className="px-4 py-4">
+                  <ColorPicker />
+                </div>
+              )}
+            </div>
 
                         {/* Notifications Section */}
                         {/* <div className="border-b border-gray-300">

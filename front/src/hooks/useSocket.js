@@ -4,6 +4,26 @@ import Peer from "simple-peer";
 import { getAllMessages, getAllMessageUsers, setOnlineuser } from "../redux/slice/user.slice";
 import { useDispatch } from "react-redux";
 
+// Simple encryption/decryption functions
+const encryptMessage = (text) => {
+  const key = 'chat';
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return btoa(result); // Convert to base64 for safe transmission
+};
+
+const decryptMessage = (encryptedText) => {
+  const key = 'chat';
+  const decodedText = atob(encryptedText);
+  let result = '';
+  for (let i = 0; i < decodedText.length; i++) {
+    result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return result;
+};
+
 const SOCKET_SERVER_URL = "http://localhost:4000"; // Move to environment variable in production
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
@@ -25,6 +45,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicrophoneOn, setIsMicrophoneOn] = useState(false);
   const [voiceCallData, setVoiceCallData] = useState(null);
+  const [cameraStatus, setCameraStatus] = useState({});
   const streamRef = useRef(null);
   const [callAccept, setCallAccept] = useState(false);
   const [callParticipants, setCallParticipants] = useState(new Set());
@@ -78,7 +99,17 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     if (streamRef.current) {
       const videoTracks = streamRef.current.getVideoTracks();
       videoTracks.forEach((track) => (track.enabled = !track.enabled));
-      setIsCameraOn((prev) => !prev);
+      const newStatus = !isCameraOn;
+      setIsCameraOn(newStatus);
+      
+      // Emit camera status change to other users
+      if (socketRef.current?.connected) {
+        console.log(`[Camera Status] User ${userId} is ${newStatus ? 'turning ON' : 'turning OFF'} their camera`);
+        socketRef.current.emit("camera-status-change", {
+          userId,
+          isCameraOn: newStatus
+        });
+      }
     }
   };
 
@@ -160,22 +191,34 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         return;
       }
 
-      console.log("messageeeeeeeeeeeeeeeee", message);
+      try {
+        // Check if message is already encrypted
+        let content = message.data.content;
+        if (!content.startsWith('data:')) {
+          // Encrypt the message content if it's not already encrypted
+          const key = 'chat';
+          let result = '';
+          for (let i = 0; i < content.length; i++) {
+            result += String.fromCharCode(content.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+          }
+          content = 'data:' + btoa(result);
+        }
 
-      const messageData = {
-        senderId: userId,
-        receiverId,
-        content: message.data,
-        replyTo: message.replyTo,
-      };
+        const messageData = {
+          senderId: userId,
+          receiverId,
+          content: {type:message.data.type,content:content},
+          replyTo: message.replyTo,
+          isBlocked: message.isBlocked,
+        };
+        socketRef.current.emit("private-message", messageData);
 
-      console.log("Sending message:", messageData);
-
-      socketRef.current.emit("private-message", messageData);
-
-      socketRef.current.once("message-sent-status", (status) => {
-        resolve(status);
-      });
+        socketRef.current.once("message-sent-status", (status) => {
+          resolve(status);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
@@ -213,7 +256,15 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
     const messageHandler = (message) => {
       console.log("Received message:", message);
-      // markMessageAsRead(message._id);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 
@@ -234,11 +285,29 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
     const messageUpdatedHandler = (message) => {
       console.log("Received message updated:", message);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 
     const groupMessageHandler = (message) => {
       console.log("Received group message:", message);
+      // Decrypt the message content if it's encrypted
+      if (message.content && message.content.content) {
+        try {
+          const decryptedContent = decryptMessage(message.content.content);
+          message.content.content = decryptedContent;
+        } catch (error) {
+          console.error('Decryption error:', error);
+        }
+      }
       callback(message);
     };
 
@@ -1329,12 +1398,31 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         content:message.content,
         forwardedFrom: message.sender,
       };
-      console.log("messageData", messageData);
+      console.log("messageDatabbbbbbbb", messageData);
 
       socketRef.current.emit("forward-message", messageData);
       resolve();
     });
   };
+
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    // Add camera status change listener
+    socketRef.current.on("camera-status-change", ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
+      console.log(`[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? 'ON' : 'OFF'}`);
+      setCameraStatus(prev => ({
+        ...prev,
+        [remoteUserId]: remoteCameraStatus
+      }));
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("camera-status-change");
+      }
+    };
+  }, [socketRef.current]);
 
   return {
     socket: socketRef.current,
@@ -1381,6 +1469,8 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     voiceCallData,
     setVoiceCallData,
     forwardMessage,
-    addMessageReaction
+    addMessageReaction,
+    cameraStatus,
+    setCameraStatus
   };
 };
