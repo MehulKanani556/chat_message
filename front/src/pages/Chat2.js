@@ -90,6 +90,7 @@ import GroupProfile from "../component/GroupProfile";
 import AddParticipants from "../component/AddParticipants";
 import CreatedGroup from "../component/CreatedGroup";
 import ProfileUser from "../component/ProfileUser";
+import CallHistory from "../component/CallHistory";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
@@ -308,6 +309,8 @@ const Chat2 = () => {
   const [notificationPermission, setNotificationPermission] = useState(
     Notification.permission
   );
+
+  const [showCallHistory, setShowCallHistory] = useState(false);
 
   //===========Use the custom socket hook===========
   const {
@@ -1586,51 +1589,63 @@ const Chat2 = () => {
   const [showLanguage, setShowLanguage] = useState(false);
 
   useEffect(() => {
+    // Listen for the showProfile event
+    const handleShowProfile = () => {
+      setShowProfile(true);
+      setShowGroups(false);
+      setSelectedChatModule(false);
+      setShowSettings(false);
+      setShowCallHistory(false);
+    };
+
     // Listen for the showGroups event
     const handleShowGroups = () => {
       setShowGroups(true);
-      setSelectedChatModule(false);
       setShowProfile(false);
-      setShowSettings(false);
-      setShowLanguage(false);
-    };
-
-    const handleShowProfile = () => {
-      setShowGroups(false);
       setSelectedChatModule(false);
-      setShowProfile(true);
       setShowSettings(false);
-      setShowLanguage(false);
+      setShowCallHistory(false);
     };
 
+    // Listen for the showChatList event
     const handleShowChatList = () => {
-      setShowGroups(false);
       setSelectedChatModule(true);
       setShowProfile(false);
+      setShowGroups(false);
       setShowSettings(false);
-      setShowLanguage(false);
+      setShowCallHistory(false);
     };
 
+    // Listen for the showSettings event
     const handleShowSettings = () => {
+      setShowSettings(true);
+      setShowProfile(false);
       setShowGroups(false);
       setSelectedChatModule(false);
-      setShowProfile(false);
-      setShowSettings(true);
-      setShowLanguage(false);
+      setShowCallHistory(false);
     };
 
-    window.addEventListener("showGroups", handleShowGroups);
+    // Listen for the showCall event
+    const handleShowCall = () => {
+      setShowCallHistory(true);
+      setShowProfile(false);
+      setShowGroups(false);
+      setSelectedChatModule(false);
+      setShowSettings(false);
+    };
+
     window.addEventListener("showProfile", handleShowProfile);
+    window.addEventListener("showGroups", handleShowGroups);
     window.addEventListener("showChatList", handleShowChatList);
     window.addEventListener("showSettings", handleShowSettings);
-    // window.addEventListener('showLanguage', handleShowLanguage);
+    window.addEventListener("showCall", handleShowCall);
 
     return () => {
-      window.removeEventListener("showGroups", handleShowGroups);
       window.removeEventListener("showProfile", handleShowProfile);
+      window.removeEventListener("showGroups", handleShowGroups);
       window.removeEventListener("showChatList", handleShowChatList);
       window.removeEventListener("showSettings", handleShowSettings);
-      // window.removeEventListener('showLanguage', handleShowLanguage);
+      window.removeEventListener("showCall", handleShowCall);
     };
   }, []);
 
@@ -1689,6 +1704,7 @@ const Chat2 = () => {
           />
         )}
         {showSettings && <Setting />}
+        {showCallHistory && <CallHistory setShowLeftSidebar={setShowLeftSidebar} />}
       </div>
 
       {/* Right Sidebar */}

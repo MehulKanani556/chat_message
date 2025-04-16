@@ -93,7 +93,7 @@ const Sidebar = ({ user, onProfileClick }) => {
       }
     },
     // {
-    //   icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
+    // icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
     //     const event = new CustomEvent('showLanguage');
     //     window.dispatchEvent(event);
     //     setActiveItem("Language");
