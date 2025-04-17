@@ -249,7 +249,7 @@ const MessageContent = ({
   allUsers,
   messages,
 }) => {
-  console.log("aaA",message)
+  // console.log("aaA", message)
   if (message.replyTo) {
     return (
       <ReplyPreview
@@ -298,7 +298,7 @@ const MessageContent = ({
 };
 
 const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
-  <div className={`max-w-[300px] max-h-[300px] overflow-hidden rounded-lg`}>
+  <div className={`max-w-[300px] max-h-[300px] overflow-hidden rounded-xl`}>
     <img
       src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`}
       alt={message.content.content}
@@ -347,6 +347,27 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
       console.error('Decryption error:', error);
     }
   }
+  function decryptMessage(encryptedText) {
+    if (typeof encryptedText === 'string' && encryptedText.startsWith('data:')) {
+      try {
+        const key = 'chat';
+        // Remove the 'data:' prefix
+        const encodedText = encryptedText.split('data:')[1];
+        // Decode from base64
+        const decodedText = atob(encodedText);
+        let result = '';
+        // XOR each character with the key
+        for (let i = 0; i < decodedText.length; i++) {
+          result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+      } catch (error) {
+        console.error('Decryption error:', error);
+        return encryptedText; // Return original text if decryption fails
+      }
+    }
+    return encryptedText; // Return original text if not encrypted
+  }
   const handleDownload = async (e) => {
     e.preventDefault();
     setIsDownloading(true);
@@ -374,7 +395,7 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = message?.content?.content;
+      a.download = decryptMessage(message?.content?.content);
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
