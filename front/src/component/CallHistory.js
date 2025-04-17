@@ -4,6 +4,7 @@ import { BsArrowLeft, BsTelephone, BsTelephoneX, BsTelephoneFill } from 'react-i
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllCallUsers } from '../redux/slice/user.slice';
+import { FaChevronLeft } from 'react-icons/fa';
 
 const CallHistory = ({ setShowLeftSidebar }) => {
   const [callHistory, setCallHistory] = useState([]);
@@ -70,16 +71,21 @@ const CallHistory = ({ setShowLeftSidebar }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-primary-dark/95 w-[380px]">
+    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+    style={{
+      boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
+    }}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center">
-          <button
-            onClick={() => setShowLeftSidebar(true)}
-            className="mr-4 text-gray-600 dark:text-gray-300"
+          {/* <button
+            onClick={() =>{
+              setShowLeftSidebar(false);
+            }}
+            className="mr-4 text-gray-600 dark:text-gray-300 md600:hidden"
           >
-            <BsArrowLeft size={20} />
-          </button>
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Call History</h2>
+            <FaChevronLeft  size={16}/>
+          </button> */}
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Call History</h2>
         </div>
         <button 
           onClick={toggleMissedCallsFilter}

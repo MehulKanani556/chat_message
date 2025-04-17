@@ -114,10 +114,13 @@ const Sidebar = ({ user, onProfileClick }) => {
       w-full md:w-16 md:h-screen
       bg-white dark:bg-primary-dark
       border-t md:border-t-0 
-      border-gray-400 dark:border-gray-700
+      border-gray-400 dark:border-gray-700z
       transition-all duration-300
-      z-50 
-    ">
+      z-50"
+      // style={{
+      //   boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)"
+      // }}
+    >
       <div className="
         flex md:flex-col
         items-center justify-around md:justify-start

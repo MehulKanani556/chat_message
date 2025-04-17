@@ -10,7 +10,7 @@ import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
 
 
-const Groups = ({setSelectedChat, selectedChat, isGroupCreateModalOpen, setIsGroupCreateModalOpen}) => {
+const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreateModalOpen, setIsGroupCreateModalOpen}) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
@@ -37,33 +37,16 @@ const Groups = ({setSelectedChat, selectedChat, isGroupCreateModalOpen, setIsGro
             });
             window.dispatchEvent(event);
             setSelectedChat(group);
+            setShowLeftSidebar(false);
         } else {
             alert("You are not a member of this group");
         }
     };
-
-    const handleCreateGroup = async () => {
-        const data = {
-            userName: groupName || "Group",
-            photo: groupPhoto,
-            members: [...groupUsers, userId],
-            createdBy: userId,
-        };
-        try {
-            await dispatch(createGroup({ groupData: data, socket }));
-            setGroupUsers([]);
-            setGroupName("");
-            setIsGroupCreateModalOpen(false);
-
-           await dispatch(getAllGroups());
-        } catch (error) {
-            // Handle any errors that occur during group creation
-            console.error("Error creating group:", error);
-            // Optionally show error to user via toast/alert
-        }
-    };
     return (
-        <div className="h-screen w-[380px] bg-[#F5F7FB] dark:bg-primary-dark/95">
+      <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+      style={{
+        boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
+      }}>
             <div className="p-4">
                 {/* Header */}  
                 <div className="flex justify-between items-center mb-4">
