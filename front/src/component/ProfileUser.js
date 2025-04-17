@@ -16,7 +16,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   };
 
   return (
-    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
+    <div className=" bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
       <div>
         <div className="flex justify-between items-center pb-2 p-4">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Profile</h2>

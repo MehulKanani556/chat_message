@@ -4,7 +4,7 @@ import { VscCallIncoming, VscCallOutgoing } from "react-icons/vsc";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { FaChevronDown } from "react-icons/fa";
+import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 const ChatList = ({
   allMessageUsers,
@@ -65,11 +65,14 @@ const ChatList = ({
   };
 
   return (
-    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
+    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+    style={{
+      boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
+    }}>
       <>
         <div className="p-4 pb-2">
-          <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light mb-4">
-            Chats
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light mb-4 flex items-center gap-2">
+          {findUser ? <FaAngleLeft  onClick={() => setFindUser(false)}/> : ""} Chats
           </h1>
 
           {/* Search bar */}
@@ -159,9 +162,7 @@ const ChatList = ({
                         }`}
                       onClick={() => {
                         setSelectedChat(item);
-                        if (window.innerWidth <= 425) {
                           setShowLeftSidebar(false);
-                        }
                       }}
                     >
                       <div className="flex items-center">
@@ -841,7 +842,7 @@ const ChatList = ({
           </div>
         )}
         <div
-          className="bg-primary cursor-pointer w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center"
+          className={`bg-primary cursor-pointer w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center ${findUser ? "hidden" : "block"}`}
           style={{
             alignItems: "center",
           }}

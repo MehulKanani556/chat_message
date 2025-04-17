@@ -29,6 +29,7 @@ import { SlActionUndo } from "react-icons/sl";
 import EmojiPicker, { EmojiStyle } from "emoji-picker-react";
 import AudioPlayer from "./AudioPlayer";
 import { FaRegClock } from "react-icons/fa";
+import { IMG_URL } from "../utils/baseUrl";
 
 const MessageList = ({
   messages,
@@ -56,6 +57,7 @@ const MessageList = ({
   setShowEmojiPicker,
   addMessageReaction,
   dropdownRef,
+  sendPrivateMessage,
 }) => {
   return (
     <>
@@ -75,14 +77,14 @@ const MessageList = ({
                 const isSameMinute =
                   prevMessage &&
                   new Date(message?.createdAt).getMinutes() ===
-                  new Date(prevMessage?.createdAt).getMinutes();
+                    new Date(prevMessage?.createdAt).getMinutes();
                 const issameUser = message.sender === prevMessage?.sender;
 
                 const showTime =
                   !prevMessage ||
                   new Date(message?.createdAt).getMinutes() -
-                  new Date(prevMessage?.createdAt).getMinutes() >
-                  0 ||
+                    new Date(prevMessage?.createdAt).getMinutes() >
+                    0 ||
                   !issameUser;
 
                 const name = allUsers.find(
@@ -154,7 +156,7 @@ const MessageList = ({
           )
         )
       ) : (
-        <EmptyMessages />
+        <EmptyMessages selectedChat={selectedChat} sendPrivateMessage={sendPrivateMessage} />
       )}
     </>
   );
@@ -195,8 +197,9 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
   return (
     <div className="flex justify-center my-2">
       <div
-        className={`flex items-center ${isCompleted ? "text-gray-600" : "text-red-500"
-          } text-sm px-3 py-2 rounded-md bg-gray-100`}
+        className={`flex items-center ${
+          isCompleted ? "text-gray-600" : "text-red-500"
+        } text-sm px-3 py-2 rounded-md bg-gray-100`}
       >
         <FaPhone
           className={message.sender === userId ? "rotate-90" : "-rotate-90"}
@@ -208,8 +211,8 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
                 ? "Outgoing call"
                 : "Call not answered"
               : isCompleted
-                ? "Incoming call"
-                : "Missed call"}
+              ? "Incoming call"
+              : "Missed call"}
             {isCompleted && ` • ${message.content.duration}`}
           </span>
           <span className="text-gray-500 text-xs">
@@ -222,7 +225,7 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
         </div>
         <span className="cursor-pointer ml-12 bg-gray-300 p-2 rounded-full">
           {message.content.callType === "voice" ||
-            message.content.callType === "audio" ? (
+          message.content.callType === "audio" ? (
             <MdPhoneEnabled
               className="w-5 h-5 cursor-pointer text-black"
               onClick={() => handleMakeCall("audio")}
@@ -279,8 +282,13 @@ const MessageContent = ({
         );
       }
       return (
-        <FileMessage message={message} userId={userId} IMG_URL={IMG_URL} highlightText={highlightText}
-          searchInputbox={searchInputbox} />
+        <FileMessage
+          message={message}
+          userId={userId}
+          IMG_URL={IMG_URL}
+          highlightText={highlightText}
+          searchInputbox={searchInputbox}
+        />
       );
     }
 
@@ -322,27 +330,38 @@ const AudioMessage = ({ message, userId, IMG_URL }) => (
   </div>
 );
 
-const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }) => {
+const FileMessage = ({
+  message,
+  userId,
+  IMG_URL,
+  highlightText,
+  searchInputbox,
+}) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
-  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+  if (
+    typeof messageContent === "string" &&
+    messageContent.startsWith("data:")
+  ) {
     try {
-      const key = 'chat';
+      const key = "chat";
       // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
       // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
-      const encodedText = messageContent.split('data:')[1];
+      const encodedText = messageContent.split("data:")[1];
       const decodedText = atob(encodedText);
-      let result = '';
+      let result = "";
       for (let i = 0; i < decodedText.length; i++) {
-        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        result += String.fromCharCode(
+          decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+        );
       }
       messageContent = result;
       // console.log(messageContent)
     } catch (error) {
-      console.error('Decryption error:', error);
+      console.error("Decryption error:", error);
     }
   }
   const handleDownload = async (e) => {
@@ -351,8 +370,10 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
     setDownloadProgress(0);
 
     try {
-      const response = await fetch(`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`);
-      const contentLength = response.headers.get('content-length');
+      const response = await fetch(
+        `${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`
+      );
+      const contentLength = response.headers.get("content-length");
       const total = parseInt(contentLength, 10);
       let loaded = 0;
 
@@ -370,7 +391,7 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
 
       const blob = new Blob(chunks);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = message?.content?.content;
       document.body.appendChild(a);
@@ -378,7 +399,7 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error("Download failed:", error);
     } finally {
       setIsDownloading(false);
       setDownloadProgress(0);
@@ -398,16 +419,41 @@ const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }
             {isDownloading && (
               <div className="absolute -inset-4 flex items-center justify-center">
                 <svg className="w-12 h-12" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="2" />
-                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray={`${downloadProgress}, 100`} strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.3s ease 0s', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke="#e2e8f0"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    strokeDasharray={`${downloadProgress}, 100`}
+                    strokeLinecap="round"
+                    style={{
+                      transition: "stroke-dasharray 0.3s ease 0s",
+                      transform: "rotate(-90deg)",
+                      transformOrigin: "50% 50%",
+                    }}
+                  />
                 </svg>
               </div>
             )}
           </button>
         </div>
         <div className="ml-3">
-          <div className="font-medium">{highlightText(messageContent, searchInputbox)}</div>
-          <div className="text-sm dark:text-gray-300">{message?.content?.size}</div>
+          <div className="font-medium">
+            {highlightText(messageContent, searchInputbox)}
+          </div>
+          <div className="text-sm dark:text-gray-300">
+            {message?.content?.size}
+          </div>
         </div>
       </div>
     </div>
@@ -418,21 +464,26 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
-  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+  if (
+    typeof messageContent === "string" &&
+    messageContent.startsWith("data:")
+  ) {
     try {
-      const key = 'chat';
+      const key = "chat";
       // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
       // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
-      const encodedText = messageContent.split('data:')[1];
+      const encodedText = messageContent.split("data:")[1];
       const decodedText = atob(encodedText);
-      let result = '';
+      let result = "";
       for (let i = 0; i < decodedText.length; i++) {
-        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        result += String.fromCharCode(
+          decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+        );
       }
       messageContent = result;
       // console.log(messageContent)
     } catch (error) {
-      console.error('Decryption error:', error);
+      console.error("Decryption error:", error);
     }
   }
 
@@ -451,9 +502,13 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
               return (
                 <span key={index} className="inline-block align-middle">
                   <img
-                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part.codePointAt(0).toString(16)}.png`}
+                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                      .codePointAt(0)
+                      .toString(16)}.png`}
                     alt={part}
-                    className={`inline ${isSingleEmoji ? 'h-14 w-14' : 'h-5 w-5'}`}
+                    className={`inline ${
+                      isSingleEmoji ? "h-14 w-14" : "h-5 w-5"
+                    }`}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.replaceWith(document.createTextNode(part));
@@ -463,7 +518,9 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
               );
             }
             // If not an emoji, apply the highlight text function
-            return <span key={index}>{highlightText(part, searchInputbox)}</span>;
+            return (
+              <span key={index}>{highlightText(part, searchInputbox)}</span>
+            );
           })}
         </p>
       </div>
@@ -473,12 +530,11 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
 
 const MessageStatus = ({ message, userId, last }) => (
   <div
-    className={`flex items-end mt-1 ${message.showTime ? "bottom-3" : "-bottom-2"
-      } right-0`}
+    className={`flex items-end mt-1 ${
+      message.showTime ? "bottom-3" : "-bottom-2"
+    } right-0`}
   >
-    {message.status === "sent" && (
-      <div className="p-3"> </div>
-    )}
+    {message.status === "sent" && <div className="p-3"> </div>}
     {message.status === "delivered" && message._id === last._id ? (
       <IoCheckmarkCircleOutline className="text-md mr-1 text-gray-600 font-bold" />
     ) : message.status === "delivered" ? (
@@ -489,17 +545,24 @@ const MessageStatus = ({ message, userId, last }) => (
       <VscEye className="text-md mx-1 text-primary font-bold" />
     ) : message.status === "read" ? (
       <div className="p-3"> </div>
-    ) : null
-    }
+    ) : null}
   </div>
 );
 
-const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightText, searchInputbox }) => {
+const ReplyPreview = ({
+  message,
+  allUsers,
+  IMG_URL,
+  messages,
+  userId,
+  highlightText,
+  searchInputbox,
+}) => {
   const getReplyContent = () => {
     return (
       <p>
         {message?.replyTo?.content &&
-          message.replyTo.content.fileType?.startsWith("image/") ? (
+        message.replyTo.content.fileType?.startsWith("image/") ? (
           <img
             src={`${IMG_URL}${message?.replyTo?.content.fileUrl.replace(
               /\\/g,
@@ -574,7 +637,12 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                   fill="#605E5C"
                 ></path>
               </svg>
-              <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+              <span>
+                {highlightText(
+                  message?.replyTo?.content?.content,
+                  searchInputbox
+                )}
+              </span>
             </span>
           </>
         ) : message?.replyTo?.content?.fileType == "application/zip" ? (
@@ -638,11 +706,16 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                   fill="#BF5712"
                 ></path>
               </svg>
-              <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+              <span>
+                {highlightText(
+                  message?.replyTo?.content?.content,
+                  searchInputbox
+                )}
+              </span>
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
           message?.replyTo?.content?.fileType == "application/vnd.ms-excel" ? (
           <>
             <span className="text-center grid place-content-center">
@@ -721,13 +794,18 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                 ></path>
               </svg>
 
-              <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+              <span>
+                {highlightText(
+                  message?.replyTo?.content?.content,
+                  searchInputbox
+                )}
+              </span>
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
           message?.replyTo?.content?.fileType ==
-          "application/vnd.ms-powerpoint" ? (
+            "application/vnd.ms-powerpoint" ? (
           <>
             <span className="text-center grid place-content-center">
               <svg
@@ -805,11 +883,16 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                 ></path>
               </svg>
 
-              <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+              <span>
+                {highlightText(
+                  message?.replyTo?.content?.content,
+                  searchInputbox
+                )}
+              </span>
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
           message?.replyTo?.content?.fileType == "application/msword" ? (
           <>
             <span className="text-center grid place-content-center">
@@ -880,11 +963,18 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
                 ></path>
               </svg>
 
-              <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+              <span>
+                {highlightText(
+                  message?.replyTo?.content?.content,
+                  searchInputbox
+                )}
+              </span>
             </span>
           </>
         ) : (
-          <span>{highlightText(message?.replyTo?.content?.content, searchInputbox)}</span>
+          <span>
+            {highlightText(message?.replyTo?.content?.content, searchInputbox)}
+          </span>
         )}
       </p>
     );
@@ -893,9 +983,9 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
   return (
     <div
       className="flex justify-between rounded-lg flex-col-reverse relative"
-    // style={{
-    //   backgroundColor: `${message.sender === userId ? "#ccf7ff" : "#f1f1f1"}`,
-    // }}
+      // style={{
+      //   backgroundColor: `${message.sender === userId ? "#ccf7ff" : "#f1f1f1"}`,
+      // }}
     >
       {/* <div className="flex flex-col-reverse"> */}
       <div
@@ -954,7 +1044,9 @@ const ReplyPreview = ({ message, allUsers, IMG_URL, messages, userId, highlightT
         </div>
         {getReplyContent()}
       </div>
-      <p className="p-2">{highlightText(message.content.content, searchInputbox)}</p>
+      <p className="p-2">
+        {highlightText(message.content.content, searchInputbox)}
+      </p>
       {/* </div> */}
     </div>
   );
@@ -1144,7 +1236,6 @@ const MessageContextMenu = ({
                 >
                   <CiSquareRemove className="mr-2" /> Remove
                 </button>
-
               </>
             )}
           {!message.content?.fileType?.includes("audio/") && (
@@ -1220,24 +1311,25 @@ const RegularMessage = ({
   selectedChat,
   messages,
 }) => {
-
   const messageContent = message?.content?.content;
   const isSingleEmoji = messageContent?.match(/^\p{Emoji}$/gu);
   const lastMessageFromCurrentUser = messages
-    .filter(message => message.sender === userId)
+    .filter((message) => message.sender === userId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
   return (
     <div
       key={message._id}
       id={`message-${message._id}`}
-      className={`flex relative ${message.sender === userId
-        ? "justify-end items-end"
-        : "justify-start items-start"
-        }  message-content 
-    ${message.reactions && message.reactions.length > 0
-          ? "mb-8"
-          : `${isConsecutive ? "mb-1" : "mb-4"}`
-        }
+      className={`flex relative ${
+        message.sender === userId
+          ? "justify-end items-end"
+          : "justify-start items-start"
+      }  message-content 
+    ${
+      message.reactions && message.reactions.length > 0
+        ? "mb-8"
+        : `${isConsecutive ? "mb-1" : "mb-4"}`
+    }
     ${showTime ? "mt-3" : ""}`}
     >
       <div
@@ -1252,11 +1344,16 @@ const RegularMessage = ({
               </div>
             )}
           </div>
-        </div> {showTime && (
+        </div>{" "}
+        {showTime && (
           <div
-            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId ? 'pe-7 text-right justify-end' : 'text-left'}`}
+            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${
+              message.sender == userId
+                ? "pe-7 text-right justify-end"
+                : "text-left"
+            }`}
             style={{
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             {selectedChat?.members && message.sender !== userId
@@ -1267,16 +1364,17 @@ const RegularMessage = ({
         )}
         <div className="flex">
           <div
-            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${isSingleEmoji ? 'bg-transparent' :
-              message.sender === userId
+            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${
+              isSingleEmoji
+                ? "bg-transparent"
+                : message.sender === userId
                 ? "bg-primary/50 rounded-s-xl"
                 : "bg-primary rounded-e-xl "
-              }
+            }
           ${showTime ? " rounded-tr-xl rounded-tl-xl" : ""}
           ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
           `}
           >
-
             <MessageContent
               message={message}
               userId={userId}
@@ -1290,8 +1388,9 @@ const RegularMessage = ({
 
             {message.edited && (
               <div
-                className={`absolute bottom-0 ${message.sender === userId ? "-left-5" : "-right-5"
-                  } flex items-center text-xs text-gray-500 mt-1`}
+                className={`absolute bottom-0 ${
+                  message.sender === userId ? "-left-5" : "-right-5"
+                } flex items-center text-xs text-gray-500 mt-1`}
               >
                 <FiEdit2 className="w-4 h-4" />
               </div>
@@ -1299,8 +1398,9 @@ const RegularMessage = ({
 
             {/* Add three dots icon */}
             <div
-              className={`absolute ${message.sender === userId ? "-right-4" : "-left-4"
-                } top-0 opacity-0 group-hover:opacity-100 cursor-pointer`}
+              className={`absolute ${
+                message.sender === userId ? "-right-4" : "-left-4"
+              } top-0 opacity-0 group-hover:opacity-100 cursor-pointer`}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1324,7 +1424,11 @@ const RegularMessage = ({
             </div>
           </div>
           {message.sender === userId && (
-            <MessageStatus message={message} userId={userId} last={lastMessageFromCurrentUser} />
+            <MessageStatus
+              message={message}
+              userId={userId}
+              last={lastMessageFromCurrentUser}
+            />
           )}
 
           {!isSingleEmoji && (
@@ -1338,9 +1442,7 @@ const RegularMessage = ({
             />
           )}
         </div>
-
         {/* {console.log("contextMenu", contextMenu)} */}
-
         <MessageContextMenu
           message={message}
           contextMenu={contextMenu}
@@ -1359,10 +1461,65 @@ const RegularMessage = ({
   );
 };
 
-const EmptyMessages = () => (
-  <div className="h-full flex items-center justify-center text-gray-500">
-    No messages yet
+const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
+  
+  const handleSayHello = async () => {
+    if (!selectedChat?._id) return;
+
+    try {
+      const messageData = {
+        data: {
+          type: "text",
+          content: "Hello"
+        }
+      };
+      
+      await sendPrivateMessage(selectedChat._id, messageData);
+    } catch (error) {
+      console.error("Error sending hello message:", error);
+    }
+  };
+  return (
+    <div className=" flex flex-col items-center justify-center w-full">
+      <div
+      className="flex justify-center items-center my-4  date-header px-2 w-full"
+      // data-date={date}
+    >
+      <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-200/30 to-gray-300 dark:bg-gradient-to-l dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
+      <span className=" text-xs whitespace-nowrap px-2 sm:px-5 py-1 rounded-full  bg-gray-300 dark:bg-gray-500 text">
+        Today
+      </span>
+      <div className="sm:block flex-1 h-[1px] bg-gradient-to-l from-gray-200/30 to-gray-300 dark:bg-gradient-to-r dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
+    </div>
+
+    <div className="flex flex-col items-center justify-center dark:bg-primary-light/10 dark:text-white shadow-lg p-6 rounded-lg min-w-[300px]">
+      <div className="w-10 h-10 rounded-full overflow-hidden mb-4 bg-gray-500 flex items-center justify-center">
+        {selectedChat?.photo &&
+        selectedChat.photo !== "null" &&
+        selectedChat?.profilePhoto == "Everyone" ? (
+          <img
+            src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+            alt="Profile"
+            className="object-cover"
+          />
+        ) : (
+          <span className="text-white text-xl font-bold">
+            {selectedChat?.userName && selectedChat?.userName.includes(" ")
+              ? selectedChat?.userName.split(" ")?.[0][0] +
+                selectedChat?.userName.split(" ")?.[1][0]
+              : selectedChat?.userName?.[0]}
+          </span>
+        )}
+      </div>
+      <p className="text-gray-400 text-lg mb-4">
+        Say Hello to {selectedChat?.userName}.
+      </p>
+      <button onClick={handleSayHello} className="bg-primary hover:bg-primary/80 text-white font-medium py-2 px-6 rounded-full transition duration-200">
+        Say Hello
+      </button>
+    </div>
   </div>
-);
+)
+};
 
 export default MessageList;
