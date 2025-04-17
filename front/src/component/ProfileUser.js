@@ -201,7 +201,35 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{date}</h3>
                           <div className="space-y-2">
                             {dateMessages.map((message, index) => (
-                              <div key={index} className="flex items-center justify-between p-2 bg-white dark:bg-primary-dark/50 rounded-lg">
+                              <div key={index} className="flex items-center justify-between p-2 bg-white dark:bg-primary-dark/50 rounded-lg cursor-pointer" onClick={() => {
+                                const fileUrl = `${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`;
+                                const fileName = decryptMessage(message.content.content);
+
+                                // Create a fetch request to get the file content
+                                fetch(fileUrl)
+                                  .then(response => response.blob())
+                                  .then(blob => {
+                                    // Create a blob URL for the file
+                                    const blobUrl = window.URL.createObjectURL(blob);
+
+                                    // Create download link
+                                    const link = document.createElement('a');
+                                    link.href = blobUrl;
+                                    link.download = fileName;
+
+                                    // Append to body, click and remove
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+
+                                    // Clean up the blob URL
+                                    window.URL.revokeObjectURL(blobUrl);
+                                  })
+                                  .catch(error => {
+                                    console.error("Download failed:", error);
+                                    alert("Failed to download the file. Please try again.");
+                                  });
+                              }}>
                                 <div className='flex items-center gap-2 px-2'>
                                   {message.content.fileType?.includes("pdf") ? (
                                     <img src={require("../img/pdf.png")} alt="PDF Icon" className="w-10 h-10 text-red-500" />
@@ -210,16 +238,15 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                   ) : message.content.fileType?.includes("excel") ? (
                                     <img src={require("../img/execel.png")} alt="Excel Icon" className="w-10 h-10 text-green-500" />
                                   ) : message.content.fileType?.includes("audio") ? (
-                                    <img src={require("../img/pdf.png")} alt="Audio Icon" className="w-10 h-10 text-purple-500" />
+                                    <img src={require("../img/audio.png")} alt="Audio Icon" className="w-10 h-10 text-purple-500" />
                                   ) : message.content.fileType?.includes("zip") ? (
                                     <img src={require("../img/zip.png")} alt="Zip Icon" className="w-10 h-10 text-orange-500" />
                                   ) : (
-                                    <img src={require("../img/pdf.png")} alt="File Icon" className="w-10 h-10 text-gray-500" />
+                                    <img src={require("../img/zip.png")} alt="File Icon" className="w-10 h-10 text-gray-500" />
                                   )}
                                   <div>
                                     <div className="flex-1 text-sm text-primary-dark dark:text-primary-light truncate">{decryptMessage(message.content.content)}</div>
                                     <div className="flex gap-3">
-
                                       <div className='text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1'>
                                         <span className='text-xl'>•</span>
                                         <span>{message.content.size}</span>
@@ -229,10 +256,8 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                         <span>{message.content.fileType.split('/').pop()}</span>
                                       </div>
                                     </div>
-
                                   </div>
                                 </div>
-
                               </div>
                             ))}
                           </div>
@@ -280,7 +305,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                 return (
                                   <div key={`${index}-${urlIndex}`} className="flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50">
                                     <div className='min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative'>
-                     
+
                                       <PiLinkSimpleBold className='w-[16px] h-[16px] absolute' />
 
                                       <img

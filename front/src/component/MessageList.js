@@ -312,17 +312,38 @@ const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
   </div>
 );
 
-const AudioMessage = ({ message, userId, IMG_URL }) => (
-  <div className={`max-w-[300px] rounded-lg`}>
-    <AudioPlayer
-      audioUrl={`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
-    />
-    <div className="ml-3">
-      <div className="font-medium">{message.content?.content}</div>
-      <div className="text-sm text-gray-500">{message.content?.size}</div>
+const AudioMessage = ({ message, userId, IMG_URL }) => {
+  let messageContent = message?.content?.content;
+
+  // Decrypt the message if it's encrypted
+  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+    try {
+      const key = 'chat';
+      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+      const encodedText = messageContent.split('data:')[1];
+      const decodedText = atob(encodedText);
+      let result = '';
+      for (let i = 0; i < decodedText.length; i++) {
+        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      messageContent = result;
+    } catch (error) {
+      console.error('Decryption error:', error);
+    }
+  }
+
+  return (
+    <div className={`max-w-[300px] rounded-lg`}>
+      <AudioPlayer
+        audioUrl={`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
+      />
+      <div className="ml-3">
+        <div className="font-medium">{messageContent}</div>
+        <div className="text-sm text-gray-500">{message.content?.size}</div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FileMessage = ({ message, userId, IMG_URL, highlightText, searchInputbox }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);

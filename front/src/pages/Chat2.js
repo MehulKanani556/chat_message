@@ -1717,7 +1717,7 @@ const Chat2 = () => {
             {selectedChat ? (
               <>
                 <div
-                  className="flex items-center justify-between p-4  relative dark:bg-primary-dark bg:primary-light "
+                  className="flex items-center justify-between p-4  relative dark:bg-[#1a1a1a] bg:primary-light "
                   style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
                 >
                   <div className="flex items-center">
