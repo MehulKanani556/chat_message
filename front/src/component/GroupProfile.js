@@ -180,7 +180,7 @@ const GroupProfile = ({
             {selectedChat?.members?.length}
           </span>
         </div>
-        
+
         <div className="flex flex-col h-[calc(100vh-360px)] overflow-y-auto modal_scroll">
           <div
             className="flex items-center p-2 cursor-pointer"
@@ -230,7 +230,6 @@ const GroupProfile = ({
             );
           })}
         </div>
-
 
         <div className="flex items-center justify-between p-2">
           <span

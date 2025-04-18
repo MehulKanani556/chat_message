@@ -240,7 +240,10 @@ const Setting = () => {
       };
 
     return (
-        <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full  relative">
+        <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+        style={{
+          boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
+        }}>
             <div>
                 <div className="p-4 pb-2 flex items-center">
                     <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Settings</h1>
