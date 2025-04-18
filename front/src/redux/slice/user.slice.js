@@ -374,7 +374,7 @@ export const updateGroup = createAsyncThunk(
   "user/updateGroup",
   async (groupData, { rejectWithValue }) => {
     const token = await sessionStorage.getItem("token");
-    const { groupId, userName, members, photo } = groupData;
+    const { groupId, userName, members, photo, bio } = groupData;
     const formData = new FormData();
     formData.append("groupId", groupId);
     if (userName) {
@@ -382,6 +382,9 @@ export const updateGroup = createAsyncThunk(
     }
     if (photo) {
       formData.append("photo", photo);
+    }
+    if (bio) {
+      formData.append("bio", bio);
     }
     if (members) {
       members.forEach((member) => {

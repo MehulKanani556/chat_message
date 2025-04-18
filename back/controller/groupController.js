@@ -32,12 +32,15 @@ async function updateGroup(req, res) {
     if (req.body.members) {
       updateData.members = req.body.members; // Add members if it exists
     }
+    if (req.body.bio) {
+      updateData.bio = req.body.bio; // Add bio if it exists
+    }
     if (req.file) {
       updateData.photo = req.file.path; // Update photo if a file is uploaded
     }
 
-    await Group.findByIdAndUpdate(groupId, updateData); // Update only the fields that are present
-    return res.status(200).json({ message: "Group updated successfully" });
+    const group = await Group.findByIdAndUpdate(groupId, updateData); // Update only the fields that are present
+    return res.status(200).json({status: true, message: "Group updated successfully", group });
   } catch (error) {
     console.error("Error updating group:", error);
     return res

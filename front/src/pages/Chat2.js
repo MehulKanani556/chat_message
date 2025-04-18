@@ -2468,8 +2468,9 @@ const Chat2 = () => {
                 )}
             </div>
 
-            <div
-              className={`transition-all duration-300 ease-in-out ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+              <div
+                className={`transition-all duration-300 ease-in-out shrink-0 ${
+                  ((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
                   isGroupCreateModalOpen ||
                   (isUserProfileModalOpen && !selectedChat.members)
                   ? "2xl:w-[380px] xs:w-full opacity-100"
