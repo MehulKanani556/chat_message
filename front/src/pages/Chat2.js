@@ -1562,98 +1562,69 @@ const Chat2 = () => {
         }}
       />
 
-      {/* Right Sidebar */}
-      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+        {/* Right Sidebar */}
+        {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
-          <div
-            className={` ${showLeftSidebar ? "hidden md:block" : "block"
-              } flex-1 flex flex-col`}
-          >
-            {selectedChat ? (
-              <>
-                <div
-                  className="flex items-center justify-between p-4  relative dark:bg-[#1a1a1a] bg:primary-light "
-                  style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
-                >
-                  <div className="flex items-center">
-                    {/* Add back button for mobile */}
-                    {window.innerWidth <= 767 && (
-                      <button
-                        className=" text-gray-600 hover:text-gray-800 mr-2"
-                        onClick={() => setShowLeftSidebar(true)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 19l-7-7 7-7"
-                          />
-                        </svg>
-                      </button>
-                    )}
-                    <div
-                      className="w-10 h-10 rounded-full bg-primary  overflow-hidden flex items-center justify-center cursor-pointer"
-                      onClick={() => {
-                        if (
-                          selectedChat?.photo &&
-                          selectedChat.photo !== "null"
-                        ) {
-                          handleProfileImageClick(
-                            `${IMG_URL}${selectedChat.photo.replace(
-                              /\\/g,
-                              "/"
-                            )}`
-                          );
-                        }
-                      }}
-                    >
-                      {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
-                        <img
-                          src={`${IMG_URL}${selectedChat.photo.replace(
-                            /\\/g,
-                            "/"
-                          )}`}
-                          alt="Profile"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-white text-xl font-bold">
-                          {selectedChat?.userName &&
-                            selectedChat?.userName.includes(" ")
-                            ? selectedChat?.userName.split(" ")?.[0][0] +
-                            selectedChat?.userName.split(" ")?.[1][0]
-                            : selectedChat?.userName?.[0]}
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      className="ml-3 cursor-pointer"
-                      onClick={() => {
-                        console.log("selectedChat", selectedChat);
-                        if (selectedChat?.members) {
-                          console.log("selectedChat");
-                          setIsGroupModalOpen(true);
-                        } else {
-                          setIsUserProfileModalOpen(true);
-                          // setIsModalOpen(true);
-                        }
-                      }}
-                    >
-                      <div className="font-medium dark:text-primary-light">
-                        {selectedChat?.userName || "Select a chat"}
-                      </div>
-                      {selectedChat?.members ? (
-                        <div className="text-sm text-gray-500">
-                          {selectedChat?.members?.length} participants
-                        </div>
-                      ) : (
+          {/* Left Side */}
+     
+            <div
+              className={`${
+                window.innerWidth <= 600
+                  ? "ml-0 w-full"
+                  : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+              } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
+            >
+              {showGroups && (
+                <Groups
+                  setShowLeftSidebar={setShowLeftSidebar}
+                  setSelectedChat={setSelectedChat}
+                  selectedChat={selectedChat}
+                  isGroupCreateModalOpen={isGroupCreateModalOpen}
+                  setIsGroupCreateModalOpen={setIsGroupCreateModalOpen}
+                />
+              )}
+              {showProfile && <Profile />}
+              {selectedChatModule && (
+                <ChatList
+                  allMessageUsers={allMessageUsers}
+                  currentUser={currentUser}
+                  onlineUsers={onlineUsers}
+                  setSelectedChat={setSelectedChat}
+                  setShowLeftSidebar={setShowLeftSidebar}
+                  IMG_URL={IMG_URL}
+                  selectedChat={selectedChat}
+                  allUsers={allUsers}
+                />
+              )}
+              {showSettings && <Setting />}
+              {showCallHistory && (
+                <CallHistory setShowLeftSidebar={setShowLeftSidebar} />
+              )}
+            </div>
+     
+          {/* Right Side */}
+          <>
+            <div
+                className={` flex flex-col transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${
+                  showOverlay &&
+                  (isGroupModalOpen ||
+                    isModalOpen ||
+                    isGroupCreateModalOpen ||
+                    isUserProfileModalOpen)
+                    ? "w-0 opacity-0"
+                    : "w-full opacity-100"
+                } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
+              >
+                {(!(
+                  isGroupModalOpen ||
+                  isModalOpen ||
+                  isGroupCreateModalOpen ||
+                  isUserProfileModalOpen
+                ) ||
+                  !showOverlay) && (
+                  <>
+                    {selectedChat ? (
+                      <>
                         <div
                           className="flex items-center justify-between p-4  relative dark:bg-[#1A1A1A] bg:primary-light border-b border-gray-200 dark:border-transparent"
                           // style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
