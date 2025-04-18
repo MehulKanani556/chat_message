@@ -247,8 +247,7 @@ const Chat2 = () => {
       "camera-status-change",
       ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
         console.log(
-          `[Camera Status] Received update: User ${remoteUserId} camera is now ${
-            remoteCameraStatus ? "ON" : "OFF"
+          `[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? "ON" : "OFF"
           }`
         );
         setCameraStatus((prev) => ({
@@ -1562,72 +1561,70 @@ const Chat2 = () => {
         }}
       />
 
-        {/* Right Sidebar */}
-        {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+      {/* Right Sidebar */}
+      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           {/* Left Side */}
-     
-            <div
-              className={`${
-                window.innerWidth <= 600
-                  ? "ml-0 w-full"
-                  : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+
+          <div
+            className={`${window.innerWidth <= 600
+                ? "ml-0 w-full"
+                : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
               } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
-            >
-              {showGroups && (
-                <Groups
-                  setShowLeftSidebar={setShowLeftSidebar}
-                  setSelectedChat={setSelectedChat}
-                  selectedChat={selectedChat}
-                  isGroupCreateModalOpen={isGroupCreateModalOpen}
-                  setIsGroupCreateModalOpen={setIsGroupCreateModalOpen}
-                />
-              )}
-              {showProfile && <Profile />}
-              {selectedChatModule && (
-                <ChatList
-                  allMessageUsers={allMessageUsers}
-                  currentUser={currentUser}
-                  onlineUsers={onlineUsers}
-                  setSelectedChat={setSelectedChat}
-                  setShowLeftSidebar={setShowLeftSidebar}
-                  IMG_URL={IMG_URL}
-                  selectedChat={selectedChat}
-                  allUsers={allUsers}
-                />
-              )}
-              {showSettings && <Setting />}
-              {showCallHistory && (
-                <CallHistory setShowLeftSidebar={setShowLeftSidebar} />
-              )}
-            </div>
-     
+          >
+            {showGroups && (
+              <Groups
+                setShowLeftSidebar={setShowLeftSidebar}
+                setSelectedChat={setSelectedChat}
+                selectedChat={selectedChat}
+                isGroupCreateModalOpen={isGroupCreateModalOpen}
+                setIsGroupCreateModalOpen={setIsGroupCreateModalOpen}
+              />
+            )}
+            {showProfile && <Profile />}
+            {selectedChatModule && (
+              <ChatList
+                allMessageUsers={allMessageUsers}
+                currentUser={currentUser}
+                onlineUsers={onlineUsers}
+                setSelectedChat={setSelectedChat}
+                setShowLeftSidebar={setShowLeftSidebar}
+                IMG_URL={IMG_URL}
+                selectedChat={selectedChat}
+                allUsers={allUsers}
+              />
+            )}
+            {showSettings && <Setting />}
+            {showCallHistory && (
+              <CallHistory setShowLeftSidebar={setShowLeftSidebar} />
+            )}
+          </div>
+
           {/* Right Side */}
           <>
             <div
-                className={` flex flex-col transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${
-                  showOverlay &&
+              className={` flex flex-col transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
                   (isGroupModalOpen ||
                     isModalOpen ||
                     isGroupCreateModalOpen ||
                     isUserProfileModalOpen)
-                    ? "w-0 opacity-0"
-                    : "w-full opacity-100"
+                  ? "w-0 opacity-0"
+                  : "w-full opacity-100"
                 } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
-              >
-                {(!(
-                  isGroupModalOpen ||
-                  isModalOpen ||
-                  isGroupCreateModalOpen ||
-                  isUserProfileModalOpen
-                ) ||
-                  !showOverlay) && (
+            >
+              {(!(
+                isGroupModalOpen ||
+                isModalOpen ||
+                isGroupCreateModalOpen ||
+                isUserProfileModalOpen
+              ) ||
+                !showOverlay) && (
                   <>
                     {selectedChat ? (
                       <>
                         <div
                           className="flex items-center justify-between p-4  relative dark:bg-[#1A1A1A] bg:primary-light border-b border-gray-200 dark:border-transparent"
-                          // style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
+                        // style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
                         >
                           <div className="flex items-center">
                             {/* Add back button for mobile */}
@@ -1668,9 +1665,7 @@ const Chat2 = () => {
                                 }
                               }}
                             >
-                              {selectedChat?.photo &&
-                              selectedChat.photo !== "null" &&
-                              selectedChat?.profilePhoto == "Everyone" ? (
+                              {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
                                 <img
                                   src={`${IMG_URL}${selectedChat.photo.replace(
                                     /\\/g,
@@ -1682,11 +1677,11 @@ const Chat2 = () => {
                               ) : (
                                 <span className="text-white text-xl font-bold">
                                   {selectedChat?.userName &&
-                                  selectedChat?.userName.includes(" ")
+                                    selectedChat?.userName.includes(" ")
                                     ? selectedChat?.userName.split(
-                                        " "
-                                      )?.[0][0] +
-                                      selectedChat?.userName.split(" ")?.[1][0]
+                                      " "
+                                    )?.[0][0] +
+                                    selectedChat?.userName.split(" ")?.[1][0]
                                     : selectedChat?.userName?.[0]}
                                 </span>
                               )}
@@ -1713,11 +1708,10 @@ const Chat2 = () => {
                                 </div>
                               ) : (
                                 <div
-                                  className={`text-sm ${
-                                    onlineUsers.includes(selectedChat?._id)
+                                  className={`text-sm ${onlineUsers.includes(selectedChat?._id)
                                       ? "text-green-500"
                                       : "text-gray-500"
-                                  }`}
+                                    }`}
                                 >
                                   {onlineUsers.includes(selectedChat?._id)
                                     ? "Online"
@@ -2059,13 +2053,13 @@ const Chat2 = () => {
                               selectedFiles.length > 0
                                 ? "calc(100vh -  276px)"
                                 : replyingTo
-                                ? replyingTo?.content?.fileType &&
-                                  replyingTo?.content?.fileType?.startsWith(
-                                    "image/"
-                                  )
-                                  ? "calc(100vh - 281px)"
-                                  : "calc(100vh -  226px)"
-                                : "calc(100vh - 173px)",
+                                  ? replyingTo?.content?.fileType &&
+                                    replyingTo?.content?.fileType?.startsWith(
+                                      "image/"
+                                    )
+                                    ? "calc(100vh - 281px)"
+                                    : "calc(100vh -  226px)"
+                                  : "calc(100vh - 173px)",
                           }}
                           ref={messagesContainerRef}
                         >
@@ -2106,7 +2100,7 @@ const Chat2 = () => {
                         </div>
 
                         {selectedFiles && selectedFiles.length > 0 && (
-                          <div className="flex w-full  mx-auto">
+                          <div className="flex px-6  dark:bg-primary-dark">
                             {selectedFiles.map((file, index) => {
                               const fileUrl = URL.createObjectURL(file); // Create a URL for the file
                               let fileIcon;
@@ -2115,55 +2109,55 @@ const Chat2 = () => {
                                   <img
                                     src={fileUrl}
                                     alt={`Selected ${index}`}
-                                    className="w-20 h-20 object-cover mb-1"
+                                    className="w-20 h-[40px] object-cover "
                                   />
                                 );
                               } else if (file.type === "application/pdf") {
                                 fileIcon = (
-                                  <FaFilePdf className="w-20 h-20 text-gray-500" />
+                                  <FaFilePdf className="w-20 h-[40px] text-gray-500" />
                                 ); // PDF file icon
                               } else if (
                                 file.type === "application/vnd.ms-excel" ||
                                 file.type ===
-                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                               ) {
                                 fileIcon = (
-                                  <FaFileExcel className="w-20 h-20 text-gray-500" />
+                                  <FaFileExcel className="w-20 h-[40px] text-gray-500" />
                                 ); // Excel file icon
                               } else if (
                                 file.type === "application/msword" ||
                                 file.type ===
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                               ) {
                                 fileIcon = (
-                                  <FaFileWord className="w-20 h-20 text-gray-500" />
+                                  <FaFileWord className="w-20 h-[40px] text-gray-500" />
                                 ); // Word file icon
                               } else if (
                                 file.type === "application/vnd.ms-powerpoint" ||
                                 file.type ===
-                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                               ) {
                                 fileIcon = (
-                                  <FaFilePowerpoint className="w-20 h-20 text-gray-500" />
+                                  <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
                                 ); // PowerPoint file icon
                               } else if (file.type === "application/zip") {
                                 fileIcon = (
-                                  <FaFileArchive className="w-20 h-20 text-gray-500" />
+                                  <FaFileArchive className="w-20 h-[40px] text-gray-500" />
                                 ); // ZIP file icon
                               } else {
                                 fileIcon = (
-                                  <FaPaperclip className="w-20 h-20 text-gray-500" />
+                                  <FaPaperclip className="w-20 h-[40px] text-gray-500" />
                                 ); // Generic file icon
                               }
                               return (
-                                <div className=" rounded-t-lg bg-[#e5e7eb] w-full p-2">
+                                <div className=" rounded-t-lg  p-2">
                                   <div
                                     key={index}
-                                    className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden bg-[#b7babe] rounded-lg"
+                                    className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
                                   >
                                     {fileIcon}
-                                    <div className="w-20 text-sm text-ellipsis  text-nowrap ">
-                                      {file.name}
+                                    <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                      {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
                                     </div>{" "}
                                     {/* Display file name */}
                                     <span className="text-xs text-gray-500">
@@ -2269,11 +2263,10 @@ const Chat2 = () => {
                             <div className="w-full mx-auto px-4 py-4 mb-5 md:mb-0 dark:bg-primary-dark">
                               <form
                                 onSubmit={handleSubmit}
-                                className={`flex items-center gap-2 ${
-                                  replyingTo || selectedFiles.length > 0
+                                className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
                                     ? "rounded-b-lg"
                                     : "rounded-lg"
-                                } px-4 py-2 w-full max-w-full`}
+                                  } px-4 py-2 w-full max-w-full`}
                               >
                                 <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
                                   <input
@@ -2375,7 +2368,7 @@ const Chat2 = () => {
                                     }
                                   >
                                     {selectedFiles &&
-                                    selectedFiles.length > 0 ? (
+                                      selectedFiles.length > 0 ? (
                                       <GoPlusCircle className="w-6 h-6 " />
                                     ) : (
                                       <svg
@@ -2403,9 +2396,8 @@ const Chat2 = () => {
                                     onClick={handleVoiceMessage}
                                   >
                                     <IoMicOutline
-                                      className={`w-6 h-6 ${
-                                        isRecording ? "text-red-500" : ""
-                                      }`}
+                                      className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                                        }`}
                                     />
                                   </button>
                                   <button
@@ -2474,92 +2466,87 @@ const Chat2 = () => {
                     )}
                   </>
                 )}
-              </div>
+            </div>
 
-              <div
-                className={`transition-all duration-300 ease-in-out ${
-                  ((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+            <div
+              className={`transition-all duration-300 ease-in-out ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
                   isGroupCreateModalOpen ||
                   (isUserProfileModalOpen && !selectedChat.members)
-                    ? "2xl:w-[380px] xs:w-full opacity-100"
-                    : "w-0 opacity-0"
+                  ? "2xl:w-[380px] xs:w-full opacity-100"
+                  : "w-0 opacity-0"
                 }`}
-                style={{
-                  boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
-                }}
-              >
-                {isGroupModalOpen && (
-                  <GroupProfile
-                    selectedChat={selectedChat}
-                    setIsGroupModalOpen={setIsGroupModalOpen}
-                    setIsModalOpen={setIsModalOpen}
-                    setGroupUsers={setGroupUsers}
-                    allUsers={allUsers}
-                    userId={userId}
-                    socket={socket}
-                    IMG_URL={IMG_URL}
-                  />
-                )}
-                {isModalOpen && (
-                  <AddParticipants
-                    selectedChat={selectedChat}
-                    setIsModalOpen={setIsModalOpen}
-                    allUsers={allUsers}
-                    userId={userId}
-                    socket={socket}
-                    groupUsers={groupUsers}
-                    setGroupUsers={setGroupUsers}
-                  />
-                )}
-                {isGroupCreateModalOpen && (
-                  <CreatedGroup
-                    isOpen={isGroupCreateModalOpen}
-                    onClose={() => setIsGroupCreateModalOpen(false)}
-                    allUsers={allUsers}
-                    currentUser={currentUser}
-                    socket={socket}
-                  />
-                )}
-                {isUserProfileModalOpen && !selectedChat.members && (
-                  <ProfileUser
-                    isOpen={isUserProfileModalOpen}
-                    onClose={() => setIsUserProfileModalOpen(false)}
-                    selectedChat={selectedChat}
-                    messages={messages}
-                    handleImageClick={handleImageClick}
-                  />
-                )}
-              </div>
-            </>
+              style={{
+                boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
+              }}
+            >
+              {isGroupModalOpen && (
+                <GroupProfile
+                  selectedChat={selectedChat}
+                  setIsGroupModalOpen={setIsGroupModalOpen}
+                  setIsModalOpen={setIsModalOpen}
+                  setGroupUsers={setGroupUsers}
+                  allUsers={allUsers}
+                  userId={userId}
+                  socket={socket}
+                  IMG_URL={IMG_URL}
+                />
+              )}
+              {isModalOpen && (
+                <AddParticipants
+                  selectedChat={selectedChat}
+                  setIsModalOpen={setIsModalOpen}
+                  allUsers={allUsers}
+                  userId={userId}
+                  socket={socket}
+                  groupUsers={groupUsers}
+                  setGroupUsers={setGroupUsers}
+                />
+              )}
+              {isGroupCreateModalOpen && (
+                <CreatedGroup
+                  isOpen={isGroupCreateModalOpen}
+                  onClose={() => setIsGroupCreateModalOpen(false)}
+                  allUsers={allUsers}
+                  currentUser={currentUser}
+                  socket={socket}
+                />
+              )}
+              {isUserProfileModalOpen && !selectedChat.members && (
+                <ProfileUser
+                  isOpen={isUserProfileModalOpen}
+                  onClose={() => setIsUserProfileModalOpen(false)}
+                  selectedChat={selectedChat}
+                  messages={messages}
+                  handleImageClick={handleImageClick}
+                />
+              )}
+            </div>
+          </>
         </>
       )}
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${
-          isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
             ? ""
             : "hidden"
-        }`}
+          }`}
       >
         <div
-          className={`flex-1 relative ${
-            isReceiving
+          className={`flex-1 relative ${isReceiving
               ? "flex items-center justify-center"
               : `grid gap-4 ${getGridColumns(
-                  parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-                )}`
-          }`}
+                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+              )}`
+            }`}
         >
           {/* Local video */}
           <div
-            className={` ${
-              isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-            } ${isReceiving ? "hidden" : ""} ${
-              remoteStreams.size === 1
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
                 ? "max-w-30 absolute top-2 right-2 z-10"
                 : "relative"
-            }`}
+              }`}
           >
             <video
               ref={localVideoRef}
@@ -2614,7 +2601,7 @@ const Chat2 = () => {
                       >
                         <div className="w-32 h-32 rounded-full overflow-hidden">
                           {participant?.photo &&
-                          participant.photo !== "null" ? (
+                            participant.photo !== "null" ? (
                             <img
                               src={`${IMG_URL}${participant.photo.replace(
                                 /\\/g,
@@ -2672,9 +2659,8 @@ const Chat2 = () => {
                 <>
                   <button
                     onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isCameraOn ? "bg-primary" : "bg-gray-400"
-                    } text-white ${isVideoCalling ? "" : "hidden"}`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-primary" : "bg-gray-400"
+                      } text-white ${isVideoCalling ? "" : "hidden"}`}
                   >
                     {isCameraOn ? (
                       <FiCamera className="text-xl " />
@@ -2684,9 +2670,8 @@ const Chat2 = () => {
                   </button>
                   <button
                     onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${
-                      isMicrophoneOn ? "bg-primary" : "bg-gray-400"
-                    } text-white`}
+                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-primary" : "bg-gray-400"
+                      } text-white`}
                   >
                     {isMicrophoneOn ? (
                       <BsFillMicFill className="text-xl " />
@@ -2715,8 +2700,8 @@ const Chat2 = () => {
               {/* Profile image or default avatar */}
               {allUsers.find((user) => user._id === incomingCall.fromEmail)
                 ?.photo &&
-              allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo !== "null" ? (
+                allUsers.find((user) => user._id === incomingCall.fromEmail)
+                  ?.photo !== "null" ? (
                 <img
                   src={`${IMG_URL}${allUsers
                     .find((user) => user._id === incomingCall.fromEmail)
@@ -2930,9 +2915,8 @@ const Chat2 = () => {
                   />
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.dob ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingDob(true)}
                   >
                     {new Date(user?.dob).toLocaleDateString() || "Add dob"}
@@ -2976,9 +2960,8 @@ const Chat2 = () => {
                   </span>
                 ) : (
                   <span
-                    className={`text-gray-800 cursor-pointer ${
-                      !user?.phone ? "text-sm" : ""
-                    } `}
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
                     onClick={() => setIsEditingPhone(true)}
                   >
                     {user?.phone || "Add phone number"}
@@ -3062,30 +3045,30 @@ const Chat2 = () => {
 
       {((isProfileImageModalOpen && selectedProfileImage) ||
         (isImageModalOpen && selectedImage)) && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative w-full h-full flex items-center justify-center p-8">
-            <img
-              src={
-                isProfileImageModalOpen ? selectedProfileImage : selectedImage
-              }
-              alt="Profile"
-              className="max-w-full max-h-full object-contain"
-            />
-            <button
-              onClick={() => {
-                if (isProfileImageModalOpen) {
-                  setIsProfileImageModalOpen(false);
-                } else if (isImageModalOpen) {
-                  setIsImageModalOpen(false);
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
+              <img
+                src={
+                  isProfileImageModalOpen ? selectedProfileImage : selectedImage
                 }
-              }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <ImCross className="w-6 h-6" />
-            </button>
+                alt="Profile"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button
+                onClick={() => {
+                  if (isProfileImageModalOpen) {
+                    setIsProfileImageModalOpen(false);
+                  } else if (isImageModalOpen) {
+                    setIsImageModalOpen(false);
+                  }
+                }}
+                className="absolute top-4 right-4 text-white hover:text-gray-300"
+              >
+                <ImCross className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {/* Forward Modal */}
       {showForwardModal && (
         <ForwardModal

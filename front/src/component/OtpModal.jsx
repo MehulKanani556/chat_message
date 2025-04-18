@@ -31,10 +31,34 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").trim();
+    
+    // Only proceed if the pasted content appears to be a valid OTP
+    if (!pastedData.match(/^\d+$/) || pastedData.length !== 6) return;
+    
+    // Fill the OTP fields with the pasted digits
+    const digits = pastedData.split("");
+    const newOtp = [...otp];
+    
+    digits.forEach((digit, index) => {
+      if (index < 6) newOtp[index] = digit;
+    });
+    
+    setOtp(newOtp);
+    
+    // Focus on the last field after paste
+    if (inputRefs.current[5]) {
+      inputRefs.current[5].focus();
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const otpString = otp.join("");
     if (otpString.length === 6) {
+      console.log(otpString);
       onVerify(otpString);
     }
   };
@@ -46,19 +70,21 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
+      <div className="bg-primary-dark rounded-lg p-6 w-full max-w-md relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
         >
           ✕
         </button>
-
-        <h3 className="text-xl text-white font-semibold mb-2">Verify OTP</h3>
-        <p className="text-gray-400 mb-6">We've sent a code to {phoneNumber}</p>
+        <div className="text-center">
+          <h3 className="text-xl text-white font-semibold mb-2">Verify OTP</h3>
+          <p className="text-gray-400 mb-0">We've sent a code to <span className="underline underline-offset-2 text-white">{phoneNumber}</span></p>
+          <p className="text-gray-400 mb-6">Please enter it to verify your Mobile No.</p>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="flex gap-2 mb-6 justify-center">
+          <div className="flex gap-3 mb-6 justify-center">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -66,17 +92,19 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
                 type="text"
                 inputMode="numeric"
                 maxLength={1}
+                placeholder=" - "
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-xl font-semibold text-white bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onPaste={index === 0 ? handlePaste : null}
+                className="w-10 h-10 text-center text-lg font-semibold text-white bg-[#2c2c2c] rounded-md focus:outline-none focus:ring-2 focus:ring-transparent"
               />
             ))}
-          </div>
+          </div>  
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white rounded-md py-3 font-medium hover:bg-blue-700 transition-colors mb-4"
+            className="w-full bg-primary text-white rounded-md py-3 font-medium hover:bg-primary/80 transition-colors mb-4"
           >
             Verify OTP
           </button>
@@ -85,9 +113,9 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
         <div className="text-center">
           <button
             onClick={handleResend}
-            className="text-blue-400 hover:text-blue-300"
+            className="text-gray-400"
           >
-            Didn't receive code? Resend
+            Didn't receive code? <span className="underline underline-offset-2 text-white">Resend</span>
           </button>
         </div>
       </div>

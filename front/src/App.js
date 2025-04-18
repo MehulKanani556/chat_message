@@ -25,11 +25,11 @@ function App() {
   }, []);
 
 
-  useEffect(() => {
-    if(!token  && !user){
-      navigate('/');
-    }
-  },[])
+  // useEffect(() => {
+  //   if(!token  && !user){
+  //     navigate('/');
+  //   }
+  // },[])
 
   return (
     <Provider store={store}>
