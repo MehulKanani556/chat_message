@@ -12,6 +12,7 @@ import UserProfile from "./component/Profile";
 import Groups from "./component/Group";
 import { initializePrimaryColor } from "./utils/themeUtils";
 import { useEffect } from "react";
+import LoginNew from "./pages/LoginNew";
 
 function App() {
   const { store, persistor } = configureStore();
@@ -35,6 +36,7 @@ function App() {
       <Routes>
         {/* <Route path="/login" element={<Login />}></Route> */}
         <Route path="/" element={<Login />}></Route>
+        <Route path="/login" element={<LoginNew />}></Route>
         <Route path="/chat" element={<Chat2 />}></Route>
         <Route path="/profile" element={<Profile />}></Route>
         <Route path="/chatNew" element={<ChatNew />}></Route>
