@@ -1,30 +1,35 @@
 require("dotenv").config();
 const express = require("express");
 const { connectDB } = require("./db/db");
-const server = express();
-const port = process.env.PORT;
-const socketPort = process.env.SOCKET_PORT || 4000;
-const cors = require("cors");
-const indexRoutes = require("./routes/indexRoutes");
-const { Server } = require("socket.io");
-const socketManager = require("./socketManager/SocketManager");
 const path = require("path");
-server.use(express.json());
-server.use(cors({
+const cors = require("cors");
+const { Server } = require("socket.io");
+const http = require("http");
+
+const indexRoutes = require("./routes/indexRoutes");
+const socketManager = require("./socketManager/SocketManager");
+
+const app = express();
+const port = process.env.PORT ;
+
+// Middlewares
+app.use(express.json());
+app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-server.use("/uploads", express.static(path.join(__dirname, "uploads")));
-server.use("/api", indexRoutes);
 
-// Create HTTP server from Express app for Socket.IO
-const http = require("http");
-const socketServer = http.createServer(server);
+// Static and API routes
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api", indexRoutes);
+
+// Create single HTTP server from Express
+const server = http.createServer(app);
 
 // Initialize Socket.IO
-const io = new Server(socketServer, {
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -32,28 +37,14 @@ const io = new Server(socketServer, {
   },
 });
 
+// Make Socket.IO globally accessible
 global.io = io;
+
+// Initialize socket manager
 socketManager.initializeSocket(io);
-// Socket manager instance
 
-// Socket connection handling
-// io.on("connection", (socket) => {
-//   console.log("New client connected");
-
-//   socketManager.handleConnection(socket);
-
-//   socket.on("disconnect", () => {
-//     console.log("Client disconnected");
-//     socketManager.handleDisconnect(socket);
-//   });
-// });
-
-// Start both servers
-server.listen(port,() => {
+// Start server (for both API and Socket.IO)
+server.listen(port, () => {
   connectDB();
-  console.log(`Database Server Is Connected At ${port}`);
-});
-
-socketServer.listen(socketPort,  () => {
-  console.log(`Socket.IO Server Is Running At ${socketPort}`);
+  console.log(`Server with DB and Socket.IO is running on port ${port}`);
 });

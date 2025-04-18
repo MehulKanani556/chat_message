@@ -24,7 +24,7 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-const SOCKET_SERVER_URL = "http://localhost:4000"; // Move to environment variable in production
+const SOCKET_SERVER_URL = "http://localhost:5000"; // Move to environment variable in production
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isConnected, setIsConnected] = useState(false);
