@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ImCross, ImImages } from "react-icons/im";
 import { MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
 import { useDispatch } from "react-redux";
@@ -17,7 +17,7 @@ import {
 } from "react-icons/fa";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { RiUserAddLine } from "react-icons/ri";
+import { RiDeleteBin6Line, RiUserAddLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
 
 const GroupProfile = ({
@@ -35,6 +35,9 @@ const GroupProfile = ({
   const [editedUserName, setEditedUserName] = useState("");
   const [groupPhoto, setGroupPhoto] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const containerRef = useRef(null);
+  const [openDirection, setOpenDirection] = useState("bottom");
 
   const handlePhotoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -161,6 +164,38 @@ const GroupProfile = ({
     }
   };
 
+  const handleMenuToggle = (userId, index) => {
+    const memberItem = document.getElementById(`member-${index}`);
+    const container = containerRef.current;
+
+    if (memberItem && container) {
+      const memberRect = memberItem.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // Check if enough space below to open dropdown
+      const spaceBelow = containerRect.bottom - memberRect.bottom;
+      if (spaceBelow < 80) {
+        setOpenDirection("top");
+      } else {
+        setOpenDirection("bottom");
+      }
+    }
+
+    setMenuOpen((prev) => (prev === userId ? null : userId));
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close if clicked outside the dropdown
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div
       className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
@@ -246,76 +281,6 @@ const GroupProfile = ({
             </h3>
           </div>
         </div>
-        {/* <div className="mt-4 p-4">
-        <div className="flex items-center justify-between p-2 border-b border-gray-400 dark:border-primary-light/20">
-          <span className="text-gray-600 dark:text-primary-light/80 font-bold">
-            Participants
-          </span>
-          <span className="text-gray-800 dark:text-primary-light/80">
-            {selectedChat?.members?.length}
-          </span>
-        </div>
-
-        <div className="flex flex-col  overflow-y-auto modal_scroll">
-          <div
-            className="flex items-center p-2 cursor-pointer"
-            onClick={() => {
-              setGroupUsers(selectedChat?.members);
-              setIsGroupModalOpen(false);
-              setIsModalOpen(true);
-            }}
-          >
-            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-primary-light/20 flex items-center justify-center mr-2 font-bold">
-              +
-            </div>
-            <span className="text-gray-800 dark:text-primary-light/80 font-bold">
-              Add participants
-            </span>
-          </div>
-          {selectedChat?.members.map((member, index) => {
-            const user = allUsers.find((user) => user._id === member);
-            return (
-              <div key={index} className="flex items-center p-2 group">
-                <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                  {user?.photo && user.photo !== "null" ? (
-                    <img
-                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                      alt={`${user.userName}`}
-                      className="object-cover h-full w-full"
-                    />
-                  ) : (
-                    <span className="text-gray-900 text-lg font-bold">
-                      {user.userName
-                        .split(" ")
-                        .map((n) => n[0].toUpperCase())
-                        .join("")}
-                    </span>
-                  )}
-                </div>
-                <span className="text-gray-800 dark:text-primary-light/80">
-                  {user?.userName}
-                </span>
-                <button
-                  className="ml-auto text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs border border-red-500 rounded-full px-2 py-1"
-                  onClick={() => handleRemoveMember(user._id)}
-                >
-                  Remove
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between p-2">
-          <span
-            className="text-red-600 font-bold cursor-pointer"
-            onClick={handleLeaveGroup}
-          >
-            Leave Group
-          </span>
-        </div>
-      </div> */}
-
         {/* Accordion content */}
         <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5">
           {/* User Info Section */}
@@ -419,107 +384,105 @@ const GroupProfile = ({
             </button>
           </div>
         </div>
-        <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg p-3">
-          <button className="w-full px-2  flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <HiOutlineUserGroup size={18} />
-              <span className="text-md font-medium ">Group Members</span>
+
+        <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3">
+      <button className="w-full px-2 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <HiOutlineUserGroup size={18} />
+          <span className="text-md font-medium">Group Members</span>
+        </div>
+      </button>
+
+      <div
+        ref={containerRef}
+        className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2"
+      >
+        {selectedChat?.members.map((member, index) => {
+          const user = allUsers.find((user) => user._id === member);
+          const isMenuOpen = menuOpen === user._id;
+
+          return (
+            <div
+              key={index}
+              id={`member-${index}`}
+              className="flex items-center p-2 relative"
+            >
+              <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                {user?.photo && user.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                    alt={`${user.userName}`}
+                    className="object-cover h-full w-full"
+                  />
+                ) : (
+                  <span className="text-gray-900 text-lg font-bold">
+                    {user.userName
+                      .split(" ")
+                      .map((n) => n[0].toUpperCase())
+                      .join("")}
+                  </span>
+                )}
+              </div>
+              <span className="text-gray-800 dark:text-primary-light/80">
+                {user?.userName}
+              </span>
+
+              <button
+                className="ml-auto text-md rounded-full px-2 py-1"
+                onClick={() => handleMenuToggle(user._id, index)}
+              >
+                <BsThreeDotsVertical />
+              </button>
+
+              {isMenuOpen && (
+                <div
+                  ref={menuRef}
+                  className={`absolute z-10 bg-white dark:bg-black/50 dark:text-white shadow-md rounded ${
+                    openDirection === "top" ? "bottom-5" : "top-5"
+                  } right-8`}
+                >
+                  <button className="block px-4 py-2 text-sm  ">
+                    Block
+                  </button>
+                  <button className=" px-4 py-2 text-sm text-red-600 flex">
+                  <RiDeleteBin6Line /> Remove
+                  </button>
+                </div>
+              )}
             </div>
-            </button>
-         <div className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2">
-          {/* <div
-            className="flex items-center p-2 cursor-pointer"
+          );
+        })}
+      </div>
+    </div>
+
+        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+          <button
+            className="w-full flex justify-between items-center"
             onClick={() => {
               setGroupUsers(selectedChat?.members);
               setIsGroupModalOpen(false);
               setIsModalOpen(true);
             }}
           >
-            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-primary-light/20 flex items-center justify-center mr-2 font-bold">
-              +
+            <div className="flex items-center space-x-2">
+              <RiUserAddLine size={18} />
+              <span className="font-medium">Add Memebers</span>
             </div>
-            <span className="text-gray-800 dark:text-primary-light/80 font-bold">
-              Add participants
-            </span>
-          </div> */}
-          {selectedChat?.members.map((member, index) => {
-            const user = allUsers.find((user) => user._id === member);
-            const isMenuOpen = menuOpen === user._id;
-            return (
-              <div key={index} className="flex items-center p-2 relative ">
-                <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                  {user?.photo && user.photo !== "null" ? (
-                    <img
-                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                      alt={`${user.userName}`}
-                      className="object-cover h-full w-full"
-                    />
-                  ) : (
-                    <span className="text-gray-900 text-lg font-bold">
-                      {user.userName
-                        .split(" ")
-                        .map((n) => n[0].toUpperCase())
-                        .join("")}
-                    </span>
-                  )}
-                </div>
-                <span className="text-gray-800 dark:text-primary-light/80">
-                  {user?.userName}
-                </span>
-                <button
-                  className="ml-auto text-md rounded-full px-2 py-1"
-                  // onClick={() => handleRemoveMember(user._id)}
-                  onClick={() => setMenuOpen(isMenuOpen ? null : user._id)} 
-                >
-                 <BsThreeDotsVertical />
-                </button>
-                {menuOpen && ( // Conditional rendering of the menu
-                  <div className="absolute bg-white shadow-md rounded mt-2">
-                    <button
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      // onClick={() => handleBlockMember(user._id)} // Function to block member
-                    >
-                      Block
-                    </button>
-                    <button
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      // onClick={() => handleRemoveMember(user._id)} // Function to remove member
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-          
-        </div>
-        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
-        <button
-              className="w-full flex justify-between items-center"
-              onClick={() => {
-                setGroupUsers(selectedChat?.members);
-                setIsGroupModalOpen(false);
-                setIsModalOpen(true);
-              }}
-            >
-              <div className="flex items-center space-x-2">
-                <RiUserAddLine size={18} />
-                <span className="font-medium">Add Memebers</span>
-              </div>
-              <FaChevronRight size={12} />
-            </button>
-        </div>
-        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
-        <button className="w-full flex justify-between items-center text-red-600" onClick={() => handleRemoveMember(userId)}>
-              <div className="flex items-center space-x-2" >
-                <FiLogOut  size={18} className={""} />
-                <span className="font-medium">Leave Group</span>
-              </div>
-            </button>
+            <FaChevronRight size={12} />
+          </button>
         </div>
 
+        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
+          <button
+            className="w-full flex justify-between items-center text-red-600"
+            onClick={() => handleRemoveMember(userId)}
+          >
+            <div className="flex items-center space-x-2">
+              <FiLogOut size={18} className={""} />
+              <span className="font-medium">Leave Group</span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -17,6 +17,8 @@ const {
   forgotPassword,
   verifyOtp,
   changePassword,
+  sendOtpToMobile,
+  verifyMobileOtp,
 } = require("../auth/auth");
 const { auth } = require("../helper/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
@@ -43,6 +45,9 @@ const {
 const indexRoutes = express.Router();
 
 // Auth Routes
+
+indexRoutes.post('/mobile-otp',sendOtpToMobile);
+indexRoutes.post('/verify-mobile-otp', verifyMobileOtp);
 
 indexRoutes.post("/usrLogin", userLogin);
 indexRoutes.post("/google-login", googleLogin);

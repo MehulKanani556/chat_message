@@ -6,13 +6,16 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import CountryList from '../component/CountryList';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import { useDispatch, useSelector } from "react-redux";
+import { mobileOtp, verifyMobileOtp } from "../redux/slice/auth.slice";
 
 const LoginNew = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [showOtpModal, setShowOtpModal] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [phone, setPhone] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [completePhoneNumber, setCompletePhoneNumber] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState({
     name: 'India',
@@ -50,45 +53,46 @@ const LoginNew = () => {
     setShowCountryDropdown(false);
   };
 
-  const [dialCode, setDialCode] = useState('91');
+  const validationSchema = Yup.object({
+    mobileNumber: Yup.string()
+      .required('Mobile number is required')
+      .min(10, 'Mobile number must be at least 10 characters')
+      .max(15, 'Mobile number must not exceed 15 characters'),
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values, { setSubmitting }) => {
+    setSubmitting(true);
+    // Create the complete phone number with country code
+    const fullPhoneNumber = `${selectedCountry.dialCode}${values.mobileNumber}`;
+    setCompletePhoneNumber(fullPhoneNumber);
+
     try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: `${selectedCountry.dialCode}${phoneNumber}`,
-        }),
-      });
-
-      // if (response.ok) {
-        setShowOtpModal(true);
-      // }
+      dispatch(mobileOtp({ mobileNumber: fullPhoneNumber }))
+        .then((response) => {
+          console.log(response)
+          if (response.payload.status == 200) {
+            setShowOtpModal(true);
+          }
+        })
     } catch (error) {
       console.error("Error sending OTP:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleOtpVerification = async (otp) => {
     try {
-      const response = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: `${selectedCountry.dialCode}${phoneNumber}`,
-          otp,
-        }),
-      });
-
-      if (response.ok) {
-        navigate("/chat");
-      }
+      dispatch(verifyMobileOtp({
+        mobileNumber: completePhoneNumber,
+        otp
+      }))
+        .then((response) => {
+          console.log(response)
+          if (response.payload.status == 200) {
+          navigate('/chat')
+          }
+        })
     } catch (error) {
       console.error("Error verifying OTP:", error);
     }
@@ -109,59 +113,70 @@ const LoginNew = () => {
             Message privately with friends and family using Chat App.
           </p>
 
-          <form onSubmit={handleSubmit}>
-            {/* Country Select */}
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">Country</label>
-                <div className="relative">
-                  <button
-                    className="w-full bg-[#2c2c2c]  rounded p-2 px-3 text-white flex items-center justify-between"
-                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-4 overflow-hidden">
-                        {selectedCountry.flag}
+          <Formik
+            initialValues={{ mobileNumber: '' }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ isSubmitting, values }) => (
+              <Form>
+                {/* Country Select */}
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Country</label>
+                    <div className="relative">
+                      <div
+                        className="w-full bg-[#2c2c2c] rounded p-2 px-3 text-white flex items-center justify-between"
+                        onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-4 overflow-hidden">
+                            {selectedCountry.flag}
+                          </div>
+                          <span>{selectedCountry.name}</span>
+                        </div>
+                        {showCountryDropdown ?
+                          <FaChevronUp size={16} className="text-gray-400" />
+                          : <FaChevronDown size={16} className="text-gray-400" />
+                        }
                       </div>
-                      <span>{selectedCountry.name}</span>
-                    </div>
-                    {showCountryDropdown ?
-                      <FaChevronUp size={16} className="text-gray-400" />
-                      : <FaChevronDown size={16} className="text-gray-400" />
-                    }
-                  </button>
 
-                  {showCountryDropdown && (
-                    <div className="absolute mt-1 w-full bg-gray-800  rounded-md shadow-lg z-10 max-h-64 overflow-auto">
-                      <CountryList onSelectCountry={selectCountry} />
+                      {showCountryDropdown && (
+                        <div className="absolute mt-1 w-full bg-gray-800 rounded-md shadow-lg z-10 max-h-56 overflow-auto">
+                          <CountryList onSelectCountry={selectCountry} />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">Mobile No.</label>
-                <div className="flex">
-                  <div className="bg-[#2c2c2c] rounded-l p-2 px-3 text-white">
-                    {selectedCountry.dialCode}
                   </div>
-                  <input
-                    type="number"
-                    placeholder="Your Mobile No."
-                    value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    className="w-full bg-[#2c2c2c] rounded-r p-2 px-3 text-white focus:outline-none"
-                  />
+
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Mobile No.</label>
+                    <div className="flex">
+                      <div className="bg-[#2c2c2c] rounded-l p-2 px-3 text-white">
+                        {selectedCountry.dialCode}
+                      </div>
+                      <Field
+                        type="number"
+                        name="mobileNumber"
+                        placeholder="Your Mobile No."
+                        className="w-full bg-[#2c2c2c] rounded-r p-2 px-3 text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <ErrorMessage name="mobileNumber" component="div" className="text-red-500 text-sm mt-1" />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-primary text-white rounded py-3 font-medium hover:bg-primary/80 transition-colors mt-6"
-            >
-              Next
-            </button>
-          </form>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-white rounded py-3 font-medium hover:bg-primary/80 transition-colors mt-6"
+                >
+                  {isSubmitting ? 'Sending...' : 'Next'}
+                </button>
+              </Form>
+            )}
+          </Formik>
         </div>
 
         {/* Right side - QR Code */}
@@ -191,7 +206,7 @@ const LoginNew = () => {
       {/* OTP Modal */}
       {showOtpModal && (
         <OtpModal
-          phoneNumber={`${selectedCountry.dialCode}${mobileNumber}`}
+          phoneNumber={completePhoneNumber}
           onVerify={handleOtpVerification}
           onClose={() => setShowOtpModal(false)}
         />

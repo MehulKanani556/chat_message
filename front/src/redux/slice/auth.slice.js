@@ -91,12 +91,40 @@ export const resetPassword = createAsyncThunk(
         }
     }
 );
+export const mobileOtp = createAsyncThunk(
+    'auth/mobileOtp',
+    async ({ mobileNumber }, { rejectWithValue }) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/mobile-otp`, { mobileNumber });
+            if (response.status === 200) {
+                return response.data; // Assuming the API returns a success message
+            }
+        } catch (error) {
+            return handleErrors(error, null, rejectWithValue);
+        }
+    }
+);
+export const verifyMobileOtp = createAsyncThunk(
+    'auth/verify-mobile-otp',
+    async ({ mobileNumber, otp }, { rejectWithValue }) => {
+        try {
+            const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp });
+            if (response.status === 200) {
+                sessionStorage.setItem('token', response.data.token);
+                sessionStorage.setItem('userId', response.data.user.id);
+                return response.data; // Assuming the API returns a success message
+            }
+        } catch (error) {
+            return handleErrors(error, null, rejectWithValue);
+        }
+    }
+);
 
 export const googleLogin = createAsyncThunk(
     'auth/google-login',
-    async ({ uid, userName, email,photo }, { rejectWithValue }) => {
+    async ({ uid, userName, email, photo }, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${BASE_URL}/google-login`, { uid, userName, email ,photo});
+            const response = await axios.post(`${BASE_URL}/google-login`, { uid, userName, email, photo });
             sessionStorage.setItem('token', response.data.token);
             sessionStorage.setItem('userId', response.data.user._id);
             return response.data;
@@ -234,7 +262,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.loading = false;
                 state.error = null;
-                
+
                 state.message = action.payload?.message || "Google Login successful";
                 // if (action.payload?.message) {
                 //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
@@ -246,7 +274,7 @@ const authSlice = createSlice({
                 state.message = action.payload?.message || "Google Login Failed";
                 // enqueueSnackbar(state.message, { variant: 'error' });
             })
-          
+
             // .addCase(updateUser.fulfilled, (state, action) => {
             //     state.user = action.payload.users; // Assuming the API returns the updated user data
             //     state.loading = false;
@@ -271,6 +299,26 @@ const authSlice = createSlice({
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Failed to create plan";
                 // enqueueSnackbar(state.message, { variant: 'error' });
+            })
+            .addCase(mobileOtp.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                state.message = action.payload.message || "OTP sent successfully"; // Assuming the API returns a success message
+            })
+            .addCase(mobileOtp.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload.message;
+                state.message = action.payload?.message || "Failed to send OTP"; // Default error message
+            })
+            .addCase(verifyMobileOtp.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                state.message = action.payload.message || "OTP Verify successfully"; // Assuming the API returns a success message
+            })
+            .addCase(verifyMobileOtp.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload.message;
+                state.message = action.payload?.message || "Failed to verify OTP"; // Default error message
             });
     },
 });

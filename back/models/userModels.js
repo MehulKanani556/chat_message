@@ -4,16 +4,16 @@ const userSchema = mongoose.Schema(
   {
     userName: {
       type: String,
-      require: true,
+      // require: true,
     },
     email: {
       type: String,
-      require: true,
-      unique: true,
+      // require: true,
+      // unique: true,
     },
     password: {
       type: String,
-      require: true,
+      // require: true,
     },
     otp: {
       type: Number,
@@ -21,11 +21,11 @@ const userSchema = mongoose.Schema(
     photo: {
       type: String,
     },
-    phone: {
+    mobileNumber: {
       type: String,
     },
     dob: {
-      type: Date, 
+      type: Date,
     },
     bio: {
       type: String,

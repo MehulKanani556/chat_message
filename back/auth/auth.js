@@ -2,6 +2,10 @@ const user = require('../models/userModels')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const nodemailer = require('nodemailer')
+const twilio = require('twilio')
+
+// Initialize Twilio client
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 exports.userLogin = async (req, res) => {
     try {
@@ -145,3 +149,73 @@ exports.changePassword = async (req, res) => {
         return res.status(500).json({ status: 500, message: error.message })
     }
 }
+
+exports.sendOtpToMobile = async (req, res) => {
+    try {
+        let { mobileNumber } = req.body;
+
+        // Generate a random OTP
+        let otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+
+        // Send OTP via SMS
+        await twilioClient.messages.create({
+            body: `Your OTP is: ${otp}`,
+            from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+            to: mobileNumber
+        });
+
+        // Optionally, save the OTP to the user's record in the database
+        let checkUser = await user.findOne({ mobileNumber });
+        if (!checkUser) {
+            // If user not found, create that user
+            checkUser = new user({ mobileNumber, otp });
+        } else {
+            checkUser.otp = otp;
+        }
+        await checkUser.save();
+
+        return res.status(200).json({ status: 200, message: "OTP sent successfully." });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: error.message });
+    }
+};
+
+exports.verifyMobileOtp = async (req, res) => {
+    try {
+        const { mobileNumber, otp } = req.body;
+
+        // Find the user by mobile number
+        let userRecord = await user.findOne({ mobileNumber });
+        if (!userRecord) {
+            return res.status(404).json({ status: 404, message: "User not found." });
+        }
+        
+
+        // Check if the OTP matches
+        if (userRecord.otp != otp) {
+            return res.status(400).json({ status: 400, message: "Invalid OTP." });
+        }
+
+        // Optionally, you can clear the OTP after successful verification
+        userRecord.otp = null; // Clear OTP after verification
+        await userRecord.save();
+
+        // Generate a token for the user
+        // const token = jwt.sign({ id: userRecord._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        let token = await jwt.sign({ _id: userRecord._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
+
+        // Prepare user information to be sent
+        const userInfo = {
+            id: userRecord._id,
+            userName: userRecord.userName,
+            mobileNumber: userRecord.mobileNumber,
+            photo: userRecord.photo,
+        };
+
+        return res.status(200).json({ status: 200, message: "OTP verified successfully.", token, user: userInfo });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: error.message });
+    }
+};
