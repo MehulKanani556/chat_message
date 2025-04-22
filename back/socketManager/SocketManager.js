@@ -340,6 +340,7 @@ function handleVoiceCallRequest(socket, data) {
   if (targetSocketId) {
     socket.to(targetSocketId).emit("voice-call-request", {
       fromEmail: data.fromEmail,
+      toEmail:data.toEmail,
       signal: data.signal,
       type: data.type,
     });
@@ -446,7 +447,7 @@ async function handleCreateGroup(socket, data) {
           receiverId: data._id,
           content: {
             type: "system",
-            content: `**${createdByUser.userName}** added **${memberName.userName}** to this conversation`,
+            content: `**${createdByUser.userName}** added **${memberName.userName}** `,
           },
         });
       }

@@ -4,11 +4,11 @@ const { saveMessage } = require("./messageController");
 
 async function createGroup(req, res) {
   try {
-    const { userName, members, createdBy } = req.body;
+    const { userName, members, createdBy, bio } = req.body;
     if(req.file){
         req.body.photo = req.file.path
     }
-    const group = await Group.create({ userName, members, createdBy, photo: req.body.photo ? req.body.photo : undefined });
+    const group = await Group.create({ userName, members, createdBy, photo: req.body.photo ? req.body.photo : undefined, bio:bio });
     if(!group){
         return res.status(400).json({ error: "Failed to create group", code: 400 });
     }
@@ -70,7 +70,7 @@ async function addParticipants(req, res) {
       });
      }
 
-    return res.status(200).json({ group }); 
+    return res.status(200).json({status:true,  group }); 
   } catch (error) {
     console.error("Error adding participants:", error);
     return res
