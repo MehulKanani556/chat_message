@@ -240,3 +240,16 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+
+.toggle-bg {
+  background-color: #4c51bf; /* Change to your desired color */
+}
+
+input:checked + .toggle-bg {
+  background-color: #4c51bf; /* Change to your desired color */
+}
+
+input:checked + .toggle-bg .toggle-dot {
+  transform: translateX(100%);
+}

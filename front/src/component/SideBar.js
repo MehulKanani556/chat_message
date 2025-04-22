@@ -117,9 +117,9 @@ const Sidebar = ({ user, onProfileClick }) => {
       border-gray-400 dark:border-gray-700z
       transition-all duration-300
       z-50"
-      // style={{
-      //   boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)"
-      // }}
+    // style={{
+    //   boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)"
+    // }}
     >
       <div className="
         flex md:flex-col
@@ -217,15 +217,21 @@ const Sidebar = ({ user, onProfileClick }) => {
           {/* Logout Modal */}
           {isLogoutModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
-              <div className="bg-white rounded-lg p-10 dark:bg-primary-dark">
-                <h3 className="text-lg font-semibold mb-8 dark:text-gray-200">
-                  Are you sure you want to logout?
+              <div className="bg-white rounded-lg p-8  dark:bg-primary-dark">
+                <h3 className="text-lg text-center font-semibold mb-6 dark:text-gray-200">
+                  Logout
                 </h3>
-                <div className="flex justify-center space-x-4">
+
+                <h3 className="w-2/3 text-center mx-auto font-semibold mb-8 text-black/50 dark:text-gray-200/50">
+                  Are you sure to Logout
+                  from your account?
+                </h3>
+
+                <div className="flex justify-center space-x-4 font-medium">
                   <button
                     onClick={() => setIsLogoutModalOpen(false)}
-                    className="px-4 py-2 bg-gray-500 text-white rounded"
-                    style={{ backgroundColor: "white", color: "black", border: "1px solid black" }}
+                    className="px-4 py-2 w-full rounded dark:text-white border border-black dark:border-white "
+                    // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
                   >
                     Cancel
                   </button>
@@ -234,10 +240,10 @@ const Sidebar = ({ user, onProfileClick }) => {
                       setIsLogoutModalOpen(false);
                       handleLogout();
                     }}
-                    className="px-4 py-2 text-white rounded"
+                    className="px-4 py-2 w-full text-white rounded"
                     style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
                   >
-                    Logout
+                    Yes, Sign out
                   </button>
                 </div>
               </div>
