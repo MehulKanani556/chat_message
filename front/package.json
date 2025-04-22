@@ -27,6 +27,7 @@
     "redux-persist": "^6.0.0",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.8.1",
+    "styled-components": "^6.1.17",
     "wavesurfer.js": "^7.9.1",
     "web-vitals": "^4.2.4",
     "yup": "^1.6.1"

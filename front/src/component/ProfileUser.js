@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaChevronUp, FaChevronDown, FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaDownload, FaChevronRight, FaChevronLeft, FaFileVideo, FaFileArchive, FaLink } from 'react-icons/fa';
 import { CgProfile } from 'react-icons/cg';
 import { FaPaperclip } from 'react-icons/fa';
@@ -7,12 +7,29 @@ import { IoCameraOutline } from 'react-icons/io5';
 import { ImCross } from 'react-icons/im';
 import { HiOutlineDownload } from "react-icons/hi";
 import { PiLinkSimpleBold } from "react-icons/pi";
+
+// Function to fetch URL titles
+const fetchUrlTitle = async (url) => {
+  try {
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, 'text/html');
+    const title = doc.querySelector('title')?.textContent || 'No title available';
+    return title;
+  } catch (error) {
+    console.error("Error fetching URL title:", error);
+    return 'Could not fetch title';
+  }
+};
+
 export default function ProfileUser({ isOpen, onClose, selectedChat, messages, handleImageClick }) {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
   const [attachFile, setAttachFile] = useState(false)
   const [activeTab, setActiveTab] = useState('media');
+  const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
 
   const toggleAccordion = () => {
     setUserInfoOpen(!userInfoOpen);
@@ -58,6 +75,26 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
     }
     return encryptedText; // Return original text if not encrypted
   }
+
+  // Fetch titles for all URLs when messages change
+  useEffect(() => {
+    const fetchTitles = async () => {
+      const titles = {};
+      const urls = messages.flatMap(message => {
+        const content = decryptMessage(message.content.content);
+        const foundUrls = content?.match(/https?:\/\/[^\s]+/g);
+        return foundUrls ? [...new Set(foundUrls)] : [];
+      });
+
+      for (const url of urls) {
+        titles[url] = await fetchUrlTitle(url);
+      }
+      setUrlTitles(titles);
+    };
+
+    fetchTitles();
+  }, [messages]);
+
   return (
     <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
       {attachFile ?
@@ -299,41 +336,43 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                               // Group duplicate URLs
                               const uniqueUrls = [...new Set(urls)];
                               return uniqueUrls.map((url, urlIndex) => {
-                                const count = urls.filter(u => u === url).length;
-                                // Extract domain for favicon
                                 const domain = new URL(url).hostname;
+
                                 return (
-                                  <div key={`${index}-${urlIndex}`} className="flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50">
-                                    <div className='min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative'>
-
-                                      <PiLinkSimpleBold className='w-[16px] h-[16px] absolute' />
-
-                                      <img
-                                        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-                                        alt=""
-                                        className="w-[24px] h-[24px] relative z-10"
-                                        onLoad={(e) => {
-                                          // Show the image only if it's a valid favicon (not a generic fallback)
-                                          // This check might need adjustment based on the actual response
-                                          if (e.target.width > 0 && e.target.height > 0) {
-                                            e.target.style.display = 'block';
-                                          } else {
+                                  <div key={`${index}-${urlIndex}`} className="flex flex-col bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50 p-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className='min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative'>
+                                        <PiLinkSimpleBold className='w-[16px] h-[16px] absolute' />
+                                        <img
+                                          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                                          alt=""
+                                          className="w-[24px] h-[24px] relative z-10"
+                                          onLoad={(e) => {
+                                            if (e.target.width > 0 && e.target.height > 0) {
+                                              e.target.style.display = 'block';
+                                            } else {
+                                              e.target.style.display = 'none';
+                                            }
+                                          }}
+                                          onError={(e) => {
                                             e.target.style.display = 'none';
-                                          }
-                                        }}
-                                        onError={(e) => {
-                                          e.target.style.display = 'none';
-                                        }}
-                                      />
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="flex-grow">
+                                        {/* Display the title */}
+                                        <div className=" text-primary-dark dark:text-white ">{urlTitles[url] || 'Loading title...'}</div>
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-sm break-all  flex gap-2 items-center text-primary-dark/50 dark:text-primary-light/50 hover:underline"
+                                        >
+                                        <span className='text-xl'>•</span>
+                                        <span>{url}</span>
+                                        </a>
+                                      </div>
                                     </div>
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex-grow ml-2 break-all text-primary-dark dark:text-white"
-                                    >
-                                      {url}
-                                    </a>
                                   </div>
                                 );
                               });

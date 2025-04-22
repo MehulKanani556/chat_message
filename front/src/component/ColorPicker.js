@@ -31,7 +31,7 @@ const ColorPicker = () => {
         {colorOptions.map((color) => (
           <div key={color.value} className="flex flex-col items-center">
             <button
-              className={`w-6 h-6 rounded-full mb-1 border-2 ${
+              className={`w-6 h-6 rounded-full mb-1 border-[1px] ${
                 selectedColor === color.value
                   ? "border-gray-800 dark:border-white"
                   : "border-transparent"
