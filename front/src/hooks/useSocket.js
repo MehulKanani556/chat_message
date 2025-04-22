@@ -24,7 +24,8 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com"; // Move to environment variable in production
+const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com"; 
+// const SOCKET_SERVER_URL = "http://localhost:5000"; 
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -495,6 +496,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       console.log("Incoming voice call from:", data.fromEmail);
       setIncomingCall({
         fromEmail: data.fromEmail,
+        toEmail:data.toEmail,
         signal: data.signal,
         type: data.type,
       });
@@ -981,6 +983,21 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           }
         }
       });
+
+      Array.from(callParticipants).forEach((participantId) => {
+        if (participantId !== userId) {
+          if (callStartTime) {
+            socketRef.current.emit("save-call-message", {
+              senderId: userId,
+              receiverId: participantId,
+              callType: "video",
+              status: "group",
+              duration: finalDuration,
+              timestamp: new Date(),
+            });
+          }
+        }
+      });
     } else {
       // Save call ended message with duration if call was connected
       Array.from(callParticipants).forEach((participantId) => {
@@ -994,22 +1011,24 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           }
         }
       });
+
+      Array.from(callParticipants).forEach((participantId) => {
+        if (participantId !== userId) {
+          if (callStartTime) {
+            socketRef.current.emit("save-call-message", {
+              senderId: userId,
+              receiverId: participantId,
+              callType: "video",
+              status: "ended",
+              duration: finalDuration,
+              timestamp: new Date(),
+            });
+          }
+        }
+      });
     }
 
-    Array.from(callParticipants).forEach((participantId) => {
-      if (participantId !== userId) {
-        if (callStartTime) {
-          socketRef.current.emit("save-call-message", {
-            senderId: userId,
-            receiverId: participantId,
-            callType: "video",
-            status: "ended",
-            duration: finalDuration,
-            timestamp: new Date(),
-          });
-        }
-      }
-    });
+    
 
     // Reset call-related states
     setCallStartTime(null);
@@ -1062,7 +1081,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         duration: null,
       });
     }
-
     setIsVoiceCalling(false);
     setIsVideoCalling(false);
     setIncomingCall(null);

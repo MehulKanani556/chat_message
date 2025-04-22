@@ -408,6 +408,7 @@ exports.getAllMessageUsers = async (req, res) => {
                 createdBy: 1,
                 createdAt: 1,
                 photo: 1,
+                bio:1,
               },
             },
           ],
@@ -472,7 +473,6 @@ exports.getAllMessageUsers = async (req, res) => {
           profilePhoto: 1,
           photo: 1,
           createdAt: 1,
-
           phone: 1,
           dob: 1,
           bio: 1,
@@ -527,6 +527,7 @@ exports.getAllMessageUsers = async (req, res) => {
         createdBy: group.createdBy,
         isGroup: true,
         messages: groupMessages,
+        bio:group.bio,
       });
     }
 

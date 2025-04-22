@@ -37,11 +37,11 @@ const ChatList = ({
   }, [archive, searchInput, allMessageUsers]);
 
   // Filter all users based on search input
-  const filteredAllUsers = allUsers.filter(
+  const filteredAllUsers = allUsers?.filter(
     (user) =>
       !user.members &&
       user._id !== currentUser &&
-      user.userName.toLowerCase().includes(searchInput.toLowerCase())
+      user.userName?.toLowerCase().includes(searchInput?.toLowerCase())
   );
 
   // Add decryption function

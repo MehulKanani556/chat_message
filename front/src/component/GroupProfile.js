@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ImCross, ImImages } from "react-icons/im";
-import { MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
+import { MdBlock, MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
 import { useDispatch } from "react-redux";
 import {
   updateGroup,
@@ -29,6 +29,7 @@ const GroupProfile = ({
   userId,
   socket,
   IMG_URL,
+  setSelectedChat
 }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -60,23 +61,7 @@ const GroupProfile = ({
       }
     }
   };
-
-  const handleUserNameUpdate = () => {
-    dispatch(
-      updateGroup({
-        groupId: selectedChat._id,
-        userName: editedUserName,
-        members: selectedChat?.members,
-      })
-    );
-    socket.emit("update-group", {
-      groupId: selectedChat._id,
-      members: selectedChat?.members.filter((id) => id !== userId),
-    });
-    dispatch(getAllMessageUsers());
-    setIsEditing(false);
-  };
-
+  
   const handleLeaveGroup = () => {
     dispatch(leaveGroup({ groupId: selectedChat._id, userId: userId }));
     socket.emit("update-group", {
@@ -85,6 +70,7 @@ const GroupProfile = ({
     });
     dispatch(getAllMessageUsers());
     setIsGroupModalOpen(false);
+    setSelectedChat(null);
   };
 
   const handleRemoveMember = (memberId) => {
@@ -204,7 +190,7 @@ const GroupProfile = ({
       }}
     >
       <div className="flex justify-between items-center p-4 py-6">
-        <h2 className="text-lg font-bold">Group Info</h2>
+        <h2 className="text-lg font-bold"> Group Info</h2>
         <button
           onClick={() => setIsGroupModalOpen(false)}
           className="text-gray-500 hover:text-gray-700"
@@ -397,7 +383,10 @@ const GroupProfile = ({
         ref={containerRef}
         className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2"
       >
-        {selectedChat?.members.map((member, index) => {
+        {selectedChat?.members
+        .slice()
+        .sort((a, b) => (a == userId ? -1 : b == userId ? 1 : 0))
+        .map((member, index) => {
           const user = allUsers.find((user) => user._id === member);
           const isMenuOpen = menuOpen === user._id;
 
@@ -428,7 +417,10 @@ const GroupProfile = ({
               </span>
 
               <button
-                className="ml-auto text-md rounded-full px-2 py-1"
+               className={`ml-auto text-md rounded-full px-2 py-1 ${
+                isMenuOpen ? 'text-primary' : '',
+                member === userId ? 'hidden': "block"
+              }`}
                 onClick={() => handleMenuToggle(user._id, index)}
               >
                 <BsThreeDotsVertical />
@@ -441,11 +433,11 @@ const GroupProfile = ({
                     openDirection === "top" ? "bottom-5" : "top-5"
                   } right-8`}
                 >
-                  <button className="block px-4 py-2 text-sm  ">
-                    Block
+                  <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
+                  <MdBlock className="mr-2"/> Block
                   </button>
-                  <button className=" px-4 py-2 text-sm text-red-600 flex">
-                  <RiDeleteBin6Line /> Remove
+                  <button className=" px-4 py-2 text-sm text-red-600  flex items-center w-full hover:bg-opacity-25"  onClick={() => handleRemoveMember(member)}>
+                  <RiDeleteBin6Line  className="mr-2"/> Remove
                   </button>
                 </div>
               )}
@@ -475,7 +467,7 @@ const GroupProfile = ({
         <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
           <button
             className="w-full flex justify-between items-center text-red-600"
-            onClick={() => handleRemoveMember(userId)}
+            onClick={() => handleLeaveGroup(userId)}
           >
             <div className="flex items-center space-x-2">
               <FiLogOut size={18} className={""} />
