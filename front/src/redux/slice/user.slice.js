@@ -10,7 +10,6 @@ const handleErrors = (error, dispatch, rejectWithValue) => {
 
   return rejectWithValue(error.response?.data || { message: errorMessage });
 };
-
 const initialState = {
   user: null,
   allCallUsers: [],
@@ -579,6 +578,41 @@ export const blockUser = createAsyncThunk(
     }
   }
 );
+export const deleteChat = createAsyncThunk(
+  "user/deleteChat",
+  async ({ selectedUserId }, { rejectWithValue }) => {
+    try {
+      const token = await sessionStorage.getItem("token");
+      const response = await axios.post(`${BASE_URL}/deleteChat`, { selectedUserId }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+export const pinChat = createAsyncThunk(
+  "user/pinChat",
+  async ({ selectedUserId }, { rejectWithValue }) => {
+    try {
+      const token = await sessionStorage.getItem("token");
+      const response = await axios.post(`${BASE_URL}/pinChat`, { selectedUserId }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+
+
 
 const userSlice = createSlice({
   name: "user",
@@ -866,7 +900,28 @@ const userSlice = createSlice({
         state.error = action.payload.message;
         state.message =
           action.payload?.message || "Failed to update block status";
+      })
+      .addCase(deleteChat.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "Chat deleted successfully";
+      })
+      .addCase(deleteChat.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message = action.payload?.message || "Failed to delete chat";
+      })
+      .addCase(pinChat.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "Chat pinChat successfully";
+      })
+      .addCase(pinChat.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message = action.payload?.message || "Failed to pinChat chat";
       });
+      
   },
 });
 

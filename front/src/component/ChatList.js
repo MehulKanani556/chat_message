@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
+import { SlPin } from "react-icons/sl";
 const ChatList = ({
   allMessageUsers,
   item,
@@ -21,8 +22,7 @@ const ChatList = ({
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
-  const { user } =
-    useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
     let filteredUsers = [];
@@ -119,6 +119,13 @@ const ChatList = ({
                   // Prioritize the current user
                   if (a._id === currentUser) return -1;
                   if (b._id === currentUser) return 1;
+                  // Check if users are pinned
+                const isAPinned = user?.pinChatFor?.includes(a._id);
+                const isBPinned = user?.pinChatFor?.includes(b._id);
+
+                // If one is pinned and other is not, prioritize pinned
+                if (isAPinned && !isBPinned) return -1;
+                if (!isAPinned && isBPinned) return 1;
 
                   const lastMessageA = Array.isArray(a.messages)
                     ? [...a.messages].sort(
@@ -752,6 +759,8 @@ const ChatList = ({
                                 </>
                               )}
                             </div>
+                            {user.pinChatFor?.includes(item?._id)? <SlPin className="text-lg" />: ""}
+                            
                             {item.messages?.filter(
                               (message) =>
                                 message.receiver === currentUser &&

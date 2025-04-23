@@ -11,7 +11,6 @@ import ColorPicker from "./ColorPicker";
 import { initializePrimaryColor } from "../utils/themeUtils";
 import { ImImages } from 'react-icons/im';
 import { SlPencil } from "react-icons/sl";
-import styled from 'styled-components';
 const Setting = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();

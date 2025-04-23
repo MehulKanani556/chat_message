@@ -1,5 +1,6 @@
 const groupModel = require("../models/groupModel");
 const Message = require("../models/messageModel");
+const Users = require("../models/userModels");
 
 exports.saveMessage = async (messageData) => {
   try {
@@ -13,6 +14,21 @@ exports.saveMessage = async (messageData) => {
       isBlocked: messageData.isBlocked,
     });
     await message.save();
+
+    const sender = messageData.senderId;
+    const receiver = messageData.receiverId;
+    
+    await Users.updateMany(
+      {
+        deleteChatFor: { $in: [sender, receiver] },
+      },
+      {
+        $pull: {
+          deleteChatFor: { $in: [sender, receiver] },
+        },
+      }
+    );
+
     return message;
   } catch (error) {
     console.error("Error saving message:", error);
