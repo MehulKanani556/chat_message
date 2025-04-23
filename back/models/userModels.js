@@ -49,7 +49,15 @@ const userSchema = mongoose.Schema(
     notification:{
       type:Boolean,
       default:true
-    }
+    },
+    deleteChatFor: {
+      type: Array,
+      default: [],
+    },
+    pinChatFor:{
+      type:Array,
+      default:[],
+    },
   },
   {
     timestamps: true,

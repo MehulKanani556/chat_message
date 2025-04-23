@@ -337,6 +337,7 @@ exports.getAllMessageUsers = async (req, res) => {
           isUser: {
             $cond: [{ $ifNull: ["$userData._id", null] }, true, false],
           },
+          deleteChatFor: { $ifNull: ["$userData.deleteChatFor", null] },
         },
       },
 
@@ -364,6 +365,7 @@ exports.getAllMessageUsers = async (req, res) => {
                 archiveUsers: 1,
                 blockedUsers: 1,
                 isUser: { $literal: true },
+                deleteChatFor: 1,
               },
             },
           ],
@@ -385,6 +387,7 @@ exports.getAllMessageUsers = async (req, res) => {
           archiveUsers: { $first: "$archiveUsers" },
           blockedUsers: { $first: "$blockedUsers" },
           isUser: { $first: "$isUser" },
+          deleteChatFor: { $first: "$deleteChatFor" },
         },
       },
 
@@ -408,7 +411,8 @@ exports.getAllMessageUsers = async (req, res) => {
                 createdBy: 1,
                 createdAt: 1,
                 photo: 1,
-                bio:1,
+                bio: 1,
+                deleteChatFor: 1,
               },
             },
           ],
@@ -430,7 +434,7 @@ exports.getAllMessageUsers = async (req, res) => {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$$isUser", true] }, 
+                    { $eq: ["$$isUser", true] },
                     {
                       $or: [
                         {
@@ -481,6 +485,7 @@ exports.getAllMessageUsers = async (req, res) => {
           isUser: 1,
           directMessages: 1,
           groups: 1,
+          deleteChatFor: 1,
         },
       },
     ];
@@ -505,9 +510,21 @@ exports.getAllMessageUsers = async (req, res) => {
     // Convert Map values to array to get unique groups
     const uniqueGroups = Array.from(uniqueGroupsMap.values());
 
+    // Get current user's data to check deleteChatFor
+    const currentUser = results.find(
+      (r) => r._id.toString() === req.user._id.toString()
+    );
+
+    // console.log("currentUser", currentUser);
+
     // Now fetch messages for each group
     const groupsWithMessages = [];
     for (const group of uniqueGroups) {
+      // Skip groups that are in deleteChatFor
+      if (currentUser?.deleteChatFor?.includes(group._id.toString())) {
+        continue;
+      }
+
       const groupMessages = await message
         .find({
           receiver: group._id,
@@ -527,26 +544,58 @@ exports.getAllMessageUsers = async (req, res) => {
         createdBy: group.createdBy,
         isGroup: true,
         messages: groupMessages,
-        bio:group.bio,
+        bio: group.bio,
       });
     }
 
-    // Format the user results
-    const formattedUsers = userResults.map((user) => ({
-      _id: user._id,
-      userName: user.userName,
-      email: user.email,
-      photo: user.photo,
-      profilePhoto: user.profilePhoto,
-      createdAt: user.createdAt,
-      phone: user.phone,
-      dob: user.dob,
-      bio: user.bio,
-      archiveUsers: user.archiveUsers,
-      blockedUsers: user.blockedUsers,
-      isUser: true,
-      messages: user.directMessages || [],
-    }));
+    // Format the user results and filter out users in deleteChatFor without messages
+    const formattedUsers = userResults
+      .filter((user) => {
+
+        const isInDeleteChatFor = currentUser?.deleteChatFor?.includes(
+          user._id.toString()
+        );
+
+        let hasMessages ;
+        if(isInDeleteChatFor){
+          hasMessages =
+          user?.directMessages &&
+          user?.directMessages.filter((u) => {
+            const deletedForStrings = u.deletedFor.map((id) => id.toString());
+            return !deletedForStrings.includes(currentUser._id.toString());
+          });
+        console.log(
+          "hasMessages",
+          hasMessages.length,
+          isInDeleteChatFor,
+          currentUser._id.toString()
+        );
+        }
+
+        if(hasMessages && hasMessages?.length <= 0){
+          return false
+        }else{
+          return true
+        }
+       
+        // Keep user if they have messages or are not in deleteChatFor
+        // return (hasMessages.length <= 0 && isInDeleteChatFor);
+      })
+      .map((user) => ({
+        _id: user._id,
+        userName: user.userName,
+        email: user.email,
+        photo: user.photo,
+        profilePhoto: user.profilePhoto,
+        createdAt: user.createdAt,
+        phone: user.phone,
+        dob: user.dob,
+        bio: user.bio,
+        archiveUsers: user.archiveUsers,
+        blockedUsers: user.blockedUsers,
+        isUser: true,
+        messages: user.directMessages || [],
+      }));
 
     return res.status(200).json({
       status: 200,
@@ -832,6 +881,71 @@ exports.blockUser = async (req, res) => {
         message: "User blocked successfully",
       });
     }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+exports.deleteChat = async (req, res) => {
+  try {
+    const { selectedUserId } = req.body;
+    const currentUser = req.user._id;
+    const userData = await user.findById(currentUser);
+    if (!userData) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+    if (userData.deleteChatFor.includes(selectedUserId)) {
+      // Unblock user
+      userData.deleteChatFor = userData.deleteChatFor.filter(
+        (id) => id !== selectedUserId
+      );
+    } else {
+      userData.deleteChatFor.push(selectedUserId);
+    }
+    await userData.save();
+    return res.status(200).json({
+      status: 200,
+      message: "Chat deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+
+exports.pinChat = async (req, res) => {
+  try {
+    const { selectedUserId } = req.body;
+    const currentUser = req.user._id;
+    const userData = await user.findById(currentUser);
+    if (!userData) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+    if (userData.pinChatFor.includes(selectedUserId)) {
+      // Unblock user
+      userData.pinChatFor = userData.pinChatFor.filter(
+        (id) => id !== selectedUserId
+      );
+    } else {
+      userData.pinChatFor.push(selectedUserId);
+    }
+    await userData.save();
+    return res.status(200).json({
+      status: 200,
+      message: "Chat deleted successfully",
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({

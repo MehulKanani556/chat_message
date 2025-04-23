@@ -74,6 +74,8 @@ import {
   getAllCallUsers,
   archiveUser,
   blockUser,
+  deleteChat,
+  pinChat,
 } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
@@ -151,6 +153,7 @@ const Chat2 = () => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   //changes end
   const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
+  const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
 
   const [participantOpen, setParticipantOpen] = useState(false);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
@@ -1330,6 +1333,17 @@ const Chat2 = () => {
     });
   };
 
+  const handleDeleteChat = async () => {
+    await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
+      dispatch(deleteChat({ selectedUserId: selectedChat._id })).then(() => {
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+        dispatch(getAllMessageUsers());
+        setIsDeleteChatModalOpen(false);
+        setSelectedChat('')
+      });
+    });
+  };
+
   // Add useEffect to handle input focus when chat is selected
   useEffect(() => {
     if (selectedChat && inputRef.current) {
@@ -1838,9 +1852,18 @@ const Chat2 = () => {
                                   <ul>
                                      <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                      onClick={async () => {
+                                        await dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(getUser(currentUser));
+                                        await dispatch(getAllMessageUsers());
+                                      }}
                                     >
+                                     { console.log(user)}
+                                      
                                       <SlPin className="text-lg" />{" "}
-                                        Pin Chat
+                                      {user.pinChatFor?.includes(selectedChat?._id)
+                                        ? "UnPin Chat"
+                                        : "Pin Chat"}
                                     </li>
                                     <li
                                       onClick={() => {
@@ -1854,7 +1877,7 @@ const Chat2 = () => {
                                    
                                     <li
                                       onClick={() => {
-                                        setIsClearChatModalOpen(true);
+                                        setIsDeleteChatModalOpen(true);
                                       }}
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                     >
@@ -1950,16 +1973,27 @@ const Chat2 = () => {
                                   ref={mobileMenuRef}
                                 >
                                   <div className="py-2 w-48">
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        setIsClearChatModalOpen(true);
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                                      <span>Clear Chat</span>
-                                    </button>
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsClearChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                                        <span>Clear Chat</span>
+                                      </button>
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsDeleteChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <RiDeleteBinLine className="w-5 h-5 mr-2" />
+                                        <span>Delete Chat</span>
+                                      </button>
 
                                     <button
                                       className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
@@ -2264,7 +2298,7 @@ const Chat2 = () => {
                                 <button
                                   className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
                                   onClick={() => {
-                                    setIsClearChatModalOpen(true);
+                                    setIsDeleteChatModalOpen(true);
                                   }}
                                 >
                                   Delete Chat
@@ -3149,6 +3183,39 @@ const Chat2 = () => {
                 className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
               >
                 Clear Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeleteChatModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Delete Chat</p>
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >   
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to delete this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Delete Chat
               </button>
             </div>
           </div>
