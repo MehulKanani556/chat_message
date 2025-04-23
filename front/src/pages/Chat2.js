@@ -21,6 +21,8 @@ import {
   FaUserPlus,
   FaFile,
   FaFileAudio,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
 import {
@@ -38,7 +40,7 @@ import {
   LuScreenShareOff,
 } from "react-icons/lu";
 import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo, GoMute, GoPlusCircle } from "react-icons/go";
+import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
 import {
@@ -151,7 +153,7 @@ const Chat2 = () => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   //changes end
   const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
-
+  const [videoDuration, setVideoDuration] = useState(null);
   const [participantOpen, setParticipantOpen] = useState(false);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isEditingDob, setIsEditingDob] = useState(false);
@@ -182,6 +184,8 @@ const Chat2 = () => {
 
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [creatGroup, setCreatGroup] = useState(false)
+
+  const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
 
   //===========Use the custom socket hook===========
   const {
@@ -1547,6 +1551,20 @@ const Chat2 = () => {
     }
   }, [user, selectedChat?._id]);
 
+  // Function to get video duration
+  const getVideoDuration = (videoElement) => {
+    return videoElement.duration; // Return the duration of the video
+  };
+
+  // Function to handle video metadata loading
+  const handleVideoMetadataLoad = (messageId, videoElement) => {
+    const duration = getVideoDuration(videoElement); // Get the duration using the utility function
+    setVideoDurations((prev) => ({
+      ...prev,
+      [messageId]: duration, // Store duration by message ID
+    }));
+  };
+
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       <Sidebar
@@ -1571,8 +1589,8 @@ const Chat2 = () => {
 
           <div
             className={`${window.innerWidth <= 600
-                ? "ml-0 w-full"
-                : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+              ? "ml-0 w-full"
+              : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
               } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
           >
             {showGroups && (
@@ -1607,12 +1625,12 @@ const Chat2 = () => {
           <>
             <div
               className={` flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
-                  (isGroupModalOpen ||
-                    isModalOpen ||
-                    isGroupCreateModalOpen ||
-                    isUserProfileModalOpen)
-                  ? "w-0 opacity-0"
-                  : "w-full opacity-100"
+                (isGroupModalOpen ||
+                  isModalOpen ||
+                  isGroupCreateModalOpen ||
+                  isUserProfileModalOpen)
+                ? "w-0 opacity-0"
+                : "w-full opacity-100"
                 } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
             >
               {(!(
@@ -1712,8 +1730,8 @@ const Chat2 = () => {
                               ) : (
                                 <div
                                   className={`text-sm ${onlineUsers.includes(selectedChat?._id)
-                                      ? "text-green-500"
-                                      : "text-gray-500"
+                                    ? "text-green-500"
+                                    : "text-gray-500"
                                     }`}
                                 >
                                   {onlineUsers.includes(selectedChat?._id)
@@ -1808,7 +1826,7 @@ const Chat2 = () => {
                                   </svg>
                                 </div>
                               )}
-                              
+
                               <IoVideocamOutline
                                 className="w-6 h-6 cursor-pointer"
                                 onClick={() => handleMakeCall("video")}
@@ -1836,11 +1854,11 @@ const Chat2 = () => {
                               {menuOpen && (
                                 <div className="optionMenu absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
                                   <ul>
-                                     <li
+                                    <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                     >
                                       <SlPin className="text-lg" />{" "}
-                                        Pin Chat
+                                      Pin Chat
                                     </li>
                                     <li
                                       onClick={() => {
@@ -1851,7 +1869,7 @@ const Chat2 = () => {
                                       <MdOutlineCancel className="text-lg" />{" "}
                                       Clear Chat
                                     </li>
-                                   
+
                                     <li
                                       onClick={() => {
                                         setIsClearChatModalOpen(true);
@@ -1864,23 +1882,23 @@ const Chat2 = () => {
                                     <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
                                       {/* <GoMute className="text-lg" />  */}
                                       <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor"/>
+                                        <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
                                       </svg>
                                       Mute
                                     </li>
-                                  {selectedChat?.members && (
-                                     <li
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                      onClick={() => {
-                                        setIsModalOpen(true);
-                                      }}>
-                                      <RiUserAddLine
-                                        title="Add to group"
-                                        data-tooltip="Add to group"
-                                        data-tooltip-delay="0"
-                                        data-tooltip-duration="0"
-                                        className=" cursor-pointer text-lg"/>
-                                      Add Members
+                                    {selectedChat?.members && (
+                                      <li
+                                        className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                        onClick={() => {
+                                          setIsModalOpen(true);
+                                        }}>
+                                        <RiUserAddLine
+                                          title="Add to group"
+                                          data-tooltip="Add to group"
+                                          data-tooltip-delay="0"
+                                          data-tooltip-duration="0"
+                                          className=" cursor-pointer text-lg" />
+                                        Add Members
                                       </li>
                                     )}
                                     <li
@@ -2291,8 +2309,8 @@ const Chat2 = () => {
                               <form
                                 onSubmit={handleSubmit}
                                 className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
-                                    ? "rounded-b-lg"
-                                    : "rounded-lg"
+                                  ? "rounded-b-lg"
+                                  : "rounded-lg"
                                   } px-4 py-2 w-full max-w-full`}
                               >
                                 <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
@@ -2495,13 +2513,12 @@ const Chat2 = () => {
                 )}
             </div>
 
-              <div
-                className={`transition-all duration-300 ease-in-out shrink-0 ${
-                  ((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
-                  isGroupCreateModalOpen ||
-                  (isUserProfileModalOpen && !selectedChat.members)
-                  ? "2xl:w-[380px] xs:w-full opacity-100"
-                  : "w-0 opacity-0"
+            <div
+              className={`transition-all duration-300 ease-in-out shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+                isGroupCreateModalOpen ||
+                (isUserProfileModalOpen && !selectedChat.members)
+                ? "2xl:w-[380px] xs:w-full opacity-100"
+                : "w-0 opacity-0"
                 }`}
               style={{
                 boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
@@ -2566,16 +2583,16 @@ const Chat2 = () => {
       {/*========== screen share ==========*/}
       <div
         className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
-            ? ""
-            : "hidden"
+          ? ""
+          : "hidden"
           }`}
       >
         <div
           className={`flex-1 relative ${isReceiving
-              ? "flex items-center justify-center"
-              : `grid gap-4 ${getGridColumns(
-                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-              )}`
+            ? "flex items-center justify-center"
+            : `grid gap-4 ${getGridColumns(
+              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+            )}`
             }`}
         >
           {/* Local video */}
@@ -2735,7 +2752,7 @@ const Chat2 = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-white/15 flex items-center justify-center z-[9999]">
           <div className="bg-black rounded-lg p-6 w-96 text-center">
 
-          <h3 className="text-2xl text-white">
+            <h3 className="text-2xl text-white">
               {
                 allUsers.find((user) => user._id === incomingCall.fromEmail)
                   ?.userName
@@ -2743,7 +2760,7 @@ const Chat2 = () => {
             </h3>
             <p className="text-gray-400 mb-4 animate-pulse">
               is Calling You.
-               {/* {incomingCall.type} call */}
+              {/* {incomingCall.type} call */}
             </p>
             <div className="w-20 h-20 mx-auto mb-10 rounded-full overflow-hidden">
               {/* Profile image or default avatar */}
@@ -2764,7 +2781,7 @@ const Chat2 = () => {
                 </div>
               )}
             </div>
-           
+
             <div className="flex justify-center gap-8">
               {/* {console.log(incomingCall.type)} */}
               <button
@@ -3085,17 +3102,122 @@ const Chat2 = () => {
         }}
       />
 
-      {((isProfileImageModalOpen && selectedProfileImage) ||
+      {/* {console.log("aa", isProfileImageModalOpen, isImageModalOpen, messages)} */}
+
+      {(
         (isImageModalOpen && selectedImage)) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="relative w-full h-full flex items-center justify-center p-8">
-              <img
-                src={
-                  isProfileImageModalOpen ? selectedProfileImage : selectedImage
-                }
-                alt="Profile"
-                className="max-w-full max-h-full object-contain"
-              />
+            <div className="relative w-full h-full flex items-center flex-col justify-center gap-2 p-8">
+              <div style={{ height: 'calc(100vh - 80px)' }} className="">
+                {selectedImage && ( // Conditionally render the selected media
+                  <div className="mb-4">
+                    {selectedImage.endsWith('.mp4') ? ( // Check if the selected media is a video
+                      <video
+                        src={selectedImage}
+                        alt="Selected Video"
+                        style={{ height: 'calc(100vh - 180px)', width: 'calc(100vh - 180px)' }}
+                        className="object-cover mb-2" // Adjust styles as needed
+                        controls // Add controls for video playback
+                        autoPlay
+                      />
+                    ) : (
+                      <img
+                        src={selectedImage}
+                        alt="Selected"
+                        style={{ height: 'calc(100vh - 180px)', width: 'calc(100vh - 180px)' }}
+                        className="object-cover mb-2" // Adjust styles as needed
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 items-end ">
+                {messages.map((message, index) => (
+                  <React.Fragment key={index}>
+                    {message.content && message.content.fileType && message.content.fileType.startsWith('image/') && (
+                      <div className="relative">
+                        {selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` &&
+
+                          <div className="absolute inset-0 bg-black opacity-60 z-10" >
+                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={()=>{handleDeleteMessage(message._id); setIsImageModalOpen(false);}}>
+                              <GoTrash />
+                            </div>
+                          </div>
+                        }
+
+                        <img
+                          className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                          src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                          alt={`Image ${index}`}
+                          onClick={() => {
+                            setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected image on click
+                          }}
+                        />
+                      </div>
+                    )}
+                    {message.content && message.content.fileType && message.content.fileType.startsWith('video/') && ( // Add video rendering
+                      <div className="flex flex-col items-center relative cursor-pointer" onClick={() => {
+                        setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected video on click
+                      }}>
+                        <div className="relative ">
+                          <div className="absolute inset-0 bg-black opacity-50 z-10" /> {/* Overlay layer */}
+                          <video
+                            className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                            src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                            alt={`Video ${index}`}
+                            onLoadedMetadata={(e) => {
+                              handleVideoMetadataLoad(message._id, e.target); // Call the function to update duration
+                            }}
+
+                          />
+                          {videoDurations[message._id] && (
+                            <span className="text-xs text-white absolute bottom-1 left-1 z-20">
+                              {Math.floor(videoDurations[message._id] / 60)}:
+                              {(Math.floor(videoDurations[message._id]) % 60).toString().padStart(2, '0')} {/* Format duration */}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* Add buttons to switch images and videos */}
+              <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
+                <button
+                  onClick={() => {
+                    // Filter messages to only include media messages (images and videos)
+                    const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
+                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length; // Wrap around to the last media
+                    setSelectedImage(`${IMG_URL}${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                  }}
+                  className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
+                >
+                  <span>
+                    <FaChevronLeft />
+                  </span>
+                </button>
+              </div>
+              <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+                <button
+                  onClick={() => {
+                    // Filter messages to only include media messages (images and videos)
+                    const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
+                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const nextIndex = (currentIndex + 1) % mediaMessages.length; // Wrap around to the first media
+                    setSelectedImage(`${IMG_URL}${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                  }}
+                  className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
+                >
+                  <span>
+                    <FaChevronRight />
+                  </span>
+                </button>
+              </div>
+
               <button
                 onClick={() => {
                   if (isProfileImageModalOpen) {
@@ -3106,11 +3228,38 @@ const Chat2 = () => {
                 }}
                 className="absolute top-4 right-4 text-white hover:text-gray-300"
               >
-                <ImCross className="w-6 h-6" />
+                <RxCross2 className="w-6 h-6" />
               </button>
             </div>
           </div>
         )}
+      {/* profile photo */}
+      {(isProfileImageModalOpen && selectedProfileImage) && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative w-full h-full flex items-center justify-center p-8">
+
+            <img
+              src={
+                isProfileImageModalOpen ? selectedProfileImage : ''
+              }
+              alt="Profile"
+              className="max-w-full max-h-full object-contain"
+            />
+            <button
+              onClick={() => {
+                if (isProfileImageModalOpen) {
+                  setIsProfileImageModalOpen(false);
+                } else if (isImageModalOpen) {
+                  setIsImageModalOpen(false);
+                }
+              }}
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
+            >
+              <ImCross className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Forward Modal */}
       {showForwardModal && (
         <ForwardModal
