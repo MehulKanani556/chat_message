@@ -15,6 +15,9 @@ module.exports = {
       "4xl": "2560px",
     },
     extend: {
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+      },
       colors: {
         // primary: {
         //   DEFAULT: "#7269FF",

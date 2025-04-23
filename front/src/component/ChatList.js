@@ -16,6 +16,7 @@ const ChatList = ({
   setSelectedChat,
   setShowLeftSidebar,
   allUsers,
+  handleMultipleFileUpload
 }) => {
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -23,6 +24,7 @@ const ChatList = ({
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
   const { user } =
     useSelector((state) => state.user);
+  const [draggedUser, setDraggedUser] = useState(null);
 
   useEffect(() => {
     let filteredUsers = [];
@@ -64,15 +66,51 @@ const ChatList = ({
     return content;
   };
 
+  // Function to handle drag start
+  const handleDragStart = (event, user) => {
+    console.log('Drag started:', user);
+    setDraggedUser(user);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  // Function to handle drag over
+  const handleDragOver = (event) => {
+    console.log('Dragging over');
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  // Function to handle drop
+  const handleDrop = (event, user) => {
+    console.log('Dropped on:', user, event.dataTransfer.files);
+    event.preventDefault();
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      handleMultipleFileUpload(event.dataTransfer.files,user);
+    }
+    setDraggedUser(null);
+  };
+
+  // Add event listeners for drag and drop
+  const handleFileDrop = (event, user) => {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    console.log(files);
+
+    if (files.length > 0) {
+      console.log('Files dropped:', files);
+      const file = files[0];
+    }
+  };
+
   return (
     <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
-    style={{
-      boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
-    }}>
+      style={{
+        boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
+      }}>
       <>
         <div className="p-4 pb-2">
           <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light mb-4 flex items-center gap-2">
-          {findUser ? <FaAngleLeft  onClick={() => setFindUser(false)}/> : ""} Chats
+            {findUser ? <FaAngleLeft onClick={() => setFindUser(false)} /> : ""} Chats
           </h1>
 
           {/* Search bar */}
@@ -155,14 +193,21 @@ const ChatList = ({
                   return (
                     <div
                       key={item._id}
-                      className={`px-3 py-2    hover:bg-primary  hover:dark:bg-primary/85 hover:text-white cursor-pointer rounded-md mb-2
+                      className={`px-3 py-2  hover:bg-primary  hover:dark:bg-primary/85 hover:text-white cursor-pointer rounded-md mb-2
                     ${selectedChat?._id === item._id
                           ? "bg-primary dark:bg-primary/85 text-white"
                           : "bg-white dark:bg-primary-dark/50"
                         }`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => {
+                        handleDrop(e, item);
+                        handleFileDrop(e, item);
+                      }}
                       onClick={() => {
                         setSelectedChat(item);
-                          setShowLeftSidebar(false);
+                        setShowLeftSidebar(false);
                       }}
                     >
                       <div className="flex items-center">
