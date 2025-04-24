@@ -87,7 +87,7 @@ const CallHistory = ({ setShowLeftSidebar }) => {
           </button> */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Call History</h2>
         </div>
-        <button 
+        {/* <button 
           onClick={toggleMissedCallsFilter}
           className={`px-3 py-1 rounded-full text-sm ${
             showMissedCallsOnly 
@@ -96,7 +96,7 @@ const CallHistory = ({ setShowLeftSidebar }) => {
           }`}
         >
           {showMissedCallsOnly ? 'Show All Calls' : 'Missed Calls Only'}
-        </button>
+        </button> */}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">

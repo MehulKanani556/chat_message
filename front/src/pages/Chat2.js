@@ -32,6 +32,7 @@ import {
   MdReport,
   MdOutlineBlock,
   MdOutlineCancel,
+  MdOutlineGroupAdd,
 } from "react-icons/md";
 import { RiDeleteBinFill, RiDeleteBinLine, RiShutDownLine, RiUserAddLine } from "react-icons/ri";
 import {
@@ -40,10 +41,13 @@ import {
   LuScreenShareOff,
 } from "react-icons/lu";
 import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash } from "react-icons/go";
+import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash, GoUnmute } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
 import {
+  BsCameraVideo,
+  BsCameraVideoOff,
+  BsChatDots,
   BsFillMicFill,
   BsFillMicMuteFill,
   BsThreeDotsVertical,
@@ -53,6 +57,8 @@ import {
   IoArchiveOutline,
   IoCallOutline,
   IoCameraOutline,
+  IoMicOffCircleOutline,
+  IoMicOffOutline,
   IoMicOutline,
   IoPersonCircleOutline,
   IoVideocamOutline,
@@ -98,6 +104,7 @@ import ProfileUser from "../component/ProfileUser";
 import CallHistory from "../component/CallHistory";
 import ForwardModal from "../component/ForwardModal";
 import { SlPin } from "react-icons/sl";
+import { AiOutlineVideoCamera } from "react-icons/ai";
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -572,7 +579,7 @@ const Chat2 = () => {
 
   //===========handle send message ===========
 
-  const handleSendMessage = async (data,userId) => {
+  const handleSendMessage = async (data, userId) => {
     if (editingMessage) {
       try {
         await dispatch(
@@ -597,7 +604,7 @@ const Chat2 = () => {
         selectedChat.blockedUsers?.includes(currentUser);
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
-        !selectedChat
+        !(selectedChat || userId)
       )
         return;
 
@@ -693,7 +700,7 @@ const Chat2 = () => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload = async (files,userId) => {
+  const handleMultipleFileUpload = async (files, userId) => {
     const filesArray = Array.from(files); // Convert FileList to an array
     for (const file of filesArray) {
       const formData = new FormData();
@@ -717,7 +724,7 @@ const Chat2 = () => {
             fileUrl: fileUrl,
             fileType: fileType || file.type,
             size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          },userId);
+          }, userId);
         }
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
@@ -1919,13 +1926,13 @@ const Chat2 = () => {
                                     <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                       onClick={async () => {
-                                        await dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
                                         await dispatch(getUser(currentUser));
                                         await dispatch(getAllMessageUsers());
                                       }}
                                     >
-                                     { console.log(user)}
-                                      
+                                      {console.log(user)}
+
                                       <SlPin className="text-lg" />{" "}
                                       {user.pinChatFor?.includes(selectedChat?._id)
                                         ? "UnPin Chat"
@@ -2039,27 +2046,27 @@ const Chat2 = () => {
                                   ref={mobileMenuRef}
                                 >
                                   <div className="py-2 w-48">
-                                      <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                        onClick={() => {
-                                          setIsClearChatModalOpen(true);
-                                          setMobileMenuOpen(false);
-                                        }}
-                                      >
-                                        <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                                        <span>Clear Chat</span>
-                                      </button>
+                                    <button
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      onClick={() => {
+                                        setIsClearChatModalOpen(true);
+                                        setMobileMenuOpen(false);
+                                      }}
+                                    >
+                                      <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                                      <span>Clear Chat</span>
+                                    </button>
 
-                                      <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                        onClick={() => {
-                                          setIsDeleteChatModalOpen(true);
-                                          setMobileMenuOpen(false);
-                                        }}
-                                      >
-                                        <RiDeleteBinLine className="w-5 h-5 mr-2" />
-                                        <span>Delete Chat</span>
-                                      </button>
+                                    <button
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      onClick={() => {
+                                        setIsDeleteChatModalOpen(true);
+                                        setMobileMenuOpen(false);
+                                      }}
+                                    >
+                                      <RiDeleteBinLine className="w-5 h-5 mr-2" />
+                                      <span>Delete Chat</span>
+                                    </button>
 
                                     <button
                                       className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
@@ -2589,7 +2596,7 @@ const Chat2 = () => {
                         )}
                       </>
                     ) : (
-                      <Front data={user} />
+                      <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
                     )}
                   </>
                 )}
@@ -2773,6 +2780,31 @@ const Chat2 = () => {
           {/* Controls */}
           {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
             <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2">
+              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+                <BsChatDots className="text-xl" />
+              </button>
+              <button
+                onClick={toggleMicrophone}
+                className={`w-10 grid place-content-center border rounded-full h-10 ${isMicrophoneOn ? "" : "bg-gray-400"
+                  } text-white`}
+              >
+                {isMicrophoneOn ? (
+                  <IoMicOffOutline className="text-xl " />
+                ) : (
+                  <IoMicOffCircleOutline className="text-xl " />
+                )}
+              </button>
+              <button
+                onClick={toggleCamera}
+                className={`w-10 grid place-content-center border rounded-full h-10 ${isCameraOn ? "" : "bg-gray-400"
+                  } text-white ${isVideoCalling ? "" : "hidden"}`}
+              >
+                {isCameraOn ? (
+                  <BsCameraVideo className="text-xl " />
+                ) : (
+                  <BsCameraVideoOff className="text-xl " />
+                )}
+              </button>
               <button
                 onClick={() => {
                   if (!callAccept && selectedChat) {
@@ -2788,42 +2820,28 @@ const Chat2 = () => {
                   }
                   cleanupConnection();
                 }}
-                className="bg-red-500 h-10 w-10  text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
+                className="bg-red-500 h-12 w-12 text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
               >
-                <MdCallEnd className="text-xl " />
+                <IoCallOutline className="text-2xl " />
               </button>
+
+              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+                <GoUnmute className="text-xl" />
+              </button>
+
               {(isVideoCalling || isVoiceCalling) && (
                 <>
                   <button
-                    onClick={toggleCamera}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${isCameraOn ? "bg-primary" : "bg-gray-400"
-                      } text-white ${isVideoCalling ? "" : "hidden"}`}
-                  >
-                    {isCameraOn ? (
-                      <FiCamera className="text-xl " />
-                    ) : (
-                      <FiCameraOff className="text-xl " />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleMicrophone}
-                    className={`w-10 grid place-content-center  rounded-full h-10 ${isMicrophoneOn ? "bg-primary" : "bg-gray-400"
-                      } text-white`}
-                  >
-                    {isMicrophoneOn ? (
-                      <BsFillMicFill className="text-xl " />
-                    ) : (
-                      <BsFillMicMuteFill className="text-xl " />
-                    )}
-                  </button>
-                  <button
                     onClick={() => setParticipantOpen(true)}
-                    className="w-10 grid place-content-center rounded-full h-10 bg-primary text-white hover:bg-primary/80"
+                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
                   >
-                    <MdGroupAdd className="text-xl" />
+                    <MdOutlineGroupAdd className="text-xl" />
                   </button>
                 </>
               )}
+              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+                <AiOutlineVideoCamera className="text-xl" />
+              </button>
             </div>
           )}
         </div>
@@ -3222,7 +3240,7 @@ const Chat2 = () => {
                         {selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` &&
 
                           <div className="absolute inset-0 bg-black opacity-60 z-10" >
-                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={()=>{handleDeleteMessage(message._id); setIsImageModalOpen(false);}}>
+                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={() => { handleDeleteMessage(message._id); setIsImageModalOpen(false); }}>
                               <GoTrash />
                             </div>
                           </div>
@@ -3394,7 +3412,7 @@ const Chat2 = () => {
               <button
                 onClick={() => setIsDeleteChatModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
-              >   
+              >
                 <ImCross />
               </button>
             </h3>
