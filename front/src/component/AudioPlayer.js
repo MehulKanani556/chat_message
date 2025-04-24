@@ -80,12 +80,12 @@ const AudioPlayer = ({ audioUrl }) => {
 
         <div className="flex-1"> <div className="flex-1 min-w-0" ref={waveformRef} />
 
-<span className="flex-shrink-0 text-[10px] text-gray-500 min-w-[32px]">
-  {currentTime} Sec
-</span></div>
-       
-        <div onClick={togglePlaybackRate} className="cursor-pointer text-xs rounded-full bg-gray-700 dark:bg-white/50 dark:text-black w-7 h-7 flex items-center justify-center">
-         <span className=""> x{playbackRates[currentRateIndex]}</span>
+          <span className="flex-shrink-0 text-[10px] text-gray-500 min-w-[32px]">
+            {currentTime} Sec
+          </span></div>
+
+        <div onClick={togglePlaybackRate} className="cursor-pointer text-xs rounded-full bg-gray-700 text-white dark:bg-white/50 dark:text-black w-7 h-7 flex items-center justify-center">
+          <span className=""> x{playbackRates[currentRateIndex]}</span>
         </div>
       </div>
     </div>

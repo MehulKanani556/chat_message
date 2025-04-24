@@ -78,14 +78,14 @@ const MessageList = ({
                 const isSameMinute =
                   prevMessage &&
                   new Date(message?.createdAt).getMinutes() ===
-                    new Date(prevMessage?.createdAt).getMinutes();
+                  new Date(prevMessage?.createdAt).getMinutes();
                 const issameUser = message.sender === prevMessage?.sender;
 
                 const showTime =
                   !prevMessage ||
                   new Date(message?.createdAt).getMinutes() -
-                    new Date(prevMessage?.createdAt).getMinutes() >
-                    0 ||
+                  new Date(prevMessage?.createdAt).getMinutes() >
+                  0 ||
                   !issameUser;
 
                 const name = allUsers.find(
@@ -197,13 +197,13 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
 
   return (
     <div className={`flex  w-full my-2  ${message.sender === userId
-    ? "justify-end items-end"
-    : "justify-start items-start"}`}>
+      ? "justify-end items-end"
+      : "justify-start items-start"}`}>
       <div
         className={`flex items-center  text-sm px-3 py-2 rounded-md bg-gray-300 dark:bg-white/15 max-w-[230px] w-full dark:text-white`}
       >
         <div className="rounded-full border w-8 h-8 p-1 text-xl border-gray-600 dark:border-white flex items-center justify-center">
-        {isCompleted ? message.sender === userId ? <MdOutlineCallMade  className="text-[#22C55E]" /> : <MdOutlineCallReceived className="text-[#22C55E]" />  : <HiOutlinePhoneMissedCall className=" text-[#FF0000]" />}
+          {isCompleted ? message.sender === userId ? <MdOutlineCallMade className="text-[#22C55E]" /> : <MdOutlineCallReceived className="text-[#22C55E]" /> : <HiOutlinePhoneMissedCall className=" text-[#FF0000]" />}
         </div>
         {/* <FaPhone
           className={message.sender === userId ? "rotate-90" : "-rotate-90"}
@@ -211,22 +211,22 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
         <div className="flex flex-col ml-2 w-full">
           <span>
             {message.sender === userId ? isCompleted ? "Outgoing call" : "Call not answered"
-              : isCompleted  ? "Incoming call" : `Missed ${message.content.callType} call`}
-           
+              : isCompleted ? "Incoming call" : `Missed ${message.content.callType} call`}
+
           </span>
           <div className="flex justify-between w-full">
-         
-          <span className="text-center">
-          {/* • */}
-          {isCompleted && ` ${message.content.duration} sec`}
-          </span>
-          <span className="text-gray-500 dark:text-white/70 text-xs">
-            {new Date(message.content.timestamp).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: false,
-            })}
-          </span>
+
+            <span className="text-center">
+              {/* • */}
+              {isCompleted && ` ${message.content.duration} sec`}
+            </span>
+            <span className="text-gray-500 dark:text-white/70 text-xs">
+              {new Date(message.content.timestamp).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: false,
+              })}
+            </span>
           </div>
         </div>
         {/* <span className="cursor-pointer ml-12 bg-gray-300 p-2 rounded-full">
@@ -284,6 +284,16 @@ const MessageContent = ({
           />
         );
       }
+      if (message.content?.fileType?.includes("video/")) {
+        return (
+          <VideoMessage
+            message={message}
+            userId={userId}
+            handleImageClick={handleImageClick}
+            IMG_URL={IMG_URL}
+          />
+        );
+      }
       if (message.content?.fileType?.includes("audio/")) {
         return (
           <AudioMessage message={message} userId={userId} IMG_URL={IMG_URL} />
@@ -325,6 +335,84 @@ const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
     />
   </div>
 );
+const VideoMessage = ({ message, userId, handleImageClick, IMG_URL }) => {
+
+  let messageContent = message?.content?.content;
+
+  // Decrypt the message if it's encrypted
+  if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
+    try {
+      const key = 'chat';
+      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+      const encodedText = messageContent.split('data:')[1];
+      const decodedText = atob(encodedText);
+      let result = '';
+      for (let i = 0; i < decodedText.length; i++) {
+        result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      messageContent = result;
+    } catch (error) {
+      console.error('Decryption error:', error);
+    }
+  }
+
+  return (
+    <>
+      <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
+        <video
+          src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`}
+          controls
+          className={`w-full h-full object-contain rounded-lg`}
+          onClick={() =>
+            handleImageClick(
+              `${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`
+            )
+          }
+        />
+        <div className=" w-full flex justify-between items-center mt-1">
+          <div className="flex">
+            <svg
+              width="20"
+              height="20"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#afafaf"
+              gradientcolor1="#afafaf"
+              gradientcolor2="#afafaf"
+            >
+              <path
+                d="M3.5 21h17c.275 0 .5-.225.5-.5v-17c0-.275-.225-.5-.5-.5h-17c-.275 0-.5.225-.5.5v17c0 .275.225.5.5.5Z"
+                fill="#fff"
+              ></path>
+              <path
+                opacity="0.64"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M3.5 22h17c.827 0 1.5-.673 1.5-1.5v-17c0-.827-.673-1.5-1.5-1.5h-17C2.673 2 2 2.673 2 3.5v17c0 .827.673 1.5 1.5 1.5ZM3 3.5a.5.5 0 0 1 .5-.5h17a.5.5 0 0 1 .5.5v17a.5.5 0 0 1-.5.5h-17a.5.5 0 0 1-.5-.5v-17Z"
+                fill="#605E5C"
+              ></path>
+              <path
+                d="M16 12a.47.47 0 0 1-.24.4l-6 3.53a.48.48 0 0 1-.26.07.5.5 0 0 1-.24-.06.46.46 0 0 1-.26-.41V12h7Z"
+                fill="#BC1948"
+              ></path>
+              <path
+                d="M16 12a.47.47 0 0 0-.24-.4l-6-3.536a.52.52 0 0 0-.5 0 .46.46 0 0 0-.26.4V12h7Z"
+                fill="#E8467C"
+              ></path>
+            </svg>
+            <div className="font-medium text-sm ps-1">{messageContent}</div>
+          </div>
+          <div className="text-[10px] opacity-60 flex items-center"><GoDotFill className="mr-0.5" />{message.content?.size}</div>
+        </div>
+      </div>
+
+
+
+    </>
+  );
+
+
+};
 
 const AudioMessage = ({ message, userId, IMG_URL }) => {
   let messageContent = message?.content?.content;
@@ -353,7 +441,7 @@ const AudioMessage = ({ message, userId, IMG_URL }) => {
       />
       <div className=" w-full flex justify-between items-center mt-1">
         <div className="font-medium text-sm">{messageContent}</div>
-        <div className="text-[10px] opacity-60 flex items-center"><GoDotFill className="mr-0.5"/>{message.content?.size}</div>
+        <div className="text-[10px] opacity-60 flex items-center"><GoDotFill className="mr-0.5" />{message.content?.size}</div>
       </div>
     </div>
   );
@@ -498,81 +586,81 @@ const FileMessage = ({
           </button>
         </div>
         <div className=" flex justify-content-between">
-        {message?.content?.fileType === "application/pdf" ? (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* PDF Icon */}
-        <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-            <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-            <path opacity="0.64" fill-rule="evenodd" clip-rule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" stroke-linecap="round" stroke-linejoin="round" fill="#fff"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* Word Icon */}
-        <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
-            <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
-            <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
-            <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* Excel Icon */}
-        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
-            <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
-            <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
-            <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* PowerPoint Icon */}
-        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
-            <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
-            <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-) : message?.content?.fileType === "application/zip" ? (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* ZIP Icon */}
-        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-) : (
-    <span className="text-sm ml-1 flex gap-1 items-center">
-        {/* Default File Icon */}
-        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-            <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-            <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-            <path opacity="0.64" fill-rule="evenodd" clip-rule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-        </svg>
-        <div className="font-medium text-sm">
-            {highlightText(messageContent, searchInputbox)}
-        </div>
-    </span>
-)}
+          {message?.content?.fileType === "application/pdf" ? (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* PDF Icon */}
+              <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                <path opacity="0.64" fill-rule="evenodd" clip-rule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" stroke-linecap="round" stroke-linejoin="round" fill="#fff"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* Word Icon */}
+              <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* Excel Icon */}
+              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* PowerPoint Icon */}
+              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          ) : message?.content?.fileType === "application/zip" ? (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* ZIP Icon */}
+              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          ) : (
+            <span className="text-sm ml-1 flex gap-1 items-center">
+              {/* Default File Icon */}
+              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                <path opacity="0.64" fill-rule="evenodd" clip-rule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+              </svg>
+              <div className="font-medium text-sm">
+                {highlightText(messageContent, searchInputbox)}
+              </div>
+            </span>
+          )}
           <div className="text-[12px] dark:text-gray-300  shrink-0">
             {message?.content?.size}
           </div>
@@ -628,9 +716,8 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
                       .codePointAt(0)
                       .toString(16)}.png`}
                     alt={part}
-                    className={`inline ${
-                      isSingleEmoji ? "h-14 w-14" : "h-5 w-5"
-                    }`}
+                    className={`inline ${isSingleEmoji ? "h-14 w-14" : "h-5 w-5"
+                      }`}
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.replaceWith(document.createTextNode(part));
@@ -652,9 +739,8 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
 
 const MessageStatus = ({ message, userId, last }) => (
   <div
-    className={`flex items-end mt-1 ${
-      message.showTime ? "bottom-3" : "-bottom-2"
-    } right-0`}
+    className={`flex items-end mt-1 ${message.showTime ? "bottom-3" : "-bottom-2"
+      } right-0`}
   >
     {message.status === "sent" && <div className="p-3"> </div>}
     {message.status === "delivered" && message._id === last._id ? (
@@ -681,10 +767,11 @@ const ReplyPreview = ({
   searchInputbox,
 }) => {
   const getReplyContent = () => {
+
     return (
       <p>
         {message?.replyTo?.content &&
-        message.replyTo.content.fileType?.startsWith("image/") ? (
+          message.replyTo.content.fileType?.startsWith("image/") ? (
           <img
             src={`${IMG_URL}${message?.replyTo?.content.fileUrl.replace(
               /\\/g,
@@ -837,7 +924,7 @@ const ReplyPreview = ({
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
           message?.replyTo?.content?.fileType == "application/vnd.ms-excel" ? (
           <>
             <span className="text-center grid place-content-center">
@@ -925,9 +1012,9 @@ const ReplyPreview = ({
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
           message?.replyTo?.content?.fileType ==
-            "application/vnd.ms-powerpoint" ? (
+          "application/vnd.ms-powerpoint" ? (
           <>
             <span className="text-center grid place-content-center">
               <svg
@@ -1014,7 +1101,7 @@ const ReplyPreview = ({
             </span>
           </>
         ) : message?.replyTo?.content?.fileType ==
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
           message?.replyTo?.content?.fileType == "application/msword" ? (
           <>
             <span className="text-center grid place-content-center">
@@ -1105,9 +1192,9 @@ const ReplyPreview = ({
   return (
     <div
       className="flex justify-between rounded-lg flex-col-reverse relative"
-      // style={{
-      //   backgroundColor: `${message.sender === userId ? "#ccf7ff" : "#f1f1f1"}`,
-      // }}
+    // style={{
+    //   backgroundColor: `${message.sender === userId ? "#ccf7ff" : "#f1f1f1"}`,
+    // }}
     >
       {/* <div className="flex flex-col-reverse"> */}
       <div
@@ -1442,16 +1529,14 @@ const RegularMessage = ({
     <div
       key={message._id}
       id={`message-${message._id}`}
-      className={`flex relative ${
-        message.sender === userId
-          ? "justify-end items-end"
-          : "justify-start items-start"
-      }  message-content 
-    ${
-      message.reactions && message.reactions.length > 0
-        ? "mb-8"
-        : `${isConsecutive ? "mb-1" : "mb-4"}`
-    }
+      className={`flex relative ${message.sender === userId
+        ? "justify-end items-end"
+        : "justify-start items-start"
+        }  message-content 
+    ${message.reactions && message.reactions.length > 0
+          ? "mb-8"
+          : `${isConsecutive ? "mb-1" : "mb-4"}`
+        }
     ${showTime ? "mt-3" : ""}`}
     >
       <div
@@ -1469,11 +1554,10 @@ const RegularMessage = ({
         </div>{" "}
         {showTime && (
           <div
-            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${
-              message.sender == userId
-                ? "pe-7 text-right justify-end"
-                : "text-left"
-            }`}
+            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId
+              ? "pe-7 text-right justify-end"
+              : "text-left"
+              }`}
             style={{
               alignItems: "center",
             }}
@@ -1486,13 +1570,12 @@ const RegularMessage = ({
         )}
         <div className="flex">
           <div
-            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${
-              isSingleEmoji
-                ? "bg-transparent"
-                : message.sender === userId
+            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${isSingleEmoji
+              ? "bg-transparent"
+              : message.sender === userId
                 ? "bg-primary/50 rounded-s-xl"
                 : "bg-primary rounded-e-xl "
-            }
+              }
           ${showTime ? " rounded-tr-xl rounded-tl-xl" : ""}
           ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
           `}
@@ -1510,9 +1593,8 @@ const RegularMessage = ({
 
             {message.edited && (
               <div
-                className={`absolute bottom-0 ${
-                  message.sender === userId ? "-left-5" : "-right-5"
-                } flex items-center text-xs text-gray-500 mt-1`}
+                className={`absolute bottom-0 ${message.sender === userId ? "-left-5" : "-right-5"
+                  } flex items-center text-xs text-gray-500 mt-1`}
               >
                 <FiEdit2 className="w-4 h-4" />
               </div>
@@ -1520,9 +1602,8 @@ const RegularMessage = ({
 
             {/* Add three dots icon */}
             <div
-              className={`absolute ${
-                message.sender === userId ? "-right-4" : "-left-4"
-              } top-0 opacity-0 group-hover:opacity-100 cursor-pointer`}
+              className={`absolute ${message.sender === userId ? "-right-4" : "-left-4"
+                } top-0 opacity-0 group-hover:opacity-100 cursor-pointer`}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1584,7 +1665,7 @@ const RegularMessage = ({
 };
 
 const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
-  
+
   const handleSayHello = async () => {
     if (!selectedChat?._id) return;
 
@@ -1595,7 +1676,7 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
           content: "Hello"
         }
       };
-      
+
       await sendPrivateMessage(selectedChat._id, messageData);
     } catch (error) {
       console.error("Error sending hello message:", error);
@@ -1604,44 +1685,44 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
   return (
     <div className=" flex flex-col items-center justify-center w-full">
       <div
-      className="flex justify-center items-center my-4  date-header px-2 w-full"
+        className="flex justify-center items-center my-4  date-header px-2 w-full"
       // data-date={date}
-    >
-      <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-200/30 to-gray-300 dark:bg-gradient-to-l dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
-      <span className=" text-xs whitespace-nowrap px-2 sm:px-5 py-1 rounded-full  bg-gray-300 dark:bg-gray-500 text">
-        Today
-      </span>
-      <div className="sm:block flex-1 h-[1px] bg-gradient-to-l from-gray-200/30 to-gray-300 dark:bg-gradient-to-r dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
-    </div>
-
-    <div className="flex flex-col items-center justify-center dark:bg-primary-light/10 dark:text-white shadow-lg p-6 rounded-lg min-w-[300px]">
-      <div className="w-10 h-10 rounded-full overflow-hidden mb-4 bg-gray-500 flex items-center justify-center">
-        {selectedChat?.photo &&
-        selectedChat.photo !== "null" &&
-        selectedChat?.profilePhoto == "Everyone" ? (
-          <img
-            src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
-            alt="Profile"
-            className="object-cover"
-          />
-        ) : (
-          <span className="text-white text-xl font-bold">
-            {selectedChat?.userName && selectedChat?.userName.includes(" ")
-              ? selectedChat?.userName.split(" ")?.[0][0] +
-                selectedChat?.userName.split(" ")?.[1][0]
-              : selectedChat?.userName?.[0]}
-          </span>
-        )}
+      >
+        <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-200/30 to-gray-300 dark:bg-gradient-to-l dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
+        <span className=" text-xs whitespace-nowrap px-2 sm:px-5 py-1 rounded-full  bg-gray-300 dark:bg-gray-500 text">
+          Today
+        </span>
+        <div className="sm:block flex-1 h-[1px] bg-gradient-to-l from-gray-200/30 to-gray-300 dark:bg-gradient-to-r dark:from-gray-300/30 dark:to-gray-300/20 max-w-[45%]" />
       </div>
-      <p className="text-gray-400 text-lg mb-4">
-        Say Hello to {selectedChat?.userName}.
-      </p>
-      <button onClick={handleSayHello} className="bg-primary hover:bg-primary/80 text-white font-medium py-2 px-6 rounded-full transition duration-200">
-        Say Hello
-      </button>
+
+      <div className="flex flex-col items-center justify-center dark:bg-primary-light/10 dark:text-white shadow-lg p-6 rounded-lg min-w-[300px]">
+        <div className="w-10 h-10 rounded-full overflow-hidden mb-4 bg-gray-500 flex items-center justify-center">
+          {selectedChat?.photo &&
+            selectedChat.photo !== "null" &&
+            selectedChat?.profilePhoto == "Everyone" ? (
+            <img
+              src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+              alt="Profile"
+              className="object-cover"
+            />
+          ) : (
+            <span className="text-white text-xl font-bold">
+              {selectedChat?.userName && selectedChat?.userName.includes(" ")
+                ? selectedChat?.userName.split(" ")?.[0][0] +
+                selectedChat?.userName.split(" ")?.[1][0]
+                : selectedChat?.userName?.[0]}
+            </span>
+          )}
+        </div>
+        <p className="text-gray-400 text-lg mb-4">
+          Say Hello to {selectedChat?.userName}.
+        </p>
+        <button onClick={handleSayHello} className="bg-primary hover:bg-primary/80 text-white font-medium py-2 px-6 rounded-full transition duration-200">
+          Say Hello
+        </button>
+      </div>
     </div>
-  </div>
-)
+  )
 };
 
 export default MessageList;

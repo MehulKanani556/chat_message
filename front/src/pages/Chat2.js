@@ -193,6 +193,7 @@ const Chat2 = () => {
   const dropAreaRef = useRef(null);
   const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
 
+  const [waveformData, setWaveformData] = useState([]);
   //===========Use the custom socket hook===========
   const {
     socket,
@@ -572,7 +573,7 @@ const Chat2 = () => {
 
   //===========handle send message ===========
 
-  const handleSendMessage = async (data,userId) => {
+  const handleSendMessage = async (data, userId) => {
     if (editingMessage) {
       try {
         await dispatch(
@@ -693,7 +694,7 @@ const Chat2 = () => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload = async (files,userId) => {
+  const handleMultipleFileUpload = async (files, userId) => {
     const filesArray = Array.from(files); // Convert FileList to an array
     for (const file of filesArray) {
       const formData = new FormData();
@@ -717,7 +718,7 @@ const Chat2 = () => {
             fileUrl: fileUrl,
             fileType: fileType || file.type,
             size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          },userId);
+          }, userId);
         }
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
@@ -1115,15 +1116,27 @@ const Chat2 = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
+  const [recordingTime, setRecordingTime] = useState(0); // State to hold recording time
 
-  // Function to handle voice message recording
+  // Timer effect for recording
+  useEffect(() => {
+    let interval = null;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime((prev) => prev + 1); // Increment recording time every second
+      }, 1000);
+    } else {
+      setRecordingTime(0); // Reset recording time when not recording
+    }
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [isRecording]);
+
   const handleVoiceMessage = async () => {
     if (!isRecording) {
       // Start recording
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
-            // Set audio constraints for better quality
             noiseSuppression: true,
             echoCancellation: true,
             sampleRate: 44100, // Set sample rate for better quality
@@ -1139,6 +1152,7 @@ const Chat2 = () => {
         };
 
         recorder.onstop = async () => {
+          stopRecording();
           const audioBlob = new Blob(chunks, { type: "audio/webm" }); // Change to 'audio/webm' for better quality
           // console.log("Audio Blob:", audioBlob);
 
@@ -1185,6 +1199,7 @@ const Chat2 = () => {
           setAudioChunks([]);
           // Stop the audio stream to release the microphone
           stream.getTracks().forEach((track) => track.stop());
+          setRecordingTime(0);
         };
 
         recorder.start();
@@ -1608,6 +1623,192 @@ const Chat2 = () => {
     }));
   };
 
+  let audioContext;
+
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    console.log('AudioContext created successfully');
+  } catch (error) {
+    console.error('Failed to create AudioContext:', error);
+  }
+
+  // Example of resuming the AudioContext
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().then(() => {
+      console.log('AudioContext resumed');
+    }).catch(err => {
+      console.error('Error resuming AudioContext:', err);
+    });
+  }
+
+  const analyser = audioContext.createAnalyser();
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  const [recording, setRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState('');
+
+  const [animationPhase, setAnimationPhase] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animationRef = useRef(null);
+  const chunksRef = useRef([]);
+  // For storing cumulative data
+  const cumulativeDataRef = useRef([]);
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  // Bar animation loop
+  useEffect(() => {
+    let barAnimationId;
+    
+    const animateBars = () => {
+      setAnimationPhase(prev => (prev + 0.1) % 10);
+      barAnimationId = requestAnimationFrame(animateBars);
+    };
+    
+    if (recording || waveformData.length === 0) {
+      barAnimationId = requestAnimationFrame(animateBars);
+    }
+    
+    return () => {
+      if (barAnimationId) {
+        cancelAnimationFrame(barAnimationId);
+      }
+    };
+  }, [recording, waveformData.length]);
+  // Start recording function
+  const startRecording = async () => {
+    try {
+      // Reset cumulative data
+      cumulativeDataRef.current = [];
+      setWaveformData([]);
+
+      // Get user's audio stream
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Set up audio context and analyser
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 2048; // Larger FFT for more detailed data
+
+      // Connect audio source to analyser
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+
+      // Start visualization and data collection
+      collectAudioData();
+
+      // Set up media recorder
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      chunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
+      };
+
+      // Start recording
+      mediaRecorderRef.current.start(100); // Collect chunks every 100ms
+      setRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+    }
+  };
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      cancelAnimationFrame(animationRef.current);
+      setRecording(false);
+    }
+  };
+  const collectAudioData = () => {
+    if (!analyserRef.current) return;
+
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    let frameCount = 0;
+
+    const updateVisualData = () => {
+      frameCount++;
+      if (frameCount % 2 !== 0) {
+        animationRef.current = requestAnimationFrame(updateVisualData);
+        return;
+      }
+
+      analyserRef.current.getByteTimeDomainData(dataArray);
+
+      // Calculate RMS (root mean square) value to represent volume
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const normalized = (dataArray[i] / 128.0) - 1.0;
+        sum += normalized * normalized;
+      }
+      const rms = Math.sqrt(sum / bufferLength);
+
+      // Scale RMS with a quadratic function for more dynamic range
+      const scaledRMS = Math.min(100, Math.max(12, rms * rms * 700));
+
+      // Add this data point to our cumulative collection
+      cumulativeDataRef.current.push(scaledRMS);
+
+      // Keep a fixed number of data points
+      if (cumulativeDataRef.current.length > 170) {
+        cumulativeDataRef.current = cumulativeDataRef.current.slice(-170);
+      }
+
+      // Update state with the latest cumulative data
+      setWaveformData([...cumulativeDataRef.current]);
+
+      // Continue collecting data
+      animationRef.current = requestAnimationFrame(updateVisualData);
+    };
+
+    updateVisualData();
+  };
+  const generateBarHeights = () => {
+    if (waveformData.length > 0) {
+      return waveformData;
+    }
+    
+    // Generate idle animation that looks more like the reference image
+    const barCount = 200;
+    const idleData = [];
+    
+    for (let i = 0; i < barCount; i++) {
+      // Create a pattern that mimics an audio waveform with varying heights
+      const baseHeight = 15;
+      const variation = 30;
+      
+      // Multiple sine waves with different frequencies and amplitudes
+      const wave1 = Math.sin((i / 4) + animationPhase) * variation * 0.4;
+      const wave2 = Math.sin((i / 7) + animationPhase * 1.3) * variation * 0.6;
+      const wave3 = Math.sin((i / 3) + animationPhase * 0.7) * variation * 0.3;
+      
+      // Combine waves and ensure minimum height
+      const waveHeight = baseHeight + Math.abs(wave1 + wave2 + wave3);
+      idleData.push(waveHeight);
+    }
+    
+    return idleData;
+  };
+  const barHeights = generateBarHeights();
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       <Sidebar
@@ -1919,13 +2120,13 @@ const Chat2 = () => {
                                     <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                       onClick={async () => {
-                                        await dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
                                         await dispatch(getUser(currentUser));
                                         await dispatch(getAllMessageUsers());
                                       }}
                                     >
-                                     { console.log(user)}
-                                      
+                                      {console.log(user)}
+
                                       <SlPin className="text-lg" />{" "}
                                       {user.pinChatFor?.includes(selectedChat?._id)
                                         ? "UnPin Chat"
@@ -2039,27 +2240,27 @@ const Chat2 = () => {
                                   ref={mobileMenuRef}
                                 >
                                   <div className="py-2 w-48">
-                                      <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                        onClick={() => {
-                                          setIsClearChatModalOpen(true);
-                                          setMobileMenuOpen(false);
-                                        }}
-                                      >
-                                        <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                                        <span>Clear Chat</span>
-                                      </button>
+                                    <button
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      onClick={() => {
+                                        setIsClearChatModalOpen(true);
+                                        setMobileMenuOpen(false);
+                                      }}
+                                    >
+                                      <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                                      <span>Clear Chat</span>
+                                    </button>
 
-                                      <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                        onClick={() => {
-                                          setIsDeleteChatModalOpen(true);
-                                          setMobileMenuOpen(false);
-                                        }}
-                                      >
-                                        <RiDeleteBinLine className="w-5 h-5 mr-2" />
-                                        <span>Delete Chat</span>
-                                      </button>
+                                    <button
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      onClick={() => {
+                                        setIsDeleteChatModalOpen(true);
+                                        setMobileMenuOpen(false);
+                                      }}
+                                    >
+                                      <RiDeleteBinLine className="w-5 h-5 mr-2" />
+                                      <span>Delete Chat</span>
+                                    </button>
 
                                     <button
                                       className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
@@ -2395,53 +2596,110 @@ const Chat2 = () => {
                                   : "rounded-lg"
                                   } px-4 py-2 w-full max-w-full`}
                               >
-                                <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
-                                  <input
-                                    ref={inputRef}
-                                    type="text"
-                                    value={messageInput}
-                                    onChange={handleInputChange}
-                                    placeholder={
-                                      editingMessage
-                                        ? "Edit message..."
-                                        : "Type a message..."
-                                    }
-                                    className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                                    onKeyDown={async (e) => {
-                                      if (e.key === "Enter") {
-                                        e.preventDefault();
+                                {isRecording ?
+                                  <>
+                                    <div>
+                                      <button
+                                        type="button"
+                                        className="p-2 hover:bg-gray-100 rounded-full transition-colors bg-primary  dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                        aria-label="Voice message"
+                                        onClick={handleVoiceMessage}
+                                      >
+                                        <IoMicOutline
+                                          className={`w-6 h-6 ${isRecording ? "text-white" : ""
+                                            }`}
+                                        />
+                                      </button>
 
-                                        if (selectedFiles.length > 0) {
-                                          await handleMultipleFileUpload(
-                                            selectedFiles
-                                          ); // Upload selected files
-                                          setSelectedFiles([]); // Clear selected files after sending
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
+                                        <div className="flex items-center justify-start h-full w-full relative">
+                                          <div className="flex items-center  gap-1 h-full absolute">
+                                            {barHeights.map((height, index) => {
+                                              // Calculate a height that centers around the middle
+                                              const variationFactor = recording ? 1 : 0.6;
+                                              const barHeight = height * variationFactor;
+
+                                              return (
+                                                <div
+                                                  key={index}
+                                                  className="flex flex-col justify-center h-full"
+                                                >
+                                                  <div
+                                                    style={{
+                                                      width: '3px',
+                                                      height: `${barHeight*2}%`,
+                                                      marginTop: `-${barHeight / 2}%`
+                                                    }}
+                                                    className="bg-black dark:bg-white rounded-xl"
+                                                  />
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className=" text-black/60 dark:text-white/60  me-3 text-sm">
+                                      {isRecording && <span>{new Date(recordingTime * 1000).toISOString().substr(14, 5)}</span>} {/* Display recording time in mm:ss format */}
+                                    </div>
+                                  </>
+
+                                  : ''}
+                                {!isRecording && (
+                                  <>
+                                    <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                                      <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={messageInput}
+                                        onChange={handleInputChange}
+                                        placeholder={
+                                          editingMessage
+                                            ? "Edit message..."
+                                            : "Type a message..."
                                         }
-                                        await handleSubmit(e);
-                                      } else if (
-                                        e.key === "Escape" &&
-                                        editingMessage
-                                      ) {
-                                        setEditingMessage(null);
-                                        setMessageInput("");
+                                        className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                        onKeyDown={async (e) => {
+                                          if (e.key === "Enter") {
+                                            e.preventDefault();
+
+                                            if (selectedFiles.length > 0) {
+                                              await handleMultipleFileUpload(
+                                                selectedFiles
+                                              ); // Upload selected files
+                                              setSelectedFiles([]); // Clear selected files after sending
+                                            }
+                                            await handleSubmit(e);
+                                          } else if (
+                                            e.key === "Escape" &&
+                                            editingMessage
+                                          ) {
+                                            setEditingMessage(null);
+                                            setMessageInput("");
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                      aria-label="Add emoji"
+                                      onClick={() =>
+                                        setIsEmojiPickerOpen(!isEmojiPickerOpen)
                                       }
-                                    }}
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                                  aria-label="Add emoji"
-                                  onClick={() =>
-                                    setIsEmojiPickerOpen(!isEmojiPickerOpen)
-                                  }
-                                >
-                                  <PiSmiley className="w-6 h-6 " />
-                                </button>
+                                    >
+                                      <PiSmiley className="w-6 h-6 " />
+                                    </button>
+                                  </>
+                                )}
+
+
                                 {isEmojiPickerOpen && (
                                   <div
                                     ref={emojiPickerRef}
-                                    className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px]"
+                                    className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px] z-50"
                                   >
                                     <EmojiPicker
                                       onEmojiClick={onEmojiClick}
@@ -2476,57 +2734,61 @@ const Chat2 = () => {
                                 )}
 
                                 <div className="flex items-center gap-1 flex-shrink-0">
-                                  <input
-                                    id="file-upload"
-                                    type="file"
-                                    multiple
-                                    accept="*/*"
-                                    className="hidden"
-                                    onChange={handleInputChange}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                    aria-label="Attach file"
-                                    onClick={() =>
-                                      document
-                                        .getElementById("file-upload")
-                                        .click()
-                                    }
-                                  >
-                                    {selectedFiles &&
-                                      selectedFiles.length > 0 ? (
-                                      <GoPlusCircle className="w-6 h-6 " />
-                                    ) : (
-                                      <svg
-                                        width={24}
-                                        height={24}
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-6 h-6"
+                                  {!isRecording &&
+                                    <>
+                                      <input
+                                        id="file-upload"
+                                        type="file"
+                                        multiple
+                                        accept="*/*"
+                                        className="hidden"
+                                        onChange={handleInputChange}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                        aria-label="Attach file"
+                                        onClick={() =>
+                                          document
+                                            .getElementById("file-upload")
+                                            .click()
+                                        }
                                       >
-                                        <path
-                                          d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                          stroke="currentColor"
-                                          strokeWidth="1.5"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
+                                        {selectedFiles &&
+                                          selectedFiles.length > 0 ? (
+                                          <GoPlusCircle className="w-6 h-6 " />
+                                        ) : (
+                                          <svg
+                                            width={24}
+                                            height={24}
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="w-6 h-6"
+                                          >
+                                            <path
+                                              d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                              stroke="currentColor"
+                                              strokeWidth="1.5"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          </svg>
+                                        )}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                        aria-label="Voice message"
+                                        onClick={() => { handleVoiceMessage(); startRecording() }}
+                                      >
+                                        <IoMicOutline
+                                          className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                                            }`}
                                         />
-                                      </svg>
-                                    )}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                    aria-label="Voice message"
-                                    onClick={handleVoiceMessage}
-                                  >
-                                    <IoMicOutline
-                                      className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
-                                        }`}
-                                    />
-                                  </button>
+                                      </button>
+                                    </>
+                                  }
                                   <button
                                     type="submit"
                                     className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black"
@@ -2534,6 +2796,9 @@ const Chat2 = () => {
                                       if (selectedFiles.length > 0) {
                                         handleMultipleFileUpload(selectedFiles); // Upload selected files
                                         setSelectedFiles([]); // Clear selected files after sending
+                                      }
+                                      if (isRecording) {
+                                        handleVoiceMessage();
                                       }
                                     }}
                                   >
@@ -3222,7 +3487,7 @@ const Chat2 = () => {
                         {selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` &&
 
                           <div className="absolute inset-0 bg-black opacity-60 z-10" >
-                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={()=>{handleDeleteMessage(message._id); setIsImageModalOpen(false);}}>
+                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={() => { handleDeleteMessage(message._id); setIsImageModalOpen(false); }}>
                               <GoTrash />
                             </div>
                           </div>
@@ -3394,7 +3659,7 @@ const Chat2 = () => {
               <button
                 onClick={() => setIsDeleteChatModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
-              >   
+              >
                 <ImCross />
               </button>
             </h3>
