@@ -21,6 +21,8 @@ import {
   FaUserPlus,
   FaFile,
   FaFileAudio,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
 import {
@@ -38,7 +40,7 @@ import {
   LuScreenShareOff,
 } from "react-icons/lu";
 import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo, GoMute, GoPlusCircle } from "react-icons/go";
+import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
 import {
@@ -74,6 +76,8 @@ import {
   getAllCallUsers,
   archiveUser,
   blockUser,
+  deleteChat,
+  pinChat,
 } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
@@ -151,6 +155,8 @@ const Chat2 = () => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   //changes end
   const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(null);
+  const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
 
   const [participantOpen, setParticipantOpen] = useState(false);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
@@ -185,6 +191,7 @@ const Chat2 = () => {
 
   const [isDragging, setIsDragging] = useState(false);
   const dropAreaRef = useRef(null);
+  const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
 
   //===========Use the custom socket hook===========
   const {
@@ -1359,6 +1366,17 @@ const Chat2 = () => {
     });
   };
 
+  const handleDeleteChat = async () => {
+    await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
+      dispatch(deleteChat({ selectedUserId: selectedChat._id })).then(() => {
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+        dispatch(getAllMessageUsers());
+        setIsDeleteChatModalOpen(false);
+        setSelectedChat('')
+      });
+    });
+  };
+
   // Add useEffect to handle input focus when chat is selected
   useEffect(() => {
     if (selectedChat && inputRef.current) {
@@ -1575,6 +1593,20 @@ const Chat2 = () => {
       }
     }
   }, [user, selectedChat?._id]);
+
+  // Function to get video duration
+  const getVideoDuration = (videoElement) => {
+    return videoElement.duration; // Return the duration of the video
+  };
+
+  // Function to handle video metadata loading
+  const handleVideoMetadataLoad = (messageId, videoElement) => {
+    const duration = getVideoDuration(videoElement); // Get the duration using the utility function
+    setVideoDurations((prev) => ({
+      ...prev,
+      [messageId]: duration, // Store duration by message ID
+    }));
+  };
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -1886,9 +1918,18 @@ const Chat2 = () => {
                                   <ul>
                                     <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                      onClick={async () => {
+                                        await dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(getUser(currentUser));
+                                        await dispatch(getAllMessageUsers());
+                                      }}
                                     >
+                                     { console.log(user)}
+                                      
                                       <SlPin className="text-lg" />{" "}
-                                      Pin Chat
+                                      {user.pinChatFor?.includes(selectedChat?._id)
+                                        ? "UnPin Chat"
+                                        : "Pin Chat"}
                                     </li>
                                     <li
                                       onClick={() => {
@@ -1902,7 +1943,7 @@ const Chat2 = () => {
 
                                     <li
                                       onClick={() => {
-                                        setIsClearChatModalOpen(true);
+                                        setIsDeleteChatModalOpen(true);
                                       }}
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                     >
@@ -1998,16 +2039,27 @@ const Chat2 = () => {
                                   ref={mobileMenuRef}
                                 >
                                   <div className="py-2 w-48">
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        setIsClearChatModalOpen(true);
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                                      <span>Clear Chat</span>
-                                    </button>
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsClearChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                                        <span>Clear Chat</span>
+                                      </button>
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsDeleteChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <RiDeleteBinLine className="w-5 h-5 mr-2" />
+                                        <span>Delete Chat</span>
+                                      </button>
 
                                     <button
                                       className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
@@ -2312,7 +2364,7 @@ const Chat2 = () => {
                                 <button
                                   className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
                                   onClick={() => {
-                                    setIsClearChatModalOpen(true);
+                                    setIsDeleteChatModalOpen(true);
                                   }}
                                 >
                                   Delete Chat
@@ -3132,17 +3184,122 @@ const Chat2 = () => {
         }}
       />
 
-      {((isProfileImageModalOpen && selectedProfileImage) ||
+      {/* {console.log("aa", isProfileImageModalOpen, isImageModalOpen, messages)} */}
+
+      {(
         (isImageModalOpen && selectedImage)) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="relative w-full h-full flex items-center justify-center p-8">
-              <img
-                src={
-                  isProfileImageModalOpen ? selectedProfileImage : selectedImage
-                }
-                alt="Profile"
-                className="max-w-full max-h-full object-contain"
-              />
+            <div className="relative w-full h-full flex items-center flex-col justify-center gap-2 p-8">
+              <div style={{ height: 'calc(100vh - 80px)' }} className="">
+                {selectedImage && ( // Conditionally render the selected media
+                  <div className="mb-4">
+                    {selectedImage.endsWith('.mp4') ? ( // Check if the selected media is a video
+                      <video
+                        src={selectedImage}
+                        alt="Selected Video"
+                        style={{ height: 'calc(100vh - 180px)', width: 'calc(100vh - 180px)' }}
+                        className="object-cover mb-2" // Adjust styles as needed
+                        controls // Add controls for video playback
+                        autoPlay
+                      />
+                    ) : (
+                      <img
+                        src={selectedImage}
+                        alt="Selected"
+                        style={{ height: 'calc(100vh - 180px)', width: 'calc(100vh - 180px)' }}
+                        className="object-cover mb-2" // Adjust styles as needed
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 items-end ">
+                {messages.map((message, index) => (
+                  <React.Fragment key={index}>
+                    {message.content && message.content.fileType && message.content.fileType.startsWith('image/') && (
+                      <div className="relative">
+                        {selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` &&
+
+                          <div className="absolute inset-0 bg-black opacity-60 z-10" >
+                            <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={()=>{handleDeleteMessage(message._id); setIsImageModalOpen(false);}}>
+                              <GoTrash />
+                            </div>
+                          </div>
+                        }
+
+                        <img
+                          className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                          src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                          alt={`Image ${index}`}
+                          onClick={() => {
+                            setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected image on click
+                          }}
+                        />
+                      </div>
+                    )}
+                    {message.content && message.content.fileType && message.content.fileType.startsWith('video/') && ( // Add video rendering
+                      <div className="flex flex-col items-center relative cursor-pointer" onClick={() => {
+                        setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected video on click
+                      }}>
+                        <div className="relative ">
+                          <div className="absolute inset-0 bg-black opacity-50 z-10" /> {/* Overlay layer */}
+                          <video
+                            className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                            src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                            alt={`Video ${index}`}
+                            onLoadedMetadata={(e) => {
+                              handleVideoMetadataLoad(message._id, e.target); // Call the function to update duration
+                            }}
+
+                          />
+                          {videoDurations[message._id] && (
+                            <span className="text-xs text-white absolute bottom-1 left-1 z-20">
+                              {Math.floor(videoDurations[message._id] / 60)}:
+                              {(Math.floor(videoDurations[message._id]) % 60).toString().padStart(2, '0')} {/* Format duration */}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* Add buttons to switch images and videos */}
+              <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
+                <button
+                  onClick={() => {
+                    // Filter messages to only include media messages (images and videos)
+                    const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
+                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length; // Wrap around to the last media
+                    setSelectedImage(`${IMG_URL}${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                  }}
+                  className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
+                >
+                  <span>
+                    <FaChevronLeft />
+                  </span>
+                </button>
+              </div>
+              <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+                <button
+                  onClick={() => {
+                    // Filter messages to only include media messages (images and videos)
+                    const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
+                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const nextIndex = (currentIndex + 1) % mediaMessages.length; // Wrap around to the first media
+                    setSelectedImage(`${IMG_URL}${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                  }}
+                  className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
+                >
+                  <span>
+                    <FaChevronRight />
+                  </span>
+                </button>
+              </div>
+
               <button
                 onClick={() => {
                   if (isProfileImageModalOpen) {
@@ -3153,11 +3310,38 @@ const Chat2 = () => {
                 }}
                 className="absolute top-4 right-4 text-white hover:text-gray-300"
               >
-                <ImCross className="w-6 h-6" />
+                <RxCross2 className="w-6 h-6" />
               </button>
             </div>
           </div>
         )}
+      {/* profile photo */}
+      {(isProfileImageModalOpen && selectedProfileImage) && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative w-full h-full flex items-center justify-center p-8">
+
+            <img
+              src={
+                isProfileImageModalOpen ? selectedProfileImage : ''
+              }
+              alt="Profile"
+              className="max-w-full max-h-full object-contain"
+            />
+            <button
+              onClick={() => {
+                if (isProfileImageModalOpen) {
+                  setIsProfileImageModalOpen(false);
+                } else if (isImageModalOpen) {
+                  setIsImageModalOpen(false);
+                }
+              }}
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
+            >
+              <ImCross className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Forward Modal */}
       {showForwardModal && (
         <ForwardModal
@@ -3196,6 +3380,39 @@ const Chat2 = () => {
                 className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
               >
                 Clear Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeleteChatModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Delete Chat</p>
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >   
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to delete this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Delete Chat
               </button>
             </div>
           </div>
