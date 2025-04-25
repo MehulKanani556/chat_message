@@ -611,6 +611,22 @@ export const pinChat = createAsyncThunk(
   }
 );
 
+export const muteChat = createAsyncThunk(
+  "user/muteChat",
+  async ({ selectedUserId }, { rejectWithValue }) => {
+    try {
+      const token = await sessionStorage.getItem("token");
+      const response = await axios.post(`${BASE_URL}/muteChat`, { selectedUserId }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
 
 
 
@@ -909,7 +925,7 @@ const userSlice = createSlice({
       .addCase(deleteChat.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to delete chat";
+        state.message = action.payload?.message || "Failed to delete chat";       
       })
       .addCase(pinChat.fulfilled, (state, action) => {
         state.loading = false;
@@ -920,7 +936,17 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to pinChat chat";
-      });
+      })
+      .addCase(muteChat.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.message = "Chat muteChat successfully";
+      })
+      .addCase(muteChat.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+        state.message = action.payload?.message || "Failed to muteChat chat";
+      })
       
   },
 });

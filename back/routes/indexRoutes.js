@@ -12,6 +12,8 @@ const {
   blockUser,
   deleteChat,
   pinChat,
+  muteUsers,
+  mute,
 } = require("../controller/userController");
 const {
   userLogin,
@@ -70,6 +72,7 @@ indexRoutes.post("/archiveUser", auth, archiveUser);
 indexRoutes.post("/blockUser", auth, blockUser);
 indexRoutes.post("/deleteChat", auth, deleteChat);
 indexRoutes.post("/pinChat", auth, pinChat);
+indexRoutes.post("/muteChat", auth, muteUsers);
 
 
 // Group Routes

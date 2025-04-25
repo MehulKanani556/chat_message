@@ -7,6 +7,7 @@ const {
 } = require("../controller/groupController");
 const User = require("../models/userModels");
 const jwt = require('jsonwebtoken');
+const Groups = require("../models/groupModel");
 
 const onlineUsers = new Map();
 
@@ -252,17 +253,18 @@ function handleScreenShareSignal(socket, data) {
 
 // ===========================Video call=============================
 
-function handleVideoCallRequest(socket, data) {
-  const targetSocketId = onlineUsers.get(data.toEmail);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("video-call-request", {
-      fromEmail: data.fromEmail,
-      signal: data.signal,
-      type: data.type,
-      participants: data.participants,
-      isGroupCall: data.isGroupCall,
-    });
-  }
+async function handleVideoCallRequest(socket, data) {
+    const targetSocketId = onlineUsers.get(data.toEmail);
+    if (targetSocketId) {
+      socket.to(targetSocketId).emit("video-call-request", {
+        fromEmail: data.fromEmail,
+        signal: data.signal,
+        type: data.type,
+        participants: data.participants,
+        isGroupCall: data.isGroupCall,
+        groupId: data?.groupId || null
+      });
+    }
 }
 
 function handleVideoCallInvite(socket, data) {
@@ -307,6 +309,7 @@ function handleParticipantLeft(socket, data) {
 }
 
 function handleVideoCallAccept(socket, data) {
+  
   const targetSocketId = onlineUsers.get(data.fromEmail);
   if (targetSocketId) {
     socket.to(targetSocketId).emit("video-call-accepted", {
