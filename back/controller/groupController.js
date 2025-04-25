@@ -65,7 +65,7 @@ async function addParticipants(req, res) {
         receiverId: groupId,
         content: {
           type: "system",
-          content: `**${addedByUser.userName}** added **${memberName.userName}** to this conversation`,
+          content: `**${addedByUser.userName}** added **${memberName.userName}** `,
         },
       });
      }

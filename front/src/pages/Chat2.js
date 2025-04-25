@@ -1630,26 +1630,26 @@ const Chat2 = () => {
     }));
   };
 
-  let audioContext;
+  // let audioContext;
 
-  try {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    console.log('AudioContext created successfully');
-  } catch (error) {
-    console.error('Failed to create AudioContext:', error);
-  }
+  // try {
+  //   audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  //   console.log('AudioContext created successfully');
+  // } catch (error) {
+  //   console.error('Failed to create AudioContext:', error);
+  // }
 
-  // Example of resuming the AudioContext
-  if (audioContext.state === 'suspended') {
-    audioContext.resume().then(() => {
-      console.log('AudioContext resumed');
-    }).catch(err => {
-      console.error('Error resuming AudioContext:', err);
-    });
-  }
+  // // Example of resuming the AudioContext
+  // if (audioContext.state === 'suspended') {
+  //   audioContext.resume().then(() => {
+  //     console.log('AudioContext resumed');
+  //   }).catch(err => {
+  //     console.error('Error resuming AudioContext:', err);
+  //   });
+  // }
 
-  const analyser = audioContext.createAnalyser();
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  // const analyser = audioContext.createAnalyser();
+  // const dataArray = new Uint8Array(analyser.frequencyBinCount);
   const [recording, setRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
 
