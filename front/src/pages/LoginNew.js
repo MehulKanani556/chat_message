@@ -10,6 +10,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch, useSelector } from "react-redux";
 import { mobileOtp, verifyMobileOtp } from "../redux/slice/auth.slice";
+import QRLoginPage from "./QRLoginPage";
 
 const LoginNew = () => {
   const dispatch = useDispatch();
@@ -185,11 +186,7 @@ const LoginNew = () => {
             Scan to Login with Chat App
           </h3>
           <div className="bg-white p-4 rounded-lg mb-6">
-            <QRCodeSVG
-              value={Math.random().toString(36).substring(2, 15)}
-              size={200}
-              level="H"
-            />
+           <QRLoginPage />
           </div>
           <div className="text-center">
             <a href="#" className="text-white/80 text-sm hover:text-white">

@@ -13,7 +13,7 @@ import Groups from "./component/Group";
 import { initializePrimaryColor } from "./utils/themeUtils";
 import { useEffect } from "react";
 import LoginNew from "./pages/LoginNew";
-import VoiceRecorder from "./pages/VoiceRecorder";
+import QRLoginPage from "./pages/QRLoginPage";
 
 function App() {
   const { store, persistor } = configureStore();
@@ -43,7 +43,7 @@ function App() {
         <Route path="/chatNew" element={<ChatNew />}></Route>
         <Route path="/profile/:userId" element={<UserProfile />}></Route>
         <Route path="/groups" element={<Groups />}></Route>
-        <Route path="/v" element={<VoiceRecorder />}></Route>
+        <Route path="/g" element={<QRLoginPage />}></Route>
         {/* <Route path="/chat2" element={<Chat11 />}></Route> */}
         {/* <Route path="/front" element={<Front />}></Route> */}
         {/* <Route path="/chatNew" element={<ChatNew/>}></Route> */}

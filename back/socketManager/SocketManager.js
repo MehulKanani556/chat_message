@@ -6,8 +6,15 @@ const {
   findGroupById,
 } = require("../controller/groupController");
 const User = require("../models/userModels");
+const jwt = require('jsonwebtoken');
 
 const onlineUsers = new Map();
+
+// Store active sessions
+const activeSessions = {};
+
+// Add your JWT secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_this_in_production';
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
@@ -704,9 +711,49 @@ function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
 
-    // socket.on("user-login", (userId) => {
-    //   handleUserLogin(socket, userId);
-    // });
+    // Handle session creation from website
+    socket.on('create_session', (data) => {
+      const { sessionId } = data;
+      console.log('Session created:', sessionId);
+      
+      // Store session with TTL (Time To Live)
+      activeSessions[sessionId] = {
+        socketId: socket.id,
+        createdAt: Date.now(),
+        expires: Date.now() + (2 * 60 * 1000) // 2 minutes expiry
+      };
+    });
+    
+    // Handle authentication from mobile app
+    socket.on('authenticate', (data) => {
+      const { sessionId, userId, username } = data;
+      
+      if (activeSessions[sessionId]) {
+        const sessionSocketId = activeSessions[sessionId].socketId;
+        
+        // Generate JWT token
+        const token = jwt.sign({ userId, username }, JWT_SECRET, { expiresIn: '7d' });
+        
+        // Notify web client of successful authentication
+        io.to(sessionSocketId).emit('auth_success', {
+          sessionId,
+          userId,
+          username,
+          token
+        });
+        
+        console.log(`User ${userId} (${username}) authenticated for session ${sessionId}`);
+        
+        // Clean up the session
+        delete activeSessions[sessionId];
+      } else {
+        // Session not found or expired
+        socket.emit('auth_error', { 
+          message: 'Invalid or expired session',
+          sessionId
+        });
+      }
+    });
 
     socket.on("user-login", async (userId) => {
       handleUserLogin(socket, userId);
@@ -782,6 +829,19 @@ function initializeSocket(io) {
     socket.on("camera-status-change", (data) => handleCameraStatusChange(socket, data));
   });
 }
+
+// Clean expired sessions every minute
+setInterval(() => {
+  const now = Date.now();
+  Object.keys(activeSessions).forEach(sessionId => {
+    if (now > activeSessions[sessionId].expires) {
+      const socketId = activeSessions[sessionId].socketId;
+      io.to(socketId).emit('session_expired', { sessionId });
+      delete activeSessions[sessionId];
+      console.log('Session expired:', sessionId);
+    }
+  });
+}, 60 * 1000);
 
 module.exports = {
   handleDisconnect,
