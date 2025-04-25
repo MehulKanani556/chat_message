@@ -56,6 +56,8 @@ import {
   IoMicOutline,
   IoPersonCircleOutline,
   IoVideocamOutline,
+  IoVolumeLowOutline,
+  IoVolumeOffOutline,
 } from "react-icons/io5";
 import { useSocket } from "../hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
@@ -78,6 +80,7 @@ import {
   blockUser,
   deleteChat,
   pinChat,
+  muteChat,
 } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
@@ -98,6 +101,7 @@ import ProfileUser from "../component/ProfileUser";
 import CallHistory from "../component/CallHistory";
 import ForwardModal from "../component/ForwardModal";
 import { SlPin } from "react-icons/sl";
+import IncomingCall from "../component/IncomingCall";
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -308,6 +312,9 @@ const Chat2 = () => {
     // Don't show notification if the chat is currently selected
     if (selectedChat && selectedChat._id === message.sender) return;
 
+    if(!user?.notification) return;
+    if(user?.muteUsers?.includes(message.sender)) return;
+    
     // Create notification content
     let notificationTitle = senderName || "New Message";
     let notificationBody = "";
@@ -692,6 +699,7 @@ const Chat2 = () => {
   }, []);
 
   //===========handle multiple file upload===========
+console.log(selectedChat);
 
   const handleMultipleFileUpload = async (files,userId) => {
     const filesArray = Array.from(files); // Convert FileList to an array
@@ -745,17 +753,36 @@ const Chat2 = () => {
   const handleMakeCall = async (type) => {
     if (!selectedChat) return;
 
-    if (type == "video") {
-      const success = await startVideoCall(selectedChat._id);
-      // console.log(success);
-      if (!success) {
-        console.error("Failed to start screen sharing");
-      }
-    } else if (type == "voice") {
-      const success = await startVoiceCall(selectedChat._id);
-      console.log(success);
-      if (!success) {
-        console.error("Failed to start voice call");
+    if(selectedChat?.members){
+      
+      // selectedChat?.members.length>0 && selectedChat?.members.map(async(user)=>{
+        if (type == "video") {
+          const success = await startVideoCall(selectedChat._id,true,selectedChat);
+          // console.log(success);
+          if (!success) {
+            console.error("Failed to start screen sharing");
+          }
+        } else if (type == "voice") {
+          const success = await startVoiceCall(selectedChat._id,true,selectedChat);
+          console.log(success);
+          if (!success) {
+            console.error("Failed to start voice call");
+          }
+        }
+      // })
+    }else{
+      if (type == "video") {
+        const success = await startVideoCall(selectedChat._id);
+        // console.log(success);
+        if (!success) {
+          console.error("Failed to start screen sharing");
+        }
+      } else if (type == "voice") {
+        const success = await startVoiceCall(selectedChat._id);
+        console.log(success);
+        if (!success) {
+          console.error("Failed to start voice call");
+        }
       }
     }
   };
@@ -1369,12 +1396,17 @@ const Chat2 = () => {
   const handleDeleteChat = async () => {
     await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
       dispatch(deleteChat({ selectedUserId: selectedChat._id })).then(() => {
+        if(user.pinChatFor?.includes(selectedChat?._id)){
+          dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+        }
         dispatch(getAllMessages({ selectedId: selectedChat._id }));
         dispatch(getAllMessageUsers());
         setIsDeleteChatModalOpen(false);
         setSelectedChat('')
       });
     });
+
+   
   };
 
   // Add useEffect to handle input focus when chat is selected
@@ -1931,31 +1963,26 @@ const Chat2 = () => {
                                         ? "UnPin Chat"
                                         : "Pin Chat"}
                                     </li>
-                                    <li
-                                      onClick={() => {
-                                        setIsClearChatModalOpen(true);
-                                      }}
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                    >
-                                      <MdOutlineCancel className="text-lg" />{" "}
-                                      Clear Chat
-                                    </li>
-
-                                    <li
-                                      onClick={() => {
-                                        setIsDeleteChatModalOpen(true);
-                                      }}
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                    >
-                                      <RiDeleteBinLine className="text-lg" />{" "}
-                                      Delete Chat
-                                    </li>
-                                    <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2">
+                                   
+                                    <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                      onClick={async () => {
+                                        await dispatch(muteChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(getUser(currentUser));
+                                        await dispatch(getAllMessageUsers());
+                                      }}>
                                       {/* <GoMute className="text-lg" />  */}
+                                      {user.muteUsers?.includes(selectedChat?._id) ? 
+                                      <>
+                                      <IoVolumeOffOutline className="text-2xl w-5"/>
+                                        UnMute
+                                      </>
+                                      : 
+                                      <>
                                       <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
+                                      <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
                                       </svg>
                                       Mute
+                                      </>}
                                     </li>
                                     {selectedChat?.members && (
                                       <li
@@ -1989,6 +2016,25 @@ const Chat2 = () => {
                                       )
                                         ? "UnArchive Chat"
                                         : "Archive Chat"}
+                                    </li>
+                                    <li
+                                      onClick={() => {
+                                        setIsClearChatModalOpen(true);
+                                      }}
+                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                    >
+                                      <MdOutlineCancel className="text-lg" />{" "}
+                                      Clear Chat
+                                    </li>
+
+                                    <li
+                                      onClick={() => {
+                                        setIsDeleteChatModalOpen(true);
+                                      }}
+                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                    >
+                                      <RiDeleteBinLine className="text-lg" />{" "}
+                                      Delete Chat
                                     </li>
                                     <li
                                       className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-red-500"
@@ -2121,20 +2167,19 @@ const Chat2 = () => {
                         </div>
 
                         {isSearchBoxOpen && (
+                          <div className="absolute top-32 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
+                          style={{
+                            transform: "translate(-50%, -50%)",
+                          }}>
                           <div
-                            className="absolute top-24 right-0 left-[50%] max-w-[500px] w-full bg-white shadow-lg p-4 z-50 flex items-center border-rounded"
-                            style={{
-                              padding: "5px 25px",
-                              borderRadius: "30px",
-                              transform: "translate(-50%, -50%)",
-                            }}
+                            className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
                             ref={searchBoxRef}
                           >
                             <FaSearch className="text-gray-500 mr-2" />
                             <input
                               type="text"
                               placeholder="Search..."
-                              className="flex-1 p-2 outline-none min-w-[20px]"
+                              className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
                               value={searchInputbox}
                               onChange={(e) => {
                                 setSearchInputbox(e.target.value);
@@ -2147,26 +2192,28 @@ const Chat2 = () => {
                                 : "0 / 0"}
                             </span>
                             <button
-                              className="text-black hover:text-gray-700 ms-5"
+                              className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
                               onClick={() => handleSearchNavigation("up")}
                             >
                               <IoIosArrowUp />
                             </button>
                             <button
-                              className="text-black hover:text-gray-700"
+                              className="hover:text-black hover:dark:text-white text-xl"
                               onClick={() => handleSearchNavigation("down")}
                             >
                               <IoIosArrowDown />
                             </button>
+                          
+                          </div>
                             <button
-                              className="text-black hover:text-gray-700 ms-5"
-                              onClick={() => {
-                                setIsSearchBoxOpen(false);
-                                setSearchInputbox(""); // Clear the input box
-                              }}
-                            >
-                              Cancel
-                            </button>
+                            className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
+                            onClick={() => {
+                              setIsSearchBoxOpen(false);
+                              setSearchInputbox(""); // Clear the input box
+                            }}
+                          >
+                           <RxCross2 />
+                          </button>
                           </div>
                         )}
 
@@ -2617,6 +2664,9 @@ const Chat2 = () => {
                   socket={socket}
                   IMG_URL={IMG_URL}
                   setSelectedChat={setSelectedChat}
+                  handleMakeCall={handleMakeCall}
+                  messages={messages}
+                  handleImageClick={handleImageClick}
                 />
               )}
               {isModalOpen && (
@@ -2655,12 +2705,17 @@ const Chat2 = () => {
                   selectedChat={selectedChat}
                   messages={messages}
                   handleImageClick={handleImageClick}
+                  handleMakeCall={handleMakeCall}
+                  onlineUsers={onlineUsers}
                 />
               )}
             </div>
           </>
         </>
       )}
+
+      {console.log("remoteStreams",remoteStreams)}
+      
 
       {/*========== screen share ==========*/}
       <div
@@ -2831,62 +2886,14 @@ const Chat2 = () => {
 
       {/* ========= incoming call ========= */}
       {incomingCall && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-white/15 flex items-center justify-center z-[9999]">
-          <div className="bg-black rounded-lg p-6 w-96 text-center">
-
-            <h3 className="text-2xl text-white">
-              {
-                allUsers.find((user) => user._id === incomingCall.fromEmail)
-                  ?.userName
-              }
-            </h3>
-            <p className="text-gray-400 mb-4 animate-pulse">
-              is Calling You.
-              {/* {incomingCall.type} call */}
-            </p>
-            <div className="w-20 h-20 mx-auto mb-10 rounded-full overflow-hidden">
-              {/* Profile image or default avatar */}
-              {allUsers.find((user) => user._id === incomingCall.fromEmail)
-                ?.photo &&
-                allUsers.find((user) => user._id === incomingCall.fromEmail)
-                  ?.photo !== "null" ? (
-                <img
-                  src={`${IMG_URL}${allUsers
-                    .find((user) => user._id === incomingCall.fromEmail)
-                    ?.photo.replace(/\\/g, "/")}`} // Replace with actual user profile image
-                  alt="Caller"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-300 grid place-content-center">
-                  <IoPersonCircleOutline className="text-4xl" />
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center gap-8">
-              {/* {console.log(incomingCall.type)} */}
-              <button
-                onClick={() => rejectVideoCall(incomingCall.type)}
-                className="w-[40%] h-10 bg-[#FF0000] text-white rounded-md flex items-center justify-center hover:bg-red-600"
-              >
-                {/* <MdCallEnd className="text-xl" /> */}
-                Decline
-              </button>
-              <button
-                onClick={
-                  incomingCall.type === "video"
-                    ? acceptVideoCall
-                    : acceptVoiceCall
-                }
-                className="w-[40%] h-10 bg-[#22C55E] text-white rounded-md flex items-center justify-center hover:bg-[#22C55E85] animate-bounce"
-              >
-                {/* <FaPhone className="text-xl" /> */}
-                Accept
-              </button>
-            </div>
-          </div>
-        </div>
+        <IncomingCall
+        incomingCall={incomingCall}
+        allUsers={allUsers} 
+        groups={groups} 
+        rejectVideoCall={rejectVideoCall} 
+        acceptVideoCall= {acceptVideoCall} 
+        acceptVoiceCall={acceptVoiceCall}
+        />
       )}
 
       {incomingShare && (
