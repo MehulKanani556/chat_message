@@ -444,7 +444,7 @@ async function handleCreateGroup(socket, data) {
       receiverId: data._id, // group ID
       content: {
         type: "system",
-        content: `**${createdByUser.userName}** created the group`,
+        content: `**${createdByUser.userName}** has created the group`,
       },
     });
 

@@ -9,15 +9,15 @@ const AudioPlayer = ({ audioUrl }) => {
   const audioRef = useRef(null);
   const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
-  const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2]; // Array of playback rates
-  const [currentRateIndex, setCurrentRateIndex] = useState(3); // Start at 1x (index 3)
+  const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2]; 
+  const [currentRateIndex, setCurrentRateIndex] = useState(3); 
 
   useEffect(() => {
     // Initialize WaveSurfer
     wavesurferRef.current = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: "text-gray-500 dark:text-gray-200", // Gray color for light mode, and lighter gray for dark mode
-      progressColor: "text-gray-900 dark:text-white", // Black color for light mode, and white for dark mode
+      waveColor: "#484848", 
+      progressColor: "#808080", 
       cursorColor: "transparent",
       barWidth: 3,
       barGap: 2,
@@ -68,13 +68,13 @@ const AudioPlayer = ({ audioUrl }) => {
     <div className="w-full min-w-[250px] max-w-full bg-white dark:bg-[#1A1A1A] rounded-lg shadow-sm p-2 py-1">
       <div className="flex items-center gap-2 sm:gap-3 w-full">
         <button
-          className="flex-shrink-0 w-6 h-6 sm:w-7 border border-[#1A1A1A] sm:h-7 flex items-center justify-center bg-white text-black rounded-full hover:bg-blue-600 transition-colors"
+          className="flex-shrink-0 w-6 h-6 sm:w-7 border border-[#1A1A1A] sm:h-7 flex items-center justify-center bg-white text-black rounded-full hover:bg-primary/70 transition-colors"
           onClick={togglePlayPause}
         >
           {isPlaying ? (
-            <IoIosPause size={20} />
+            <IoIosPause size={18} className="" />
           ) : (
-            <IoPlay size={12} className="ml-1" />
+            <IoPlay size={16} className="ml-[1px]" />
           )}
         </button>
 

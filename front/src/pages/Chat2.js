@@ -707,7 +707,7 @@ const Chat2 = () => {
   }, []);
 
   //===========handle multiple file upload===========
-console.log(selectedChat);
+
 
   const handleMultipleFileUpload = async (files, userId) => {
     const filesArray = Array.from(files); // Convert FileList to an array
@@ -754,44 +754,25 @@ console.log(selectedChat);
     }
   };
 
+
+  
+
   // =========================== video call=============================
 
   // Add call handling functions
 
   const handleMakeCall = async (type) => {
     if (!selectedChat) return;
-
     if(selectedChat?.members){
-      
-      // selectedChat?.members.length>0 && selectedChat?.members.map(async(user)=>{
-        if (type == "video") {
-          const success = await startVideoCall(selectedChat._id,true,selectedChat);
-          // console.log(success);
+          const success = await startVideoCall(selectedChat._id,true,selectedChat,type);
           if (!success) {
             console.error("Failed to start screen sharing");
           }
-        } else if (type == "voice") {
-          const success = await startVoiceCall(selectedChat._id,true,selectedChat);
-          console.log(success);
-          if (!success) {
-            console.error("Failed to start voice call");
-          }
-        }
-      // })
     }else{
-      if (type == "video") {
-        const success = await startVideoCall(selectedChat._id);
-        // console.log(success);
+        const success = await startVideoCall(selectedChat._id,false,selectedChat,type);
         if (!success) {
           console.error("Failed to start screen sharing");
         }
-      } else if (type == "voice") {
-        const success = await startVoiceCall(selectedChat._id);
-        console.log(success);
-        if (!success) {
-          console.error("Failed to start voice call");
-        }
-      }
     }
   };
 
@@ -837,7 +818,6 @@ console.log(selectedChat);
     document.addEventListener("click", handleClickaaa);
     return () => document.removeEventListener("click", handleClickaaa);
   }, []);
-
   // ==================group chat=================
 
   const handleAddParticipants = () => {
@@ -991,7 +971,8 @@ console.log(selectedChat);
     setIsDropdownOpen((prevState) => !prevState);
   };
 
-
+  // console.log("dfbgsdg");
+  
 
   const handleDropdownToggle = (messageId) => {
     setActiveMessageId((prev) => (prev === messageId ? null : messageId));
@@ -1145,7 +1126,6 @@ console.log(selectedChat);
       return newIndex;
     });
   };
-
   // Add state to manage recording
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -1703,26 +1683,26 @@ console.log(selectedChat);
       }
     };
   }, []);
-
+  
   // Bar animation loop
-  useEffect(() => {
-    let barAnimationId;
+  // useEffect(() => {
+  //   let barAnimationId;
     
-    const animateBars = () => {
-      setAnimationPhase(prev => (prev + 0.1) % 10);
-      barAnimationId = requestAnimationFrame(animateBars);
-    };
+  //   const animateBars = () => {
+  //     setAnimationPhase(prev => (prev + 0.1) % 10);
+  //     barAnimationId = requestAnimationFrame(animateBars);
+  //   };
     
-    if (recording || waveformData.length === 0) {
-      barAnimationId = requestAnimationFrame(animateBars);
-    }
+  //   if (recording || waveformData.length === 0) {
+  //     barAnimationId = requestAnimationFrame(animateBars);
+  //   }
     
-    return () => {
-      if (barAnimationId) {
-        cancelAnimationFrame(barAnimationId);
-      }
-    };
-  }, [recording, waveformData.length]);
+  //   return () => {
+  //     if (barAnimationId) {
+  //       cancelAnimationFrame(barAnimationId);
+  //     }
+  //   };
+  // }, [recording, waveformData.length]);
   // Start recording function
   const startRecording = async () => {
     try {
@@ -1768,6 +1748,7 @@ console.log(selectedChat);
       console.error('Error accessing microphone:', error);
     }
   };
+  
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
@@ -1848,6 +1829,7 @@ console.log(selectedChat);
     return idleData;
   };
   const barHeights = generateBarHeights();
+ 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       <Sidebar
@@ -2985,10 +2967,8 @@ console.log(selectedChat);
           </>
         </>
       )}
-
-      {console.log("remoteStreams",remoteStreams)}
       
-
+      {/* {console.log(remoteStreams)} */}
       {/*========== screen share ==========*/}
       <div
         className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData

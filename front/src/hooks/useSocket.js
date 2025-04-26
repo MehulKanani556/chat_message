@@ -24,8 +24,8 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com"; 
-const SOCKET_SERVER_URL = "http://localhost:5000"; 
+const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com"; 
+// const SOCKET_SERVER_URL = "http://localhost:5000"; 
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -504,9 +504,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       setVoiceCallData(data);
     });
 
-    socketRef.current.on(
-      "participant-joined",
-      async ({ newParticipantId, from, participants }) => {
+    socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants }) => {
         if (newParticipantId !== userId && streamRef.current) {
           console.log(
             "participant-joined",
@@ -716,18 +714,19 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
   //==========================video call=============================
 
-  const startVideoCall = async (receiverId, isGroupCall = false, selectedChat) => {
+  const startVideoCall = async (receiverId, isGroupCall = false, selectedChat = null,type) => {
     if (!receiverId) {
       setError("Please enter peer email first");
       return;
     }
+
+    const calltype = type == "video" ? "video" : "voice"
   
     try {
       let stream = null;
-  
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: hasWebcam,
+          video: calltype == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
          // Try to get media stream but don't block if devices aren't available
@@ -736,15 +735,17 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         //   video: hasWebcam,
         //   audio: hasMicrophone,
         // });
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
+        // stream = await navigator.mediaDevices.getDisplayMedia({
+        //   video: true,
+        // });
       } catch (err) {
         console.warn("Could not get media devices:", err);
       }
   
       if (stream) {
-        setIsCameraOn(true);
+        if(calltype == "video"){
+          setIsCameraOn(true);
+        }
         setIsMicrophoneOn(true);
         streamRef.current = stream;
   
@@ -776,7 +777,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
                 fromEmail: userId,
                 toEmail: member,
                 signal,
-                type: "video",
+                type: calltype,
                 isGroupCall: false,
                 participants: selectedChat.members,
                 groupId:receiverId
@@ -789,7 +790,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           });
       
           peersRef.current[member] = peer;
-          setIsVideoCalling(true);
           setPeerEmail(member);
           setCallParticipants(new Set(selectedChat.members));
         })
@@ -806,7 +806,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
               fromEmail: userId,
               toEmail: receiverId,
               signal,
-              type: "video",
+              type: calltype,
               isGroupCall: false,
               participants: [userId, receiverId],
             };
@@ -818,22 +818,22 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         });
     
         peersRef.current[receiverId] = peer;
-        setIsVideoCalling(true);
+       
         setPeerEmail(receiverId);
         setCallParticipants(new Set([userId, receiverId]));
       }
   
-   
+      if(calltype == "video"){
+        setIsVideoCalling(true);
+      }else{
+        setIsVoiceCalling(true);
+      }
 
     } catch (err) {
       console.error("Error starting video call:", err);
       endVideoCall();
     }
   };
-  
-
-  // console.log("remote stream", remoteStreams);
-
   // New function to invite additional participants
   const inviteToCall = async (newParticipantId) => {
     if (!streamRef.current) return;
@@ -850,7 +850,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           fromEmail: userId,
           toEmail: newParticipantId,
           signal,
-          type: "video",
+          type: isVideoCalling ? "video" : "voice",
           participants: Array.from(callParticipants),
         });
       });
@@ -880,10 +880,8 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       console.error("Error inviting to call:", err);
     }
   };
-
   const acceptVideoCall = async () => {
     if (!incomingCall) return;
-
     try {
       // Set call start time when call is accepted
       setCallStartTime(new Date());
@@ -893,7 +891,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       try {
         // Try to get media stream but don't block if devices aren't available
         stream = await navigator.mediaDevices.getUserMedia({
-          video: hasWebcam,
+          video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
         // stream = await navigator.mediaDevices.getDisplayMedia({
@@ -905,7 +903,9 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       }
 
       if (stream) {
-        setIsCameraOn(true);
+       if( incomingCall.type == "video"){
+         setIsCameraOn(true);
+       }
         setIsMicrophoneOn(true);
         streamRef.current = stream;
         if (localVideoRef.current) {
@@ -975,7 +975,11 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         });
       }
 
-      setIsVideoCalling(true);
+      if(incomingCall.type == "video"){
+        setIsVideoCalling(true);
+      }else{
+        setIsVoiceCalling(true);
+      }
       setPeerEmail(incomingCall.fromEmail);
       setCallParticipants(new Set(incomingCall.participants));
       setIncomingCall(null);
@@ -984,7 +988,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       endVideoCall();
     }
   };
-
   // Add function to start call duration timer
   const startCallDurationTimer = () => {
     callTimerRef.current = setInterval(() => {
@@ -994,7 +997,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       }
     }, 1000);
   };
-
   const endVideoCall = () => {
     // Calculate final call duration
     const finalDuration = callStartTime
@@ -1394,6 +1396,8 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     setIsVoiceCalling(null);
     setIsVideoCalling(null);
   };
+
+
   // ==================group message=============================
   // Send group message
   const sendGroupMessage = (groupId, message) => {
