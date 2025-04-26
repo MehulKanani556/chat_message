@@ -11,6 +11,7 @@ import {
 import { CgProfile } from "react-icons/cg";
 import {
   FaChevronDown,
+  FaChevronLeft,
   FaChevronRight,
   FaChevronUp,
   FaPaperclip,
@@ -19,6 +20,22 @@ import { HiOutlineUserGroup } from "react-icons/hi";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { RiDeleteBin6Line, RiUserAddLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
+import { IoCallOutline, IoNotificationsOutline, IoVideocamOutline } from "react-icons/io5";
+import { PiLinkSimpleBold } from "react-icons/pi";
+
+const fetchUrlTitle = async (url) => {
+  try {
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, 'text/html');
+    const title = doc.querySelector('title')?.textContent || 'No title available';
+    return title;
+  } catch (error) {
+    console.error("Error fetching URL title:", error);
+    return 'Could not fetch title';
+  }
+};
 
 const GroupProfile = ({
   selectedChat,
@@ -29,7 +46,10 @@ const GroupProfile = ({
   userId,
   socket,
   IMG_URL,
-  setSelectedChat
+  setSelectedChat,
+  handleMakeCall,
+  messages,
+  handleImageClick
 }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -39,6 +59,10 @@ const GroupProfile = ({
   const menuRef = useRef(null);
   const containerRef = useRef(null);
   const [openDirection, setOpenDirection] = useState("bottom");
+  const [attachFile, setAttachFile]= useState(false)
+  const [activeTab, setActiveTab] = useState('media');
+  const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
+  const [enabled, setEnabled] = useState(false);
 
   const handlePhotoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -182,6 +206,67 @@ const GroupProfile = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  };
+
+  function decryptMessage(encryptedText) {
+    if (typeof encryptedText === 'string' && encryptedText.startsWith('data:')) {
+      try {
+        const key = 'chat';
+        // Remove the 'data:' prefix
+        const encodedText = encryptedText.split('data:')[1];
+        // Decode from base64
+        const decodedText = atob(encodedText);
+        let result = '';
+        // XOR each character with the key
+        for (let i = 0; i < decodedText.length; i++) {
+          result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+      } catch (error) {
+        console.error('Decryption error:', error);
+        return encryptedText; // Return original text if decryption fails
+      }
+    }
+    return encryptedText; // Return original text if not encrypted
+  }
+
+  // Fetch titles for all URLs when messages change
+  useEffect(() => {
+    const fetchTitles = async () => {
+      const titles = {};
+      const urls = messages.flatMap(message => {
+        const content = decryptMessage(message.content.content);
+        const foundUrls = content?.match(/https?:\/\/[^\s]+/g);
+        return foundUrls ? [...new Set(foundUrls)] : [];
+      });
+
+      for (const url of urls) {
+        titles[url] = await fetchUrlTitle(url);
+      }
+      setUrlTitles(titles);
+    };
+
+    fetchTitles();
+  }, [messages]);
+
   return (
     <div
       className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
@@ -189,6 +274,401 @@ const GroupProfile = ({
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
       }}
     >
+       {attachFile ? (
+        <>
+            <div className="flex justify-between items-center p-4 py-5">
+        <h2 className="text-lg font-bold flex items-center">  <FaChevronLeft className="mr-2 cursor-pointer"  onClick={() => setAttachFile(false)}/>  Attach File</h2>
+        <button
+          onClick={() => setIsGroupModalOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <ImCross />
+        </button>
+      </div>
+
+          <div className="mt-2">
+            <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-200/0  to-gray-400/0 via-gray-400/40 dark:bg-gradient-to-l dark:from-gray-300/0 dark:to-gray-300/0 dark:via-gray-400/40" />
+          </div>
+          <div>
+            <div className="mt-5">
+              <div className="flex ">
+                <button
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b  ${
+                    activeTab === "media"
+                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                  }`}
+                  onClick={() => setActiveTab("media")}
+                >
+                  Media
+                </button>
+                <button
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b ${
+                    activeTab === "docs"
+                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                  }`}
+                  onClick={() => setActiveTab("docs")}
+                >
+                  Docs
+                </button>
+                <button
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b   ${
+                    activeTab === "links"
+                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                  }`}
+                  onClick={() => setActiveTab("links")}
+                >
+                  Links
+                </button>
+              </div>
+              <div className="p-4">
+                {activeTab === "media" && (
+                  <div className="space-y-6">
+                    {Object.entries(
+                      messages
+                        .filter(
+                          (message) =>
+                            message.content?.type === "file" &&
+                            (message.content?.fileType?.includes("image/") ||
+                              message.content?.fileType?.includes("video/") ||
+                              message.content?.fileType?.includes("png") ||
+                              message.content?.fileType?.includes("gif"))
+                        )
+                        .reduce((acc, message) => {
+                          const date = formatDate(message.createdAt);
+                          if (!acc[date]) acc[date] = [];
+                          acc[date].push(message);
+                          return acc;
+                        }, {})
+                    )
+                      .sort((a, b) => {
+                        if (a[0] === "Today") return -1;
+                        if (b[0] === "Today") return 1;
+                        if (a[0] === "Yesterday") return -1;
+                        if (b[0] === "Yesterday") return 1;
+                        return (
+                          new Date(b[1][0].createdAt) -
+                          new Date(a[1][0].createdAt)
+                        );
+                      })
+                      .map(([date, dateMessages]) => (
+                        <div key={date}>
+                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            {date}
+                          </h3>
+                          <div className="grid grid-cols-3 gap-3">
+                            {dateMessages.map((message, index) => (
+                              <div
+                                key={index}
+                                className="aspect-square rounded-lg overflow-hidden"
+                              >
+                                {message.content?.fileType?.includes(
+                                  "image/"
+                                ) ||
+                                message.content?.fileType?.includes("png") ||
+                                message.content?.fileType?.includes("gif") ? (
+                                  <img
+                                    src={`${IMG_URL}${message.content.fileUrl.replace(
+                                      /\\/g,
+                                      "/"
+                                    )}`}
+                                    alt={message.content.content}
+                                    className="w-full h-full object-cover cursor-pointer"
+                                    onClick={() =>
+                                      handleImageClick(
+                                        `${IMG_URL}${message.content.fileUrl.replace(
+                                          /\\/g,
+                                          "/"
+                                        )}`
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  <video
+                                    src={`${IMG_URL}${message.content.fileUrl.replace(
+                                      /\\/g,
+                                      "/"
+                                    )}`}
+                                    alt={message.content.content}
+                                    className="w-full h-full object-cover cursor-pointer"
+                                    onClick={() =>
+                                      handleImageClick(
+                                        `${IMG_URL}${message.content.fileUrl.replace(
+                                          /\\/g,
+                                          "/"
+                                        )}`
+                                      )
+                                    }
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {activeTab === "docs" && (
+                  <div className="space-y-6 overflow-hidden">
+                    {Object.entries(
+                      messages
+                        .filter(
+                          (message) =>
+                            message.content?.type === "file" &&
+                            (message.content?.fileType?.includes("pdf") ||
+                              message.content?.fileType?.includes("word") ||
+                              message.content?.fileType?.includes("excel") ||
+                              message.content?.fileType?.includes("audio") ||
+                              message.content?.fileType?.includes("zip"))
+                        )
+                        .reduce((acc, message) => {
+                          const date = formatDate(message.createdAt);
+                          if (!acc[date]) acc[date] = [];
+                          acc[date].push(message);
+                          return acc;
+                        }, {})
+                    )
+                      .sort((a, b) => {
+                        if (a[0] === "Today") return -1;
+                        if (b[0] === "Today") return 1;
+                        if (a[0] === "Yesterday") return -1;
+                        if (b[0] === "Yesterday") return 1;
+                        return (
+                          new Date(b[1][0].createdAt) -
+                          new Date(a[1][0].createdAt)
+                        );
+                      })
+                      .map(([date, dateMessages]) => (
+                        <div key={date}>
+                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            {date}
+                          </h3>
+                          <div className="space-y-2">
+                            {dateMessages.map((message, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-white dark:bg-primary-dark/50 rounded-lg cursor-pointer"
+                                onClick={() => {
+                                  const fileUrl = `${IMG_URL}${message.content.fileUrl.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`;
+                                  const fileName = decryptMessage(
+                                    message.content.content
+                                  );
+
+                                  // Create a fetch request to get the file content
+                                  fetch(fileUrl)
+                                    .then((response) => response.blob())
+                                    .then((blob) => {
+                                      // Create a blob URL for the file
+                                      const blobUrl =
+                                        window.URL.createObjectURL(blob);
+
+                                      // Create download link
+                                      const link = document.createElement("a");
+                                      link.href = blobUrl;
+                                      link.download = fileName;
+
+                                      // Append to body, click and remove
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+
+                                      // Clean up the blob URL
+                                      window.URL.revokeObjectURL(blobUrl);
+                                    })
+                                    .catch((error) => {
+                                      console.error("Download failed:", error);
+                                      alert(
+                                        "Failed to download the file. Please try again."
+                                      );
+                                    });
+                                }}
+                              >
+                                <div className="flex items-center gap-2 px-2">
+                                  {message.content.fileType?.includes("pdf") ? (
+                                    <img
+                                      src={require("../img/pdf.png")}
+                                      alt="PDF Icon"
+                                      className="w-10 h-10 text-red-500"
+                                    />
+                                  ) : message.content.fileType?.includes(
+                                      "word"
+                                    ) ? (
+                                    <img
+                                      src={require("../img/word.png")}
+                                      alt="Word Icon"
+                                      className="w-10 h-10 text-blue-500"
+                                    />
+                                  ) : message.content.fileType?.includes(
+                                      "excel"
+                                    ) ? (
+                                    <img
+                                      src={require("../img/execel.png")}
+                                      alt="Excel Icon"
+                                      className="w-10 h-10 text-green-500"
+                                    />
+                                  ) : message.content.fileType?.includes(
+                                      "audio"
+                                    ) ? (
+                                    <img
+                                      src={require("../img/audio.png")}
+                                      alt="Audio Icon"
+                                      className="w-10 h-10 text-purple-500"
+                                    />
+                                  ) : message.content.fileType?.includes(
+                                      "zip"
+                                    ) ? (
+                                    <img
+                                      src={require("../img/zip.png")}
+                                      alt="Zip Icon"
+                                      className="w-10 h-10 text-orange-500"
+                                    />
+                                  ) : (
+                                    <img
+                                      src={require("../img/zip.png")}
+                                      alt="File Icon"
+                                      className="w-10 h-10 text-gray-500"
+                                    />
+                                  )}
+                                  <div>
+                                    <div className="flex-1 text-sm text-primary-dark dark:text-primary-light truncate">
+                                      {decryptMessage(message.content.content)}
+                                    </div>
+                                    <div className="flex gap-3">
+                                      <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
+                                        <span className="text-xl">•</span>
+                                        <span>{message.content.size}</span>
+                                      </div>
+                                      <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
+                                        <span className="text-xl">•</span>
+                                        <span>
+                                          {message.content.fileType
+                                            .split("/")
+                                            .pop()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {activeTab === "links" && (
+                  <div className="space-y-6">
+                    {Object.entries(
+                      messages
+                        .filter((message) => {
+                          const content = decryptMessage(
+                            message.content.content
+                          );
+                          return (
+                            typeof content === "string" &&
+                            (content.includes("http://") ||
+                              content.includes("https://"))
+                          );
+                        })
+                        .reduce((acc, message) => {
+                          const date = formatDate(message.createdAt);
+                          if (!acc[date]) acc[date] = [];
+                          acc[date].push(message);
+                          return acc;
+                        }, {})
+                    )
+                      .sort((a, b) => {
+                        if (a[0] === "Today") return -1;
+                        if (b[0] === "Today") return 1;
+                        if (a[0] === "Yesterday") return -1;
+                        if (b[0] === "Yesterday") return 1;
+                        return (
+                          new Date(b[1][0].createdAt) -
+                          new Date(a[1][0].createdAt)
+                        );
+                      })
+                      .map(([date, dateMessages]) => (
+                        <div key={date}>
+                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            {date}
+                          </h3>
+                          <div className="space-y-2">
+                            {dateMessages.map((message, index) => {
+                              const content = decryptMessage(
+                                message.content.content
+                              );
+                              const urls = content.match(/https?:\/\/[^\s]+/g);
+                              if (!urls) return null;
+
+                              // Group duplicate URLs
+                              const uniqueUrls = [...new Set(urls)];
+                              return uniqueUrls.map((url, urlIndex) => {
+                                const domain = new URL(url).hostname;
+
+                                return (
+                                  <div
+                                    key={`${index}-${urlIndex}`}
+                                    className="flex flex-col bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50 p-3"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className="min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                                        <PiLinkSimpleBold className="w-[16px] h-[16px] absolute" />
+                                        <img
+                                          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                                          alt=""
+                                          className="w-[24px] h-[24px] relative z-10"
+                                          onLoad={(e) => {
+                                            if (
+                                              e.target.width > 0 &&
+                                              e.target.height > 0
+                                            ) {
+                                              e.target.style.display = "block";
+                                            } else {
+                                              e.target.style.display = "none";
+                                            }
+                                          }}
+                                          onError={(e) => {
+                                            e.target.style.display = "none";
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="flex-grow">
+                                        {/* Display the title */}
+                                        <div className=" text-primary-dark dark:text-white ">
+                                          {urlTitles[url] || "Loading title..."}
+                                        </div>
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-sm break-all  flex gap-2 items-center text-primary-dark/50 dark:text-primary-light/50 hover:underline"
+                                        >
+                                          <span className="text-xl">•</span>
+                                          <span>{url}</span>
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+
+      <>
       <div className="flex justify-between items-center p-4 py-6">
         <h2 className="text-lg font-bold"> Group Info</h2>
         <button
@@ -267,215 +747,276 @@ const GroupProfile = ({
             </h3>
           </div>
         </div>
-        {/* Accordion content */}
-        <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5">
-          {/* User Info Section */}
-          <div className="border-b border-gray-300">
-            <button className="w-full px-4 py-3 flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <MdInfoOutline size={18} />
-                <span className="text-md font-medium ">About</span>
-              </div>
+
+        <div className="overflow-y-auto scrollbar-hide h-[calc(100vh-300px)]">
+
+          <div className="max-w-md flex mb-3 gap-5">
+           
+            <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+            <IoCallOutline
+                                className="w-6 h-6 cursor-pointer"
+                                onClick={() => handleMakeCall("voice")}
+                                title="Voice Call"
+                                data-tooltip="Voice Call"
+                                data-tooltip-delay="0"
+                                data-tooltip-duration="0"
+                              />
+                <p className="">Voice Call</p>
             </button>
+            <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+            <IoVideocamOutline
+                                className="w-6 h-6 cursor-pointer"
+                                onClick={() => handleMakeCall("video")}
+                                title="Video Call"
+                                data-tooltip="Video Call"
+                                data-tooltip-delay="0"
+                                data-tooltip-duration="0"
+                              />
+                <p>Video Call</p>
+            </button>
+          </div>
+          {/* Accordion content */}
+          <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5">
+            {/* User Info Section */}
+            <div className="border-b border-gray-300">
+              <button className="w-full px-4 py-3 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <MdInfoOutline size={18} />
+                  <span className="text-md font-medium ">About</span>
+                </div>
+              </button>
 
-            <div className="px-4 pb-4 pt-1">
-              <div className="mb-4">
-                <p className="text-gray-400 text-sm">Name</p>
-                {editingField === "name" ? (
-                  <input
-                    type="text"
-                    name="name"
-                    value={tempData.name}
-                    onChange={handleInputChange}
-                    onBlur={() => handleSaveField("name")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSaveField("name");
-                      }
-                    }}
-                    className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
-                    autoFocus
-                  />
-                ) : (
-                  <div className="relative">
-                    <p className="text-black font-semibold dark:text-primary-light">
-                      {profileData.name}
-                    </p>
-                    <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
-                      <button
-                        onClick={() => handleEditField("name")}
-                        className="text-black dark:text-white flex items-center gap-2"
-                      >
-                        <MdModeEdit size={16} />
-                      </button>
+              <div className="px-4 pb-4 pt-1">
+                <div className="mb-4">
+                  <p className="text-gray-400 text-sm">Name</p>
+                  {editingField === "name" ? (
+                    <input
+                      type="text"
+                      name="name"
+                      value={tempData.name}
+                      onChange={handleInputChange}
+                      onBlur={() => handleSaveField("name")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSaveField("name");
+                        }
+                      }}
+                      className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="relative">
+                      <p className="text-black font-semibold dark:text-primary-light">
+                        {profileData.name}
+                      </p>
+                      <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
+                        <button
+                          onClick={() => handleEditField("name")}
+                          className="text-black dark:text-white flex items-center gap-2"
+                        >
+                          <MdModeEdit size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              <div className="mb-4">
-                <p className="text-gray-400 text-sm">About</p>
-                {editingField === "bio" ? (
-                  <input
-                    type="text"
-                    name="bio"
-                    value={tempData.bio}
-                    onChange={handleInputChange}
-                    onBlur={() => handleSaveField("bio")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSaveField("bio");
-                      }
-                    }}
-                    className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
-                    autoFocus
-                  />
-                ) : (
-                  <div className="relative">
-                    <p className="text-black font-semibold dark:text-primary-light">
-                      {profileData.bio || "-"}
-                    </p>
-                    <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
-                      <button
-                        onClick={() => handleEditField("bio")}
-                        className="text-black dark:text-white flex items-center gap-2"
-                      >
-                        <MdModeEdit size={16} />
-                      </button>
+                <div className="mb-4">
+                  <p className="text-gray-400 text-sm">About</p>
+                  {editingField === "bio" ? (
+                    <input
+                      type="text"
+                      name="bio"
+                      value={tempData.bio}
+                      onChange={handleInputChange}
+                      onBlur={() => handleSaveField("bio")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSaveField("bio");
+                        }
+                      }}
+                      className="w-full p-2 ps-0 border-b border-gray-300 focus:outline-none focus:ring-0 focus:ring-transparent dark:bg-transparent dark:text-primary-light"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="relative">
+                      <p className="text-black font-semibold dark:text-primary-light">
+                        {profileData.bio || "-"}
+                      </p>
+                      <div className="flex justify-between items-center absolute top-1/2 right-0 -translate-y-1/2">
+                        <button
+                          onClick={() => handleEditField("bio")}
+                          className="text-black dark:text-white flex items-center gap-2"
+                        >
+                          <MdModeEdit size={16} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              <div className="">
-                <p className="text-gray-400 text-sm">Created By</p>
-                <p className="text-black font-semibold dark:text-primary-light">
-                  {profileData.createdBy}
-                </p>
+                <div className="">
+                  <p className="text-gray-400 text-sm">Created By</p>
+                  <p className="text-black font-semibold dark:text-primary-light">
+                    {profileData.createdBy}
+                  </p>
+                </div>
               </div>
+            </div>
+
+            {/* Files Section */}
+            <div>
+              <button
+                className="w-full px-4 py-3 flex justify-between items-center"
+                onClick={() => setAttachFile(true)}
+              >
+                <div className="flex items-center space-x-2">
+                  <FaPaperclip size={18} className=" " />
+                  <span className="font-medium">Attached Files</span>
+                </div>
+                <FaChevronRight size={12} />
+              </button>
             </div>
           </div>
 
-          {/* Files Section */}
-          <div>
+          <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3">
+            <button className="w-full px-2 flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <HiOutlineUserGroup size={18} />
+                <span className="text-md font-medium">Group Members</span>
+              </div>
+            </button>
+
+            <div
+              ref={containerRef}
+              className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2"
+            >
+              {selectedChat?.members
+              .slice()
+              .sort((a, b) => (a == userId ? -1 : b == userId ? 1 : 0))
+              .map((member, index) => {
+                const user = allUsers.find((user) => user._id === member);
+                const isMenuOpen = menuOpen === user._id;
+
+                return (
+                  <div
+                    key={index}
+                    id={`member-${index}`}
+                    className="flex items-center p-2 relative"
+                  >
+                    <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                      {user?.photo && user.photo !== "null" ? (
+                        <img
+                          src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                          alt={`${user.userName}`}
+                          className="object-cover h-full w-full"
+                        />
+                      ) : (
+                        <span className="text-gray-900 text-lg font-bold">
+                          {user.userName
+                            .split(" ")
+                            .map((n) => n[0].toUpperCase())
+                            .join("")}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-gray-800 dark:text-primary-light/80">
+                      {user?.userName}
+                    </span>
+
+                    <button
+                    className={`ml-auto text-md rounded-full px-2 py-1 ${
+                      isMenuOpen ? 'text-primary' : '',
+                      member === userId ? 'hidden': "block"
+                    }`}
+                      onClick={() => handleMenuToggle(user._id, index)}
+                    >
+                      <BsThreeDotsVertical />
+                    </button>
+
+                    {isMenuOpen && (
+                      <div
+                        ref={menuRef}
+                        className={`absolute z-10 bg-white dark:bg-black/50 dark:text-white shadow-md rounded ${
+                          openDirection === "top" ? "bottom-5" : "top-5"
+                        } right-8`}
+                      >
+                        <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
+                        <MdBlock className="mr-2"/> Block
+                        </button>
+                        <button className=" px-4 py-2 text-sm text-red-600  flex items-center w-full hover:bg-opacity-25"  onClick={() => handleRemoveMember(member)}>
+                        <RiDeleteBin6Line  className="mr-2"/> Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
             <button
-              className="w-full px-4 py-3 flex justify-between items-center"
-              // onClick={() => setAttachFile(true)}
+              className="w-full flex justify-between items-center"
+              // onClick={() => {
+              //   setGroupUsers(selectedChat?.members);
+              //   setIsGroupModalOpen(false);
+              //   setIsModalOpen(true);
+              // }}
             >
               <div className="flex items-center space-x-2">
-                <FaPaperclip size={18} className=" " />
-                <span className="font-medium">Attached Files</span>
+                <IoNotificationsOutline size={18} />
+                <span className="font-medium">Notification</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={() => setEnabled(!enabled)}
+          className="sr-only peer"
+        />
+        <div className={`w-9 h-5 rounded-full transition-colors duration-300 ${enabled ? 'bg-primary' : 'bg-gray-300 dark:bg-white/15'}`}>
+          <div
+            className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full shadow-md transform transition-transform duration-300 ${enabled ? 'translate-x-4' : ''}`}
+          ></div>
+        </div>
+      </label>
+            
+            </button>
+          </div>
+
+          <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+            <button
+              className="w-full flex justify-between items-center"
+              onClick={() => {
+                setGroupUsers(selectedChat?.members);
+                setIsGroupModalOpen(false);
+                setIsModalOpen(true);
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RiUserAddLine size={18} />
+                <span className="font-medium">Add Memebers</span>
               </div>
               <FaChevronRight size={12} />
             </button>
           </div>
-        </div>
 
-        <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3">
-      <button className="w-full px-2 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <HiOutlineUserGroup size={18} />
-          <span className="text-md font-medium">Group Members</span>
-        </div>
-      </button>
-
-      <div
-        ref={containerRef}
-        className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2"
-      >
-        {selectedChat?.members
-        .slice()
-        .sort((a, b) => (a == userId ? -1 : b == userId ? 1 : 0))
-        .map((member, index) => {
-          const user = allUsers.find((user) => user._id === member);
-          const isMenuOpen = menuOpen === user._id;
-
-          return (
-            <div
-              key={index}
-              id={`member-${index}`}
-              className="flex items-center p-2 relative"
+          <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
+            <button
+              className="w-full flex justify-between items-center text-red-600"
+              onClick={() => handleLeaveGroup(userId)}
             >
-              <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                {user?.photo && user.photo !== "null" ? (
-                  <img
-                    src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                    alt={`${user.userName}`}
-                    className="object-cover h-full w-full"
-                  />
-                ) : (
-                  <span className="text-gray-900 text-lg font-bold">
-                    {user.userName
-                      .split(" ")
-                      .map((n) => n[0].toUpperCase())
-                      .join("")}
-                  </span>
-                )}
+              <div className="flex items-center space-x-2">
+                <FiLogOut size={18} className={""} />
+                <span className="font-medium">Leave Group</span>
               </div>
-              <span className="text-gray-800 dark:text-primary-light/80">
-                {user?.userName}
-              </span>
-
-              <button
-               className={`ml-auto text-md rounded-full px-2 py-1 ${
-                isMenuOpen ? 'text-primary' : '',
-                member === userId ? 'hidden': "block"
-              }`}
-                onClick={() => handleMenuToggle(user._id, index)}
-              >
-                <BsThreeDotsVertical />
-              </button>
-
-              {isMenuOpen && (
-                <div
-                  ref={menuRef}
-                  className={`absolute z-10 bg-white dark:bg-black/50 dark:text-white shadow-md rounded ${
-                    openDirection === "top" ? "bottom-5" : "top-5"
-                  } right-8`}
-                >
-                  <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
-                  <MdBlock className="mr-2"/> Block
-                  </button>
-                  <button className=" px-4 py-2 text-sm text-red-600  flex items-center w-full hover:bg-opacity-25"  onClick={() => handleRemoveMember(member)}>
-                  <RiDeleteBin6Line  className="mr-2"/> Remove
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-
-        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
-          <button
-            className="w-full flex justify-between items-center"
-            onClick={() => {
-              setGroupUsers(selectedChat?.members);
-              setIsGroupModalOpen(false);
-              setIsModalOpen(true);
-            }}
-          >
-            <div className="flex items-center space-x-2">
-              <RiUserAddLine size={18} />
-              <span className="font-medium">Add Memebers</span>
-            </div>
-            <FaChevronRight size={12} />
-          </button>
-        </div>
-
-        <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
-          <button
-            className="w-full flex justify-between items-center text-red-600"
-            onClick={() => handleLeaveGroup(userId)}
-          >
-            <div className="flex items-center space-x-2">
-              <FiLogOut size={18} className={""} />
-              <span className="font-medium">Leave Group</span>
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

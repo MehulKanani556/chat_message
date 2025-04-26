@@ -58,6 +58,10 @@ const userSchema = mongoose.Schema(
       type:Array,
       default:[],
     },
+    muteUsers:{
+      type:Array,
+      default:[],
+    }
   },
   {
     timestamps: true,

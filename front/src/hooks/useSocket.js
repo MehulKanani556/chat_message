@@ -478,6 +478,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         type: data.type,
         participants: data.participants,
         isGroupCall: data.isGroupCall,
+        groupId:data.groupId || null
       });
     });
 
@@ -715,84 +716,121 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
   //==========================video call=============================
 
-  const startVideoCall = async (receiverId, isGroupCall = false) => {
+  const startVideoCall = async (receiverId, isGroupCall = false, selectedChat) => {
     if (!receiverId) {
       setError("Please enter peer email first");
       return;
     }
-
+  
     try {
       let stream = null;
+  
       try {
-        // Try to get media stream but don't block if devices aren't available
-        // console.log("hasWebcam", hasWebcam, "hasMicrophone", hasMicrophone);
         stream = await navigator.mediaDevices.getUserMedia({
           video: hasWebcam,
           audio: hasMicrophone,
         });
-        // stream = await navigator.mediaDevices.getDisplayMedia({
-        //   video: true,
+         // Try to get media stream but don't block if devices aren't available
+        // console.log("hasWebcam", hasWebcam, "hasMicrophone", hasMicrophone);
+        // stream = await navigator.mediaDevices.getUserMedia({
+        //   video: hasWebcam,
+        //   audio: hasMicrophone,
         // });
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        });
       } catch (err) {
         console.warn("Could not get media devices:", err);
-        // Continue without media stream
       }
+  
       if (stream) {
         setIsCameraOn(true);
         setIsMicrophoneOn(true);
         streamRef.current = stream;
-
+  
         if (localVideoRef?.current) {
           localVideoRef.current.srcObject = stream;
-          console.log("Local video stream set successfully");
           try {
             await localVideoRef.current.play();
-            // console.log(localVideoRef.current)
           } catch (err) {
             console.error("Error playing local video:", err);
           }
         }
       }
-
+  
       setCallStartTime(new Date());
-      setIsCameraOn(true);
-      setIsMicrophoneOn(true);
 
-      // Create peer for initial call
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream,
-      });
+      const otherMembers = selectedChat &&  selectedChat?.members?.filter(memberId => memberId !== userId);
 
-      peer.on("signal", (signal) => {
-        const data = {
-          fromEmail: userId,
-          toEmail: receiverId,
-          signal,
-          type: "video",
-          isGroupCall,
-          participants: Array.from(new Set([userId, receiverId])),
-        };
+      if(otherMembers){
 
-        console.log("data", data);
-        socketRef.current.emit("video-call-request", data);
-      });
+        otherMembers.forEach((member)=>{
+          const peer = new Peer({
+            initiator: true,
+            trickle: false,
+            stream,
+          });
+      
+          peer.on("signal", (signal) => {
+              const data = {
+                fromEmail: userId,
+                toEmail: member,
+                signal,
+                type: "video",
+                isGroupCall: false,
+                participants: selectedChat.members,
+                groupId:receiverId
+              };
+              socketRef.current.emit("video-call-request", data);
+          });
+      
+          peer.on("stream", (remoteStream) => {
+            setRemoteStreams((prev) => new Map(prev).set(member, remoteStream));
+          });
+      
+          peersRef.current[member] = peer;
+          setIsVideoCalling(true);
+          setPeerEmail(member);
+          setCallParticipants(new Set(selectedChat.members));
+        })
+       
+      }else{
+        const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream,
+        });
+    
+        peer.on("signal", (signal) => {
+            const data = {
+              fromEmail: userId,
+              toEmail: receiverId,
+              signal,
+              type: "video",
+              isGroupCall: false,
+              participants: [userId, receiverId],
+            };
+            socketRef.current.emit("video-call-request", data);
+        });
+    
+        peer.on("stream", (remoteStream) => {
+          setRemoteStreams((prev) => new Map(prev).set(receiverId, remoteStream));
+        });
+    
+        peersRef.current[receiverId] = peer;
+        setIsVideoCalling(true);
+        setPeerEmail(receiverId);
+        setCallParticipants(new Set([userId, receiverId]));
+      }
+  
+   
 
-      peer.on("stream", (remoteStream) => {
-        console.log("Got stream from initial peer:", receiverId);
-        setRemoteStreams((prev) => new Map(prev).set(receiverId, remoteStream));
-      });
-
-      peersRef.current[receiverId] = peer;
-      setIsVideoCalling(true);
-      setPeerEmail(receiverId);
-      setCallParticipants(new Set([userId, receiverId]));
     } catch (err) {
       console.error("Error starting video call:", err);
       endVideoCall();
     }
   };
+  
 
   // console.log("remote stream", remoteStreams);
 
@@ -1027,9 +1065,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         }
       });
     }
-
-    
-
     // Reset call-related states
     setCallStartTime(null);
     setCallDuration(null);
@@ -1088,7 +1123,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
   // ===========================call=============================
 
-  const startVoiceCall = async (receiverId) => {
+  const startVoiceCall = async (receiverId, isGroupCall = false, selectedChat) => {
     if (!receiverId) {
       setError("Please enter peer email first");
       return;
@@ -1129,7 +1164,51 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       // Set call start time when call is initiated
       setCallStartTime(new Date());
 
+      const otherMembers = selectedChat &&  selectedChat?.members?.filter(memberId => memberId !== userId);
+     
+      if(otherMembers){
+
+      otherMembers.forEach((member)=>{
       // Create peer connection for voice only
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream,
+      });
+
+      peer.on("signal", (signal) => {
+        socketRef.current.emit("voice-call-request", {
+          fromEmail: userId,
+          toEmail: member,
+          signal,
+          type: "voice",
+          participants: selectedChat.members,
+          groupId:receiverId
+        });
+      });
+
+      peer.on("stream", (remoteStream) => {
+        console.log("Received remote audio stream");
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current.play().catch((err) => {
+            console.error("Error playing remote audio:", err);
+          });
+        }
+      });
+
+      peer.on("error", (err) => {
+        console.error("Peer error:", err);
+        setError("Voice call connection error occurred");
+        // endVoiceCall();
+      });
+
+      peerRef.current[member] = peer;
+      setIsVoiceCalling(true);
+      setPeerEmail(receiverId);
+      })
+    }else{
+      
       const peer = new Peer({
         initiator: true,
         trickle: false,
@@ -1161,9 +1240,10 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         // endVoiceCall();
       });
 
-      peerRef.current = peer;
+      peerRef.current[receiverId] = peer;
       setIsVoiceCalling(true);
       setPeerEmail(receiverId);
+    }
     } catch (err) {
       console.error("Error starting voice call:", err);
       setError(err.message || "Failed to start voice call");

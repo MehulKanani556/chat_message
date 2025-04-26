@@ -944,7 +944,7 @@ exports.pinChat = async (req, res) => {
     await userData.save();
     return res.status(200).json({
       status: 200,
-      message: "Chat deleted successfully",
+      message: "Chat pined successfully",
     });
   } catch (error) {
     console.error(error);
@@ -954,3 +954,36 @@ exports.pinChat = async (req, res) => {
     });
   }
 };
+
+exports.muteUsers = async (req, res) => {
+  try {
+    const { selectedUserId } = req.body;
+    const currentUser = req.user._id;
+    const userData = await user.findById(currentUser);
+    if (!userData) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+      });
+    }
+    if (userData.muteUsers.includes(selectedUserId)) {
+      // Unblock user
+      userData.muteUsers = userData.muteUsers.filter(
+        (id) => id !== selectedUserId
+      );
+    } else {
+      userData.muteUsers.push(selectedUserId);
+    }
+    await userData.save();
+    return res.status(200).json({
+      status: 200,
+      message: "Chat Mute successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+}
