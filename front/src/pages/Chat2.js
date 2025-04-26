@@ -670,7 +670,7 @@ const Chat2 = () => {
       console.error("Failed to send group message:", error);
     }
   };
-
+// console.log("object")
   //===========emoji picker===========
   const onEmojiClick = (event, emojiObject) => {
     // console.log("event", event, emojiObject);
@@ -707,7 +707,7 @@ const Chat2 = () => {
   }, []);
 
   //===========handle multiple file upload===========
-console.log(selectedChat);
+// console.log(selectedChat);
 
   const handleMultipleFileUpload = async (files, userId) => {
     const filesArray = Array.from(files); // Convert FileList to an array
@@ -1705,24 +1705,25 @@ console.log(selectedChat);
   }, []);
 
   // Bar animation loop
-  useEffect(() => {
-    let barAnimationId;
+  // useEffect(() => {
+  //   let barAnimationId;
     
-    const animateBars = () => {
-      setAnimationPhase(prev => (prev + 0.1) % 10);
-      barAnimationId = requestAnimationFrame(animateBars);
-    };
+  //   const animateBars = () => {
+  //     setAnimationPhase(prev => (prev + 0.1) % 10);
+  //     barAnimationId = requestAnimationFrame(animateBars);
+  //   };
     
-    if (recording || waveformData.length === 0) {
-      barAnimationId = requestAnimationFrame(animateBars);
-    }
+  //   if (recording || waveformData.length === 0) {
+  //     barAnimationId = requestAnimationFrame(animateBars);
+  //   }
     
-    return () => {
-      if (barAnimationId) {
-        cancelAnimationFrame(barAnimationId);
-      }
-    };
-  }, [recording, waveformData.length]);
+  //   return () => {
+  //     if (barAnimationId) {
+  //       cancelAnimationFrame(barAnimationId);
+  //     }
+  //   };
+  // }, []);
+  console.log("object")
   // Start recording function
   const startRecording = async () => {
     try {
@@ -1731,6 +1732,7 @@ console.log(selectedChat);
       setWaveformData([]);
 
       // Get user's audio stream
+      console.log(navigator)
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // Set up audio context and analyser
@@ -2986,7 +2988,7 @@ console.log(selectedChat);
         </>
       )}
 
-      {console.log("remoteStreams",remoteStreams)}
+      {/* {console.log("remoteStreams",remoteStreams)} */}
       
 
       {/*========== screen share ==========*/}
