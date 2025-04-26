@@ -153,7 +153,7 @@ async function getAllGroups(req, res) {
         receiverId: groupId,
         content: {
           type: "system",
-          content: `**${removeUser.userName}** has removed **${user.userName}** from this conversation`,
+          content: `**${removeUser.userName}** has removed **${user.userName}**`,
         },
       });
       }else{
@@ -162,7 +162,7 @@ async function getAllGroups(req, res) {
           receiverId: groupId,
           content: {
             type: "system",
-            content: `**${user.userName}** has left the group.`,
+            content: `**${user.userName}** has left.`,
           },
         });
       }
