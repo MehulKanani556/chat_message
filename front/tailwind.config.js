@@ -15,8 +15,15 @@ module.exports = {
       "4xl": "2560px",
     },
     extend: {
+      keyframes: {
+        wave: {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(3)', opacity: '0' },
+        },
+      },
       animation: {
         'spin-slow': 'spin 3s linear infinite',
+        wave: 'wave 2s ease-out infinite',
       },
       colors: {
         // primary: {

@@ -320,9 +320,9 @@ const Chat2 = () => {
     // Don't show notification if the chat is currently selected
     if (selectedChat && selectedChat._id === message.sender) return;
 
-    if(!user?.notification) return;
-    if(user?.muteUsers?.includes(message.sender)) return;
-    
+    if (!user?.notification) return;
+    if (user?.muteUsers?.includes(message.sender)) return;
+
     // Create notification content
     let notificationTitle = senderName || "New Message";
     let notificationBody = "";
@@ -670,7 +670,7 @@ const Chat2 = () => {
       console.error("Failed to send group message:", error);
     }
   };
-// console.log("object")
+  // console.log("object")
   //===========emoji picker===========
   const onEmojiClick = (event, emojiObject) => {
     // console.log("event", event, emojiObject);
@@ -754,7 +754,7 @@ const Chat2 = () => {
   };
 
 
-  
+
 
   // =========================== video call=============================
 
@@ -762,16 +762,16 @@ const Chat2 = () => {
 
   const handleMakeCall = async (type) => {
     if (!selectedChat) return;
-    if(selectedChat?.members){
-          const success = await startVideoCall(selectedChat._id,true,selectedChat,type);
-          if (!success) {
-            console.error("Failed to start screen sharing");
-          }
-    }else{
-        const success = await startVideoCall(selectedChat._id,false,selectedChat,type);
-        if (!success) {
-          console.error("Failed to start screen sharing");
-        }
+    if (selectedChat?.members) {
+      const success = await startVideoCall(selectedChat._id, true, selectedChat, type);
+      if (!success) {
+        console.error("Failed to start screen sharing");
+      }
+    } else {
+      const success = await startVideoCall(selectedChat._id, false, selectedChat, type);
+      if (!success) {
+        console.error("Failed to start screen sharing");
+      }
     }
   };
 
@@ -971,7 +971,7 @@ const Chat2 = () => {
   };
 
   // console.log("dfbgsdg");
-  
+
 
   const handleDropdownToggle = (messageId) => {
     setActiveMessageId((prev) => (prev === messageId ? null : messageId));
@@ -1397,8 +1397,8 @@ const Chat2 = () => {
   const handleDeleteChat = async () => {
     await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
       dispatch(deleteChat({ selectedUserId: selectedChat._id })).then(() => {
-        if(user.pinChatFor?.includes(selectedChat?._id)){
-          dispatch(pinChat({selectedUserId: selectedChat?._id,}));
+        if (user.pinChatFor?.includes(selectedChat?._id)) {
+          dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
         }
         dispatch(getAllMessages({ selectedId: selectedChat._id }));
         dispatch(getAllMessageUsers());
@@ -1407,7 +1407,7 @@ const Chat2 = () => {
       });
     });
 
-   
+
   };
 
   // Add useEffect to handle input focus when chat is selected
@@ -1682,20 +1682,20 @@ const Chat2 = () => {
       }
     };
   }, []);
-  
+
   // Bar animation loop
   // useEffect(() => {
   //   let barAnimationId;
-    
+
   //   const animateBars = () => {
   //     setAnimationPhase(prev => (prev + 0.1) % 10);
   //     barAnimationId = requestAnimationFrame(animateBars);
   //   };
-    
+
   //   if (recording || waveformData.length === 0) {
   //     barAnimationId = requestAnimationFrame(animateBars);
   //   }
-    
+
   //   return () => {
   //     if (barAnimationId) {
   //       cancelAnimationFrame(barAnimationId);
@@ -1703,7 +1703,7 @@ const Chat2 = () => {
   //   };
   // }, []);
 
- // Start recording function
+  // Start recording function
   const startRecording = async () => {
     try {
       // Reset cumulative data
@@ -1749,7 +1749,7 @@ const Chat2 = () => {
       console.error('Error accessing microphone:', error);
     }
   };
-  
+
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
@@ -1807,30 +1807,30 @@ const Chat2 = () => {
     if (waveformData.length > 0) {
       return waveformData;
     }
-    
+
     // Generate idle animation that looks more like the reference image
     const barCount = 200;
     const idleData = [];
-    
+
     for (let i = 0; i < barCount; i++) {
       // Create a pattern that mimics an audio waveform with varying heights
       const baseHeight = 15;
       const variation = 30;
-      
+
       // Multiple sine waves with different frequencies and amplitudes
       const wave1 = Math.sin((i / 4) + animationPhase) * variation * 0.4;
       const wave2 = Math.sin((i / 7) + animationPhase * 1.3) * variation * 0.6;
       const wave3 = Math.sin((i / 3) + animationPhase * 0.7) * variation * 0.3;
-      
+
       // Combine waves and ensure minimum height
       const waveHeight = baseHeight + Math.abs(wave1 + wave2 + wave3);
       idleData.push(waveHeight);
     }
-    
+
     return idleData;
   };
   const barHeights = generateBarHeights();
- 
+
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       <Sidebar
@@ -2154,26 +2154,26 @@ const Chat2 = () => {
                                         ? "UnPin Chat"
                                         : "Pin Chat"}
                                     </li>
-                                   
+
                                     <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                       onClick={async () => {
-                                        await dispatch(muteChat({selectedUserId: selectedChat?._id,}));
+                                        await dispatch(muteChat({ selectedUserId: selectedChat?._id, }));
                                         await dispatch(getUser(currentUser));
                                         await dispatch(getAllMessageUsers());
                                       }}>
                                       {/* <GoMute className="text-lg" />  */}
-                                      {user.muteUsers?.includes(selectedChat?._id) ? 
-                                      <>
-                                      <IoVolumeOffOutline className="text-2xl w-5"/>
-                                        UnMute
-                                      </>
-                                      : 
-                                      <>
-                                      <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
-                                      </svg>
-                                      Mute
-                                      </>}
+                                      {user.muteUsers?.includes(selectedChat?._id) ?
+                                        <>
+                                          <IoVolumeOffOutline className="text-2xl w-5" />
+                                          UnMute
+                                        </>
+                                        :
+                                        <>
+                                          <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
+                                          </svg>
+                                          Mute
+                                        </>}
                                     </li>
                                     {selectedChat?.members && (
                                       <li
@@ -2359,52 +2359,52 @@ const Chat2 = () => {
 
                         {isSearchBoxOpen && (
                           <div className="absolute top-32 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
-                          style={{
-                            transform: "translate(-50%, -50%)",
-                          }}>
-                          <div
-                            className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
-                            ref={searchBoxRef}
-                          >
-                            <FaSearch className="text-gray-500 mr-2" />
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
-                              value={searchInputbox}
-                              onChange={(e) => {
-                                setSearchInputbox(e.target.value);
-                                setCurrentSearchIndex(0); // Reset current search index
+                            style={{
+                              transform: "translate(-50%, -50%)",
+                            }}>
+                            <div
+                              className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
+                              ref={searchBoxRef}
+                            >
+                              <FaSearch className="text-gray-500 mr-2" />
+                              <input
+                                type="text"
+                                placeholder="Search..."
+                                className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
+                                value={searchInputbox}
+                                onChange={(e) => {
+                                  setSearchInputbox(e.target.value);
+                                  setCurrentSearchIndex(0); // Reset current search index
+                                }}
+                              />
+                              <span className="mx-2 text-gray-500">
+                                {totalMatches > 0
+                                  ? `${currentSearchIndex + 1} / ${totalMatches}`
+                                  : "0 / 0"}
+                              </span>
+                              <button
+                                className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
+                                onClick={() => handleSearchNavigation("up")}
+                              >
+                                <IoIosArrowUp />
+                              </button>
+                              <button
+                                className="hover:text-black hover:dark:text-white text-xl"
+                                onClick={() => handleSearchNavigation("down")}
+                              >
+                                <IoIosArrowDown />
+                              </button>
+
+                            </div>
+                            <button
+                              className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
+                              onClick={() => {
+                                setIsSearchBoxOpen(false);
+                                setSearchInputbox(""); // Clear the input box
                               }}
-                            />
-                            <span className="mx-2 text-gray-500">
-                              {totalMatches > 0
-                                ? `${currentSearchIndex + 1} / ${totalMatches}`
-                                : "0 / 0"}
-                            </span>
-                            <button
-                              className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
-                              onClick={() => handleSearchNavigation("up")}
                             >
-                              <IoIosArrowUp />
+                              <RxCross2 />
                             </button>
-                            <button
-                              className="hover:text-black hover:dark:text-white text-xl"
-                              onClick={() => handleSearchNavigation("down")}
-                            >
-                              <IoIosArrowDown />
-                            </button>
-                          
-                          </div>
-                            <button
-                            className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
-                            onClick={() => {
-                              setIsSearchBoxOpen(false);
-                              setSearchInputbox(""); // Clear the input box
-                            }}
-                          >
-                           <RxCross2 />
-                          </button>
                           </div>
                         )}
 
@@ -2666,7 +2666,7 @@ const Chat2 = () => {
                                                   <div
                                                     style={{
                                                       width: '3px',
-                                                      height: `${barHeight*2}%`,
+                                                      height: `${barHeight * 2}%`,
                                                       marginTop: `-${barHeight / 2}%`
                                                     }}
                                                     className="bg-black dark:bg-white rounded-xl"
@@ -2968,7 +2968,7 @@ const Chat2 = () => {
           </>
         </>
       )}
-      
+
       {/*========== screen share ==========*/}
       <div
         className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
@@ -2979,102 +2979,57 @@ const Chat2 = () => {
         <div
           className={`flex-1 relative ${isReceiving
             ? "flex items-center justify-center"
-            : `grid gap-4 ${getGridColumns(
-              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-            )}`
+            : `grid gap-4 ${getGridColumns(parseInt(remoteStreams.size))}`
             }`}
         >
-          {/* Local video */}
-          <div
-            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
-                ? "max-w-30 absolute top-2 right-2 z-10"
-                : "relative"
-              }`}
-          >
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-contain"
-              style={{
-                maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
-              }}
-            />
-            <div className="absolute bottom-2 left-2 text-white text-xl bg-primary  px-3 py-1 rounded-full text-center">
-              You
-            </div>
-          </div>
-
-          {/* Remote videos */}
-          {isReceiving ? (
-            <div className="w-full h-full">
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full max-h-[80vh] object-contain"
-              />
-            </div>
-          ) : (
+          {Array.from(remoteStreams).length > 0 ? (
             <>
-              {Array.from(remoteStreams).map(([participantId, stream]) => {
-                const participant = allUsers.find(
-                  (user) => user._id === participantId
-                );
-                const isCameraEnabled = cameraStatus?.[participantId] !== false;
-
+              {/* Render the video when the call is active */}
+              {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
+                // Render remote video stream
                 return (
                   <div key={participantId} className="relative w-full">
-                    {isCameraEnabled ? (
-                      <video
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-contain max-h-[80vh]"
-                        ref={(el) => {
-                          if (el) {
-                            el.srcObject = stream;
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="w-full h-full flex items-center justify-center bg-primary-dark"
-                        style={{ maxHeight: "80vh" }}
-                      >
-                        <div className="w-32 h-32 rounded-full overflow-hidden">
-                          {participant?.photo &&
-                            participant.photo !== "null" ? (
-                            <img
-                              src={`${IMG_URL}${participant.photo.replace(
-                                /\\/g,
-                                "/"
-                              )}`}
-                              alt="Profile"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-                              <span className="text-white text-4xl">
-                                {participant?.userName?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <video
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-contain max-h-[80vh]"
+                      ref={(el) => {
+                        if (el) {
+                          el.srcObject = stream;
+                        }
+                      }}
+                    />
                     <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                      {participant?.userName?.charAt(0).toUpperCase() +
-                        participant?.userName?.slice(1) || "Participant"}
-                      {!isCameraEnabled && (
-                        <span className="ml-2 text-sm">(Camera Off)</span>
-                      )}
+                      {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
                     </div>
                   </div>
                 );
               })}
             </>
+          ) : (
+            // Show the initial div when the call is not active
+            <div className="relative flex items-center justify-center w-full h-full ">
+              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
+              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
+              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
+              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
+              {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
+                <img
+                  src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+                  alt="User profile"
+                  className="object-cover border rounded-full w-24 h-24"
+                />
+              ) : (
+                <div className="flex items-center justify-center">
+                  <span className="text-white text-4xl">
+                    {selectedChat?.userName?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <p className="absolute bottom-72 text-white text-lg font-medium">
+                {selectedChat?.userName || "Unknown User"}
+              </p>
+            </div>
           )}
 
           {/* Controls */}
@@ -3085,7 +3040,7 @@ const Chat2 = () => {
               </button>
               <button
                 onClick={toggleMicrophone}
-                className={`w-10 grid place-content-center border rounded-full h-10 ${isMicrophoneOn ? "" : "bg-gray-400"
+                className={`w-10 grid place-content-center border rounded-full h-10 ${isMicrophoneOn ? "" : ""
                   } text-white`}
               >
                 {isMicrophoneOn ? (
@@ -3096,7 +3051,7 @@ const Chat2 = () => {
               </button>
               <button
                 onClick={toggleCamera}
-                className={`w-10 grid place-content-center border rounded-full h-10 ${isCameraOn ? "" : "bg-gray-400"
+                className={`w-10 grid place-content-center border rounded-full h-10 ${isCameraOn ? "" : ""
                   } text-white ${isVideoCalling ? "" : "hidden"}`}
               >
                 {isCameraOn ? (
@@ -3150,12 +3105,12 @@ const Chat2 = () => {
       {/* ========= incoming call ========= */}
       {incomingCall && (
         <IncomingCall
-        incomingCall={incomingCall}
-        allUsers={allUsers} 
-        groups={groups} 
-        rejectVideoCall={rejectVideoCall} 
-        acceptVideoCall= {acceptVideoCall} 
-        acceptVoiceCall={acceptVoiceCall}
+          incomingCall={incomingCall}
+          allUsers={allUsers}
+          groups={groups}
+          rejectVideoCall={rejectVideoCall}
+          acceptVideoCall={acceptVideoCall}
+          acceptVoiceCall={acceptVoiceCall}
         />
       )}
 
@@ -3586,7 +3541,7 @@ const Chat2 = () => {
           </div>
         )}
 
-        
+
       {/* profile photo */}
       {(isProfileImageModalOpen && selectedProfileImage) && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
