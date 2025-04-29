@@ -21,7 +21,9 @@ const uploadController = {
       const baseUrl = process.env.SERVER_URL || 'https://chat-message-0fml.onrender.com';
       const filePath = file.path.replace(/\\/g, '/'); // Convert Windows backslashes to forward slashes
       res.status(200).json({
-        fileUrl: `${baseUrl}/${filePath}`,
+        // fileUrl: `${baseUrl}/${filePath}`,
+        fileUrl: `${filePath}`,
+
         fileType: file.mimetype,
       });
     } catch (error) {
