@@ -109,6 +109,7 @@ import ForwardModal from "../component/ForwardModal";
 import { SlPin } from "react-icons/sl";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
+import { debounce } from 'lodash';
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -121,7 +122,7 @@ const Chat2 = () => {
   const emojiPickerRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser] = useState(sessionStorage.getItem("userId")); // Replace with actual user data
-  const [typingUsers, setTypingUsers] = useState({});
+  const [typingUsers, setTypingUsers] = useState([]);
   const localVideoRef = useRef(null);
   const [callUsers, setCallUsers] = useState([]);
   const remoteVideoRef = useRef(null);
@@ -302,6 +303,7 @@ const Chat2 = () => {
       requestNotificationPermission();
     }
   }, []);
+
   // Function to request notification permission
   const requestNotificationPermission = async () => {
     try {
@@ -329,7 +331,31 @@ const Chat2 = () => {
 
     // Handle different message types
     if (message.content.type === "text") {
-      notificationBody = message.content.content || "New message received";
+
+      let messageContent;
+      if (
+        typeof message.content.content === "string" &&
+        message.content.content.startsWith("data:")
+      ) {
+        try {
+          const key = "chat";
+          // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
+          // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
+          const encodedText = message.content.content.split("data:")[1];
+          const decodedText = atob(encodedText);
+          let result = "";
+          for (let i = 0; i < decodedText.length; i++) {
+            result += String.fromCharCode(
+              decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+            );
+          }
+          messageContent = result;
+          // console.log(messageContent)
+        } catch (error) {
+          console.error("Decryption error:", error);
+        }
+      }
+      notificationBody = messageContent || "New message received";
     } else if (message.content.type === "file") {
       if (message.content.fileType?.startsWith("image/")) {
         notificationBody = "Sent you a photo";
@@ -515,25 +541,18 @@ const Chat2 = () => {
   // ===========================typing=============================
 
   useEffect(() => {
+
+
     if (!isConnected) return;
 
     const handleTypingStatus = (data) => {
-      if (data.userId === selectedChat?._id) {
-        setTypingUsers((prev) => ({
-          ...prev,
-          [data.userId]: data.isTyping,
-        }));
-
-        // Clear typing indicator after 3 seconds of no updates
-        if (data.isTyping) {
-          setTimeout(() => {
-            setTypingUsers((prev) => ({
-              ...prev,
-              [data.userId]: false,
-            }));
-          }, 3000);
-        }
+      if (data.isTyping) {
+        setTypingUsers((prev) => [...new Set([...prev, data.userId])]);
+        setTimeout(() => {
+          setTypingUsers((prev) => [...new Set(prev.filter(id => id !== data.userId))]);
+        }, 5000);
       }
+      // }
     };
     socket.on("user-typing", handleTypingStatus);
     return () => {
@@ -543,16 +562,28 @@ const Chat2 = () => {
     };
   }, [isConnected, selectedChat]);
 
+  // console.log(typingUsers);
+  
+
+  let typingTimeout; // define outside the function
+
   const handleInputChange = (e) => {
     const files = e.target.files;
+  
     if (files && files.length > 0) {
       const filesArray = Array.from(files);
       setSelectedFiles((prev) => [...prev, ...filesArray]);
       return;
     }
+  
     setMessageInput(e.target.value);
+  
     if (selectedChat) {
-      sendTypingStatus(selectedChat._id, true);
+      if (typingTimeout) clearTimeout(typingTimeout);
+  
+      typingTimeout = setTimeout(() => {
+        sendTypingStatus(selectedChat._id, true);
+      }, 2000); // Wait 3 seconds after last input
     }
   };
 
@@ -1880,6 +1911,7 @@ const Chat2 = () => {
                 selectedChat={selectedChat}
                 allUsers={allUsers}
                 handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
+                typingUsers={typingUsers}
               />
             )}
             {showSettings && <Setting />}
@@ -2461,6 +2493,7 @@ const Chat2 = () => {
                             messageInput={messageInput}
                             handleImageClick={handleImageClick}
                             sendPrivateMessage={sendPrivateMessage}
+                            typingUsers={typingUsers}
                           />
                         </div>
 
@@ -2968,7 +3001,7 @@ const Chat2 = () => {
           </>
         </>
       )}
-      
+
       {/*========== screen share ==========*/}
       <div
         className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
@@ -3107,17 +3140,18 @@ const Chat2 = () => {
               </button>
               <button
                 onClick={() => {
-                  if (!callAccept && selectedChat) {
-                    if (isVideoCalling || isVoiceCalling) {
-                      isVideoCalling
-                        ? rejectVoiceCall(selectedChat._id, "video")
-                        : rejectVoiceCall(selectedChat._id, "voice");
-                    }
-                  } else {
-                    if (isVideoCalling || isVoiceCalling) {
-                      isVideoCalling ? endVideoCall() : endVoiceCall();
-                    }
-                  }
+                  // if (!callAccept && selectedChat) {
+                  //   if (isVideoCalling || isVoiceCalling) {
+                  //     isVideoCalling
+                  //       ? rejectVoiceCall(selectedChat._id, "video")
+                  //       : rejectVoiceCall(selectedChat._id, "voice");
+                  //   }
+                  // } else {
+                  //   if (isVideoCalling || isVoiceCalling) {
+                  //     isVideoCalling ? endVideoCall() : endVoiceCall();
+                  //   }
+                  // }
+                  endVideoCall()
                   cleanupConnection();
                 }}
                 className="bg-red-500 h-12 w-12 text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
@@ -3155,7 +3189,7 @@ const Chat2 = () => {
         groups={groups} 
         rejectVideoCall={rejectVideoCall} 
         acceptVideoCall= {acceptVideoCall} 
-        acceptVoiceCall={acceptVoiceCall}
+        // acceptVoiceCall={acceptVoiceCall}
         />
       )}
 
@@ -3408,7 +3442,7 @@ const Chat2 = () => {
                     key={user._id}
                     className="flex items-center justify-between p-2 hover:bg-primary/50 rounded cursor-pointer"
                     onClick={() => {
-                      // console.log("user", user);
+                      console.log("user", user);
                       inviteToCall(user._id);
                       setParticipantOpen(false);
                     }}

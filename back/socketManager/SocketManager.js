@@ -383,7 +383,7 @@ function handleVoiceCallEnd(socket, data) {
 // ================ Handle save call message================
 async function handleSaveCallMessage(socket, data) {
   try {
-    const { senderId, receiverId, callType, status, duration, timestamp } = data;
+    const { senderId, receiverId, callType, status, duration, timestamp, callfrom, joined } = data;
     
     // Format duration string if exists
     let durationStr = '';
@@ -398,7 +398,9 @@ async function handleSaveCallMessage(socket, data) {
       type: "call",
       callType,
       status,
-      timestamp
+      timestamp,
+      callfrom,
+      joined
     };
 
     // Add duration for ended calls
@@ -480,10 +482,29 @@ async function handleCreateGroup(socket, data) {
 }
 
 async function handleUpdateGroup(socket, data) {
-  const { groupId, name, members } = data;
+  const { groupId, name, members,updateType,user,newData,oldData } = data;
   try {
-    // const updatedGroup = await updateGroup(groupId, name, members);
-    // Emit to all members of the group
+    const userData = await User.findById(user);
+    let contentData;
+
+    if(updateType== "name"){
+      contentData = `**${userData.userName}** Changed Group name  **${oldData}** to  **${newData}**`
+    }else if (updateType== "bio"){
+       contentData = `**${userData.userName}** Changed Group bio  **${oldData}** to  **${newData}**`
+    }else if (updateType== "icon"){
+      contentData = `**${userData.userName}** Changed Group icon`
+    }
+
+    await saveMessage({
+      senderId: groupId,
+      receiverId: groupId,
+      content: {
+        type: "system",
+        content: contentData,
+      },
+    });
+
+
     members.forEach((memberId) => {
       const memberSocket = onlineUsers.get(memberId);
       if (memberSocket) {
