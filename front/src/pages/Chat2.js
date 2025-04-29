@@ -1844,9 +1844,9 @@ const Chat2 = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setCameraStream(stream);
+      setOpenCameraState(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setOpenCameraState(true);
       }
     } catch (error) {
       console.error("Error accessing the camera: ", error);
@@ -1882,11 +1882,11 @@ const Chat2 = () => {
     if (videoRef.current) {
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-  
+
       // ← mirror the drawing context so the saved image is flipped too
       context.translate(canvas.width, 0);
       context.scale(-1, 1);
-  
+
       context.drawImage(
         videoRef.current,
         0,
@@ -1894,7 +1894,7 @@ const Chat2 = () => {
         canvas.width,
         canvas.height
       );
-  
+
       const photoData = canvas.toDataURL('image/jpeg', 0.8);
       setPhoto(photoData);
       handleUploadCapturePic(photoData);
@@ -1920,6 +1920,7 @@ const Chat2 = () => {
     closeCamera();
 
   };
+  console.log(videoRef)
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -2555,16 +2556,18 @@ const Chat2 = () => {
                             handleImageClick={handleImageClick}
                             sendPrivateMessage={sendPrivateMessage}
                           />}
-                          {openCameraState &&
-                            <>
-                              <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
-                                <video ref={videoRef} className="w-full h-full " autoPlay style={{ display: cameraStream ? 'block' : 'none' ,transform: 'scaleX(-1)'}} />
+                          <>
+                            {console.log("hhh")},
+
+                            <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
+                              <video ref={videoRef} className="w-full  " autoPlay style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }} />
+                              {openCameraState &&
                                 <button className="btn absolute bottom-2 left-1/2 text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
                                   <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
-                                </button>    
-                              </div>
-                            </> 
-                          }
+                                </button>
+                              }
+                            </div>
+                          </>
 
                         </div>
 
