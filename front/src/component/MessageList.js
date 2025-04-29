@@ -59,7 +59,11 @@ const MessageList = ({
   addMessageReaction,
   dropdownRef,
   sendPrivateMessage,
+  typingUsers
 }) => {
+
+  
+  
   return (
     <>
       {messages && messages.length > 0 ? (
@@ -159,6 +163,18 @@ const MessageList = ({
       ) : (
         <EmptyMessages selectedChat={selectedChat} sendPrivateMessage={sendPrivateMessage} />
       )}
+      {(selectedChat && typingUsers.includes(selectedChat._id))  && (
+        <div className="flex">
+        <div className=" flex text-sm p-2 px-3 dark:text-white bg-primary rounded-e-xl rounded-tl-xl">
+          <span>{selectedChat.members ? `${""}` :""}</span>
+          <div className="flex space-x-1 mt-3 ml-2">
+            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        </div>
+        </div>
+      )}
     </>
   );
 };
@@ -178,7 +194,7 @@ const DateHeader = ({ date }) => (
 
 const SystemMessage = ({ message }) => (
   <div className="flex justify-center my-2">
-    <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-sm px-2 py-1 rounded-full w-96 text-center">
+    <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-sm px-4 py-1.5 rounded-full min-w-80 text-center">
       {message.content.content
         .split("**")
         .map((part, index) =>
@@ -194,11 +210,12 @@ const SystemMessage = ({ message }) => (
 
 const CallMessage = ({ message, userId, handleMakeCall }) => {
   const isCompleted = message.content.status === "ended";
-
+  const group = !message?.content?.callfrom  && message?.content?.joined;
   return (
     <div className={`flex  w-full my-2  ${message.sender === userId
       ? "justify-end items-end"
       : "justify-start items-start"}`}>
+        
       <div
         className={`flex items-center  text-sm px-3 py-2 rounded-md bg-gray-300 dark:bg-white/15 max-w-[230px] w-full dark:text-white`}
       >
@@ -210,8 +227,8 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
         /> */}
         <div className="flex flex-col ml-2 w-full">
           <span>
-            {message.sender === userId ? isCompleted ? "Outgoing call" : "Call not answered"
-              : isCompleted ? "Incoming call" : `Missed ${message.content.callType} call`}
+            {message.sender === userId ? isCompleted ? (group ? "Group call" : "Outgoing call") : "Call not answered"
+              : isCompleted ?  (group ? "Group call" : "Incoming call") : `Missed ${message.content.callType} call`}
 
           </span>
           <div className="flex justify-between w-full">
@@ -219,6 +236,9 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
             <span className="text-center">
               {/* • */}
               {isCompleted && ` ${message.content.duration} sec`}
+
+              {message?.content?.joined &&
+              <span className="ml-2 opacity-75 text-xs"> • ({parseInt(message?.content?.joined)+1}) Joined</span>}
             </span>
             <span className="text-gray-500 dark:text-white/70 text-xs">
               {new Date(message.content.timestamp).toLocaleTimeString([], {

@@ -218,14 +218,23 @@ exports.clearChat = async (req, res) => {
     const { selectedId } = req.body;
     const userId = req.user._id;
 
+    const group = await groupModel.findById(selectedId)
     // Find all messages between these users
-    const messages = await Message.find({
-      $or: [
-        { sender: userId, receiver: selectedId },
-        { sender: selectedId, receiver: userId },
-      ],
-    });
-
+    let messages ;
+    if(group){
+      messages = await Message.find({
+        $or: [
+          { receiver: selectedId },
+        ],
+      });
+    }else{
+      messages = await Message.find({
+        $or: [
+          { sender: userId, receiver: selectedId },
+          { sender: selectedId, receiver: userId },
+        ],
+      });
+    }
     // Add current user to deletedFor array for each message
     await Promise.all(
       messages.map(async (message) => {

@@ -49,6 +49,8 @@ const messageSchema = mongoose.Schema(
       status: String,
       callType: String,
       duration: String,
+      callfrom: String,
+      joined: String,
     },
     status: {
       type: String,
