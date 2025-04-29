@@ -190,7 +190,7 @@ const Chat2 = () => {
 
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [showProfileInSidebar, setShowProfileInSidebar] = useState(false);
-  const [docModel, setDocModel] = useState(false);
+
   const [showGroups, setShowGroups] = useState(false);
 
   const [notificationPermission, setNotificationPermission] = useState(
@@ -1496,7 +1496,6 @@ const Chat2 = () => {
     const handleClickOutside = (event) => {
       if (menuOpen && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
-        setDocModel(false);
       }
     };
 
@@ -1504,7 +1503,7 @@ const Chat2 = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [menuOpen, docModel]);
+  }, [menuOpen]);
 
   useEffect(() => {
     // Set showLeftSidebar to true when no chat is selected
@@ -1832,112 +1831,32 @@ const Chat2 = () => {
   };
   const barHeights = generateBarHeights();
 
+  const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
 
-  // ==========================capture photo
-
-  const [cameraStream, setCameraStream] = useState(null);
-  const videoRef = useRef(null);
-  const [photo, setPhoto] = useState(null);
-  const [openCameraState, setOpenCameraState] = useState(false);
-
-  const openCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setCameraStream(stream);
-      setOpenCameraState(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error("Error accessing the camera: ", error);
-    }
+  const handleEndCall = () => {
+    setParticipantOpen(false);
+    setSelectedCallUsers(new Set());
+    // ... existing end call logic ...
   };
-  function dataURLtoBlob(dataurl) {
-    const arr = dataurl.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], { type: mime });
-  }
-  // const capturePhoto = () => {
-  //   const canvas = document.createElement('canvas');
-  //   const context = canvas.getContext('2d');
-  //   if (videoRef.current) {
-  //     canvas.width = videoRef.current.videoWidth;
-  //     canvas.height = videoRef.current.videoHeight;
-  //     context.drawImage(videoRef.current, 0, 0);
-  //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
-  //     setPhoto(photoData); // Store the photo data
-  //     handleUploadCapturePic(photoData);
-  //     console.log(photoData);
-  //   }
-  // };
-  const capturePhoto = () => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (videoRef.current) {
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-
-      // ← mirror the drawing context so the saved image is flipped too
-      context.translate(canvas.width, 0);
-      context.scale(-1, 1);
-
-      context.drawImage(
-        videoRef.current,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      const photoData = canvas.toDataURL('image/jpeg', 0.8);
-      setPhoto(photoData);
-      handleUploadCapturePic(photoData);
-      console.log(photoData);
-    }
-  };
-  const closeCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      setOpenCameraState(false);
-      setCameraStream(null);
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    }
-  };
-  const handleUploadCapturePic = (dataUrl) => {
-    const blob = dataURLtoBlob(dataUrl);
-    // Optionally, give it a filename
-    const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-    console.log(file)
-    handleMultipleFileUpload([file]);
-    closeCamera();
-
-  };
-  console.log(videoRef)
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
-      <Sidebar
-        user={user}
-        onProfileClick={(userId) => {
-          // Find the ChatList component and set the selected profile
-          const chatListElement = document.querySelector(".ml-16");
-          if (chatListElement) {
-            // Dispatch the custom event to show the profile
-            const event = new CustomEvent("showProfile", {
-              detail: { userId },
-            });
-            window.dispatchEvent(event);
-          }
-        }}
-      />
+      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+        <Sidebar
+          user={user}
+          onProfileClick={(userId) => {
+            // Find the ChatList component and set the selected profile
+            const chatListElement = document.querySelector(".ml-16");
+            if (chatListElement) {
+              // Dispatch the custom event to show the profile
+              const event = new CustomEvent("showProfile", {
+                detail: { userId },
+              });
+              window.dispatchEvent(event);
+            }
+          }}
+        />
+      )}
 
       {/* Right Sidebar */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
@@ -1995,20 +1914,7 @@ const Chat2 = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {isDragging && (
-                <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
-                  <div className="rounded-lg p-8  w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="mb-4">
-                        <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
-                    </div>
-                  </div>
-                </div>
-              )}
+
               {(!(
                 isGroupModalOpen ||
                 isModalOpen ||
@@ -2499,356 +2405,450 @@ const Chat2 = () => {
                           </div>
                         )}
 
+
                         {/*========== Messages ==========*/}
-                        {/* {console.log("replyingTo",replyingTo)} */}
-
-                        <div
-                          className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
-                          style={{
-                            height:
-                              selectedFiles.length > 0
-                                ? "calc(100vh -  276px)"
-                                : replyingTo
-                                  ? replyingTo?.content?.fileType &&
-                                    replyingTo?.content?.fileType?.startsWith(
-                                      "image/"
-                                    )
-                                    ? "calc(100vh - 281px)"
-                                    : "calc(100vh -  226px)"
-                                  : "calc(100vh - 173px)",
-                          }}
-                          ref={messagesContainerRef}
-                        >
-                          {/* {visibleDate && <FloatingDateIndicator />} */}
-
-                          {cameraStream ? <>
-
-                          </> : <MessageList
-                            messages={messages}
-                            groupMessagesByDate={groupMessagesByDate}
-                            userId={userId}
-                            handleMakeCall={handleMakeCall}
-                            handleContextMenu={handleContextMenu}
-                            handleDropdownToggle={handleDropdownToggle}
-                            handleEditMessage={handleEditMessage}
-                            handleDeleteMessage={handleDeleteMessage}
-                            handleCopyMessage={handleCopyMessage}
-                            handleReplyMessage={handleReplyMessage}
-                            handleForwardMessage={handleForwardMessage}
-                            highlightText={highlightText}
-                            searchInputbox={searchInputbox}
-                            activeMessageId={activeMessageId}
-                            contextMenu={contextMenu}
-                            setContextMenu={setContextMenu}
-                            setActiveMessageId={setActiveMessageId}
-                            allUsers={allUsers}
-                            selectedChat={selectedChat}
-                            IMG_URL={IMG_URL}
-                            showEmojiPicker={showEmojiPicker}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            addMessageReaction={addMessageReaction}
-                            setSelectedFiles={setSelectedFiles}
-                            selectedFiles={selectedFiles}
-                            setReplyingTo={setReplyingTo}
-                            replyingTo={replyingTo}
-                            setMessageInput={setMessageInput}
-                            messageInput={messageInput}
-                            handleImageClick={handleImageClick}
-                            sendPrivateMessage={sendPrivateMessage}
-                          />}
-                          <>
-                            {console.log("hhh")},
-
-                            <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
-                              <video ref={videoRef} className="w-full  " autoPlay style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }} />
-                              {openCameraState &&
-                                <button className="btn absolute bottom-2 left-1/2 text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
-                                  <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
-                                </button>
-                              }
-                            </div>
-                          </>
-
-                        </div>
-
-                        {selectedFiles && selectedFiles.length > 0 && (
-                          <div className="flex px-6  dark:bg-primary-dark">
-                            {selectedFiles.map((file, index) => {
-                              const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                              let fileIcon;
-                              if (file.type.startsWith("image/")) {
-                                fileIcon = (
-                                  <img
-                                    src={fileUrl}
-                                    alt={`Selected ${index}`}
-                                    className="w-20 h-[40px] object-cover "
-                                  />
-                                );
-                              } else if (file.type === "application/pdf") {
-                                fileIcon = (
-                                  <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                ); // PDF file icon
-                              } else if (
-                                file.type === "application/vnd.ms-excel" ||
-                                file.type ===
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                              ) {
-                                fileIcon = (
-                                  <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                ); // Excel file icon
-                              } else if (
-                                file.type === "application/msword" ||
-                                file.type ===
-                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                              ) {
-                                fileIcon = (
-                                  <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                ); // Word file icon
-                              } else if (
-                                file.type === "application/vnd.ms-powerpoint" ||
-                                file.type ===
-                                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                              ) {
-                                fileIcon = (
-                                  <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                ); // PowerPoint file icon
-                              } else if (file.type === "application/zip") {
-                                fileIcon = (
-                                  <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                ); // ZIP file icon
-                              } else {
-                                fileIcon = (
-                                  <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                ); // Generic file icon
-                              }
-                              return (
-                                <div className=" rounded-t-lg  p-2">
-                                  <div
-                                    key={index}
-                                    className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                  >
-                                    {fileIcon}
-                                    <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                      {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                    </div>{" "}
-                                    {/* Display file name */}
-                                    <span className="text-xs text-gray-500">
-                                      {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                      MB
-                                    </span>{" "}
-                                    {/* Display file size */}
-                                    <button
-                                      className="absolute top-1 right-1 bg-white rounded-full"
-                                      onClick={() => {
-                                        setSelectedFiles(
-                                          selectedFiles.filter(
-                                            (_, i) => i !== index
-                                          )
-                                        );
-                                      }}
-                                    >
-                                      <RxCross2 />
-                                    </button>
+                        <div className="relative">
+                          {/* {console.log("replyingTo",replyingTo)} */}
+                          {isDragging && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
+                              <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="mb-4">
+                                    <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
                                   </div>
+                                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {replyingTo && (
-                          <div className="w-full dark:bg-primary-dark/15">
-                            <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
-                              <div>
-                                <div className="text-sm text-blue-500 font-medium">
-                                  Replying to{" "}
-                                  {
-                                    allUsers.find(
-                                      (user) => user._id === replyingTo.sender
-                                    )?.userName
-                                  }
-                                </div>
-                                <div className="text-gray-600 text-sm line-clamp-2">
-                                  {console.log(
-                                    replyingTo.content.fileType === "image/jpeg"
-                                  )}
-                                  {replyingTo.content.content}
-                                  {replyingTo?.content?.fileType &&
-                                    replyingTo?.content?.fileType?.startsWith(
-                                      "image/"
-                                    ) && (
-                                      <img
-                                        src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
-                                          /\\/g,
-                                          "/"
-                                        )}`}
-                                        alt=""
-                                        className="h-10"
-                                      />
-                                    )}
-                                </div>
-                                <button
-                                  onClick={() => setReplyingTo(null)}
-                                  className="text-gray-500 hover:text-gray-700"
-                                >
-                                  <RxCross2 size={20} />
-                                </button>
                               </div>
                             </div>
+                          )}
+                          <div
+                            className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
+                            style={{
+                              height:
+                                selectedFiles.length > 0
+                                  ? "calc(100vh -  276px)"
+                                  : replyingTo
+                                    ? replyingTo?.content?.fileType &&
+                                      replyingTo?.content?.fileType?.startsWith(
+                                        "image/"
+                                      )
+                                      ? "calc(100vh - 281px)"
+                                      : "calc(100vh -  226px)"
+                                    : "calc(100vh - 173px)",
+                            }}
+                            ref={messagesContainerRef}
+                          >
+                            {/* {visibleDate && <FloatingDateIndicator />} */}
+                            <MessageList
+                              messages={messages}
+                              groupMessagesByDate={groupMessagesByDate}
+                              userId={userId}
+                              handleMakeCall={handleMakeCall}
+                              handleContextMenu={handleContextMenu}
+                              handleDropdownToggle={handleDropdownToggle}
+                              handleEditMessage={handleEditMessage}
+                              handleDeleteMessage={handleDeleteMessage}
+                              handleCopyMessage={handleCopyMessage}
+                              handleReplyMessage={handleReplyMessage}
+                              handleForwardMessage={handleForwardMessage}
+                              highlightText={highlightText}
+                              searchInputbox={searchInputbox}
+                              activeMessageId={activeMessageId}
+                              contextMenu={contextMenu}
+                              setContextMenu={setContextMenu}
+                              setActiveMessageId={setActiveMessageId}
+                              allUsers={allUsers}
+                              selectedChat={selectedChat}
+                              IMG_URL={IMG_URL}
+                              showEmojiPicker={showEmojiPicker}
+                              setShowEmojiPicker={setShowEmojiPicker}
+                              addMessageReaction={addMessageReaction}
+                              setSelectedFiles={setSelectedFiles}
+                              selectedFiles={selectedFiles}
+                              setReplyingTo={setReplyingTo}
+                              replyingTo={replyingTo}
+                              setMessageInput={setMessageInput}
+                              messageInput={messageInput}
+                              handleImageClick={handleImageClick}
+                              sendPrivateMessage={sendPrivateMessage}
+                            />
                           </div>
-                        )}
 
-                        {/*========== Message Input ==========*/}
-                        {selectedChat &&
-                          (user.blockedUsers?.includes(selectedChat._id) ? (
-                            <div className="w-full mx-auto px-4 py-2 mb-5 md:mb-0 dark:bg-primary-dark/95 text-white">
-                              <div className="text-center text-red-700 mb-2">
-                                This user is blocked.
-                              </div>
-                              <div className="flex justify-center items-center gap-4 mb-4">
-                                <button
-                                  className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
-                                  onClick={() => {
-                                    setIsDeleteChatModalOpen(true);
-                                  }}
-                                >
-                                  Delete Chat
-                                </button>
-
-                                <button
-                                  className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
-                                  onClick={async () => {
-                                    await dispatch(
-                                      blockUser({
-                                        selectedUserId: selectedChat?._id,
-                                      })
-                                    );
-                                    await dispatch(getUser(currentUser));
-                                    await dispatch(getAllMessageUsers());
-                                  }}
-                                >
-                                  Unblock
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
-                              <form
-                                onSubmit={handleSubmit}
-                                className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
-                                  ? "rounded-b-lg"
-                                  : "rounded-lg"
-                                  } px-4 py-2 w-full max-w-full`}
-                              >
-                                {isRecording ?
-                                  <>
-                                    <div>
+                          {selectedFiles && selectedFiles.length > 0 && (
+                            <div className="flex px-6  dark:bg-primary-dark">
+                              {selectedFiles.map((file, index) => {
+                                const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                                let fileIcon;
+                                if (file.type.startsWith("image/")) {
+                                  fileIcon = (
+                                    <img
+                                      src={fileUrl}
+                                      alt={`Selected ${index}`}
+                                      className="w-20 h-[40px] object-cover "
+                                    />
+                                  );
+                                } else if (file.type === "application/pdf") {
+                                  fileIcon = (
+                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                  ); // PDF file icon
+                                } else if (
+                                  file.type === "application/vnd.ms-excel" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                ) {
+                                  fileIcon = (
+                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                  ); // Excel file icon
+                                } else if (
+                                  file.type === "application/msword" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                ) {
+                                  fileIcon = (
+                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                  ); // Word file icon
+                                } else if (
+                                  file.type === "application/vnd.ms-powerpoint" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                ) {
+                                  fileIcon = (
+                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                  ); // PowerPoint file icon
+                                } else if (file.type === "application/zip") {
+                                  fileIcon = (
+                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                  ); // ZIP file icon
+                                } else {
+                                  fileIcon = (
+                                    <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                  ); // Generic file icon
+                                }
+                                return (
+                                  <div className=" rounded-t-lg  p-2">
+                                    <div
+                                      key={index}
+                                      className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
+                                    >
+                                      {fileIcon}
+                                      <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                        {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                      </div>{" "}
+                                      {/* Display file name */}
+                                      <span className="text-xs text-gray-500">
+                                        {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                        MB
+                                      </span>{" "}
+                                      {/* Display file size */}
                                       <button
-                                        type="button"
-                                        className="p-2 hover:bg-gray-100 rounded-full transition-colors bg-primary  dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                        aria-label="Voice message"
-                                        onClick={handleVoiceMessage}
+                                        className="absolute top-1 right-1 bg-white rounded-full"
+                                        onClick={() => {
+                                          setSelectedFiles(
+                                            selectedFiles.filter(
+                                              (_, i) => i !== index
+                                            )
+                                          );
+                                        }}
                                       >
-                                        <IoMicOutline
-                                          className={`w-6 h-6 ${isRecording ? "text-white" : ""
-                                            }`}
-                                        />
+                                        <RxCross2 />
                                       </button>
-
                                     </div>
-                                    <div className="flex-1">
-                                      <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
-                                        <div className="flex items-center justify-start h-full w-full relative">
-                                          <div className="flex items-center  gap-1 h-full absolute">
-                                            {barHeights.map((height, index) => {
-                                              // Calculate a height that centers around the middle
-                                              const variationFactor = recording ? 1 : 0.6;
-                                              const barHeight = height * variationFactor;
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
 
-                                              return (
-                                                <div
-                                                  key={index}
-                                                  className="flex flex-col justify-center h-full"
-                                                >
+                          {replyingTo && (
+                            <div className="w-full dark:bg-primary-dark/15">
+                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                                <div>
+                                  <div className="text-sm text-blue-500 font-medium">
+                                    Replying to{" "}
+                                    {
+                                      allUsers.find(
+                                        (user) => user._id === replyingTo.sender
+                                      )?.userName
+                                    }
+                                  </div>
+                                  <div className="text-gray-600 text-sm line-clamp-2">
+                                    {console.log(
+                                      replyingTo.content.fileType === "image/jpeg"
+                                    )}
+                                    {replyingTo.content.content}
+                                    {replyingTo?.content?.fileType &&
+                                      replyingTo?.content?.fileType?.startsWith(
+                                        "image/"
+                                      ) && (
+                                        <img
+                                          src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                                            /\\/g,
+                                            "/"
+                                          )}`}
+                                          alt=""
+                                          className="h-10"
+                                        />
+                                      )}
+                                  </div>
+                                  <button
+                                    onClick={() => setReplyingTo(null)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <RxCross2 size={20} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/*========== Message Input ==========*/}
+                          {selectedChat &&
+                            (user.blockedUsers?.includes(selectedChat._id) ? (
+                              <div className="w-full mx-auto px-4 py-2 mb-5 md:mb-0 dark:bg-primary-dark/95 text-white">
+                                <div className="text-center text-red-700 mb-2">
+                                  This user is blocked.
+                                </div>
+                                <div className="flex justify-center items-center gap-4 mb-4">
+                                  <button
+                                    className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
+                                    onClick={() => {
+                                      setIsDeleteChatModalOpen(true);
+                                    }}
+                                  >
+                                    Delete Chat
+                                  </button>
+
+                                  <button
+                                    className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
+                                    onClick={async () => {
+                                      await dispatch(
+                                        blockUser({
+                                          selectedUserId: selectedChat?._id,
+                                        })
+                                      );
+                                      await dispatch(getUser(currentUser));
+                                      await dispatch(getAllMessageUsers());
+                                    }}
+                                  >
+                                    Unblock
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
+                                <form
+                                  onSubmit={handleSubmit}
+                                  className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
+                                    ? "rounded-b-lg"
+                                    : "rounded-lg"
+                                    } px-4 py-2 w-full max-w-full`}
+                                >
+                                  {isRecording ?
+                                    <>
+                                      <div>
+                                        <button
+                                          type="button"
+                                          className="p-2 hover:bg-gray-100 rounded-full transition-colors bg-primary  dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          aria-label="Voice message"
+                                          onClick={handleVoiceMessage}
+                                        >
+                                          <IoMicOutline
+                                            className={`w-6 h-6 ${isRecording ? "text-white" : ""
+                                              }`}
+                                          />
+                                        </button>
+
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
+                                          <div className="flex items-center justify-start h-full w-full relative">
+                                            <div className="flex items-center  gap-1 h-full absolute">
+                                              {barHeights.map((height, index) => {
+                                                // Calculate a height that centers around the middle
+                                                const variationFactor = recording ? 1 : 0.6;
+                                                const barHeight = height * variationFactor;
+
+                                                return (
                                                   <div
-                                                    style={{
-                                                      width: '3px',
-                                                      height: `${barHeight * 2}%`,
-                                                      marginTop: `-${barHeight / 2}%`
-                                                    }}
-                                                    className="bg-black dark:bg-white rounded-xl"
-                                                  />
-                                                </div>
-                                              );
-                                            })}
+                                                    key={index}
+                                                    className="flex flex-col justify-center h-full"
+                                                  >
+                                                    <div
+                                                      style={{
+                                                        width: '3px',
+                                                        height: `${barHeight * 2}%`,
+                                                        marginTop: `-${barHeight / 2}%`
+                                                      }}
+                                                      className="bg-black dark:bg-white rounded-xl"
+                                                    />
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
-                                    </div>
-                                    <div className=" text-black/60 dark:text-white/60  me-3 text-sm">
-                                      {isRecording && <span>{new Date(recordingTime * 1000).toISOString().substr(14, 5)}</span>} {/* Display recording time in mm:ss format */}
-                                    </div>
-                                  </>
+                                      <div className=" text-black/60 dark:text-white/60  me-3 text-sm">
+                                        {isRecording && <span>{new Date(recordingTime * 1000).toISOString().substr(14, 5)}</span>} {/* Display recording time in mm:ss format */}
+                                      </div>
+                                    </>
 
-                                  : ''}
-                                {!isRecording && (
-                                  <>
-                                    <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
-                                      <input
-                                        ref={inputRef}
-                                        type="text"
-                                        value={messageInput}
-                                        onChange={handleInputChange}
-                                        placeholder={
-                                          editingMessage
-                                            ? "Edit message..."
-                                            : "Type a message..."
-                                        }
-                                        className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                                        onKeyDown={async (e) => {
-                                          if (e.key === "Enter") {
-                                            e.preventDefault();
-
-                                            if (selectedFiles.length > 0) {
-                                              await handleMultipleFileUpload(
-                                                selectedFiles
-                                              ); // Upload selected files
-                                              setSelectedFiles([]); // Clear selected files after sending
-                                            }
-                                            await handleSubmit(e);
-                                          } else if (
-                                            e.key === "Escape" &&
+                                    : ''}
+                                  {!isRecording && (
+                                    <>
+                                      <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                                        <input
+                                          ref={inputRef}
+                                          type="text"
+                                          value={messageInput}
+                                          onChange={handleInputChange}
+                                          placeholder={
                                             editingMessage
-                                          ) {
-                                            setEditingMessage(null);
-                                            setMessageInput("");
+                                              ? "Edit message..."
+                                              : "Type a message..."
                                           }
-                                        }}
-                                      />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                                      aria-label="Add emoji"
-                                      onClick={() =>
-                                        setIsEmojiPickerOpen(!isEmojiPickerOpen)
-                                      }
+                                          className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                          onKeyDown={async (e) => {
+                                            if (e.key === "Enter") {
+                                              e.preventDefault();
+
+                                              if (selectedFiles.length > 0) {
+                                                await handleMultipleFileUpload(
+                                                  selectedFiles
+                                                ); // Upload selected files
+                                                setSelectedFiles([]); // Clear selected files after sending
+                                              }
+                                              await handleSubmit(e);
+                                            } else if (
+                                              e.key === "Escape" &&
+                                              editingMessage
+                                            ) {
+                                              setEditingMessage(null);
+                                              setMessageInput("");
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                        aria-label="Add emoji"
+                                        onClick={() =>
+                                          setIsEmojiPickerOpen(!isEmojiPickerOpen)
+                                        }
+                                      >
+                                        <PiSmiley className="w-6 h-6 " />
+                                      </button>
+                                    </>
+                                  )}
+
+
+                                  {isEmojiPickerOpen && (
+                                    <div
+                                      ref={emojiPickerRef}
+                                      className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px] z-50"
                                     >
-                                      <PiSmiley className="w-6 h-6 " />
-                                    </button>
-                                  </>
-                                )}
+                                      <EmojiPicker
+                                        onEmojiClick={onEmojiClick}
+                                        previewConfig={{
+                                          showPreview: false,
+                                        }}
+                                      >
+                                        <svg
+                                          width={20}
+                                          height={20}
+                                          x={0}
+                                          y={0}
+                                          viewBox="0 0 32 32"
+                                          style={{
+                                            enableBackground: "new 0 0 24 24",
+                                          }}
+                                          xmlSpace="preserve"
+                                          className
+                                        >
+                                          <g>
+                                            <path
+                                              d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
+                                              fill="currentColor"
+                                              opacity={1}
+                                              data-original="#000000"
+                                              className
+                                            />
+                                          </g>
+                                        </svg>
+                                      </EmojiPicker>
+                                    </div>
+                                  )}
 
-
-                                {isEmojiPickerOpen && (
-                                  <div
-                                    ref={emojiPickerRef}
-                                    className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px] z-50"
-                                  >
-                                    <EmojiPicker
-                                      onEmojiClick={onEmojiClick}
-                                      previewConfig={{
-                                        showPreview: false,
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {!isRecording &&
+                                      <>
+                                        <input
+                                          id="file-upload"
+                                          type="file"
+                                          multiple
+                                          accept="*/*"
+                                          className="hidden"
+                                          onChange={handleInputChange}
+                                        />
+                                        <button
+                                          type="button"
+                                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          aria-label="Attach file"
+                                          onClick={() =>
+                                            document
+                                              .getElementById("file-upload")
+                                              .click()
+                                          }
+                                        >
+                                          {selectedFiles &&
+                                            selectedFiles.length > 0 ? (
+                                            <GoPlusCircle className="w-6 h-6 " />
+                                          ) : (
+                                            <svg
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              className="w-6 h-6"
+                                            >
+                                              <path
+                                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              />
+                                            </svg>
+                                          )}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          aria-label="Voice message"
+                                          onClick={() => { handleVoiceMessage(); startRecording() }}
+                                        >
+                                          <IoMicOutline
+                                            className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                                              }`}
+                                          />
+                                        </button>
+                                      </>
+                                    }
+                                    <button
+                                      type="submit"
+                                      className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black"
+                                      onClick={() => {
+                                        if (selectedFiles.length > 0) {
+                                          handleMultipleFileUpload(selectedFiles); // Upload selected files
+                                          setSelectedFiles([]); // Clear selected files after sending
+                                        }
+                                        if (isRecording) {
+                                          handleVoiceMessage();
+                                        }
                                       }}
                                     >
                                       <svg
@@ -2873,159 +2873,23 @@ const Chat2 = () => {
                                           />
                                         </g>
                                       </svg>
-                                    </EmojiPicker>
+                                    </button>
                                   </div>
-                                )}
-
-                                <div className="flex items-center gap-1 flex-shrink-0 relative">
-                                  {!isRecording &&
-                                    <>
-                                      <input
-                                        id="file-upload"
-                                        type="file"
-                                        multiple
-                                        accept="*/*"
-                                        className="hidden"
-                                        onChange={handleInputChange}
-                                      />
-                                      <input
-                                        id="image-upload"
-                                        type="file"
-                                        multiple
-                                        accept=".jpg, .jpeg, .png, .mp4, .avi, .mov, .gif, .heic, .webp, .svg, .m4v"
-                                        className="hidden"
-                                        onChange={handleInputChange}
-                                      />
-                                      <button
-                                        type="button"
-                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                        aria-label="Attach file"
-                                        onClick={() =>
-                                          // document
-                                          //   .getElementById("file-upload")
-                                          //   .click()
-                                          setDocModel(true)
-                                        }
-                                      >
-                                        {selectedFiles &&
-                                          selectedFiles.length > 0 ? (
-                                          <GoPlusCircle className="w-6 h-6 " />
-                                        ) : (
-                                          <svg
-                                            width={24}
-                                            height={24}
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="w-6 h-6"
-                                          >
-                                            <path
-                                              d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                              stroke="currentColor"
-                                              strokeWidth="1.5"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                            />
-                                          </svg>
-                                        )}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                        aria-label="Voice message"
-                                        onClick={() => { handleVoiceMessage(); startRecording() }}
-                                      >
-                                        <IoMicOutline
-                                          className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
-                                            }`}
-                                        />
-                                      </button>
-                                    </>
-                                  }
-                                  {docModel && (
-                                    <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
-                                      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                        <ul className="dark:text-white  flex flex-col ">
-                                          <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(); }}>
-                                            <span className="w-5">
-                                              <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
-                                            </span>
-                                            <span>Camera</span>
-                                          </li>
-                                          <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
-                                            <span className="w-5">
-                                              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
-
-                                            </span>
-                                            <span className="text-nowrap">
-                                              Photo & Video
-                                            </span>
-                                          </li>
-                                          <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
-                                            <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                              <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
-                                              <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
-                                              <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
-                                              <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
-                                            </svg>
-
-                                            </span> <span>Document</span></li>
-                                        </ul>
-                                      </div>
-                                    </div>
-                                  )}
-                                  <button
-                                    type="submit"
-                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black"
-                                    onClick={() => {
-                                      if (selectedFiles.length > 0) {
-                                        handleMultipleFileUpload(selectedFiles); // Upload selected files
-                                        setSelectedFiles([]); // Clear selected files after sending
-                                      }
-                                      if (isRecording) {
-                                        handleVoiceMessage();
-                                      }
-                                    }}
-                                  >
-                                    <svg
-                                      width={20}
-                                      height={20}
-                                      x={0}
-                                      y={0}
-                                      viewBox="0 0 32 32"
-                                      style={{
-                                        enableBackground: "new 0 0 24 24",
+                                  {editingMessage && (
+                                    <button
+                                      onClick={() => {
+                                        setEditingMessage(null);
+                                        setMessageInput("");
                                       }}
-                                      xmlSpace="preserve"
-                                      className
+                                      className="ml-2 text-gray-500"
                                     >
-                                      <g>
-                                        <path
-                                          d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
-                                          fill="currentColor"
-                                          opacity={1}
-                                          data-original="#000000"
-                                          className
-                                        />
-                                      </g>
-                                    </svg>
-                                  </button>
-                                </div>
-                                {editingMessage && (
-                                  <button
-                                    onClick={() => {
-                                      setEditingMessage(null);
-                                      setMessageInput("");
-                                    }}
-                                    className="ml-2 text-gray-500"
-                                  >
-                                    Cancel
-                                  </button>
-                                )}
-                              </form>
-                            </div>
-                          ))}
-
+                                      Cancel
+                                    </button>
+                                  )}
+                                </form>
+                              </div>
+                            ))}
+                        </div>
                         {/* Show Send to Bottom button only if user has scrolled up */}
                         {showScrollToBottom && (
                           <button
@@ -3119,10 +2983,10 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark  scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col p-4 bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
           ? ""
           : "hidden"
-          }`}
+          } ${participantOpen ? "mr-96" : ""}`}
       >
         <div
           className={`flex-1 relative ${isReceiving
@@ -3182,8 +3046,10 @@ const Chat2 = () => {
 
           {/* Controls */}
           {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
-            <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2">
-              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2 transform -translate-x-1/2">
+              <button
+                onClick={() => setSelectedChatModule(!selectedChatModule)}
+                className="w-10 grid place-content-center rounded-full h-10 border text-white">
                 <BsChatDots className="text-xl" />
               </button>
               <button
@@ -3251,163 +3117,169 @@ const Chat2 = () => {
       </div>
 
       {/* ========= incoming call ========= */}
-      {
-        incomingCall && (
-          <IncomingCall
-            incomingCall={incomingCall}
-            allUsers={allUsers}
-            groups={groups}
-            rejectVideoCall={rejectVideoCall}
-            acceptVideoCall={acceptVideoCall}
-            acceptVoiceCall={acceptVoiceCall}
-          />
-        )
-      }
+      {incomingCall && (
+        <IncomingCall
+          incomingCall={incomingCall}
+          allUsers={allUsers}
+          groups={groups}
+          rejectVideoCall={rejectVideoCall}
+          acceptVideoCall={acceptVideoCall}
+          acceptVoiceCall={acceptVoiceCall}
+        />
+      )}
 
-      {
-        incomingShare && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-black rounded-lg p-6 w-72 text-center">
-              <h3 className="text-2xl text-gray-300 mb-2 ">
-                Incoming Screen <br /> Request...
-              </h3>
-              <p className="text-gray-400 mb-8">
-                {
-                  allUsers.find((user) => user._id === incomingShare.fromEmail)
-                    ?.userName
-                }
-              </p>
-              <div className="flex justify-center gap-8">
-                <button
-                  onClick={() => acceptScreenShare()}
-                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-                >
-                  <LuScreenShare className="w-6 h-6 cursor-pointer" />
-                </button>
-                <button
-                  onClick={() => {
-                    setIncomingShare(null);
-                    cleanupConnection();
-                  }}
-                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                >
-                  <LuScreenShareOff className="text-xl" />
-                </button>
-              </div>
+      {incomingShare && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-black rounded-lg p-6 w-72 text-center">
+            <h3 className="text-2xl text-gray-300 mb-2 ">
+              Incoming Screen <br /> Request...
+            </h3>
+            <p className="text-gray-400 mb-8">
+              {
+                allUsers.find((user) => user._id === incomingShare.fromEmail)
+                  ?.userName
+              }
+            </p>
+            <div className="flex justify-center gap-8">
+              <button
+                onClick={() => acceptScreenShare()}
+                className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+              >
+                <LuScreenShare className="w-6 h-6 cursor-pointer" />
+              </button>
+              <button
+                onClick={() => {
+                  setIncomingShare(null);
+                  cleanupConnection();
+                }}
+                className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+              >
+                <LuScreenShareOff className="text-xl" />
+              </button>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Profile Modal */}
-      {
-        isProfileModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-96 modal_background">
-              <div className="flex justify-between items-center pb-2 p-4">
-                <h2 className="text-lg font-bold">Profile</h2>
-                <button
-                  onClick={() => setIsProfileModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <ImCross />
-                </button>
-              </div>
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-96 modal_background">
+            <div className="flex justify-between items-center pb-2 p-4">
+              <h2 className="text-lg font-bold">Profile</h2>
+              <button
+                onClick={() => setIsProfileModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ImCross />
+              </button>
+            </div>
 
-              <div className="flex flex-col items-center">
-                <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
-                  {user?.photo && user.photo !== "null" ? (
-                    <img
-                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                      alt="Profile"
-                      className="object-cover w-24 h-24  rounded-full"
-                    />
-                  ) : (
-                    <div
-                      className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                      style={{
-                        background:
-                          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                      }}
-                    >
-                      <IoCameraOutline className="text-3xl cursor-pointer" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <MdOutlineModeEdit
-                      className="text-white text-3xl cursor-pointer"
-                      onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
-                    />
+            <div className="flex flex-col items-center">
+              <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
+                {user?.photo && user.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                    alt="Profile"
+                    className="object-cover w-24 h-24  rounded-full"
+                  />
+                ) : (
+                  <div
+                    className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
+                    }}
+                  >
+                    <IoCameraOutline className="text-3xl cursor-pointer" />
                   </div>
-
-                  {isDropdownOpen && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
-                    >
-                      <ul>
-                        <li
-                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                          onClick={() =>
-                            document.getElementById("file-input").click()
-                          } // Trigger file input click
-                        >
-                          Upload Photo
-                        </li>
-                        <li
-                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                          onClick={() => {
-                            dispatch(
-                              updateUser({
-                                id: currentUser,
-                                values: { photo: null },
-                              })
-                            );
-                          }}
-                        >
-                          Remove Photo
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <div className="flex mt-2 items-center justify-between gap-4">
-                  {isEditingUserName ? (
-                    <input
-                      type="text"
-                      value={!editedUserName ? user?.userName : editedUserName}
-                      onChange={handleUserNameChange}
-                      onBlur={handleUserNameBlur}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          handleUserNameBlur();
-                        }
-                      }}
-                      className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                      autoFocus
-                    />
-                  ) : (
-                    <h3 className="text-xl font-semibold">{user?.userName}</h3>
-                  )}
+                )}
+                <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <MdOutlineModeEdit
-                    className="cursor-pointer"
-                    onClick={handleEditClick}
+                    className="text-white text-3xl cursor-pointer"
+                    onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
                   />
                 </div>
+
+                {isDropdownOpen && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
+                  >
+                    <ul>
+                      <li
+                        className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                        onClick={() =>
+                          document.getElementById("file-input").click()
+                        } // Trigger file input click
+                      >
+                        Upload Photo
+                      </li>
+                      <li
+                        className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          dispatch(
+                            updateUser({
+                              id: currentUser,
+                              values: { photo: null },
+                            })
+                          );
+                        }}
+                      >
+                        Remove Photo
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
-              <div className="mt-4 p-4">
-                <div className="flex items-center justify-between p-2 border-b mb-2">
-                  <span className="text-gray-600 font-bold">Skype Name</span>
-                  <span className="text-gray-800">{user?.userName}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 border-b mb-2">
-                  <span className="text-gray-600 font-bold">Birthday</span>
-                  {isEditingDob ? (
-                    <input
-                      type="date"
-                      value={!editedDob ? user.dob : editedDob}
-                      onChange={(e) => setEditedDob(e.target.value)}
-                      onBlur={() => {
+              <div className="flex mt-2 items-center justify-between gap-4">
+                {isEditingUserName ? (
+                  <input
+                    type="text"
+                    value={!editedUserName ? user?.userName : editedUserName}
+                    onChange={handleUserNameChange}
+                    onBlur={handleUserNameBlur}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleUserNameBlur();
+                      }
+                    }}
+                    className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <h3 className="text-xl font-semibold">{user?.userName}</h3>
+                )}
+                <MdOutlineModeEdit
+                  className="cursor-pointer"
+                  onClick={handleEditClick}
+                />
+              </div>
+            </div>
+            <div className="mt-4 p-4">
+              <div className="flex items-center justify-between p-2 border-b mb-2">
+                <span className="text-gray-600 font-bold">Skype Name</span>
+                <span className="text-gray-800">{user?.userName}</span>
+              </div>
+              <div className="flex items-center justify-between p-2 border-b mb-2">
+                <span className="text-gray-600 font-bold">Birthday</span>
+                {isEditingDob ? (
+                  <input
+                    type="date"
+                    value={!editedDob ? user.dob : editedDob}
+                    onChange={(e) => setEditedDob(e.target.value)}
+                    onBlur={() => {
+                      setIsEditingDob(false);
+                      // Optionally, dispatch an action to update the dob in the store
+                      dispatch(
+                        updateUser({
+                          id: currentUser,
+                          values: { dob: editedDob },
+                        })
+                      );
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
                         setIsEditingDob(false);
                         // Optionally, dispatch an action to update the dob in the store
                         dispatch(
@@ -3416,42 +3288,42 @@ const Chat2 = () => {
                             values: { dob: editedDob },
                           })
                         );
+                      }
+                    }}
+                    className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                      } `}
+                    onClick={() => setIsEditingDob(true)}
+                  >
+                    {new Date(user?.dob).toLocaleDateString() || "Add dob"}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-2 mb-2">
+                <span className="text-gray-600 font-bold">Phone Number</span>
+                {isEditingPhone ? (
+                  <span>
+                    <input
+                      type="text"
+                      value={!editedPhone ? user.phone : editedPhone}
+                      onChange={(e) => setEditedPhone(e.target.value)}
+                      max={12}
+                      onBlur={() => {
+                        setIsEditingPhone(false);
+                        // Optionally, dispatch an action to update the phone number in the store
+                        dispatch(
+                          updateUser({
+                            id: currentUser,
+                            values: { phone: editedPhone },
+                          })
+                        );
                       }}
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
-                          setIsEditingDob(false);
-                          // Optionally, dispatch an action to update the dob in the store
-                          dispatch(
-                            updateUser({
-                              id: currentUser,
-                              values: { dob: editedDob },
-                            })
-                          );
-                        }
-                      }}
-                      className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
-                        } `}
-                      onClick={() => setIsEditingDob(true)}
-                    >
-                      {new Date(user?.dob).toLocaleDateString() || "Add dob"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between p-2 mb-2">
-                  <span className="text-gray-600 font-bold">Phone Number</span>
-                  {isEditingPhone ? (
-                    <span>
-                      <input
-                        type="text"
-                        value={!editedPhone ? user.phone : editedPhone}
-                        onChange={(e) => setEditedPhone(e.target.value)}
-                        max={12}
-                        onBlur={() => {
                           setIsEditingPhone(false);
                           // Optionally, dispatch an action to update the phone number in the store
                           dispatch(
@@ -3460,71 +3332,119 @@ const Chat2 = () => {
                               values: { phone: editedPhone },
                             })
                           );
-                        }}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            setIsEditingPhone(false);
-                            // Optionally, dispatch an action to update the phone number in the store
-                            dispatch(
-                              updateUser({
-                                id: currentUser,
-                                values: { phone: editedPhone },
-                              })
-                            );
-                          }
-                        }}
-                        className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                        autoFocus
-                      />
-                    </span>
-                  ) : (
-                    <span
-                      className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
-                        } `}
-                      onClick={() => setIsEditingPhone(true)}
-                    >
-                      {user?.phone || "Add phone number"}
-                    </span>
-                  )}
-                </div>
+                        }
+                      }}
+                      className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                      autoFocus
+                    />
+                  </span>
+                ) : (
+                  <span
+                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                      } `}
+                    onClick={() => setIsEditingPhone(true)}
+                  >
+                    {user?.phone || "Add phone number"}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Call participant modal */}
-      {
-        participantOpen && (
-          <div className="fixed inset-0 dark:bg-primary-light/15 bg-primary-dark/10  bg-opacity-50 flex items-center justify-center z-50">
-            <div className=" rounded-lg p-4 w-96 bg-primary-light dark:bg-primary-dark dark:text-white">
-              <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 className="text-lg font-bold">Add Participants</h2>
+      {participantOpen && (
+        <div className="fixed inset-0 bg-opacity-50 z-50">
+          <div className="absolute right-0 top-0 h-full w-96 bg-primary-light dark:bg-primary-dark/95 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
+            <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
+              <div className="flex justify-between items-center p-4 py-6">
+                <h2 className="text-lg font-bold">Add Members</h2>
                 <button
                   className="text-gray-500 hover:text-gray-700"
-                  onClick={() => setParticipantOpen(false)}
+                  onClick={() => {
+                    setParticipantOpen(false);
+                    setSelectedCallUsers(new Set());
+                  }}
                 >
-                  <ImCross />
+                  <RxCross2 className="w-6 h-6" />
                 </button>
               </div>
-              <div className="max-h-96 overflow-y-auto mt-4 modal_scroll">
-                {allUsers
-                  .filter(
-                    (user) =>
-                      !callParticipants.has(user._id) && user._id !== userId
-                  )
-                  .map((user) => (
-                    <div
-                      key={user._id}
-                      className="flex items-center justify-between p-2 hover:bg-primary/50 rounded cursor-pointer"
-                      onClick={() => {
-                        // console.log("user", user);
-                        inviteToCall(user._id);
-                        setParticipantOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full mr-2 bg-primary overflow-hidden flex items-center justify-center ">
+              <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
+
+              {/* Search bar */}
+              <div className="relative p-4">
+                <input
+                  type="text"
+                  placeholder="Search users"
+                  className="w-full py-2 pl-10 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10 focus:outline-none"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <svg
+                  className="absolute left-7 top-7 text-gray-400"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+
+              <div className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2 px-4">
+                All Users
+              </div>
+
+              <div className="p-4">
+                <div className="flex flex-col h-[calc(100vh-275px)] overflow-y-auto modal_scroll">
+                  {allUsers
+                    .filter(
+                      (user) =>
+                        !callParticipants.has(user._id) && user._id !== userId
+                    )
+                    .map((user) => (
+                      <div
+                        key={user._id}
+                        className="flex items-center p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-primary-light/10 rounded-md bg-primary-dark/80 mb-2"
+                        onClick={() => {
+                          const newSelectedUsers = new Set(selectedCallUsers);
+                          if (newSelectedUsers.has(user._id)) {
+                            newSelectedUsers.delete(user._id);
+                          } else {
+                            newSelectedUsers.add(user._id);
+                          }
+                          setSelectedCallUsers(newSelectedUsers);
+                        }}
+                      >
+                        <div
+                          className={`w-5 h-5 rounded border mr-3 ${selectedCallUsers.has(user._id)
+                            ? "bg-primary border-primary"
+                            : "border-gray-400"
+                            }`}
+                        >
+                          {selectedCallUsers.has(user._id) && (
+                            <svg
+                              className="w-full h-full text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
                           {user?.photo && user.photo !== "null" ? (
                             <img
                               src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
@@ -3540,15 +3460,34 @@ const Chat2 = () => {
                             </span>
                           )}
                         </div>
-                        <span className="ml-2">{user.userName}</span>
+                        <div className="flex-1">
+                          <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                            {user.userName}
+                          </h3>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
+                <div className="mt-4 flex justify-center w-full">
+                  <button
+                    className="px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
+                    onClick={() => {
+                      selectedCallUsers.forEach(userId => {
+                        inviteToCall(userId);
+                      });
+                      setParticipantOpen(false);
+                      setSelectedCallUsers(new Set());
+                    }}
+                    disabled={selectedCallUsers.size === 0}
+                  >
+                    Add Members
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* Add a hidden file input for photo upload */}
       <input
@@ -3567,9 +3506,8 @@ const Chat2 = () => {
 
       {/* {console.log("aa", isProfileImageModalOpen, isImageModalOpen, messages)} */}
 
-      {
-        (
-          (isImageModalOpen && selectedImage)) && (
+      {(
+        (isImageModalOpen && selectedImage)) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="relative w-full h-full flex items-center flex-col justify-center gap-2 p-8">
               <div style={{ height: 'calc(100vh - 80px)' }} className="">
@@ -3696,123 +3634,112 @@ const Chat2 = () => {
               </button>
             </div>
           </div>
-        )
-      }
-
+        )}
 
       {/* profile photo */}
-      {
-        (isProfileImageModalOpen && selectedProfileImage) && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="relative w-full h-full flex items-center justify-center p-8">
+      {(isProfileImageModalOpen && selectedProfileImage) && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative w-full h-full flex items-center justify-center p-8">
 
-              <img
-                src={
-                  isProfileImageModalOpen ? selectedProfileImage : ''
+            <img
+              src={
+                isProfileImageModalOpen ? selectedProfileImage : ''
+              }
+              alt="Profile"
+              className="max-w-full max-h-full object-contain"
+            />
+            <button
+              onClick={() => {
+                if (isProfileImageModalOpen) {
+                  setIsProfileImageModalOpen(false);
+                } else if (isImageModalOpen) {
+                  setIsImageModalOpen(false);
                 }
-                alt="Profile"
-                className="max-w-full max-h-full object-contain"
-              />
+              }}
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
+            >
+              <ImCross className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Forward Modal */}
+      {showForwardModal && (
+        <ForwardModal
+          show={showForwardModal}
+          onClose={() => setShowForwardModal(false)}
+          onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
+          users={allUsers}
+        />
+      )}
+
+      {/* delete message modal */}
+      {isClearChatModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Clear Chat</p>
               <button
-                onClick={() => {
-                  if (isProfileImageModalOpen) {
-                    setIsProfileImageModalOpen(false);
-                  } else if (isImageModalOpen) {
-                    setIsImageModalOpen(false);
-                  }
-                }}
-                className="absolute top-4 right-4 text-white hover:text-gray-300"
+                onClick={() => setIsClearChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
               >
-                <ImCross className="w-6 h-6" />
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to clear this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsClearChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Clear Chat
               </button>
             </div>
           </div>
-        )
-      }
-      {/* Forward Modal */}
-      {
-        showForwardModal && (
-          <ForwardModal
-            show={showForwardModal}
-            onClose={() => setShowForwardModal(false)}
-            onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
-            users={allUsers}
-          />
-        )
-      }
+        </div>
+      )}
 
-      {/* delete message modal */}
-      {
-        isClearChatModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-              <h3 className=" mb-4 flex justify-between">
-                <p className="text-lg font-bold">Clear Chat</p>
-                <button
-                  onClick={() => setIsClearChatModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <ImCross />
-                </button>
-              </h3>
-              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-                Are you sure you want to clear this chat?
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setIsClearChatModalOpen(false)}
-                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleClearChat}
-                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-                >
-                  Clear Chat
-                </button>
-              </div>
+      {isDeleteChatModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Delete Chat</p>
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to delete this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Delete Chat
+              </button>
             </div>
           </div>
-        )
-      }
-
-      {
-        isDeleteChatModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-              <h3 className=" mb-4 flex justify-between">
-                <p className="text-lg font-bold">Delete Chat</p>
-                <button
-                  onClick={() => setIsDeleteChatModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <ImCross />
-                </button>
-              </h3>
-              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-                Are you sure you want to delete this chat?
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setIsDeleteChatModalOpen(false)}
-                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteChat}
-                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-                >
-                  Delete Chat
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
-};
-
+}
 export default Chat2;
