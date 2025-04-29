@@ -204,7 +204,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           }
           content = 'data:' + btoa(result);
         }
-        console.log(message)
+        // console.log(message)
         
 
         const messageData = {

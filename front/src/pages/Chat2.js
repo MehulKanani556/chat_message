@@ -190,7 +190,7 @@ const Chat2 = () => {
 
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [showProfileInSidebar, setShowProfileInSidebar] = useState(false);
-
+  const [docModel, setDocModel] = useState(false);
   const [showGroups, setShowGroups] = useState(false);
 
   const [notificationPermission, setNotificationPermission] = useState(
@@ -1496,6 +1496,7 @@ const Chat2 = () => {
     const handleClickOutside = (event) => {
       if (menuOpen && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
+        setDocModel(false);
       }
     };
 
@@ -1503,7 +1504,7 @@ const Chat2 = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [menuOpen, docModel]);
 
   useEffect(() => {
     // Set showLeftSidebar to true when no chat is selected
@@ -1830,6 +1831,95 @@ const Chat2 = () => {
     return idleData;
   };
   const barHeights = generateBarHeights();
+
+
+  // ==========================capture photo
+
+  const [cameraStream, setCameraStream] = useState(null);
+  const videoRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+  const [openCameraState, setOpenCameraState] = useState(false);
+
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setOpenCameraState(true);
+      }
+    } catch (error) {
+      console.error("Error accessing the camera: ", error);
+    }
+  };
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  }
+  // const capturePhoto = () => {
+  //   const canvas = document.createElement('canvas');
+  //   const context = canvas.getContext('2d');
+  //   if (videoRef.current) {
+  //     canvas.width = videoRef.current.videoWidth;
+  //     canvas.height = videoRef.current.videoHeight;
+  //     context.drawImage(videoRef.current, 0, 0);
+  //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
+  //     setPhoto(photoData); // Store the photo data
+  //     handleUploadCapturePic(photoData);
+  //     console.log(photoData);
+  //   }
+  // };
+  const capturePhoto = () => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (videoRef.current) {
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+  
+      // ← mirror the drawing context so the saved image is flipped too
+      context.translate(canvas.width, 0);
+      context.scale(-1, 1);
+  
+      context.drawImage(
+        videoRef.current,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+  
+      const photoData = canvas.toDataURL('image/jpeg', 0.8);
+      setPhoto(photoData);
+      handleUploadCapturePic(photoData);
+      console.log(photoData);
+    }
+  };
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setOpenCameraState(false);
+      setCameraStream(null);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
+  const handleUploadCapturePic = (dataUrl) => {
+    const blob = dataURLtoBlob(dataUrl);
+    // Optionally, give it a filename
+    const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+    console.log(file)
+    handleMultipleFileUpload([file]);
+    closeCamera();
+
+  };
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -2429,7 +2519,10 @@ const Chat2 = () => {
                           ref={messagesContainerRef}
                         >
                           {/* {visibleDate && <FloatingDateIndicator />} */}
-                          <MessageList
+
+                          {cameraStream ? <>
+
+                          </> : <MessageList
                             messages={messages}
                             groupMessagesByDate={groupMessagesByDate}
                             userId={userId}
@@ -2461,7 +2554,18 @@ const Chat2 = () => {
                             messageInput={messageInput}
                             handleImageClick={handleImageClick}
                             sendPrivateMessage={sendPrivateMessage}
-                          />
+                          />}
+                          {openCameraState &&
+                            <>
+                              <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
+                                <video ref={videoRef} className="w-full h-full " autoPlay style={{ display: cameraStream ? 'block' : 'none' ,transform: 'scaleX(-1)'}} />
+                                <button className="btn absolute bottom-2 left-1/2 text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
+                                  <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
+                                </button>    
+                              </div>
+                            </> 
+                          }
+
                         </div>
 
                         {selectedFiles && selectedFiles.length > 0 && (
@@ -2770,7 +2874,7 @@ const Chat2 = () => {
                                   </div>
                                 )}
 
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1 flex-shrink-0 relative">
                                   {!isRecording &&
                                     <>
                                       <input
@@ -2781,14 +2885,23 @@ const Chat2 = () => {
                                         className="hidden"
                                         onChange={handleInputChange}
                                       />
+                                      <input
+                                        id="image-upload"
+                                        type="file"
+                                        multiple
+                                        accept=".jpg, .jpeg, .png, .mp4, .avi, .mov, .gif, .heic, .webp, .svg, .m4v"
+                                        className="hidden"
+                                        onChange={handleInputChange}
+                                      />
                                       <button
                                         type="button"
                                         className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                                         aria-label="Attach file"
                                         onClick={() =>
-                                          document
-                                            .getElementById("file-upload")
-                                            .click()
+                                          // document
+                                          //   .getElementById("file-upload")
+                                          //   .click()
+                                          setDocModel(true)
                                         }
                                       >
                                         {selectedFiles &&
@@ -2826,6 +2939,38 @@ const Chat2 = () => {
                                       </button>
                                     </>
                                   }
+                                  {docModel && (
+                                    <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
+                                      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                        <ul className="dark:text-white  flex flex-col ">
+                                          <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(); }}>
+                                            <span className="w-5">
+                                              <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
+                                            </span>
+                                            <span>Camera</span>
+                                          </li>
+                                          <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
+                                            <span className="w-5">
+                                              <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
+
+                                            </span>
+                                            <span className="text-nowrap">
+                                              Photo & Video
+                                            </span>
+                                          </li>
+                                          <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
+                                            <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
+                                              <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
+                                              <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
+                                              <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
+                                            </svg>
+
+                                            </span> <span>Document</span></li>
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  )}
                                   <button
                                     type="submit"
                                     className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black"
@@ -3103,169 +3248,163 @@ const Chat2 = () => {
       </div>
 
       {/* ========= incoming call ========= */}
-      {incomingCall && (
-        <IncomingCall
-          incomingCall={incomingCall}
-          allUsers={allUsers}
-          groups={groups}
-          rejectVideoCall={rejectVideoCall}
-          acceptVideoCall={acceptVideoCall}
-          acceptVoiceCall={acceptVoiceCall}
-        />
-      )}
+      {
+        incomingCall && (
+          <IncomingCall
+            incomingCall={incomingCall}
+            allUsers={allUsers}
+            groups={groups}
+            rejectVideoCall={rejectVideoCall}
+            acceptVideoCall={acceptVideoCall}
+            acceptVoiceCall={acceptVoiceCall}
+          />
+        )
+      }
 
-      {incomingShare && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-black rounded-lg p-6 w-72 text-center">
-            <h3 className="text-2xl text-gray-300 mb-2 ">
-              Incoming Screen <br /> Request...
-            </h3>
-            <p className="text-gray-400 mb-8">
-              {
-                allUsers.find((user) => user._id === incomingShare.fromEmail)
-                  ?.userName
-              }
-            </p>
-            <div className="flex justify-center gap-8">
-              <button
-                onClick={() => acceptScreenShare()}
-                className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-              >
-                <LuScreenShare className="w-6 h-6 cursor-pointer" />
-              </button>
-              <button
-                onClick={() => {
-                  setIncomingShare(null);
-                  cleanupConnection();
-                }}
-                className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-              >
-                <LuScreenShareOff className="text-xl" />
-              </button>
+      {
+        incomingShare && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-black rounded-lg p-6 w-72 text-center">
+              <h3 className="text-2xl text-gray-300 mb-2 ">
+                Incoming Screen <br /> Request...
+              </h3>
+              <p className="text-gray-400 mb-8">
+                {
+                  allUsers.find((user) => user._id === incomingShare.fromEmail)
+                    ?.userName
+                }
+              </p>
+              <div className="flex justify-center gap-8">
+                <button
+                  onClick={() => acceptScreenShare()}
+                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+                >
+                  <LuScreenShare className="w-6 h-6 cursor-pointer" />
+                </button>
+                <button
+                  onClick={() => {
+                    setIncomingShare(null);
+                    cleanupConnection();
+                  }}
+                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <LuScreenShareOff className="text-xl" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Profile Modal */}
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-96 modal_background">
-            <div className="flex justify-between items-center pb-2 p-4">
-              <h2 className="text-lg font-bold">Profile</h2>
-              <button
-                onClick={() => setIsProfileModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ImCross />
-              </button>
-            </div>
+      {
+        isProfileModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-96 modal_background">
+              <div className="flex justify-between items-center pb-2 p-4">
+                <h2 className="text-lg font-bold">Profile</h2>
+                <button
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </div>
 
-            <div className="flex flex-col items-center">
-              <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
-                {user?.photo && user.photo !== "null" ? (
-                  <img
-                    src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                    alt="Profile"
-                    className="object-cover w-24 h-24  rounded-full"
-                  />
-                ) : (
-                  <div
-                    className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                    style={{
-                      background:
-                        "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                    }}
-                  >
-                    <IoCameraOutline className="text-3xl cursor-pointer" />
+              <div className="flex flex-col items-center">
+                <div className="relative w-24 h-24  rounded-full bg-gray-300 mt-4 group">
+                  {user?.photo && user.photo !== "null" ? (
+                    <img
+                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                      alt="Profile"
+                      className="object-cover w-24 h-24  rounded-full"
+                    />
+                  ) : (
+                    <div
+                      className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
+                      }}
+                    >
+                      <IoCameraOutline className="text-3xl cursor-pointer" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <MdOutlineModeEdit
+                      className="text-white text-3xl cursor-pointer"
+                      onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
+                    />
                   </div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center rounded-full  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+
+                  {isDropdownOpen && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
+                    >
+                      <ul>
+                        <li
+                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                          onClick={() =>
+                            document.getElementById("file-input").click()
+                          } // Trigger file input click
+                        >
+                          Upload Photo
+                        </li>
+                        <li
+                          className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            dispatch(
+                              updateUser({
+                                id: currentUser,
+                                values: { photo: null },
+                              })
+                            );
+                          }}
+                        >
+                          Remove Photo
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className="flex mt-2 items-center justify-between gap-4">
+                  {isEditingUserName ? (
+                    <input
+                      type="text"
+                      value={!editedUserName ? user?.userName : editedUserName}
+                      onChange={handleUserNameChange}
+                      onBlur={handleUserNameBlur}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleUserNameBlur();
+                        }
+                      }}
+                      className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3 className="text-xl font-semibold">{user?.userName}</h3>
+                  )}
                   <MdOutlineModeEdit
-                    className="text-white text-3xl cursor-pointer"
-                    onClick={profileDropdown} // Ensure this function toggles isDropdownOpen
+                    className="cursor-pointer"
+                    onClick={handleEditClick}
                   />
                 </div>
-
-                {isDropdownOpen && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute top-full mt-2 bg-white border rounded shadow-lg z-50"
-                  >
-                    <ul>
-                      <li
-                        className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                        onClick={() =>
-                          document.getElementById("file-input").click()
-                        } // Trigger file input click
-                      >
-                        Upload Photo
-                      </li>
-                      <li
-                        className="p-2 px-3 text-nowrap hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          dispatch(
-                            updateUser({
-                              id: currentUser,
-                              values: { photo: null },
-                            })
-                          );
-                        }}
-                      >
-                        Remove Photo
-                      </li>
-                    </ul>
-                  </div>
-                )}
               </div>
-              <div className="flex mt-2 items-center justify-between gap-4">
-                {isEditingUserName ? (
-                  <input
-                    type="text"
-                    value={!editedUserName ? user?.userName : editedUserName}
-                    onChange={handleUserNameChange}
-                    onBlur={handleUserNameBlur}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleUserNameBlur();
-                      }
-                    }}
-                    className="text-xl font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                    autoFocus
-                  />
-                ) : (
-                  <h3 className="text-xl font-semibold">{user?.userName}</h3>
-                )}
-                <MdOutlineModeEdit
-                  className="cursor-pointer"
-                  onClick={handleEditClick}
-                />
-              </div>
-            </div>
-            <div className="mt-4 p-4">
-              <div className="flex items-center justify-between p-2 border-b mb-2">
-                <span className="text-gray-600 font-bold">Skype Name</span>
-                <span className="text-gray-800">{user?.userName}</span>
-              </div>
-              <div className="flex items-center justify-between p-2 border-b mb-2">
-                <span className="text-gray-600 font-bold">Birthday</span>
-                {isEditingDob ? (
-                  <input
-                    type="date"
-                    value={!editedDob ? user.dob : editedDob}
-                    onChange={(e) => setEditedDob(e.target.value)}
-                    onBlur={() => {
-                      setIsEditingDob(false);
-                      // Optionally, dispatch an action to update the dob in the store
-                      dispatch(
-                        updateUser({
-                          id: currentUser,
-                          values: { dob: editedDob },
-                        })
-                      );
-                    }}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
+              <div className="mt-4 p-4">
+                <div className="flex items-center justify-between p-2 border-b mb-2">
+                  <span className="text-gray-600 font-bold">Skype Name</span>
+                  <span className="text-gray-800">{user?.userName}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 border-b mb-2">
+                  <span className="text-gray-600 font-bold">Birthday</span>
+                  {isEditingDob ? (
+                    <input
+                      type="date"
+                      value={!editedDob ? user.dob : editedDob}
+                      onChange={(e) => setEditedDob(e.target.value)}
+                      onBlur={() => {
                         setIsEditingDob(false);
                         // Optionally, dispatch an action to update the dob in the store
                         dispatch(
@@ -3274,42 +3413,42 @@ const Chat2 = () => {
                             values: { dob: editedDob },
                           })
                         );
-                      }
-                    }}
-                    className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                    autoFocus
-                  />
-                ) : (
-                  <span
-                    className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
-                      } `}
-                    onClick={() => setIsEditingDob(true)}
-                  >
-                    {new Date(user?.dob).toLocaleDateString() || "Add dob"}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between p-2 mb-2">
-                <span className="text-gray-600 font-bold">Phone Number</span>
-                {isEditingPhone ? (
-                  <span>
-                    <input
-                      type="text"
-                      value={!editedPhone ? user.phone : editedPhone}
-                      onChange={(e) => setEditedPhone(e.target.value)}
-                      max={12}
-                      onBlur={() => {
-                        setIsEditingPhone(false);
-                        // Optionally, dispatch an action to update the phone number in the store
-                        dispatch(
-                          updateUser({
-                            id: currentUser,
-                            values: { phone: editedPhone },
-                          })
-                        );
                       }}
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
+                          setIsEditingDob(false);
+                          // Optionally, dispatch an action to update the dob in the store
+                          dispatch(
+                            updateUser({
+                              id: currentUser,
+                              values: { dob: editedDob },
+                            })
+                          );
+                        }
+                      }}
+                      className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className={`text-gray-800 cursor-pointer ${!user?.dob ? "text-sm" : ""
+                        } `}
+                      onClick={() => setIsEditingDob(true)}
+                    >
+                      {new Date(user?.dob).toLocaleDateString() || "Add dob"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-2 mb-2">
+                  <span className="text-gray-600 font-bold">Phone Number</span>
+                  {isEditingPhone ? (
+                    <span>
+                      <input
+                        type="text"
+                        value={!editedPhone ? user.phone : editedPhone}
+                        onChange={(e) => setEditedPhone(e.target.value)}
+                        max={12}
+                        onBlur={() => {
                           setIsEditingPhone(false);
                           // Optionally, dispatch an action to update the phone number in the store
                           dispatch(
@@ -3318,81 +3457,95 @@ const Chat2 = () => {
                               values: { phone: editedPhone },
                             })
                           );
-                        }
-                      }}
-                      className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
-                      autoFocus
-                    />
-                  </span>
-                ) : (
-                  <span
-                    className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
-                      } `}
-                    onClick={() => setIsEditingPhone(true)}
-                  >
-                    {user?.phone || "Add phone number"}
-                  </span>
-                )}
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            setIsEditingPhone(false);
+                            // Optionally, dispatch an action to update the phone number in the store
+                            dispatch(
+                              updateUser({
+                                id: currentUser,
+                                values: { phone: editedPhone },
+                              })
+                            );
+                          }
+                        }}
+                        className="text-base text-gray-800 font-semibold bg-transparent focus:ring-0 focus-visible:outline-none"
+                        autoFocus
+                      />
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-gray-800 cursor-pointer ${!user?.phone ? "text-sm" : ""
+                        } `}
+                      onClick={() => setIsEditingPhone(true)}
+                    >
+                      {user?.phone || "Add phone number"}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Call participant modal */}
-      {participantOpen && (
-        <div className="fixed inset-0 dark:bg-primary-light/15 bg-primary-dark/10  bg-opacity-50 flex items-center justify-center z-50">
-          <div className=" rounded-lg p-4 w-96 bg-primary-light dark:bg-primary-dark dark:text-white">
-            <div className="flex justify-between items-center mb-4 border-b pb-2">
-              <h2 className="text-lg font-bold">Add Participants</h2>
-              <button
-                className="text-gray-500 hover:text-gray-700"
-                onClick={() => setParticipantOpen(false)}
-              >
-                <ImCross />
-              </button>
-            </div>
-            <div className="max-h-96 overflow-y-auto mt-4 modal_scroll">
-              {allUsers
-                .filter(
-                  (user) =>
-                    !callParticipants.has(user._id) && user._id !== userId
-                )
-                .map((user) => (
-                  <div
-                    key={user._id}
-                    className="flex items-center justify-between p-2 hover:bg-primary/50 rounded cursor-pointer"
-                    onClick={() => {
-                      // console.log("user", user);
-                      inviteToCall(user._id);
-                      setParticipantOpen(false);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full mr-2 bg-primary overflow-hidden flex items-center justify-center ">
-                        {user?.photo && user.photo !== "null" ? (
-                          <img
-                            src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                            alt={`${user.userName}`}
-                            className="object-cover h-full w-full"
-                          />
-                        ) : (
-                          <span className="text-gray-900 text-lg font-bold">
-                            {user.userName
-                              .split(" ")
-                              .map((n) => n[0].toUpperCase())
-                              .join("")}
-                          </span>
-                        )}
+      {
+        participantOpen && (
+          <div className="fixed inset-0 dark:bg-primary-light/15 bg-primary-dark/10  bg-opacity-50 flex items-center justify-center z-50">
+            <div className=" rounded-lg p-4 w-96 bg-primary-light dark:bg-primary-dark dark:text-white">
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 className="text-lg font-bold">Add Participants</h2>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setParticipantOpen(false)}
+                >
+                  <ImCross />
+                </button>
+              </div>
+              <div className="max-h-96 overflow-y-auto mt-4 modal_scroll">
+                {allUsers
+                  .filter(
+                    (user) =>
+                      !callParticipants.has(user._id) && user._id !== userId
+                  )
+                  .map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center justify-between p-2 hover:bg-primary/50 rounded cursor-pointer"
+                      onClick={() => {
+                        // console.log("user", user);
+                        inviteToCall(user._id);
+                        setParticipantOpen(false);
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full mr-2 bg-primary overflow-hidden flex items-center justify-center ">
+                          {user?.photo && user.photo !== "null" ? (
+                            <img
+                              src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                              alt={`${user.userName}`}
+                              className="object-cover h-full w-full"
+                            />
+                          ) : (
+                            <span className="text-gray-900 text-lg font-bold">
+                              {user.userName
+                                .split(" ")
+                                .map((n) => n[0].toUpperCase())
+                                .join("")}
+                            </span>
+                          )}
+                        </div>
+                        <span className="ml-2">{user.userName}</span>
                       </div>
-                      <span className="ml-2">{user.userName}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Add a hidden file input for photo upload */}
       <input
@@ -3411,8 +3564,9 @@ const Chat2 = () => {
 
       {/* {console.log("aa", isProfileImageModalOpen, isImageModalOpen, messages)} */}
 
-      {(
-        (isImageModalOpen && selectedImage)) && (
+      {
+        (
+          (isImageModalOpen && selectedImage)) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="relative w-full h-full flex items-center flex-col justify-center gap-2 p-8">
               <div style={{ height: 'calc(100vh - 80px)' }} className="">
@@ -3539,113 +3693,122 @@ const Chat2 = () => {
               </button>
             </div>
           </div>
-        )}
+        )
+      }
 
 
       {/* profile photo */}
-      {(isProfileImageModalOpen && selectedProfileImage) && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative w-full h-full flex items-center justify-center p-8">
+      {
+        (isProfileImageModalOpen && selectedProfileImage) && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative w-full h-full flex items-center justify-center p-8">
 
-            <img
-              src={
-                isProfileImageModalOpen ? selectedProfileImage : ''
-              }
-              alt="Profile"
-              className="max-w-full max-h-full object-contain"
-            />
-            <button
-              onClick={() => {
-                if (isProfileImageModalOpen) {
-                  setIsProfileImageModalOpen(false);
-                } else if (isImageModalOpen) {
-                  setIsImageModalOpen(false);
+              <img
+                src={
+                  isProfileImageModalOpen ? selectedProfileImage : ''
                 }
-              }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <ImCross className="w-6 h-6" />
-            </button>
+                alt="Profile"
+                className="max-w-full max-h-full object-contain"
+              />
+              <button
+                onClick={() => {
+                  if (isProfileImageModalOpen) {
+                    setIsProfileImageModalOpen(false);
+                  } else if (isImageModalOpen) {
+                    setIsImageModalOpen(false);
+                  }
+                }}
+                className="absolute top-4 right-4 text-white hover:text-gray-300"
+              >
+                <ImCross className="w-6 h-6" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
       {/* Forward Modal */}
-      {showForwardModal && (
-        <ForwardModal
-          show={showForwardModal}
-          onClose={() => setShowForwardModal(false)}
-          onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
-          users={allUsers}
-        />
-      )}
+      {
+        showForwardModal && (
+          <ForwardModal
+            show={showForwardModal}
+            onClose={() => setShowForwardModal(false)}
+            onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
+            users={allUsers}
+          />
+        )
+      }
 
       {/* delete message modal */}
-      {isClearChatModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-            <h3 className=" mb-4 flex justify-between">
-              <p className="text-lg font-bold">Clear Chat</p>
-              <button
-                onClick={() => setIsClearChatModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ImCross />
-              </button>
-            </h3>
-            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-              Are you sure you want to clear this chat?
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setIsClearChatModalOpen(false)}
-                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearChat}
-                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-              >
-                Clear Chat
-              </button>
+      {
+        isClearChatModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+              <h3 className=" mb-4 flex justify-between">
+                <p className="text-lg font-bold">Clear Chat</p>
+                <button
+                  onClick={() => setIsClearChatModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </h3>
+              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+                Are you sure you want to clear this chat?
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsClearChatModalOpen(false)}
+                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+                >
+                  Clear Chat
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {isDeleteChatModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-            <h3 className=" mb-4 flex justify-between">
-              <p className="text-lg font-bold">Delete Chat</p>
-              <button
-                onClick={() => setIsDeleteChatModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <ImCross />
-              </button>
-            </h3>
-            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-              Are you sure you want to delete this chat?
-            </p>
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setIsDeleteChatModalOpen(false)}
-                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteChat}
-                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-              >
-                Delete Chat
-              </button>
+      {
+        isDeleteChatModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+              <h3 className=" mb-4 flex justify-between">
+                <p className="text-lg font-bold">Delete Chat</p>
+                <button
+                  onClick={() => setIsDeleteChatModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <ImCross />
+                </button>
+              </h3>
+              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+                Are you sure you want to delete this chat?
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsDeleteChatModalOpen(false)}
+                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteChat}
+                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+                >
+                  Delete Chat
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
