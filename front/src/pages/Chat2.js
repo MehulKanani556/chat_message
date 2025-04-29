@@ -1494,7 +1494,7 @@ const Chat2 = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuOpen && !event.target.closest(".optionMenu")) {
+      if ((menuOpen || docModel) && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
         setDocModel(false);
       }
@@ -2557,7 +2557,7 @@ const Chat2 = () => {
                             sendPrivateMessage={sendPrivateMessage}
                           />}
                           <>
-                            {console.log("hhh")},
+                            
 
                             <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
                               <video ref={videoRef} className="w-full  " autoPlay style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }} />
@@ -2904,7 +2904,8 @@ const Chat2 = () => {
                                           // document
                                           //   .getElementById("file-upload")
                                           //   .click()
-                                          setDocModel(true)
+                                          setDocModel(!docModel)
+
                                         }
                                       >
                                         {selectedFiles &&
