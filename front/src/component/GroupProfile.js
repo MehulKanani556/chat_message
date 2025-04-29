@@ -69,15 +69,16 @@ const GroupProfile = ({
       const file = e.target.files[0];
       setGroupPhoto(file);
       try {
-        await dispatch(
-          updateGroup({
+        await dispatch(updateGroup({
             groupId: selectedChat._id,
             photo: file,
-          })
-        );
+          }));
+
         socket.emit("update-group", {
           groupId: selectedChat._id,
           members: selectedChat?.members.filter((id) => id !== userId),
+          updateType:"icon",
+          user:userId
         });
         await dispatch(getAllMessageUsers());
       } catch (error) {
@@ -165,6 +166,10 @@ const GroupProfile = ({
         socket.emit("update-group", {
           groupId: selectedChat._id,
           members: selectedChat?.members.filter((id) => id !== userId),
+          updateType:fieldName,
+          oldData:fieldName == "name" ? selectedChat?.userName : selectedChat?.bio,
+          newData:fieldName == "name" ? tempData.name : tempData.bio,
+          user:userId
         });
         dispatch(getAllMessageUsers());
       }

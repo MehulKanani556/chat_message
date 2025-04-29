@@ -1,4 +1,5 @@
 const FileModel = require("../models/fileModel");
+const path = require("path");
 
 const uploadController = {
   uploadFile: async (req, res) => {
@@ -16,9 +17,11 @@ const uploadController = {
         uploadDate: new Date(),
       });
 
-      // Return the file URL and type
+      // Return the complete file URL and type
+      const baseUrl = process.env.SERVER_URL || 'https://chat-message-0fml.onrender.com';
+      const filePath = file.path.replace(/\\/g, '/'); // Convert Windows backslashes to forward slashes
       res.status(200).json({
-        fileUrl: `${file.path}`,
+        fileUrl: `${baseUrl}/${filePath}`,
         fileType: file.mimetype,
       });
     } catch (error) {

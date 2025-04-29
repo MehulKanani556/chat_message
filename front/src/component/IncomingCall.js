@@ -2,14 +2,17 @@ import React from 'react';
 import { IoPersonCircleOutline } from "react-icons/io5";
 import { MdCallEnd } from "react-icons/md";
 import { IMG_URL } from '../utils/baseUrl';
+import { useSelector } from 'react-redux';
 
 const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptVideoCall, acceptVoiceCall }) => {
+
+  const { user } = useSelector((state) => state.user);
   
-   let user;
+   let userData;
     if(incomingCall.groupId){
-        user =  groups?.find((user) => user._id === incomingCall.groupId)
+      userData =  groups?.find((user) => user._id === incomingCall.groupId)
     }else{
-        user =  allUsers?.find((user) => user._id === incomingCall.fromEmail)
+      userData =  allUsers?.find((user) => user._id === incomingCall.fromEmail)
     }
  
     return (
@@ -17,17 +20,17 @@ const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptV
       <div className="bg-black rounded-lg p-6 w-96 text-center">
         <h3 className="text-2xl text-white">
           {
-           user?.userName
+           userData?.userName
           }
         </h3>
         <p className="text-gray-400 mb-4 animate-pulse">
           is Calling You.
         </p>
         <div className="w-20 h-20 mx-auto mb-10 rounded-full overflow-hidden">
-          {(user?.photo)  &&
-            ( user?.photo !== "null") ? (
+          {(userData?.photo)  &&
+            ( userData?.photo !== "null") ? (
             <img
-              src={`${IMG_URL}${(user?.photo)?.replace(/\\/g, "/")}`}
+              src={`${IMG_URL}${(userData?.photo)?.replace(/\\/g, "/")}`}
               alt="Caller"
               className="w-full h-full object-cover"
             />
@@ -39,18 +42,14 @@ const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptV
         </div>
         <div className="flex justify-center gap-8">
           <button
-            onClick={() => rejectVideoCall(incomingCall.type)}
+            onClick={() => rejectVideoCall(incomingCall.type,user._id,incomingCall.groupId)}
             className="w-[40%] h-10 bg-[#FF0000] text-white rounded-md flex items-center justify-center hover:bg-red-600"
           >
             <MdCallEnd className="text-xl" />
             Decline
           </button>
           <button
-            onClick={
-              incomingCall.type === "video"
-                ? acceptVideoCall
-                : acceptVoiceCall
-            }
+            onClick={() =>acceptVideoCall(incomingCall.type)}
             className="w-[40%] h-10 bg-[#22C55E] text-white rounded-md flex items-center justify-center hover:bg-[#22C55E85] animate-bounce"
           >
             Accept
