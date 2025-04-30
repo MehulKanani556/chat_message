@@ -33,6 +33,7 @@ import {
   MdOutlineBlock,
   MdOutlineCancel,
   MdOutlineGroupAdd,
+  MdOutlineFlipCameraIos,
 } from "react-icons/md";
 import { RiDeleteBinFill, RiDeleteBinLine, RiShutDownLine, RiUserAddLine } from "react-icons/ri";
 import {
@@ -1879,11 +1880,23 @@ const Chat2 = () => {
   const [photo, setPhoto] = useState(null);
   const [openCameraState, setOpenCameraState] = useState(false);
 
+  // {{ edit_1 }} add state for facingMode & availability
+  const [facingMode, setFacingMode] = useState('user');
+  const [backCameraAvailable, setBackCameraAvailable] = useState(false);
+
   const openCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // {{ edit_2 }} request with current facingMode
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
       setCameraStream(stream);
       setOpenCameraState(true);
+
+      // detect if an environment (back) camera exists
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const backCams = devices.filter(d =>
+        d.kind === 'videoinput' && d.label.toLowerCase().includes('back')
+      );
+      if (backCams.length > 0) setBackCameraAvailable(true);
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -1959,6 +1972,29 @@ const Chat2 = () => {
     handleMultipleFileUpload([file]);
     closeCamera();
 
+  };
+
+  // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream
+  const switchCamera = async () => {
+    try {
+      const newFacing = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(newFacing);
+
+      // stop old tracks
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing }
+      });
+      setCameraStream(newStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+      }
+    } catch (err) {
+      console.error("Error switching camera:", err);
+    }
   };
 
   return (
@@ -2605,11 +2641,26 @@ const Chat2 = () => {
                             }
                             <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
                               <video ref={videoRef} className="w-full  " autoPlay style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }} />
-                              {openCameraState &&
-                                <button className="btn absolute bottom-2 left-1/2 text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
-                                  <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
+                              {openCameraState && (
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+
+                                  <button className="btn  text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
+                                    <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
+                                  </button>
+                                </div>
+
+                              )}
+
+                              {openCameraState && (
+                                <button
+                                  className="btn absolute bottom-3 right-4 text-white rounded-full "
+                                  onClick={switchCamera}
+                                >
+                                  <div className="bg-white/40 w-10 h-10 flex items-center justify-center text-2xl rounded-full hover:bg-white/80">
+                                    <MdOutlineFlipCameraIos />
+                                  </div>
                                 </button>
-                              }
+                              )}
                             </div>
                           </div>
 
