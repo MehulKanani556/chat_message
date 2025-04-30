@@ -32,8 +32,8 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-const SOCKET_SERVER_URL = "http://localhost:5000";
+const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
+// const SOCKET_SERVER_URL = "http://localhost:5000";
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   const [isConnected, setIsConnected] = useState(false);
