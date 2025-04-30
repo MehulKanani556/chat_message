@@ -49,6 +49,7 @@ import {
   BsCameraVideo,
   BsCameraVideoOff,
   BsChatDots,
+  BsCrosshair,
   BsFillMicFill,
   BsFillMicMuteFill,
   BsThreeDotsVertical,
@@ -1935,13 +1936,13 @@ const Chat2 = () => {
     if (videoRef.current) {
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-  
+
       // {{ edit_1 }} only mirror when using front camera
       if (facingMode === 'user') {
         context.translate(canvas.width, 0);
         context.scale(-1, 1);
       }
-  
+
       context.drawImage(
         videoRef.current,
         0,
@@ -1949,7 +1950,7 @@ const Chat2 = () => {
         canvas.width,
         canvas.height
       );
-  
+
       const photoData = canvas.toDataURL('image/jpeg', 0.8);
       setPhoto(photoData);
       handleUploadCapturePic(photoData);
@@ -2643,6 +2644,11 @@ const Chat2 = () => {
                               />
                             }
                             <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
+                              {openCameraState &&
+                                <button className="absolute top-2 right-2 text-white z-10 text-xl" onClick={()=>{closeCamera()}}>
+                                  <RxCross2 />
+                                </button>
+                              }
                               <video
                                 ref={videoRef}
                                 className="w-full"
@@ -2656,7 +2662,6 @@ const Chat2 = () => {
                               />
                               {openCameraState && (
                                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-
                                   <button className="btn  text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
                                     <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
                                   </button>
@@ -2664,7 +2669,7 @@ const Chat2 = () => {
 
                               )}
 
-                              {openCameraState && (
+                              {openCameraState && backCameraAvailable && (
                                 <button
                                   className="btn absolute bottom-3 right-4 text-white rounded-full "
                                   onClick={switchCamera}
