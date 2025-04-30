@@ -758,7 +758,6 @@ const Chat2 = () => {
 
         if (response.status === 200) {
           const { fileUrl, fileType } = response.data;
-          alert(fileUrl);
 
           await handleSendMessage({
             type: "file",
@@ -1936,11 +1935,13 @@ const Chat2 = () => {
     if (videoRef.current) {
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-
-      // ← mirror the drawing context so the saved image is flipped too
-      context.translate(canvas.width, 0);
-      context.scale(-1, 1);
-
+  
+      // {{ edit_1 }} only mirror when using front camera
+      if (facingMode === 'user') {
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+      }
+  
       context.drawImage(
         videoRef.current,
         0,
@@ -1948,7 +1949,7 @@ const Chat2 = () => {
         canvas.width,
         canvas.height
       );
-
+  
       const photoData = canvas.toDataURL('image/jpeg', 0.8);
       setPhoto(photoData);
       handleUploadCapturePic(photoData);
@@ -1970,7 +1971,7 @@ const Chat2 = () => {
     // Optionally, give it a filename
     const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
     console.log(file);
-    alert(file);
+
     handleMultipleFileUpload([file]);
     closeCamera();
 
@@ -2642,7 +2643,17 @@ const Chat2 = () => {
                               />
                             }
                             <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
-                              <video ref={videoRef} className="w-full  " autoPlay style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }} />
+                              <video
+                                ref={videoRef}
+                                className="w-full"
+                                autoPlay
+                                // -   style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }}
+                                // only mirror when using front camera
+                                style={{
+                                  display: cameraStream ? 'block' : 'none',
+                                  transform: facingMode === 'user' ? 'scaleX(-1)' : 'none'
+                                }}
+                              />
                               {openCameraState && (
                                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
 
