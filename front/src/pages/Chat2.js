@@ -758,6 +758,7 @@ const Chat2 = () => {
 
         if (response.status === 200) {
           const { fileUrl, fileType } = response.data;
+          alert(fileUrl);
 
           await handleSendMessage({
             type: "file",
@@ -1968,7 +1969,8 @@ const Chat2 = () => {
     const blob = dataURLtoBlob(dataUrl);
     // Optionally, give it a filename
     const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-    console.log(file)
+    console.log(file);
+    alert(file);
     handleMultipleFileUpload([file]);
     closeCamera();
 
