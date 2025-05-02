@@ -228,7 +228,7 @@ const Chat2 = () => {
     startSharing,
     startVideoCall,
     acceptVideoCall,
-    endVideoCall,
+    endCall,
     isSharing,
     setIsSharing,
     isReceiving,
@@ -236,14 +236,11 @@ const Chat2 = () => {
     toggleCamera,
     toggleMicrophone,
     markMessageAsRead,
-    rejectVideoCall,
+    rejectCall,
     rejectVoiceCall,
     incomingShare,
     setIncomingShare,
     acceptScreenShare,
-    startVoiceCall,
-    acceptVoiceCall,
-    endVoiceCall,
     isVoiceCalling,
     callAccept,
     remoteStreams,
@@ -256,6 +253,9 @@ const Chat2 = () => {
     addMessageReaction,
     cameraStatus,
     setCameraStatus,
+    leaveCall,
+    startCall,
+    acceptCall
   } = useSocket(user?._id, localVideoRef, remoteVideoRef, allUsers);
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -795,12 +795,14 @@ const Chat2 = () => {
   const handleMakeCall = async (type) => {
     if (!selectedChat) return;
     if (selectedChat?.members) {
-      const success = await startVideoCall(selectedChat._id, true, selectedChat, type);
+      const success = await startCall(selectedChat._id, true, selectedChat, type);
+      // const success = await startCall(selectedChat, type);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
     } else {
-      const success = await startVideoCall(selectedChat._id, false, selectedChat, type);
+      const success = await startCall(selectedChat._id, false, selectedChat, type);
+      // const success = await startCall(selectedChat._id,type);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
@@ -1961,6 +1963,9 @@ const Chat2 = () => {
 
   };
 
+  console.log(remoteStreams);
+  
+
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
@@ -2833,6 +2838,7 @@ const Chat2 = () => {
                                     </>
 
                                     : ''}
+
                                   {!isRecording && (
                                     <>
                                       <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
@@ -2881,11 +2887,10 @@ const Chat2 = () => {
                                     </>
                                   )}
 
-
                                   {isEmojiPickerOpen && (
                                     <div
                                       ref={emojiPickerRef}
-                                      className="absolute bg-white border rounded shadow-lg p-1 bottom-[75px] right-[100px] z-50"
+                                      className="absolute rounded shadow-lg bottom-[90px] right-[100px] z-50"
                                     >
                                       <EmojiPicker
                                         onEmojiClick={onEmojiClick}
@@ -2893,28 +2898,6 @@ const Chat2 = () => {
                                           showPreview: false,
                                         }}
                                       >
-                                        <svg
-                                          width={20}
-                                          height={20}
-                                          x={0}
-                                          y={0}
-                                          viewBox="0 0 32 32"
-                                          style={{
-                                            enableBackground: "new 0 0 24 24",
-                                          }}
-                                          xmlSpace="preserve"
-                                          className
-                                        >
-                                          <g>
-                                            <path
-                                              d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
-                                              fill="currentColor"
-                                              opacity={1}
-                                              data-original="#000000"
-                                              className
-                                            />
-                                          </g>
-                                        </svg>
                                       </EmojiPicker>
                                     </div>
                                   )}
@@ -3173,30 +3156,53 @@ const Chat2 = () => {
             : `grid gap-4 ${getGridColumns(parseInt(remoteStreams.size))}`
             }`}
         >
-          {Array.from(remoteStreams).length > 0 ? (
-            <>
-              {/* Render the video when the call is active */}
-              {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
-                // Render remote video stream
-                return (
-                  <div key={participantId} className="relative w-full">
-                    <video
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain max-h-[80vh]"
-                      ref={(el) => {
-                        if (el) {
-                          el.srcObject = stream;
-                        }
-                      }}
-                    />
-                    <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                      {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
+  
+          <div
+            className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+              } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
+                ? "max-w-30 absolute top-2 right-2 z-10"
+                : "relative"
+              }`}
+          >
+            <video
+              ref={localVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-contain"
+              style={{
+                maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
+              }}
+            />
+            <div className="absolute bottom-2 left-2 text-white text-xl bg-primary  px-3 py-1 rounded-full text-center">
+              You
+            </div>
+          </div>
+
+            {Array.from(remoteStreams).length > 0 ? (
+              <>
+                {/* Render the video when the call is active */}
+                {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
+                  // Render remote video stream
+                  return (
+                    <div key={participantId} className="relative w-full">
+                      <video
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-contain max-h-[80vh]"
+                        ref={(el) => {
+                          if (el) {
+                            el.srcObject = stream;
+                          }
+                        }}
+                      />
+                      <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
+                        {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </>
+                  );
+                })}
+              </>
           ) : (
             // Show the initial div when the call is not active
             <div className="relative flex items-center justify-center w-full h-full ">
@@ -3266,7 +3272,8 @@ const Chat2 = () => {
                   //     isVideoCalling ? endVideoCall() : endVoiceCall();
                   //   }
                   // }
-                  endVideoCall()
+                  leaveCall();
+                  endCall()
                   cleanupConnection();
                 }}
                 className="bg-red-500 h-12 w-12 text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
@@ -3302,9 +3309,8 @@ const Chat2 = () => {
           incomingCall={incomingCall}
           allUsers={allUsers}
           groups={groups}
-          rejectVideoCall={rejectVideoCall}
-          acceptVideoCall={acceptVideoCall}
-        // acceptVoiceCall={acceptVoiceCall}
+          rejectCall={rejectCall}
+          acceptCall={acceptCall}
         />
       )}
 
