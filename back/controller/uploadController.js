@@ -5,9 +5,14 @@ const uploadController = {
   uploadFile: async (req, res) => {
     try {
       const file = req.file;
-      // console.log("file", file);
+      // console.log("file1");
 
-      // Save file details to your database
+      // grab Bearer token from the Authorization header
+      const authHeader = req.headers.authorization || "";
+      const token = authHeader.split(" ")[1];
+      // console.log("file2");
+
+      // Save file details to your database, storing the S3 key:
       const fileDoc = await FileModel.create({
         filename: file.originalname,
         path: file.path,
@@ -16,10 +21,15 @@ const uploadController = {
         userId: req.user._id, // Assuming you have user authentication
         uploadDate: new Date(),
       });
+      // console.log("file3");
 
-      // Return the complete file URL and type
-      const baseUrl = process.env.SERVER_URL || 'https://chat-message-0fml.onrender.com';
-      const filePath = file.path.replace(/\\/g, '/'); // Convert Windows backslashes to forward slashes
+
+      // use the public URL that multer-s3 already gave us
+      const fileUrl = file.location;
+      // console.log("file4");
+
+
+      // return the public URL
       res.status(200).json({
         // fileUrl: `${baseUrl}/${filePath}`,
         fileUrl: `${filePath}`,

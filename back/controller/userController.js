@@ -616,6 +616,7 @@ exports.updateUser = async (req, res) => {
     if (req.file) {
       req.body.photo = req.file.path;
     }
+    // console.log(req.file);
     const updatedUser = await user.findByIdAndUpdate(
       req.params.id,
       { ...req.body, photo: req.body.photo ? req.body.photo : undefined }, // Ensure photo is included if provided

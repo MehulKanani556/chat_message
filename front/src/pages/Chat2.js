@@ -2001,6 +2001,33 @@ const Chat2 = () => {
     }
   };
 
+  // button
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isImageModalOpen || !selectedImage) return;
+  
+      const mediaMessages = messages.filter(message => 
+        message.content && 
+        message.content.fileType && 
+        (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
+      );
+      const currentIndex = mediaMessages.findIndex(message => 
+        `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
+      );
+  
+      if (e.key === 'ArrowLeft') {
+        const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
+        setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
+      } else if (e.key === 'ArrowRight') {
+        const nextIndex = (currentIndex + 1) % mediaMessages.length;
+        setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isImageModalOpen, selectedImage, messages]);
+
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
