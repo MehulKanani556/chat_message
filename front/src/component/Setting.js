@@ -95,7 +95,7 @@ const Setting = () => {
                         mobileNumber: userData.mobileNumber || '',
                         bio: userData.bio || '',
 
-                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : '',
+                        profileImage: userData.photo ? `${userData.photo.replace(/\\/g, "/")}` : '',
                     });
                     setTempData({
                         name: userData.userName || '',
@@ -104,7 +104,7 @@ const Setting = () => {
                         bio: userData.bio || '',
                         mobileNumber: userData.mobileNumber || '',
 
-                        profileImage: userData.photo ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}` : '',
+                        profileImage: userData.photo ? `${userData.photo.replace(/\\/g, "/")}` : '',
                     });
                 } catch (error) {
                     console.error('Error fetching user data:', error);
@@ -125,7 +125,7 @@ const Setting = () => {
                 bio: currentUser.bio || '',
                 mobileNumber: currentUser.mobileNumber || '',
 
-                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : '',
+                profileImage: currentUser.photo ? `${currentUser.photo.replace(/\\/g, "/")}` : '',
             });
             setTempData({
                 name: currentUser.userName || '',
@@ -134,7 +134,7 @@ const Setting = () => {
                 bio: currentUser.bio || '',
                 mobileNumber: currentUser.mobileNumber || '',
 
-                profileImage: currentUser.photo ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}` : '',
+                profileImage: currentUser.photo ? `${currentUser.photo.replace(/\\/g, "/")}` : '',
             });
         }
     }, [currentUser, targetUserId]);

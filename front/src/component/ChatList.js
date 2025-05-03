@@ -224,7 +224,7 @@ const ChatList = ({
                         <div className="relative mr-3">
                           {item?.photo && item.photo !== "null" && !item?.blockedUsers?.includes(currentUser) && (item?.profilePhoto == "Everyone" || item._id === currentUser || item.isGroup) ? (
                             <img
-                              src={`${IMG_URL}${item.photo.replace(/\\/g, "/")}`}
+                              src={`${item.photo.replace(/\\/g, "/")}`}
                               alt="Profile"
                               className="w-10 h-10 rounded-full object-cover"
                             />
@@ -897,7 +897,7 @@ const ChatList = ({
                     <div className="relative mr-3">
                       {item?.photo && item.photo !== "null" && (item?.profilePhoto == "Everyone" || item.isGroup) ? (
                         <img
-                          src={`${IMG_URL}${item.photo.replace(/\\/g, "/")}`}
+                          src={`${item.photo.replace(/\\/g, "/")}`}
                           alt="Profile"
                           className="w-10 h-10 rounded-full object-cover"
                         />

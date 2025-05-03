@@ -6,7 +6,7 @@ async function createGroup(req, res) {
   try {
     const { userName, members, createdBy, bio } = req.body;
     if(req.file){
-        req.body.photo = req.file.path
+        req.body.photo = req.file.location
     }
     const group = await Group.create({ userName, members, createdBy, photo: req.body.photo ? req.body.photo : undefined, bio:bio });
     if(!group){
@@ -36,7 +36,7 @@ async function updateGroup(req, res) {
       updateData.bio = req.body.bio; // Add bio if it exists
     }
     if (req.file) {
-      updateData.photo = req.file.path; // Update photo if a file is uploaded
+      updateData.photo = req.file.location; // Update photo if a file is uploaded
     }
 
     const group = await Group.findByIdAndUpdate(groupId, updateData); // Update only the fields that are present

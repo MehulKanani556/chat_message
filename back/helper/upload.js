@@ -1,16 +1,44 @@
 const multer = require("multer");
 const path = require("path");
 
-// Configure multer for file upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let uploadPath = "uploads/";
-    require("fs").mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
+// -------------- insert AWS config here --------------
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const {getSignedUrl} = require("@aws-sdk/s3-request-presigner");
+const multerS3 = require('multer-s3');
+
+// configure a V3 S3Client
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+});
+// ----------------------------------------------------
+
+
+async function getOgjectURL (key){
+  const command =new GetObjectCommand({
+    Bucket:process.env.S3_BUCKET_NAME,
+    key:key
+  });
+  const url = await getSignedUrl(s3,command);
+  return url ;
+}
+
+// Configure multer for file upload
+const storage = multerS3({
+  s3,
+  bucket: process.env.S3_BUCKET_NAME,
+   contentType: multerS3.AUTO_CONTENT_TYPE, 
+  acl: 'public-read',
+  metadata: (req, file, cb) => {
+    cb(null, { fieldName: file.fieldname });
+  },
+  key: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random()*1e9)
+                     + path.extname(file.originalname);
+    cb(null, uniqueName);
   },
 });
 
@@ -30,14 +58,25 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage,
+  fileFilter,
   limits: {
     fileSize: 600 * 1024 * 1024, // 600MB limit
   },
 });
 
-module.exports = upload;
+async function getObjectUrl(key) {
+  const cmd = new GetObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key,
+  });
+  return getSignedUrl(s3, cmd, { expiresIn: 31536000  });
+}
+
+module.exports = {
+  upload,
+  getObjectUrl,
+};
 
 
 

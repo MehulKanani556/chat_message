@@ -29,6 +29,10 @@ const fileSchema = new mongoose.Schema({
   // Optional: Add more fields as needed
   originalName: String,
   extension: String,
+  accessToken: {
+    type: String,
+    required: false,
+  },
   isDeleted: {
     type: Boolean,
     default: false,
