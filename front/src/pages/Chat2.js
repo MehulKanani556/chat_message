@@ -23,6 +23,7 @@ import {
   FaFileAudio,
   FaChevronLeft,
   FaChevronRight,
+  FaRegBell,
 } from "react-icons/fa";
 import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
 import {
@@ -41,7 +42,7 @@ import {
   LuSendHorizontal,
   LuScreenShareOff,
 } from "react-icons/lu";
-import { IoIosArrowDown, IoIosArrowUp, IoMdSearch } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowForward, IoIosArrowUp, IoMdSearch } from "react-icons/io";
 import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash, GoUnmute } from "react-icons/go";
 import { ImCross } from "react-icons/im";
 import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
@@ -109,7 +110,7 @@ import ProfileUser from "../component/ProfileUser";
 import CallHistory from "../component/CallHistory";
 import ForwardModal from "../component/ForwardModal";
 import { SlPin } from "react-icons/sl";
-import { AiOutlineVideoCamera } from "react-icons/ai";
+import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
 
@@ -209,6 +210,13 @@ const Chat2 = () => {
   const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
 
   const [waveformData, setWaveformData] = useState([]);
+
+  const [showFirstSection, setShowFirstSection] = useState(true);
+  const [userStreams, setUserStreams] = useState({});
+
+  const getStreamForUser = (userId) => {
+    return userStreams[userId]; // Return the stream for the given user ID
+  };
   //===========Use the custom socket hook===========
   const {
     socket,
@@ -856,13 +864,14 @@ const Chat2 = () => {
   const handleAddParticipants = () => {
     const data = {
       groupId: selectedChat._id,
-      members: groupNewUsers,
+      members: Array.from(selectedCallUsers),
       addedBy: userId,
     };
     dispatch(addParticipants(data));
     socket.emit("update-group", data);
     setGroupUsers([]);
     setGroupNewUsers([]);
+    setSelectedCallUsers(new Set());
     setIsModalOpen(false);
     dispatch(getAllMessageUsers());
   };
@@ -1453,12 +1462,12 @@ const Chat2 = () => {
 
   const getGridColumns = (count) => {
     if (count <= 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-1";
-    if (count === 3) return "grid-cols-2";
-    if (count === 4) return "grid-cols-2";
-    if (count <= 6) return "grid-cols-2 md:grid-cols-3";
-    if (count <= 8) return "grid-cols-2 md:grid-cols-4";
-    return "grid-cols-3 md:grid-cols-4";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2 md:grid-cols-2";
+    if (count <= 6) return "grid-cols-3 md:grid-cols-3";
+    if (count <= 9) return "grid-cols-3 md:grid-cols-3";
+    if (count <= 12) return "grid-cols-4 md:grid-cols-4";
+    return "grid-cols-5 md:grid-cols-5";
   };
 
   const [replyingTo, setReplyingTo] = useState(null);
@@ -2005,16 +2014,16 @@ const Chat2 = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isImageModalOpen || !selectedImage) return;
-  
-      const mediaMessages = messages.filter(message => 
-        message.content && 
-        message.content.fileType && 
+
+      const mediaMessages = messages.filter(message =>
+        message.content &&
+        message.content.fileType &&
         (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
       );
-      const currentIndex = mediaMessages.findIndex(message => 
+      const currentIndex = mediaMessages.findIndex(message =>
         `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
       );
-  
+
       if (e.key === 'ArrowLeft') {
         const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
         setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
@@ -2023,10 +2032,54 @@ const Chat2 = () => {
         setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
       }
     };
-  
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isImageModalOpen, selectedImage, messages]);
+  useEffect(() => {
+    // Cleanup function to close the participant section when the component unmounts
+    return () => {
+      setParticipantOpen(false);
+    };
+  }, []);
+
+  const handleUserJoin = (userId, stream) => {
+    setUserStreams((prevStreams) => ({
+      ...prevStreams,
+      [userId]: stream, // Store the stream for the user
+    }));
+  };
+
+  useEffect(() => {
+    if (!socket) return; // Only add listener if socket is ready
+
+    const handler = (data) => setIncomingCall(data);
+    socket.on('incoming-call', handler);
+
+    // Clean up the listener when the component unmounts or socket changes
+    return () => {
+      socket.off('incoming-call', handler);
+    };
+  }, [socket]);
+
+
+  const participants = [
+    { id: 1, name: "User 1", img: "https://api.dicebear.com/7.x/adventurer/svg?seed=user1" },
+    { id: 2, name: "User 2", img: "https://api.dicebear.com/7.x/adventurer/svg?seed=user2" },
+    { id: 3, name: "User 3", img: "https://api.dicebear.com/7.x/adventurer/svg?seed=user3" },
+    { id: 4, name: "User 4", img: "https://api.dicebear.com/7.x/adventurer/svg?seed=user4" },
+    { id: 5, name: "User 5", img: "https://api.dicebear.com/7.x/adventurer/svg?seed=user5" },
+  ];
+
+  const getGridCols = (count) => {
+    if (count === 1) return "grid-cols-1";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2 md:grid-cols-2";
+    if (count <= 6) return "grid-cols-3 md:grid-cols-3";
+    if (count <= 9) return "grid-cols-3 md:grid-cols-3";
+    if (count <= 12) return "grid-cols-4 md:grid-cols-4";
+    return "grid-cols-5 md:grid-cols-5";
+  };
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -2672,7 +2725,7 @@ const Chat2 = () => {
                             }
                             <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
                               {openCameraState &&
-                                <button className="absolute top-2 right-2 text-white z-10 text-xl" onClick={()=>{closeCamera()}}>
+                                <button className="absolute top-2 right-2 text-white z-10 text-xl" onClick={() => { closeCamera() }}>
                                   <RxCross2 />
                                 </button>
                               }
@@ -3258,139 +3311,136 @@ const Chat2 = () => {
 
       {/*========== screen share ==========*/}
       <div
-        className={`flex-grow flex flex-col p-4 bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`flex-grow flex flex-col p-10 bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
           ? ""
           : "hidden"
           } ${participantOpen ? "mr-96" : ""}`}
       >
         <div
-          className={`flex-1 relative ${isReceiving
-            ? "flex items-center justify-center"
-            : `grid gap-4 ${getGridColumns(parseInt(remoteStreams.size))}`
-            }`}
+          className={`flex-1 relative ${isReceiving ? "flex items-center justify-center" : `grid ${getGridColumns(Object.keys(userStreams).length)} gap-4`}`}
         >
-          {Array.from(remoteStreams).length > 0 ? (
-            <>
-              {/* Render the video when the call is active */}
-              {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
-                // Render remote video stream
-                return (
-                  <div key={participantId} className="relative w-full">
-                    <video
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain max-h-[80vh]"
-                      ref={(el) => {
-                        if (el) {
-                          el.srcObject = stream;
-                        }
-                      }}
-                    />
-                    <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                      {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
-                    </div>
-                  </div>
-                );
-              })}
-            </>
+          {Object.keys(userStreams).length > 0 ? (
+            Object.keys(userStreams).map((userId) => (
+              <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
+                <video autoPlay playsInline className="w-full h-full object-cover rounded-lg" ref={(el) => { if (el) { el.srcObject = userStreams[userId]; } }} />
+                <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
+                  {allUsers.find((user) => user._id === userId)?.userName || "Participant"}
+                </div>
+              </div>
+            ))
           ) : (
             // Show the initial div when the call is not active
-            <div className="relative flex items-center justify-center w-full h-full ">
-              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
-              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
-              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
-              <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
-              {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
-                <img
-                  src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
-                  alt="User profile"
-                  className="object-cover border rounded-full w-24 h-24"
-                />
-              ) : (
-                <div className="flex items-center justify-center">
-                  <span className="text-white text-4xl">
-                    {selectedChat?.userName?.charAt(0).toUpperCase()}
-                  </span>
+            // <div className="relative flex items-center justify-center w-full h-full ">
+            //   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
+            //   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
+            //   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
+            //   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
+            //   {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
+            //     <img
+            //       src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+            //       alt="User profile"
+            //       className="object-cover border rounded-full w-24 h-24"
+            //     />
+            //   ) : (
+            //     <div className="flex items-center justify-center">
+            //       <span className="text-white text-4xl">
+            //          {selectedChat?.userName?.charAt(0).toUpperCase()}
+            //       </span>
+            //     </div>
+            //   )}
+            //   <p className="absolute bottom-72 text-white text-lg font-medium">
+            //     {selectedChat?.userName || "Unknown User"}
+            //   </p>
+            // </div>
+            <div className={`grid gap-4 ${getGridCols(participants.length)}`}>
+              {participants.map((user) => (
+                <div key={user.id} className="relative bg-gray-800 rounded-lg overflow-hidden flex items-center justify-center h-[100%]">
+                  {/* Replace img with <video> for real streams */}
+                  {/* <img src="" alt={user.name} className="object-cover w-full h-full" /> */}
+                  <div className="absolute bottom-[360px] left-96  bg-opacity-60 text-white px-3 py-1 rounded-full text-sm">
+                    <IoMicOffOutline className="text-xl" />
+                  </div>
                 </div>
-              )}
-              <p className="absolute bottom-72 text-white text-lg font-medium">
-                {selectedChat?.userName || "Unknown User"}
-              </p>
-            </div>
-          )}
-
-          {/* Controls */}
-          {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
-            <div className="h-10 flex gap-3 mb-4 absolute bottom-1 left-1/2 transform -translate-x-1/2">
-              <button
-                onClick={() => setSelectedChatModule(!selectedChatModule)}
-                className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                <BsChatDots className="text-xl" />
-              </button>
-              <button
-                onClick={toggleMicrophone}
-                className={`w-10 grid place-content-center border rounded-full h-10 ${isMicrophoneOn ? "" : ""
-                  } text-white`}
-              >
-                {isMicrophoneOn ? (
-                  <IoMicOffOutline className="text-xl " />
-                ) : (
-                  <IoMicOffCircleOutline className="text-xl " />
-                )}
-              </button>
-              <button
-                onClick={toggleCamera}
-                className={`w-10 grid place-content-center border rounded-full h-10 ${isCameraOn ? "" : ""
-                  } text-white ${isVideoCalling ? "" : "hidden"}`}
-              >
-                {isCameraOn ? (
-                  <BsCameraVideo className="text-xl " />
-                ) : (
-                  <BsCameraVideoOff className="text-xl " />
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  // if (!callAccept && selectedChat) {
-                  //   if (isVideoCalling || isVoiceCalling) {
-                  //     isVideoCalling
-                  //       ? rejectVoiceCall(selectedChat._id, "video")
-                  //       : rejectVoiceCall(selectedChat._id, "voice");
-                  //   }
-                  // } else {
-                  //   if (isVideoCalling || isVoiceCalling) {
-                  //     isVideoCalling ? endVideoCall() : endVoiceCall();
-                  //   }
-                  // }
-                  endVideoCall()
-                  cleanupConnection();
-                }}
-                className="bg-red-500 h-12 w-12 text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
-              >
-                <IoCallOutline className="text-2xl " />
-              </button>
-
-              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                <GoUnmute className="text-xl" />
-              </button>
-
-              {(isVideoCalling || isVoiceCalling) && (
-                <>
-                  <button
-                    onClick={() => setParticipantOpen(true)}
-                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                  >
-                    <MdOutlineGroupAdd className="text-xl" />
-                  </button>
-                </>
-              )}
-              <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                <AiOutlineVideoCamera className="text-xl" />
-              </button>
+              ))}
             </div>
           )}
         </div>
+
+        {/* Controls */}
+        {(isSharing || isReceiving || isVideoCalling || isVoiceCalling) && (
+          <div className="h-14 flex gap-3 mb-6 absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/90 rounded-2xl shadow-lg px-8 border border-gray-700 items-center z-50">
+            <button
+              onClick={() => setSelectedChatModule(!selectedChatModule)}
+              className="w-10 grid place-content-center rounded-full h-10 border text-white">
+              <BsChatDots className="text-xl" />
+            </button>
+            <button
+              onClick={toggleMicrophone}
+              className={`w-10 grid place-content-center border rounded-full h-10 ${isMicrophoneOn ? "" : ""
+                } text-white`}
+            >
+              {isMicrophoneOn ? (
+                <IoMicOffOutline className="text-xl " />
+              ) : (
+                <IoMicOffCircleOutline className="text-xl " />
+              )}
+            </button>
+            <button
+              onClick={toggleCamera}
+              className={`w-10 grid place-content-center border rounded-full h-10 ${isCameraOn ? "" : ""
+                } text-white ${isVideoCalling ? "" : "hidden"}`}
+            >
+              {isCameraOn ? (
+                <BsCameraVideo className="text-xl " />
+              ) : (
+                <BsCameraVideoOff className="text-xl " />
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (!callAccept && selectedChat) {
+                  if (isVideoCalling || isVoiceCalling) {
+                    isVideoCalling
+                      ? rejectVoiceCall(selectedChat._id, "video")
+                      : rejectVoiceCall(selectedChat._id, "voice");
+                  }
+                } else {
+                  if (isVideoCalling || isVoiceCalling) {
+                    isVideoCalling ? endVideoCall() : endVoiceCall();
+                  }
+                }
+                cleanupConnection();
+              }}
+              className="bg-red-500 h-12 w-12 text-white  grid place-content-center rounded-full hover:bg-red-600 transition-colors "
+            >
+              <IoCallOutline className="text-2xl " />
+            </button>
+
+            <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+              <GoUnmute className="text-xl" />
+            </button>
+
+            {(isVideoCalling || isVoiceCalling) && (
+              <>
+                <button
+                  onClick={() => {
+                    setParticipantOpen(true);
+                    setShowFirstSection(true); // Now this will work
+                  }}
+                  className="w-10 grid place-content-center rounded-full h-10 border text-white"
+                >
+                  <MdOutlineGroupAdd className="text-xl" />
+                </button>
+              </>
+            )}
+            <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+              <AiOutlineVideoCamera className="text-xl" />
+            </button>
+          </div>
+        )}
       </div>
+
+
 
       {/* ========= incoming call ========= */}
       {incomingCall && (
@@ -3412,8 +3462,7 @@ const Chat2 = () => {
             </h3>
             <p className="text-gray-400 mb-8">
               {
-                allUsers.find((user) => user._id === incomingShare.fromEmail)
-                  ?.userName
+                allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName
               }
             </p>
             <div className="flex justify-center gap-8">
@@ -3632,136 +3681,229 @@ const Chat2 = () => {
       {/* Call participant modal */}
       {participantOpen && (
         <div className="fixed inset-0 bg-opacity-50 z-50">
-          <div className="absolute right-0 top-0 h-full w-96 bg-primary-light dark:bg-primary-dark/95 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
-            <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
-              <div className="flex justify-between items-center p-4 py-6">
-                <h2 className="text-lg font-bold">Add Members</h2>
-                <button
-                  className="text-gray-500 hover:text-gray-700"
-                  onClick={() => {
-                    setParticipantOpen(false);
-                    setSelectedCallUsers(new Set());
-                  }}
-                >
-                  <RxCross2 className="w-6 h-6" />
-                </button>
-              </div>
-              <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
-
-              {/* {/ Search bar /} */}
-              <div className="relative p-4">
-                <input
-                  type="text"
-                  placeholder="Search users"
-                  className="w-full py-2 pl-10 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10 focus:outline-none"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                <svg
-                  className="absolute left-7 top-7 text-gray-400"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </div>
-
-              <div className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2 px-4">
-                All Users
-              </div>
-
-              <div className="p-4">
-                <div className="flex flex-col h-[calc(100vh-275px)] overflow-y-auto modal_scroll">
-                  {allUsers
-                    .filter(
-                      (user) =>
-                        !callParticipants.has(user._id) && user._id !== userId
-                    )
-                    .map((user) => (
-                      <div
-                        key={user._id}
-                        className="flex items-center p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-primary-light/10 rounded-md bg-primary-dark/80 mb-2"
-                        onClick={() => {
-                          const newSelectedUsers = new Set(selectedCallUsers);
-                          if (newSelectedUsers.has(user._id)) {
-                            newSelectedUsers.delete(user._id);
-                          } else {
-                            newSelectedUsers.add(user._id);
-                          }
-                          setSelectedCallUsers(newSelectedUsers);
-                        }}
-                      >
-                        <div
-                          className={`w-5 h-5 rounded border mr-3 ${selectedCallUsers.has(user._id)
-                            ? "bg-primary border-primary"
-                            : "border-gray-400"
-                            }`}
-                        >
-                          {selectedCallUsers.has(user._id) && (
-                            <svg
-                              className="w-full h-full text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                          {user?.photo && user.photo !== "null" ? (
-                            <img
-                              src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                              alt={`${user.userName}`}
-                              className="object-cover h-full w-full"
-                            />
-                          ) : (
-                            <span className="text-gray-900 text-lg font-bold">
-                              {user.userName
-                                .split(" ")
-                                .map((n) => n[0].toUpperCase())
-                                .join("")}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
-                            {user.userName}
-                          </h3>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-                <div className="mt-4 flex justify-center w-full">
+          {/* first section */}
+          {showFirstSection && (
+            <div className="absolute right-0 top-0 h-full w-96 bg-primary-light dark:bg-primary-dark/90 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
+              <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
+                <div className="flex justify-between items-center p-4 py-6">
+                  <h2 className="text-lg font-bold">Add Members</h2>
                   <button
-                    className="px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
+                    className="text-gray-500 hover:text-gray-700"
                     onClick={() => {
-                      selectedCallUsers.forEach(userId => {
-                        inviteToCall(userId);
-                      });
                       setParticipantOpen(false);
                       setSelectedCallUsers(new Set());
                     }}
-                    disabled={selectedCallUsers.size === 0}
                   >
-                    Add Members
+                    <RxCross2 className="w-6 h-6" />
                   </button>
+                </div>
+                <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
+
+                {/* Search bar */}
+                <div className="relative p-4">
+                  <input
+                    type="text"
+                    placeholder="Search users"
+                    className="w-full py-2 pl-10 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10 focus:outline-none"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                  <svg
+                    className="absolute left-7 top-7 text-gray-400"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+
+                <div className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2 px-4">
+                  All Users
+                </div>
+
+                <div className="p-4">
+                  <div className="flex flex-col h-[calc(100vh-275px)] overflow-y-auto modal_scroll">
+                    {allUsers
+                      .filter(
+                        (user) =>
+                          !callParticipants.has(user._id) && user._id !== userId
+                      )
+                      .map((user) => (
+                        <div
+                          key={user._id}
+                          className="flex items-center p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-primary-light/10 rounded-md bg-primary-dark/80 mb-2"
+                          onClick={() => {
+                            const newSelectedUsers = new Set(selectedCallUsers);
+                            if (newSelectedUsers.has(user._id)) {
+                              newSelectedUsers.delete(user._id);
+                            } else {
+                              newSelectedUsers.add(user._id);
+                            }
+                            setSelectedCallUsers(newSelectedUsers);
+                          }}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded border mr-3 ${selectedCallUsers.has(user._id)
+                              ? "bg-primary border-primary"
+                              : "border-gray-400"
+                              }`}
+                          >
+                            {selectedCallUsers.has(user._id) && (
+                              <svg
+                                className="w-full h-full text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                            {user?.photo && user.photo !== "null" ? (
+                              <img
+                                src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                                alt={`${user.userName}`}
+                                className="object-cover h-full w-full"
+                              />
+                            ) : (
+                              <span className="text-gray-900 text-lg font-bold">
+                                {user.userName
+                                  .split(" ")
+                                  .map((n) => n[0].toUpperCase())
+                                  .join("")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                              {user.userName}
+                            </h3>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="mt-4 flex justify-center w-full">
+                    <button
+                      className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
+                      onClick={() => {
+                        console.log("Inviting users:", Array.from(selectedCallUsers));
+                        selectedCallUsers.forEach(userId => {
+                          inviteToCall(userId);
+                        });
+                        setParticipantOpen(false);
+                        setSelectedCallUsers(new Set());
+                        setShowFirstSection(false);
+                      }}
+                      disabled={selectedCallUsers.size === 0}
+                    >
+                      Add Members
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* second section */}
+          {!showFirstSection && (
+            <div className="absolute right-0 top-0 h-full w-96 bg-primary-light dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
+              <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/95 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
+                <div className="flex justify-between items-center p-4 py-6">
+                  <h2 className="text-lg font-bold"> Members</h2>
+                  <button
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => {
+                      setParticipantOpen(false);
+                      setSelectedCallUsers(new Set());
+                    }}
+                  >
+                    <RxCross2 className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
+
+                <div className="relative p-4">
+                  <button
+                    className="bg-black flex items-center justify-between w-full py-2 text-white rounded-md transition-colors"
+                  >
+                    <span className="flex items-center">
+                      <RiUserAddLine className="mr-2 ml-4" />
+                      Add Members
+                    </span>
+                    <IoIosArrowForward className="mr-4" />
+                  </button>
+                </div>
+                <div className="text-gray-700 font-medium dark:text-primary-light flex items-center gap-2 px-4">
+                  joined
+                </div>
+
+                <div className="p-4">
+                  <div className="flex flex-col overflow-y-auto modal_scroll ">
+                    <div className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2" >
+                      <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400" >
+                        <img src="./img/f1.png" alt="User Profile" className="object-cover w-full h-full" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                          hello
+                        </h3>
+                      </div>
+                      <AiOutlineAudioMuted className="h-6 w-6" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-gray-700 font-medium dark:text-primary-light flex items-center gap-2 px-4">
+                  invited
+                </div>
+                <div className="p-4">
+                  <div className="flex flex-col overflow-y-auto modal_scroll">
+                    <div className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2" >
+                      <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                        <img src="./img/f1.png" alt="User Profile" className="object-cover w-full h-full" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                          hello
+                        </h3>
+                      </div>
+                      <FaRegBell className="h-6 w-6" />
+                      <div
+                        className="flex items-center justify-center gap-1 h-6 w-8 cursor-pointer"
+                      // onClick={togglePlay}
+                      >
+                        {Array.from({ length: 7 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-2 bg-primary  rounded-full transform transition-all duration-300 ease-in-out  animate-callwaveform
+                            }`}
+                            style={{
+                              animationDelay: `${i * 0.1}s`,
+                              // height: isPlaying ? 'auto' : '2rem'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
       )}
 
