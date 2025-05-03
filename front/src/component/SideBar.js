@@ -169,7 +169,7 @@ const Sidebar = ({ user, onProfileClick }) => {
           <div className="w-10 h-10 rounded-full bg-primary overflow-hidden flex items-center justify-center border border-gray-800">
             {user?.photo && user.photo !== "null" ? (
               <img
-                src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                src={`${user.photo.replace(/\\/g, "/")}`}
                 alt="Profile"
                 className="object-fill w-full h-full cursor-pointer"
                 onClick={handleProfileClick}

@@ -31,6 +31,21 @@ import AudioPlayer from "./AudioPlayer";
 import { FaRegClock } from "react-icons/fa";
 import { IMG_URL } from "../utils/baseUrl";
 import { HiOutlinePhoneMissedCall } from "react-icons/hi";
+const decryptMessage = (encrypted) => {
+  const key = 'chat';
+  if (typeof encrypted === 'string' && encrypted.startsWith('data:')) {
+    // strip the "data:" prefix and base64‐decode
+    const raw = atob(encrypted.split('data:')[1]);
+    let out = '';
+    for (let i = 0; i < raw.length; i++) {
+      out += String.fromCharCode(
+        raw.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+      );
+    }
+    return out;
+  }
+  return encrypted;
+};
 
 const MessageList = ({
   messages,
@@ -62,8 +77,8 @@ const MessageList = ({
   typingUsers
 }) => {
 
-  
-  
+
+
   return (
     <>
       {messages && messages.length > 0 ? (
@@ -163,16 +178,16 @@ const MessageList = ({
       ) : (
         <EmptyMessages selectedChat={selectedChat} sendPrivateMessage={sendPrivateMessage} />
       )}
-      {(selectedChat && typingUsers.includes(selectedChat._id))  && (
+      {(selectedChat && typingUsers.includes(selectedChat._id)) && (
         <div className="flex">
-        <div className=" flex text-sm p-2 px-3 dark:text-white bg-primary rounded-e-xl rounded-tl-xl">
-          <span>{selectedChat.members ? `${""}` :""}</span>
-          <div className="flex space-x-1 mt-3 ml-2">
-            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '300ms' }}></div>
+          <div className=" flex text-sm p-2 px-3 dark:text-white bg-primary rounded-e-xl rounded-tl-xl">
+            <span>{selectedChat.members ? `${""}` : ""}</span>
+            <div className="flex space-x-1 mt-3 ml-2">
+              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '300ms' }}></div>
+            </div>
           </div>
-        </div>
         </div>
       )}
     </>
@@ -210,12 +225,12 @@ const SystemMessage = ({ message }) => (
 
 const CallMessage = ({ message, userId, handleMakeCall }) => {
   const isCompleted = message.content.status === "ended";
-  const group = !message?.content?.callfrom  && message?.content?.joined;
+  const group = !message?.content?.callfrom && message?.content?.joined;
   return (
     <div className={`flex  w-full my-2  ${message.sender === userId
       ? "justify-end items-end"
       : "justify-start items-start"}`}>
-        
+
       <div
         className={`flex items-center  text-sm px-3 py-2 rounded-md bg-gray-300 dark:bg-white/15 max-w-[230px] w-full dark:text-white`}
       >
@@ -228,7 +243,7 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
         <div className="flex flex-col ml-2 w-full">
           <span>
             {message.sender === userId ? isCompleted ? (group ? "Group call" : "Outgoing call") : "Call not answered"
-              : isCompleted ?  (group ? "Group call" : "Incoming call") : `Missed ${message.content.callType} call`}
+              : isCompleted ? (group ? "Group call" : "Incoming call") : `Missed ${message.content.callType} call`}
 
           </span>
           <div className="flex justify-between w-full">
@@ -238,7 +253,7 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
               {isCompleted && ` ${message.content.duration} sec`}
 
               {message?.content?.joined &&
-              <span className="ml-2 opacity-75 text-xs"> • ({parseInt(message?.content?.joined)+1}) Joined</span>}
+                <span className="ml-2 opacity-75 text-xs"> • ({parseInt(message?.content?.joined) + 1}) Joined</span>}
             </span>
             <span className="text-gray-500 dark:text-white/70 text-xs">
               {new Date(message.content.timestamp).toLocaleTimeString([], {
@@ -344,12 +359,12 @@ const MessageContent = ({
 const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
   <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
     <img
-      src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`}
-      alt={message.content.content}
+      src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
+      alt={decryptMessage(message.content.content)}
       className={`w-full h-full object-contain rounded-lg`}
       onClick={() =>
         handleImageClick(
-          `${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`
+          `${message.content.fileUrl.replace(/\\/g, "/")}`
         )
       }
     />
@@ -380,12 +395,12 @@ const VideoMessage = ({ message, userId, handleImageClick, IMG_URL }) => {
     <>
       <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
         <video
-          src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`}
+          src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
           controls
           className={`w-full h-full object-contain rounded-lg`}
           onClick={() =>
             handleImageClick(
-              `${IMG_URL}${message.content.fileUrl.replace(/\\/g, "/")}`
+              `${message.content.fileUrl.replace(/\\/g, "/")}`
             )
           }
         />
@@ -457,7 +472,7 @@ const AudioMessage = ({ message, userId, IMG_URL }) => {
   return (
     <div className={`max-w-[400px] rounded-lg`}>
       <AudioPlayer
-        audioUrl={`${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
+        audioUrl={`${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
       />
       <div className=" w-full flex justify-between items-center mt-1">
         <div className="font-medium text-sm">{messageContent}</div>
@@ -528,9 +543,11 @@ const FileMessage = ({
     setDownloadProgress(0);
 
     try {
+      console.log(message?.content.fileUrl)
       const response = await fetch(
-        `${IMG_URL}${message?.content?.fileUrl?.replace(/\\/g, "/")}`
+        `${message?.content?.fileUrl?.replace(/\\/g, "/")}`
       );
+      console.log(response)
       const contentLength = response.headers.get("content-length");
       const total = parseInt(contentLength, 10);
       let loaded = 0;
@@ -605,78 +622,92 @@ const FileMessage = ({
             )}
           </button>
         </div>
-        <div className=" flex justify-content-between">
+        <div className=" flex justify-content-between gap-1">
           {message?.content?.fileType === "application/pdf" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
+
               {/* PDF Icon */}
-              <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-                <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-                <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-                <path fillRule="evenodd" clipRule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
-                <path fillRule="evenodd" clipRule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" strokeLinecap="round" strokeLinejoin="round" fill="#fff"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                  <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                  <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
+                  <path fillRule="evenodd" clipRule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" strokeLinecap="round" strokeLinejoin="round" fill="#fff"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
           ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
               {/* Word Icon */}
-              <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
-                <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
-                <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
-                <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                  <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                  <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                  <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
           ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
               {/* Excel Icon */}
-              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
-                <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
-                <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
-                <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                  <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                  <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                  <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm " style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
           ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
               {/* PowerPoint Icon */}
-              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
-                <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
-                <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+
+                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                  <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                  <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
           ) : message?.content?.fileType === "application/zip" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
               {/* ZIP Icon */}
-              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
           ) : (
             <span className="text-sm ml-1 flex gap-1 items-center">
               {/* Default File Icon */}
-              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-                <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-                <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-              </svg>
-              <div className="font-medium text-sm">
+              <div>
+                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                  <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                  <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                  <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+                </svg>
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>

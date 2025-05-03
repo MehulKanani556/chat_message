@@ -1,5 +1,6 @@
 const FileModel = require("../models/fileModel");
 const path = require("path");
+const { getObjectUrl } = require("../helper/upload");
 
 const uploadController = {
   uploadFile: async (req, res) => {
@@ -15,11 +16,15 @@ const uploadController = {
       // Save file details to your database, storing the S3 key:
       const fileDoc = await FileModel.create({
         filename: file.originalname,
-        path: file.path,
+        path: file.key,
         type: file.mimetype,
         size: file.size,
         userId: req.user._id, // Assuming you have user authentication
         uploadDate: new Date(),
+        originalName: file.originalname,
+        extension: path.extname(file.originalname),
+        accessToken: token,
+        awsToken: file.key,
       });
       // console.log("file3");
 
@@ -31,9 +36,8 @@ const uploadController = {
 
       // return the public URL
       res.status(200).json({
-        // fileUrl: `${baseUrl}/${filePath}`,
-        fileUrl: `${filePath}`,
-
+        fileUrl,
+        awsToken: file.key,
         fileType: file.mimetype,
       });
     } catch (error) {

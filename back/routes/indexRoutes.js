@@ -33,7 +33,7 @@ const {
   updateMessage,
   clearChat,
 } = require("../controller/messageController");
-const upload = require("../helper/upload");
+const {upload} = require("../helper/upload");
 const uploadController = require("../controller/uploadController");
 const {
   createGroup,

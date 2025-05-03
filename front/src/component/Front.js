@@ -12,7 +12,7 @@ const Front = ({ data, handleMultipleFileUpload }) => {
                             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/40 to-primary dark:from-primary/30 dark:to-primary overflow-hidden border-4 border-white dark:border-primary-light shadow-lg">
                                 {data?.photo && data?.photo != "null" ? (
                                     <img
-                                        src={`${IMG_URL}${data?.photo.replace(/\\/g, "/")}`}
+                                        src={`${data?.photo.replace(/\\/g, "/")}`}
                                         alt="Profile"
                                         className="object-cover w-full h-full"
                                     />

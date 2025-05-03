@@ -747,7 +747,7 @@ const Chat2 = () => {
     for (const file of filesArray) {
       const formData = new FormData();
       formData.append("file", file);
-      // console.log("multiple file upload", file);
+      console.log("multiple file upload", file);
 
       try {
         const response = await axios.post(`${BASE_URL}/upload`, formData, {
@@ -3815,7 +3815,7 @@ const Chat2 = () => {
                   <React.Fragment key={index}>
                     {message.content && message.content.fileType && message.content.fileType.startsWith('image/') && (
                       <div className="relative">
-                        {selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` &&
+                        {selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` &&
 
                           <div className="absolute inset-0 bg-black opacity-60 z-10" >
                             <div className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" onClick={() => { handleDeleteMessage(message._id); setIsImageModalOpen(false); }}>
@@ -3825,24 +3825,24 @@ const Chat2 = () => {
                         }
 
                         <img
-                          className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
-                          src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                          className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                          src={`${message.content.fileUrl.replace(/\\/g, '/')}`}
                           alt={`Image ${index}`}
                           onClick={() => {
-                            setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected image on click
+                            setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected image on click
                           }}
                         />
                       </div>
                     )}
                     {message.content && message.content.fileType && message.content.fileType.startsWith('video/') && ( // Add video rendering
                       <div className="flex flex-col items-center relative cursor-pointer" onClick={() => {
-                        setSelectedImage(`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected video on click
+                        setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`); // Set selected video on click
                       }}>
                         <div className="relative ">
                           <div className="absolute inset-0 bg-black opacity-50 z-10" /> {/* Overlay layer */}
                           <video
-                            className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${selectedImage === `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
-                            src={`${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}`}
+                            className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${selectedImage == `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''}`} // Add cursor pointer for interactivity
+                            src={`${message.content.fileUrl.replace(/\\/g, '/')}`}
                             alt={`Video ${index}`}
                             onLoadedMetadata={(e) => {
                               handleVideoMetadataLoad(message._id, e.target); // Call the function to update duration
@@ -3868,9 +3868,9 @@ const Chat2 = () => {
                   onClick={() => {
                     // Filter messages to only include media messages (images and videos)
                     const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
-                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const currentIndex = mediaMessages.findIndex(message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
                     const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length; // Wrap around to the last media
-                    setSelectedImage(`${IMG_URL}${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                    setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
                   }}
                   className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
                 >
@@ -3884,9 +3884,9 @@ const Chat2 = () => {
                   onClick={() => {
                     // Filter messages to only include media messages (images and videos)
                     const mediaMessages = messages.filter(message => message.content && message.content.fileType && (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/')));
-                    const currentIndex = mediaMessages.findIndex(message => `${IMG_URL}${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
+                    const currentIndex = mediaMessages.findIndex(message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage);
                     const nextIndex = (currentIndex + 1) % mediaMessages.length; // Wrap around to the first media
-                    setSelectedImage(`${IMG_URL}${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
+                    setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
                   }}
                   className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
                 >
