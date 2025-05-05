@@ -6,7 +6,7 @@ const {
   findGroupById,
 } = require("../controller/groupController");
 const User = require("../models/userModels");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const Groups = require("../models/groupModel");
 
 const onlineUsers = new Map();
@@ -14,8 +14,56 @@ const onlineUsers = new Map();
 // Store active sessions
 const activeSessions = {};
 
+const activeCalls = {};
+
+// Add call room management
+const callRooms = new Map();
+
 // Add your JWT secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_this_in_production';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production";
+
+// Helper function to manage call rooms
+function createCallRoom(
+  roomId,
+  initiator,
+  type,
+  isGroupCall = false,
+  groupId = null
+) {
+  callRooms.set(roomId, {
+    id: roomId,
+    initiator,
+    type,
+    isGroupCall,
+    groupId,
+    participants: new Set([initiator]),
+    invitedUsers: new Set(),
+    ringingUsers: new Set(),
+    joinedUsers: new Set([initiator]),
+    startTime: new Date(),
+    endTime: null,
+    duration: 0,
+    status: "active",
+  });
+  return callRooms.get(roomId);
+}
+
+function getCallRoom(roomId) {
+  return callRooms.get(roomId);
+}
+
+function updateCallRoom(roomId, updates) {
+  const room = callRooms.get(roomId);
+  if (room) {
+    callRooms.set(roomId, { ...room, ...updates });
+  }
+  return callRooms.get(roomId);
+}
+
+function deleteCallRoom(roomId) {
+  callRooms.delete(roomId);
+}
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
@@ -77,11 +125,11 @@ function getSocketByUserId(userId) {
 }
 
 async function handlePrivateMessage(socket, data) {
-  const { senderId, receiverId, content,  replyTo, isBlocked } = data;
+  const { senderId, receiverId, content, replyTo, isBlocked } = data;
 
   try {
     // console.log("replyTo", content);
-    
+
     // Save message to database with initial status 'sent'
     const savedMessage = await saveMessage({
       senderId,
@@ -99,21 +147,21 @@ async function handlePrivateMessage(socket, data) {
         sender: senderId,
         content: savedMessage.content,
         createdAt: savedMessage.createdAt,
-        status: "delivered"
+        status: "delivered",
       });
 
       await Message.findByIdAndUpdate(savedMessage._id, {
-        status: "delivered"
+        status: "delivered",
       });
 
       socket.emit("message-sent-status", {
         messageId: savedMessage._id,
-        status: "delivered"
+        status: "delivered",
       });
     } else {
       socket.emit("message-sent-status", {
         messageId: savedMessage._id,
-        status: "sent"
+        status: "sent",
       });
     }
   } catch (error) {
@@ -121,7 +169,7 @@ async function handlePrivateMessage(socket, data) {
     socket.emit("message-sent-status", {
       messageId: Date.now(),
       status: "failed",
-      error: error.message
+      error: error.message,
     });
   }
 }
@@ -253,146 +301,305 @@ function handleScreenShareSignal(socket, data) {
 
 // ===========================Video call=============================
 
-async function handleVideoCallRequest(socket, data) {
-    const targetSocketId = onlineUsers.get(data.toEmail);
-    if (targetSocketId) {
-      socket.to(targetSocketId).emit("video-call-request", {
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        type: data.type,
-        participants: data.participants,
-        isGroupCall: data.isGroupCall,
-        groupId: data?.groupId || null
-      });
+async function handleCallRequest(socket, data) {
+  const {
+    fromEmail,
+    toEmail,
+    signal,
+    type,
+    participants,
+    isGroupCall,
+    groupId,
+    roomId,
+  } = data;
+
+  socket.join(roomId);
+
+  if (!activeCalls[roomId]) {
+    activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
+  }
+
+  const targetSocketId = onlineUsers.get(toEmail);
+  activeCalls[roomId].invited.push(toEmail);
+  activeCalls[roomId].invited.push(fromEmail);
+
+  if(targetSocketId){
+    activeCalls[roomId].ringing.push(toEmail);
+  }
+
+  if (targetSocketId) {
+    // Create or get call room
+    let callRoom = getCallRoom(roomId);
+    if (!callRoom) {
+      callRoom = createCallRoom(roomId, fromEmail, type, isGroupCall, groupId);
     }
+
+    // Add user to invited list
+    callRoom.invitedUsers.add(toEmail);
+    updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
+
+    socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
+    socket.emit("call:update-participant-list", activeCalls[roomId]);
+
+    socket.to(targetSocketId).emit("call-request", {
+      fromEmail,
+      signal,
+      type,
+      participants,
+      isGroupCall,
+      groupId: groupId || null,
+      roomId,
+    });
+  }
 }
 
-function handleVideoCallInvite(socket, data) {
-  // console.log("video-call-invite", data);
-  const targetSocketId = onlineUsers.get(data.toEmail);
+function handleCallInvite(socket, data) {
+  const {
+    fromEmail,
+    toEmail,
+    signal,
+    participants,
+    type,
+    isGroupCall,
+    roomId,
+  } = data;
+
+  socket.join(roomId);
+
+  if (!activeCalls[roomId]) {
+    activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
+  }
+
+  const targetSocketId = onlineUsers.get(toEmail);
+  
+  activeCalls[roomId].invited.push(toEmail);
+  if(targetSocketId){
+    activeCalls[roomId].ringing.push(toEmail);
+  }
   if (targetSocketId) {
-      socket.to(targetSocketId).emit("video-call-invite", {
-      fromEmail: data.fromEmail,
-      signal: data.signal,
-      participants: data.participants,
-      type: data.type,
-      isGroupCall: data.isGroupCall,
+    // Create or get call room
+    let callRoom = getCallRoom(roomId);
+    if (!callRoom) {
+      callRoom = createCallRoom(roomId, fromEmail, type, isGroupCall);
+    }
+
+    // Add user to invited list
+    callRoom.invitedUsers.add(toEmail);
+    updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
+
+    socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
+    socket.emit("call:update-participant-list", activeCalls[roomId]);
+
+    socket.to(targetSocketId).emit("call-invite", {
+      fromEmail,
+      signal,
+      participants,
+      type,
+      isGroupCall,
+      roomId,
     });
   }
 }
 
 function handleParticipantJoined(socket, data) {
-  console.log("participant-joined", data);
+  const { newParticipantId, from, participants, roomId } = data;
   const targetSocketId = onlineUsers.get(data.to);
+
   if (targetSocketId) {
+    const callRoom = getCallRoom(roomId);
+    if (callRoom) {
+      // Update room state
+      callRoom.participants.add(newParticipantId);
+      callRoom.joinedUsers.add(newParticipantId);
+      callRoom.ringingUsers.delete(newParticipantId);
+      updateCallRoom(roomId, {
+        participants: callRoom.participants,
+        joinedUsers: callRoom.joinedUsers,
+        ringingUsers: callRoom.ringingUsers,
+      });
+    }
+
     socket.to(targetSocketId).emit("participant-joined", {
-      newParticipantId: data.newParticipantId,
-      from: data.from,
-      participants: data.participants
+      newParticipantId,
+      from,
+      participants,
+      roomId,
     });
   }
 }
 
 function handleParticipantLeft(socket, data) {
-  const { leavingUser, to, duration } = data;
-  
-  // Get socket ID of the participant to notify
+  const { leavingUser, to, duration, roomId } = data;
   const targetSocketId = onlineUsers.get(to);
-  
+
   if (targetSocketId) {
-    // Notify the participant about who left
+    const callRoom = getCallRoom(roomId);
+    if (callRoom) {
+      // Update room state
+      callRoom.participants.delete(leavingUser);
+      callRoom.joinedUsers.delete(leavingUser);
+      callRoom.ringingUsers.delete(leavingUser);
+      updateCallRoom(roomId, {
+        participants: callRoom.participants,
+        joinedUsers: callRoom.joinedUsers,
+        ringingUsers: callRoom.ringingUsers,
+      });
+
+      // If no participants left, delete the room
+      if (callRoom.participants.size === 0) {
+        deleteCallRoom(roomId);
+      }
+    }
+
+    const call = activeCalls[roomId];
+  
+  if (call) {
+    if (call.joined.includes(leavingUser)) {
+      call.joined = call.joined.filter((id) => id !== leavingUser); 
+    }
+    if(call.invited.includes(leavingUser)){
+      call.invited =  call.invited.push(leavingUser) 
+    }
+  }
+  socket.to(roomId).emit("call:update-participant-list", call);
+
     socket.to(targetSocketId).emit("participant-left", {
       leavingUser,
-      duration
+      duration,
+      roomId,
     });
   }
+  socket.leave(roomId);
 }
 
-function handleVideoCallAccept(socket, data) {
+function handleCallAccept(socket, data) {
+  const { signal, fromEmail, toEmail, participants, roomId } = data;
+
+  socket.join(roomId);
+  const call = activeCalls[roomId];
+  console.log("call", call,roomId);
   
-  const targetSocketId = onlineUsers.get(data.fromEmail);
+  if (call) {
+    if (!call.joined.includes(fromEmail)) {
+      call.joined.push(fromEmail);
+      call.invited = call.invited.filter((id) => id !== fromEmail)
+    }
+    if(!call.joined.includes(toEmail)){
+      call.joined.push(toEmail);
+      call.invited = call.invited.filter((id) => id !== toEmail)
+    }
+    call.ringing = call.ringing.filter((id) => id !== fromEmail);
+    call.ringing = call.ringing.filter((id) => id !== toEmail);
+  }
+
+  const targetSocketId = onlineUsers.get(fromEmail);
+  const toSocketId = onlineUsers.get(toEmail);
+
   if (targetSocketId) {
-    socket.to(targetSocketId).emit("video-call-accepted", {
-      signal: data.signal,
-      fromEmail: data.toEmail,
+    const callRoom = getCallRoom(roomId);
+    if (callRoom) {
+      // Update room state
+      callRoom.ringingUsers.delete(toEmail);
+      callRoom.joinedUsers.add(toEmail);
+      updateCallRoom(roomId, {
+        ringingUsers: callRoom.ringingUsers,
+        joinedUsers: callRoom.joinedUsers,
+      });
+    }
+    
+    // Send call acceptance to the caller
+    socket.to(targetSocketId).emit("call-accepted", {
+      signal,
+      fromEmail: toEmail,
+      roomId,
     });
+
+    // Emit to all participants in the room including the accepting user
+    socket.to(roomId).emit("call:update-participant-list", call);
+    socket.emit("call:update-participant-list", call);
   }
 }
 
-function handleVideoCallSignal(socket, data) {
-  console.log("video-call-signal", data);
-  const targetSocketId = onlineUsers.get(data.to);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("video-call-signal", {
-      signal: data.signal,
-      from: data.from
-    });
-  }
-}
-
-function handleVideoCallEnd(socket, data) {
-  const { to, from, duration } = data;
-  const targetSocketId = onlineUsers.get(to);
-
-  // Notify the other user that the call has ended
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("video-call-ended", {
-      from,
-      duration
-    });
-  }
-}
-
-// ===========================call=============================
-// Voice call handlers
-function handleVoiceCallRequest(socket, data) {
-  const targetSocketId = onlineUsers.get(data.toEmail);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("voice-call-request", {
-      fromEmail: data.fromEmail,
-      toEmail:data.toEmail,
-      signal: data.signal,
-      type: data.type,
-    });
-  }
-}
-
-function handleVoiceCallAccept(socket, data) {
-  const targetSocketId = onlineUsers.get(data.fromEmail);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("voice-call-accepted", {
-      signal: data.signal,
-      fromEmail: data.toEmail,
-    });
-  }
-}
-
-function handleVoiceCallEnd(socket, data) {
-  const { to, from, duration } = data;
+function handleCallSignal(socket, data) {
+  const { signal, to, from, roomId } = data;
   const targetSocketId = onlineUsers.get(to);
 
   if (targetSocketId) {
-    socket.to(targetSocketId).emit("voice-call-ended", {
+    socket.to(targetSocketId).emit("call-signal", {
+      signal,
       from,
-      duration
+      roomId,
     });
   }
 }
 
+function handleCallEnd(socket, data) {
+  const { to, from, duration, roomId } = data;
+  const targetSocketId = onlineUsers.get(to);
+
+  if (targetSocketId) {
+    const callRoom = getCallRoom(roomId);
+    if (callRoom) {
+      // Update room state
+      callRoom.status = "ended";
+      callRoom.endTime = new Date();
+      callRoom.duration = duration;
+      updateCallRoom(roomId, {
+        status: "ended",
+        endTime: callRoom.endTime,
+        duration: callRoom.duration,
+      });
+
+      // Delete room after a delay to allow for cleanup
+      setTimeout(() => {
+        deleteCallRoom(roomId);
+      }, 5000);
+    }
+
+    const call = activeCalls[roomId];
+    if (call) {
+      call.joined = call.joined.filter((id) => id !== from);
+      call.joined = call.joined.filter((id) => id !== to);
+      call.ringing = call.ringing.filter((id) => id !== from);
+      call.ringing = call.ringing.filter((id) => id !== to);
+    }
+    call.invited =  call.invited.push(from) 
+    call.invited =  call.invited.push(to) 
+
+    socket.to(roomId).emit("call:update-participant-list", call);
+
+    socket.to(targetSocketId).emit("call-ended", {
+      from,
+      duration,
+      roomId,
+    });
+
+    socket.leave(roomId);
+  }
+}
 
 // ================ Handle save call message================
 async function handleSaveCallMessage(socket, data) {
   try {
-    const { senderId, receiverId, callType, status, duration, timestamp, callfrom, joined } = data;
-    
+    const {
+      senderId,
+      receiverId,
+      callType,
+      status,
+      duration,
+      timestamp,
+      callfrom,
+      joined,
+    } = data;
+
     // Format duration string if exists
-    let durationStr = '';
+    let durationStr = "";
     if (duration) {
       const minutes = Math.floor(duration / 60);
       const seconds = duration % 60;
-      durationStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      durationStr = `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
-    
+
     // Create message content based on status
     let content = {
       type: "call",
@@ -400,11 +607,11 @@ async function handleSaveCallMessage(socket, data) {
       status,
       timestamp,
       callfrom,
-      joined
+      joined,
     };
 
     // Add duration for ended calls
-    if (status === 'ended') {
+    if (status === "ended") {
       content.duration = durationStr;
     }
 
@@ -425,7 +632,6 @@ async function handleSaveCallMessage(socket, data) {
     if (receiverSocket) {
       socket.to(receiverSocket).emit("receive-message", savedMessage);
     }
-
   } catch (error) {
     console.error("Error saving call message:", error);
   }
@@ -482,17 +688,17 @@ async function handleCreateGroup(socket, data) {
 }
 
 async function handleUpdateGroup(socket, data) {
-  const { groupId, name, members,updateType,user,newData,oldData } = data;
+  const { groupId, name, members, updateType, user, newData, oldData } = data;
   try {
     const userData = await User.findById(user);
     let contentData;
 
-    if(updateType== "name"){
-      contentData = `**${userData.userName}** Changed Group name  **${oldData}** to  **${newData}**`
-    }else if (updateType== "bio"){
-       contentData = `**${userData.userName}** Changed Group bio  **${oldData}** to  **${newData}**`
-    }else if (updateType== "icon"){
-      contentData = `**${userData.userName}** Changed Group icon`
+    if (updateType == "name") {
+      contentData = `**${userData.userName}** Changed Group name  **${oldData}** to  **${newData}**`;
+    } else if (updateType == "bio") {
+      contentData = `**${userData.userName}** Changed Group bio  **${oldData}** to  **${newData}**`;
+    } else if (updateType == "icon") {
+      contentData = `**${userData.userName}** Changed Group icon`;
     }
 
     await saveMessage({
@@ -503,7 +709,6 @@ async function handleUpdateGroup(socket, data) {
         content: contentData,
       },
     });
-
 
     members.forEach((memberId) => {
       const memberSocket = onlineUsers.get(memberId);
@@ -581,7 +786,7 @@ async function handleGroupMessage(socket, data) {
 
 async function handleMessageReaction(socket, data) {
   const { messageId, userId, emoji } = data;
-  
+
   try {
     // Find the message
     const message = await Message.findById(messageId);
@@ -596,7 +801,7 @@ async function handleMessageReaction(socket, data) {
     message.reactions.push({
       userId,
       emoji,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     await message.save();
@@ -608,7 +813,7 @@ async function handleMessageReaction(socket, data) {
     const reactionData = {
       messageId,
       userId,
-      emoji
+      emoji,
     };
 
     if (receiverSocketId) {
@@ -617,7 +822,6 @@ async function handleMessageReaction(socket, data) {
     if (senderSocketId && senderSocketId !== socket.id) {
       socket.to(senderSocketId).emit("message-reaction", reactionData);
     }
-
   } catch (error) {
     console.error("Error handling message reaction:", error);
   }
@@ -668,22 +872,20 @@ async function handleForwardMessage(socket, data) {
   const { senderId, receiverId, content, forwardedFrom } = data;
 
   try {
-
     console.log("content", data);
     // Save forwarded message to database
     const savedMessage = await saveMessage({
       senderId,
       receiverId,
-      content: content  ,
+      content: content,
       forwardedFrom: forwardedFrom,
       status: "sent",
     });
-   
 
     const receiverSocketId = onlineUsers.get(receiverId);
     if (receiverSocketId) {
       socket.to(receiverSocketId).emit("receive-message", savedMessage);
-      
+
       await Message.findByIdAndUpdate(savedMessage._id, {
         status: "delivered",
       });
@@ -711,21 +913,27 @@ async function handleForwardMessage(socket, data) {
 // ===========================camera status=============================
 function handleCameraStatusChange(socket, data) {
   const { userId, isCameraOn } = data;
-  
-  console.log(`[Camera Status] Backend received: User ${userId} camera status change to ${isCameraOn ? 'ON' : 'OFF'}`);
-  
+
+  console.log(
+    `[Camera Status] Backend received: User ${userId} camera status change to ${
+      isCameraOn ? "ON" : "OFF"
+    }`
+  );
+
   // Get all online users except the sender
   const onlineUsersList = Array.from(onlineUsers.entries());
-  
-  console.log(`[Camera Status] Broadcasting to ${onlineUsersList.length - 1} other users`);
-  
+
+  console.log(
+    `[Camera Status] Broadcasting to ${onlineUsersList.length - 1} other users`
+  );
+
   // Broadcast camera status to all other users
   onlineUsersList.forEach(([onlineUserId, socketId]) => {
     if (onlineUserId !== userId) {
       console.log(`[Camera Status] Sending update to user ${onlineUserId}`);
       socket.to(socketId).emit("camera-status-change", {
         userId,
-        isCameraOn
+        isCameraOn,
       });
     }
   });
@@ -736,45 +944,49 @@ function initializeSocket(io) {
     console.log("New socket connection:", socket.id);
 
     // Handle session creation from website
-    socket.on('create_session', (data) => {
+    socket.on("create_session", (data) => {
       const { sessionId } = data;
-      console.log('Session created:', sessionId);
-      
+      console.log("Session created:", sessionId);
+
       // Store session with TTL (Time To Live)
       activeSessions[sessionId] = {
         socketId: socket.id,
         createdAt: Date.now(),
-        expires: Date.now() + (2 * 60 * 1000) // 2 minutes expiry
+        expires: Date.now() + 2 * 60 * 1000, // 2 minutes expiry
       };
     });
-    
+
     // Handle authentication from mobile app
-    socket.on('authenticate', (data) => {
+    socket.on("authenticate", (data) => {
       const { sessionId, userId, username } = data;
-      
+
       if (activeSessions[sessionId]) {
         const sessionSocketId = activeSessions[sessionId].socketId;
-        
+
         // Generate JWT token
-        const token = jwt.sign({ userId, username }, JWT_SECRET, { expiresIn: '7d' });
-        
+        const token = jwt.sign({ userId, username }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+
         // Notify web client of successful authentication
-        io.to(sessionSocketId).emit('auth_success', {
+        io.to(sessionSocketId).emit("auth_success", {
           sessionId,
           userId,
           username,
-          token
+          token,
         });
-        
-        console.log(`User ${userId} (${username}) authenticated for session ${sessionId}`);
-        
+
+        console.log(
+          `User ${userId} (${username}) authenticated for session ${sessionId}`
+        );
+
         // Clean up the session
         delete activeSessions[sessionId];
       } else {
         // Session not found or expired
-        socket.emit('auth_error', { 
-          message: 'Invalid or expired session',
-          sessionId
+        socket.emit("auth_error", {
+          message: "Invalid or expired session",
+          sessionId,
         });
       }
     });
@@ -811,23 +1023,19 @@ function initializeSocket(io) {
     socket.on("share-signal", (data) => handleScreenShareSignal(socket, data));
 
     // ===========================Video call=============================
-    socket.on("video-call-request", (data) =>handleVideoCallRequest(socket, data));
-    socket.on("video-call-accept", (data) =>handleVideoCallAccept(socket, data));
-    socket.on("video-call-signal", (data) => handleVideoCallSignal(socket, data));
-    socket.on("end-video-call", (data) => handleVideoCallEnd(socket, data));
-    socket.on("video-call-invite", (data) => handleVideoCallInvite(socket, data));
-    socket.on("participant-join", (data) => handleParticipantJoined(socket, data));
-    socket.on("participant-left", (data) => handleParticipantLeft(socket, data));
+    socket.on("call-request", (data) => handleCallRequest(socket, data));
+    socket.on("call-accept", (data) => handleCallAccept(socket, data));
+    socket.on("call-signal", (data) => handleCallSignal(socket, data));
+    socket.on("end-call", (data) => handleCallEnd(socket, data));
+    socket.on("call-invite", (data) => handleCallInvite(socket, data));
+    socket.on("participant-join", (data) =>handleParticipantJoined(socket, data));
+    socket.on("participant-left", (data) =>handleParticipantLeft(socket, data));
 
     // ===========================save call message=============================
 
-    socket.on("save-call-message", (data) => handleSaveCallMessage(socket, data));
-
-    // =========================== voice call=============================
-    socket.on("voice-call-request", (data) => handleVoiceCallRequest(socket, data));
-    socket.on("voice-call-accept", (data) => handleVoiceCallAccept(socket, data));
-    socket.on("end-voice-call", (data) => handleVoiceCallEnd(socket, data));
-
+    socket.on("save-call-message", (data) =>
+      handleSaveCallMessage(socket, data)
+    );
     // ===========================group=============================
     // Add group handlers
     socket.on("create-group", (data) => handleCreateGroup(socket, data));
@@ -844,25 +1052,30 @@ function initializeSocket(io) {
     );
 
     // ===========================message reaction=============================
-    socket.on("message-reaction", (data) => handleMessageReaction(socket, data));
+    socket.on("message-reaction", (data) =>
+      handleMessageReaction(socket, data)
+    );
 
     // Add to socket.on handlers
     socket.on("forward-message", (data) => handleForwardMessage(socket, data));
 
     // Add camera status handler
-    socket.on("camera-status-change", (data) => handleCameraStatusChange(socket, data));
+    socket.on("camera-status-change", (data) =>
+      handleCameraStatusChange(socket, data)
+    );
+    // ===========================================================================================================
   });
 }
 
 // Clean expired sessions every minute
 setInterval(() => {
   const now = Date.now();
-  Object.keys(activeSessions).forEach(sessionId => {
+  Object.keys(activeSessions).forEach((sessionId) => {
     if (now > activeSessions[sessionId].expires) {
       const socketId = activeSessions[sessionId].socketId;
-      io.to(socketId).emit('session_expired', { sessionId });
+      io.to(socketId).emit("session_expired", { sessionId });
       delete activeSessions[sessionId];
-      console.log('Session expired:', sessionId);
+      console.log("Session expired:", sessionId);
     }
   });
 }, 60 * 1000);
@@ -873,4 +1086,8 @@ module.exports = {
   getSocketByUserId,
   initializeSocket,
   onlineUsers, // Export if needed elsewhere
+  createCallRoom,
+  getCallRoom,
+  updateCallRoom,
+  deleteCallRoom,
 };
