@@ -157,7 +157,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     });
   };
 
-  console.log("callRoom", callRoom, joinedUsers, invitedUsers, ringingUsers);
+  // console.log("callRoom", callRoom, joinedUsers, invitedUsers, ringingUsers);
 
   useEffect(() => {
     checkMediaDevices();
@@ -248,7 +248,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       });
 
       socketRef.current.on("user-status-changed", (onlineUserIds) => {
-        console.log("Online users updated:", onlineUserIds);
+        // console.log("Online users updated:", onlineUserIds);
         setOnlineUsers(onlineUserIds);
         if (onlineUserIds.length > 0) {
           dispatch(setOnlineuser(onlineUserIds));
@@ -699,10 +699,10 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       setCallStatus("ringing");
       addToRingingUsers(data.fromEmail);
 
-      console.log("callStatus", callStatus);
+      // console.log("callStatus", callStatus);
     });
 
-    console.log("callDuration", callDuration);
+    // console.log("callDuration", callDuration);
 
     socketRef.current.on("call-invite", async (data) => {
       console.log("Incoming call invite from:", data);
@@ -720,9 +720,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       addToRingingUsers(data.fromEmail);
     });
 
-    socketRef.current.on(
-      "participant-joined",
-      async ({ newParticipantId, from, participants, roomId }) => {
+    socketRef.current.on("participant-joined",async ({ newParticipantId, from, participants, roomId }) => {
         if (newParticipantId !== userId && streamRef.current) {
           addToJoinedUsers(newParticipantId);
           const peer = new Peer({
@@ -828,7 +826,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       }
     });
 
-    socketRef.current.on("call:update-participant-list", ({ call }) => {
+    socketRef.current.on("call:update-participant-list", (call) => {
       console.log("call:update-participant-list", call);
     });
 
@@ -875,7 +873,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     try {
       let stream = null;
       try {
-        stream = await navigator.mediaDevices.getDisplayMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: calltype == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
@@ -1003,6 +1001,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           signal,
           type: isVideoCalling ? "video" : "voice",
           participants: Array.from(callParticipants),
+          roomId: callRoom,
         });
       });
 
@@ -1049,7 +1048,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       let stream = null;
       try {
         // Try to get media stream but don't block if devices aren't available
-        stream = await navigator.mediaDevices.getDisplayMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
@@ -1081,6 +1080,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           fromEmail: incomingCall.fromEmail,
           toEmail: userId,
           participants: incomingCall.participants,
+          roomId: callRoom,
         });
       });
 

@@ -321,6 +321,7 @@ async function handleCallRequest(socket, data) {
 
   const targetSocketId = onlineUsers.get(toEmail);
   activeCalls[roomId].invited.push(toEmail);
+  activeCalls[roomId].invited.push(fromEmail);
 
   if(targetSocketId){
     activeCalls[roomId].ringing.push(toEmail);
@@ -336,6 +337,9 @@ async function handleCallRequest(socket, data) {
     // Add user to invited list
     callRoom.invitedUsers.add(toEmail);
     updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
+
+    socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
+    socket.emit("call:update-participant-list", activeCalls[roomId]);
 
     socket.to(targetSocketId).emit("call-request", {
       fromEmail,
@@ -372,9 +376,6 @@ function handleCallInvite(socket, data) {
   if(targetSocketId){
     activeCalls[roomId].ringing.push(toEmail);
   }
-
- 
-
   if (targetSocketId) {
     // Create or get call room
     let callRoom = getCallRoom(roomId);
@@ -385,6 +386,9 @@ function handleCallInvite(socket, data) {
     // Add user to invited list
     callRoom.invitedUsers.add(toEmail);
     updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
+
+    socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
+    socket.emit("call:update-participant-list", activeCalls[roomId]);
 
     socket.to(targetSocketId).emit("call-invite", {
       fromEmail,
@@ -447,12 +451,25 @@ function handleParticipantLeft(socket, data) {
       }
     }
 
+    const call = activeCalls[roomId];
+  
+  if (call) {
+    if (call.joined.includes(leavingUser)) {
+      call.joined = call.joined.filter((id) => id !== leavingUser); 
+    }
+    if(call.invited.includes(leavingUser)){
+      call.invited =  call.invited.push(leavingUser) 
+    }
+  }
+  socket.to(roomId).emit("call:update-participant-list", call);
+
     socket.to(targetSocketId).emit("participant-left", {
       leavingUser,
       duration,
       roomId,
     });
   }
+  socket.leave(roomId);
 }
 
 function handleCallAccept(socket, data) {
@@ -460,15 +477,23 @@ function handleCallAccept(socket, data) {
 
   socket.join(roomId);
   const call = activeCalls[roomId];
+  console.log("call", call,roomId);
+  
   if (call) {
     if (!call.joined.includes(fromEmail)) {
       call.joined.push(fromEmail);
+      call.invited = call.invited.filter((id) => id !== fromEmail)
+    }
+    if(!call.joined.includes(toEmail)){
+      call.joined.push(toEmail);
+      call.invited = call.invited.filter((id) => id !== toEmail)
     }
     call.ringing = call.ringing.filter((id) => id !== fromEmail);
-    socket.to(roomId).emit("call:update-participant-list", call);
+    call.ringing = call.ringing.filter((id) => id !== toEmail);
   }
 
   const targetSocketId = onlineUsers.get(fromEmail);
+  const toSocketId = onlineUsers.get(toEmail);
 
   if (targetSocketId) {
     const callRoom = getCallRoom(roomId);
@@ -481,12 +506,17 @@ function handleCallAccept(socket, data) {
         joinedUsers: callRoom.joinedUsers,
       });
     }
-
+    
+    // Send call acceptance to the caller
     socket.to(targetSocketId).emit("call-accepted", {
       signal,
       fromEmail: toEmail,
       roomId,
     });
+
+    // Emit to all participants in the room including the accepting user
+    socket.to(roomId).emit("call:update-participant-list", call);
+    socket.emit("call:update-participant-list", call);
   }
 }
 
@@ -526,11 +556,25 @@ function handleCallEnd(socket, data) {
       }, 5000);
     }
 
+    const call = activeCalls[roomId];
+    if (call) {
+      call.joined = call.joined.filter((id) => id !== from);
+      call.joined = call.joined.filter((id) => id !== to);
+      call.ringing = call.ringing.filter((id) => id !== from);
+      call.ringing = call.ringing.filter((id) => id !== to);
+    }
+    call.invited =  call.invited.push(from) 
+    call.invited =  call.invited.push(to) 
+
+    socket.to(roomId).emit("call:update-participant-list", call);
+
     socket.to(targetSocketId).emit("call-ended", {
       from,
       duration,
       roomId,
     });
+
+    socket.leave(roomId);
   }
 }
 
@@ -984,12 +1028,8 @@ function initializeSocket(io) {
     socket.on("call-signal", (data) => handleCallSignal(socket, data));
     socket.on("end-call", (data) => handleCallEnd(socket, data));
     socket.on("call-invite", (data) => handleCallInvite(socket, data));
-    socket.on("participant-join", (data) =>
-      handleParticipantJoined(socket, data)
-    );
-    socket.on("participant-left", (data) =>
-      handleParticipantLeft(socket, data)
-    );
+    socket.on("participant-join", (data) =>handleParticipantJoined(socket, data));
+    socket.on("participant-left", (data) =>handleParticipantLeft(socket, data));
 
     // ===========================save call message=============================
 

@@ -253,7 +253,7 @@ const Chat2 = () => {
     addMessageReaction,
     cameraStatus,
     setCameraStatus,
-    leaveCall,
+    // leaveCall,
     startCall,
     acceptCall
   } = useSocket(user?._id, localVideoRef, remoteVideoRef, allUsers);
@@ -1963,7 +1963,7 @@ const Chat2 = () => {
 
   };
 
-  console.log(remoteStreams);
+  // console.log(remoteStreams);
   
 
   return (
@@ -3272,7 +3272,7 @@ const Chat2 = () => {
                   //     isVideoCalling ? endVideoCall() : endVoiceCall();
                   //   }
                   // }
-                  leaveCall();
+                  // leaveCall();
                   endCall()
                   cleanupConnection();
                 }}
