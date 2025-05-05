@@ -4,7 +4,7 @@ import { MdCallEnd } from "react-icons/md";
 import { IMG_URL } from '../utils/baseUrl';
 import { useSelector } from 'react-redux';
 
-const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptVideoCall, acceptVoiceCall }) => {
+const IncomingCall = ({ incomingCall, allUsers, groups, rejectCall, acceptCall }) => {
 
   const { user } = useSelector((state) => state.user);
   
@@ -12,7 +12,7 @@ const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptV
     if(incomingCall.groupId){
       userData =  groups?.find((user) => user._id === incomingCall.groupId)
     }else{
-      userData =  allUsers?.find((user) => user._id === incomingCall.fromEmail)
+      userData =  allUsers?.find((user) => user._id === incomingCall.from)
     }
  
     return (
@@ -42,14 +42,14 @@ const IncomingCall = ({ incomingCall, allUsers, groups, rejectVideoCall, acceptV
         </div>
         <div className="flex justify-center gap-8">
           <button
-            onClick={() => rejectVideoCall(incomingCall.type,user._id,incomingCall.groupId)}
+            onClick={() => rejectCall(incomingCall.type,user._id,incomingCall.groupId)}
             className="w-[40%] h-10 bg-[#FF0000] text-white rounded-md flex items-center justify-center hover:bg-red-600"
           >
             <MdCallEnd className="text-xl" />
             Decline
           </button>
           <button
-            onClick={() =>acceptVideoCall(incomingCall.type)}
+            onClick={() =>acceptCall(incomingCall.type)}
             className="w-[40%] h-10 bg-[#22C55E] text-white rounded-md flex items-center justify-center hover:bg-[#22C55E85] animate-bounce"
           >
             Accept

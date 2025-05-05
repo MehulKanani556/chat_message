@@ -273,3 +273,35 @@ input:checked+.toggle-bg .toggle-dot {
 .animate-callwaveform {
   animation: waveform 1s ease-in-out infinite;
 }
+
+.dark .EmojiPickerReact, .dark .EmojiPickerReact h2  {
+  background-color: #373737 !important; 
+  color: #ffffff !important;
+  border: none;
+}
+.dark .EmojiPickerReact input  {
+  background-color: #2C2C2C !important; 
+  color: #ffffff !important;
+  border: none;
+}
+
+.EmojiPickerReact input {
+  border: none;
+}
+
+.EmojiPickerReact .epr-body.epr_-l19tlc {
+  /* IE and Edge */
+  -ms-overflow-style: none;
+  /* Firefox */
+  scrollbar-width: none;
+  /* Safari and Chrome */
+  -webkit-scrollbar {
+    display: none;
+  }
+}
+
+
+.EmojiPickerReact {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
