@@ -9,7 +9,7 @@ import {
   FaFileAudio,
   FaFile,
 } from "react-icons/fa";
-import { MdOutlineCallMade, MdOutlineCallReceived, MdPhoneEnabled } from "react-icons/md";
+import { MdOutlineCallMade, MdOutlineCallReceived, MdOutlineContentCopy, MdPhoneEnabled } from "react-icons/md";
 import { GoDeviceCameraVideo, GoDotFill } from "react-icons/go";
 import { BiShare, BiReply } from "react-icons/bi";
 import { VscCopy, VscEye } from "react-icons/vsc";
@@ -31,6 +31,7 @@ import AudioPlayer from "./AudioPlayer";
 import { FaRegClock } from "react-icons/fa";
 import { IMG_URL } from "../utils/baseUrl";
 import { HiOutlinePhoneMissedCall } from "react-icons/hi";
+import { LuForward, LuReply } from "react-icons/lu";
 const decryptMessage = (encrypted) => {
   const key = 'chat';
   if (typeof encrypted === 'string' && encrypted.startsWith('data:')) {
@@ -1467,74 +1468,95 @@ const MessageContextMenu = ({
       transform: "translate(-50%, 0)",
     };
   };
+  // console.log(message.content?.type?.includes("text"), message.content)
 
   return (
     <>
       {contextMenu.visible && contextMenu.messageId === message._id && (
         <div
-          className="fixed bg-white border rounded shadow-lg z-[1000]"
+          className="fixed bg-white dark:bg-[#2C2C2C] dark:text-white  rounded shadow-lg z-[1000]"
           style={getMenuPosition()}
           onClick={(e) => e.stopPropagation()}
         >
           {!message.content?.fileType?.includes("image/") &&
             !message.content?.fileType?.includes("audio/") &&
+            !message.content?.type?.includes("file") &&
             message.receiver !== userId && (
               <>
                 <button
-                  className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
+                  className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                     handleEditMessage(contextMenu.message);
                   }}
                 >
-                  <MdOutlineModeEdit className="mr-2" /> Edit
+                  <span className="mr-2">
+                    <svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2.50834 18C2.44155 18.0001 2.3754 17.9869 2.3137 17.9613C2.25201 17.9357 2.19599 17.8982 2.14886 17.8508C2.08679 17.7888 2.04185 17.7118 2.01843 17.6273C1.995 17.5427 1.99389 17.4536 2.0152 17.3685L2.97035 13.5346C2.99264 13.4451 3.03884 13.3632 3.10401 13.2979L13.8564 2.54547C14.5836 1.81818 15.7675 1.81818 16.4948 2.54547L17.454 3.50472C18.1814 4.23208 18.1814 5.41591 17.454 6.14311L6.70177 16.8955C6.63654 16.9609 6.55466 17.0071 6.46501 17.0292L2.63122 17.9843C2.59114 17.995 2.54983 18.0002 2.50837 18H2.50834ZM3.92289 13.9173L3.20651 16.7924L6.08165 16.076L16.7349 5.42335C17.0653 5.09294 17.0653 4.55429 16.7349 4.22387L15.7757 3.26462C15.4446 2.93357 14.9059 2.93418 14.5762 3.26462L3.92289 13.9173Z" fill="currentColor" />
+                      <path d="M15.441 7.94777C15.3107 7.94777 15.1804 7.89819 15.0814 7.79856L12.2029 4.92068C12.004 4.72179 12.004 4.39958 12.2029 4.20083C12.4017 4.00207 12.7239 4.00207 12.9227 4.20083L15.8013 7.07947C16.0001 7.27823 16.0001 7.60044 15.8013 7.79919C15.7008 7.89819 15.5706 7.94777 15.441 7.94777ZM6.34325 17.0455C6.21296 17.0455 6.0828 16.9959 5.98377 16.8962L3.10512 14.0177C2.90637 13.8188 2.90637 13.4966 3.10512 13.2978C3.30388 13.0991 3.62612 13.0991 3.82501 13.2978L6.70352 16.1765C6.90228 16.3752 6.90228 16.6975 6.70352 16.8962C6.65629 16.9436 6.60014 16.9812 6.5383 17.0069C6.47647 17.0325 6.41018 17.0456 6.34325 17.0455Z" fill="currentColor" />
+                    </svg>
+
+                  </span> Edit
                 </button>
-                <button
-                  className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
-                  onClick={() => handleDeleteMessage(message._id)}
-                >
-                  <CiSquareRemove className="mr-2" /> Remove
-                </button>
+
               </>
             )}
-          {!message.content?.fileType?.includes("audio/") && (
-            <button
-              className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
-              onClick={() => {
-                handleCopyMessage(message.content, () =>
-                  setActiveMessageId(null)
-                );
-                setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
-              }}
-            >
-              <VscCopy className="mr-2" /> Copy
-            </button>
-          )}
+
+
           <button
-            className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
+            className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
             onClick={() => {
               handleReplyMessage(message);
               setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
             }}
           >
-            <BiReply className="mr-2" /> Reply
+            <LuReply className="mr-2" /> Reply
           </button>
           <button
-            className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
+            className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
             onClick={() => handleForwardMessage(message)}
           >
-            <BiShare className="mr-2" /> Forward
+            <LuForward className="mr-2 " /> Forward
+          </button>
+          {
+            (message.content?.fileType?.includes("image/") ||
+              message.content?.type?.includes("text")) && (
+              <button
+                className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
+                onClick={() => {
+                  handleCopyMessage(message.content, () =>
+                    setActiveMessageId(null)
+                  );
+                  setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+                }}
+              >
+                <MdOutlineContentCopy className="mr-2 " /> Copy
+              </button>
+            )}
+          <button
+            className="w-28 px-4 py-2 text-left text-red-500  flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
+            onClick={() => handleDeleteMessage(message._id)}
+          >
+            <span className="mr-2">
+
+              <svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15.6562 3.875H13.3125V3.40625C13.3125 2.63084 12.6817 2 11.9062 2H8.15625C7.38084 2 6.75 2.63084 6.75 3.40625V3.875H4.40625C3.63084 3.875 3 4.50584 3 5.28125C3 5.904 3.40703 6.43316 3.96891 6.61753L4.805 16.7105C4.86522 17.4336 5.48078 18 6.20638 18H13.8561C14.5817 18 15.1973 17.4336 15.2576 16.7103L16.0936 6.6175C16.6555 6.43316 17.0625 5.904 17.0625 5.28125C17.0625 4.50584 16.4317 3.875 15.6562 3.875ZM7.6875 3.40625C7.6875 3.14778 7.89778 2.9375 8.15625 2.9375H11.9062C12.1647 2.9375 12.375 3.14778 12.375 3.40625V3.875H7.6875V3.40625ZM14.3232 16.6327C14.3032 16.8737 14.098 17.0625 13.8561 17.0625H6.20638C5.96453 17.0625 5.75934 16.8737 5.73931 16.6329L4.91544 6.6875H15.1471L14.3232 16.6327ZM15.6562 5.75H4.40625C4.14778 5.75 3.9375 5.53972 3.9375 5.28125C3.9375 5.02278 4.14778 4.8125 4.40625 4.8125H15.6562C15.9147 4.8125 16.125 5.02278 16.125 5.28125C16.125 5.53972 15.9147 5.75 15.6562 5.75Z" fill="currentColor" />
+                <path d="M8.15538 15.6273L7.68663 8.06477C7.6706 7.80636 7.44694 7.60983 7.18979 7.62592C6.93138 7.64195 6.73491 7.86439 6.75091 8.12277L7.21966 15.6853C7.23507 15.9338 7.44144 16.125 7.68707 16.125C7.95854 16.125 8.17204 15.8964 8.15538 15.6273ZM10.0313 7.62505C9.77241 7.62505 9.56254 7.83492 9.56254 8.0938V15.6563C9.56254 15.9152 9.77241 16.125 10.0313 16.125C10.2902 16.125 10.5 15.9152 10.5 15.6563V8.0938C10.5 7.83492 10.2902 7.62505 10.0313 7.62505ZM12.8728 7.62595C12.6149 7.60992 12.3919 7.80639 12.3759 8.0648L11.9072 15.6273C11.8912 15.8857 12.0877 16.1081 12.346 16.1241C12.6046 16.1401 12.8269 15.9436 12.8429 15.6853L13.3116 8.1228C13.3276 7.86439 13.1312 7.64195 12.8728 7.62595Z" fill="currentColor" />
+              </svg>
+            </span>
+
+            Remove
           </button>
 
-          {message.content?.fileType?.includes("audio/") && (
+          {/* {message.content?.fileType?.includes("audio/") && (
             <button
-              className="w-28 px-4 py-2 text-left text-black flex items-center hover:bg-gray-100"
+              className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
               onClick={() => handleDeleteMessage(message._id)}
             >
               <CiSquareRemove className="mr-2" /> Remove
             </button>
-          )}
+          )} */}
         </div>
       )}
     </>

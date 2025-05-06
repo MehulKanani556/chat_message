@@ -113,6 +113,7 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
+import { decryptMessage } from "../utils/decryptMess";
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -847,8 +848,10 @@ const Chat2 = () => {
   };
 
   const handleEditMessage = (message) => {
+    const decryptedContent = decryptMessage(message.content.content);
+
     setEditingMessage(message);
-    setMessageInput(message.content.content);
+    setMessageInput(decryptedContent);
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     if (inputRef.current) {
       inputRef.current.focus();
@@ -1341,15 +1344,17 @@ const Chat2 = () => {
 
   // Update the handleCopyMessage function to handle both text and images
   const handleCopyMessage = async (message, callback) => {
+    console.log("aa", message)
     if (message.type === "file" && message.fileType?.includes("image/")) {
       try {
         const response = await fetch(
-          `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
+          `${message?.fileUrl?.replace(/\\/g, "/")}`
         );
+
+        // pull from the top-level fileUrl
+        // const response = await fetch(message.fileUrl);
         const blob = await response.blob();
-        const item = new ClipboardItem({
-          [blob.type]: blob,
-        });
+        const item = new ClipboardItem({ [blob.type]: blob });
 
         await navigator.clipboard.write([item]);
         callback();
@@ -1358,7 +1363,8 @@ const Chat2 = () => {
       }
     } else {
       // Handle text and emoji copying
-      const content = message.content || message;
+
+      const content = decryptMessage(message.content || message)
       navigator.clipboard.writeText(content).then(callback);
     }
   };
@@ -1541,6 +1547,10 @@ const Chat2 = () => {
     const handleClickOutside = (event) => {
       if ((menuOpen || docModel) && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
+      }
+      if ((menuOpen || docModel) && !event.target.closest(".optionMenu")) {
+        setMenuOpen(false);
+        setDocModel(false);  // also close the docModel popup
       }
     };
 
@@ -2083,7 +2093,7 @@ const Chat2 = () => {
     return "grid-cols-5 md:grid-cols-5";
   };
   // console.log(remoteStreams);
-  
+
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -2681,8 +2691,8 @@ const Chat2 = () => {
                                       replyingTo?.content?.fileType?.startsWith(
                                         "image/"
                                       )
-                                      ? "calc(100vh - 281px)"
-                                      : "calc(100vh -  226px)"
+                                      ? "calc(100vh - 280px)"
+                                      : "calc(100vh -  229px)"
                                     : "calc(100vh - 173px)",
                             }}
                             ref={messagesContainerRef}
@@ -2781,7 +2791,14 @@ const Chat2 = () => {
                                   );
                                 } else if (file.type === "application/pdf") {
                                   fileIcon = (
-                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                    // <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                    <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                      <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                                      <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                                      <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+                                      <path fillRule="evenodd" clipRule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
+                                      <path fillRule="evenodd" clipRule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" strokeLinecap="round" strokeLinejoin="round" fill="#fff"></path>
+                                    </svg>
                                   ); // PDF file icon
                                 } else if (
                                   file.type === "application/vnd.ms-excel" ||
@@ -2789,7 +2806,13 @@ const Chat2 = () => {
                                   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 ) {
                                   fileIcon = (
-                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                    // <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                      <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                                      <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                                      <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                                      <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+                                    </svg>
                                   ); // Excel file icon
                                 } else if (
                                   file.type === "application/msword" ||
@@ -2797,7 +2820,13 @@ const Chat2 = () => {
                                   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                 ) {
                                   fileIcon = (
-                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                    // <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                    <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                      <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                                      <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                                      <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                                      <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+                                    </svg>
                                   ); // Word file icon
                                 } else if (
                                   file.type === "application/vnd.ms-powerpoint" ||
@@ -2805,11 +2834,19 @@ const Chat2 = () => {
                                   "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                                 ) {
                                   fileIcon = (
-                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                    // <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                      <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                                      <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                                      <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+                                    </svg>
                                   ); // PowerPoint file icon
                                 } else if (file.type === "application/zip") {
                                   fileIcon = (
-                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                      <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                                    </svg>
+                                    // <FaFileArchive className="w-20 h-[40px] text-gray-500" />
                                   ); // ZIP file icon
                                 } else {
                                   fileIcon = (
@@ -2851,11 +2888,11 @@ const Chat2 = () => {
                             </div>
                           )}
 
-                          {replyingTo && (
+                          {/* {replyingTo && (
                             <div className="w-full dark:bg-primary-dark/15">
-                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-primary">
                                 <div>
-                                  <div className="text-sm text-blue-500 font-medium">
+                                  <div className="text-sm text-primary font-medium">
                                     Replying to{" "}
                                     {
                                       allUsers.find(
@@ -2864,10 +2901,8 @@ const Chat2 = () => {
                                     }
                                   </div>
                                   <div className="text-gray-600 text-sm line-clamp-2">
-                                    {console.log(
-                                      replyingTo.content.fileType === "image/jpeg"
-                                    )}
-                                    {replyingTo.content.content}
+
+                                    {decryptMessage(replyingTo.content.content)}
                                     {replyingTo?.content?.fileType &&
                                       replyingTo?.content?.fileType?.startsWith(
                                         "image/"
@@ -2882,16 +2917,16 @@ const Chat2 = () => {
                                         />
                                       )}
                                   </div>
-                                  <button
-                                    onClick={() => setReplyingTo(null)}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <RxCross2 size={20} />
-                                  </button>
                                 </div>
+                                <button
+                                  onClick={() => setReplyingTo(null)}
+                                  className="text-gray-500 hover:text-gray-700 self-center"
+                                >
+                                  <RxCross2 size={20} />
+                                </button>
                               </div>
                             </div>
-                          )}
+                          )} */}
 
                           {/*========== Message Input ==========*/}
                           {selectedChat &&
@@ -2911,7 +2946,7 @@ const Chat2 = () => {
                                   </button>
 
                                   <button
-                                    className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
+                                    className="bg-primary dark:hover:bg-primary/70 py-1 rounded-md w-32"
                                     onClick={async () => {
                                       await dispatch(
                                         blockUser({
@@ -2989,42 +3024,85 @@ const Chat2 = () => {
 
                                   {!isRecording && (
                                     <>
-                                      <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
-                                        <input
-                                          ref={inputRef}
-                                          type="text"
-                                          value={messageInput}
-                                          onChange={handleInputChange}
-                                          placeholder={
-                                            editingMessage
-                                              ? "Edit message..."
-                                              : "Type a message..."
-                                          }
-                                          className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                                          onKeyDown={async (e) => {
-                                            if (e.key === "Enter") {
-                                              e.preventDefault();
+                                      <div className="flex-1">
 
-                                              if (selectedFiles.length > 0) {
-                                                await handleMultipleFileUpload(
-                                                  selectedFiles
-                                                ); // Upload selected files
-                                                setSelectedFiles([]); // Clear selected files after sending
-                                              }
-                                              await handleSubmit(e);
-                                            } else if (
-                                              e.key === "Escape" &&
+                                        {replyingTo && (
+                                          <div className="w-full dark:bg-primary-dark/15 rounded-t-lg">
+                                            <div className="bg-gray-100 dark:bg-primary-dark p-3 rounded-t-lg flex justify-between items-start border-l-4 border-primary">
+                                              <div>
+                                                <div className="text-sm text-primary font-medium">
+                                                  Replying to{" "}
+                                                  {
+                                                    allUsers.find(
+                                                      (user) => user._id === replyingTo.sender
+                                                    )?.userName
+                                                  }
+                                                </div>
+                                                <div className="text-gray-600 text-sm line-clamp-2">
+
+                                                  {replyingTo?.content?.fileType?.startsWith("image/") ? null : decryptMessage(replyingTo.content.content)}
+                                                  {replyingTo?.content?.fileType &&
+                                                    replyingTo?.content?.fileType?.startsWith(
+                                                      "image/"
+                                                    ) && (
+                                                      <img
+                                                        src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                                                          /\\/g,
+                                                          "/"
+                                                        )}`}
+                                                        alt={decryptMessage(replyingTo.content.content)}
+                                                        className="h-10"
+                                                      />
+                                                    )}
+                                                </div>
+                                              </div>
+                                              <button
+                                                onClick={() => setReplyingTo(null)}
+                                                className="text-gray-500 hover:text-gray-700 self-center"
+                                              >
+                                                <RxCross2 size={20} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                                          <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={messageInput}
+                                            onChange={handleInputChange}
+                                            placeholder={
                                               editingMessage
-                                            ) {
-                                              setEditingMessage(null);
-                                              setMessageInput("");
+                                                ? "Edit message..."
+                                                : "Type a message..."
                                             }
-                                          }}
-                                        />
+                                            className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                            onKeyDown={async (e) => {
+                                              if (e.key === "Enter") {
+                                                e.preventDefault();
+
+                                                if (selectedFiles.length > 0) {
+                                                  await handleMultipleFileUpload(
+                                                    selectedFiles
+                                                  ); // Upload selected files
+                                                  setSelectedFiles([]); // Clear selected files after sending
+                                                }
+                                                await handleSubmit(e);
+                                              } else if (
+                                                e.key === "Escape" &&
+                                                editingMessage
+                                              ) {
+                                                setEditingMessage(null);
+                                                setMessageInput("");
+                                              }
+                                            }}
+                                          />
+                                        </div>
                                       </div>
+
                                       <button
                                         type="button"
-                                        className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                        className={` p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0`}
                                         aria-label="Add emoji"
                                         onClick={() =>
                                           setIsEmojiPickerOpen(!isEmojiPickerOpen)
@@ -3050,7 +3128,7 @@ const Chat2 = () => {
                                     </div>
                                   )}
 
-                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                  <div className={"flex items-center gap-1 flex-shrink-0"}>
                                     {!isRecording &&
                                       <>
                                         <input
@@ -3204,7 +3282,7 @@ const Chat2 = () => {
                         {showScrollToBottom && (
                           <button
                             type="button"
-                            className="absolute bottom-24 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
+                            className={`absolute ${replyingTo ? 'bottom-52' : 'bottom-24'}  right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg `}
                             onClick={scrollToBottom}
                             aria-label="Send to Bottom"
                           >
@@ -3312,53 +3390,53 @@ const Chat2 = () => {
               </div>
             ))
 
-  
-          // <div
-          //   className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
-          //     } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
-          //       ? "max-w-30 absolute top-2 right-2 z-10"
-          //       : "relative"
-          //     }`}
-          // >
-          //   <video
-          //     ref={localVideoRef}
-          //     autoPlay
-          //     playsInline
-          //     muted
-          //     className="w-full h-full object-contain"
-          //     style={{
-          //       maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
-          //     }}
-          //   />
-          //   <div className="absolute bottom-2 left-2 text-white text-xl bg-primary  px-3 py-1 rounded-full text-center">
-          //     You
-          //   </div>
-          // </div>
 
-          //   {Array.from(remoteStreams).length > 0 ? (
-          //     <>
-          //       {/* Render the video when the call is active */}
-          //       {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
-          //         // Render remote video stream
-          //         return (
-          //           <div key={participantId} className="relative w-full">
-          //             <video
-          //               autoPlay
-          //               playsInline
-          //               className="w-full h-full object-contain max-h-[80vh]"
-          //               ref={(el) => {
-          //                 if (el) {
-          //                   el.srcObject = stream;
-          //                 }
-          //               }}
-          //             />
-          //             <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-          //               {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
-          //             </div>
-          //           </div>
-          //         );
-          //       })}
-          //     </>
+            // <div
+            //   className={` ${isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"
+            //     } ${isReceiving ? "hidden" : ""} ${remoteStreams.size === 1
+            //       ? "max-w-30 absolute top-2 right-2 z-10"
+            //       : "relative"
+            //     }`}
+            // >
+            //   <video
+            //     ref={localVideoRef}
+            //     autoPlay
+            //     playsInline
+            //     muted
+            //     className="w-full h-full object-contain"
+            //     style={{
+            //       maxHeight: `${remoteStreams.size === 1 ? "20vh" : "100%"}`,
+            //     }}
+            //   />
+            //   <div className="absolute bottom-2 left-2 text-white text-xl bg-primary  px-3 py-1 rounded-full text-center">
+            //     You
+            //   </div>
+            // </div>
+
+            //   {Array.from(remoteStreams).length > 0 ? (
+            //     <>
+            //       {/* Render the video when the call is active */}
+            //       {Array.from(remoteStreams).length > 0 && Array.from(remoteStreams).map(([participantId, stream]) => {
+            //         // Render remote video stream
+            //         return (
+            //           <div key={participantId} className="relative w-full">
+            //             <video
+            //               autoPlay
+            //               playsInline
+            //               className="w-full h-full object-contain max-h-[80vh]"
+            //               ref={(el) => {
+            //                 if (el) {
+            //                   el.srcObject = stream;
+            //                 }
+            //               }}
+            //             />
+            //             <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
+            //               {allUsers.find((user) => user._id === participantId)?.userName || "Participant"}
+            //             </div>
+            //           </div>
+            //         );
+            //       })}
+            //     </>
           ) : (
             // Show the initial div when the call is not active
             // <div className="relative flex items-center justify-center w-full h-full ">
@@ -3513,7 +3591,7 @@ const Chat2 = () => {
                   }
                 } else {
                   if (isVideoCalling || isVoiceCalling) {
-                    isVideoCalling ? endVideoCall() : endVoiceCall();
+                    // isVideoCalling ? endVideoCall() : endVoiceCall();
                   }
                 }
                 cleanupConnection();
