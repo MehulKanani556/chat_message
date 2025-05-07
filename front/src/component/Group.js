@@ -28,7 +28,8 @@ const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreat
     }, [dispatch]);
 
     const filteredGroups = groups.filter(group =>
-        group.userName.toLowerCase().includes(searchInput.toLowerCase())
+        group.userName.toLowerCase().includes(searchInput.toLowerCase()) &&
+        group.members?.includes(currentUser)
     );
 
     const handleGroupClick = (group) => {

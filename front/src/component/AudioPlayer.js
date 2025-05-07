@@ -13,37 +13,60 @@ const AudioPlayer = ({ audioUrl }) => {
   const [currentRateIndex, setCurrentRateIndex] = useState(3); 
 
   useEffect(() => {
-    // Initialize WaveSurfer
-    wavesurferRef.current = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: "#484848", 
-      progressColor: "#808080", 
-      cursorColor: "transparent",
-      barWidth: 3,
-      barGap: 2,
-      height: 30,
-      responsive: true,
-    });
+    let wavesurfer = null;
+    
+    const initWaveSurfer = async () => {
+      wavesurfer = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: "#484848", 
+        progressColor: "#808080", 
+        cursorColor: "transparent",
+        barWidth: 3,
+        barGap: 2,
+        height: 30,
+        responsive: true,
+      });
 
-    // Load audio file
-    wavesurferRef.current.load(audioUrl);
+      await wavesurfer.load(audioUrl);
+      wavesurferRef.current = wavesurfer;
 
-    // Update time display
-    wavesurferRef.current.on("audioprocess", () => {
-      const minutes = Math.floor(wavesurferRef.current.getCurrentTime() / 60);
-      const seconds = Math.floor(wavesurferRef.current.getCurrentTime() % 60)
-        .toString()
-        .padStart(2, "0");
-      setCurrentTime(`${minutes}:${seconds}`);
-    });
+      // Update time display
+      wavesurfer.on("audioprocess", () => {
+        const minutes = Math.floor(wavesurfer.getCurrentTime() / 60);
+        const seconds = Math.floor(wavesurfer.getCurrentTime() % 60)
+          .toString()
+          .padStart(2, "0");
+        setCurrentTime(`${minutes}:${seconds}`);
+      });
 
-    // playback finished
-    wavesurferRef.current.on("finish", () => {
-      setIsPlaying(false);
-    });
+      // playback finished
+      wavesurfer.on("finish", () => {
+        setIsPlaying(false);
+      });
+    };
+
+    initWaveSurfer();
 
     return () => {
-      wavesurferRef.current.destroy();
+      const cleanup = async () => {
+        if (wavesurferRef.current) {
+          try {
+            // Stop any ongoing playback
+            wavesurferRef.current.stop();
+            // Unregister all event listeners
+            wavesurferRef.current.unAll();
+            // Wait a bit before destroying
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // Destroy the instance
+            await wavesurferRef.current.destroy();
+            wavesurferRef.current = null;
+          } catch (error) {
+            console.warn('Error during WaveSurfer cleanup:', error);
+          }
+        }
+      };
+      
+      cleanup();
     };
   }, [audioUrl]);
 

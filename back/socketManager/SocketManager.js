@@ -323,7 +323,7 @@ async function handleCallRequest(socket, data) {
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
 
-  if(targetSocketId){
+  if (targetSocketId) {
     activeCalls[roomId].ringing.push(toEmail);
   }
 
@@ -371,9 +371,9 @@ function handleCallInvite(socket, data) {
   }
 
   const targetSocketId = onlineUsers.get(toEmail);
-  
+
   activeCalls[roomId].invited.push(toEmail);
-  if(targetSocketId){
+  if (targetSocketId) {
     activeCalls[roomId].ringing.push(toEmail);
   }
   if (targetSocketId) {
@@ -452,16 +452,16 @@ function handleParticipantLeft(socket, data) {
     }
 
     const call = activeCalls[roomId];
-  
-  if (call) {
-    if (call.joined.includes(leavingUser)) {
-      call.joined = call.joined.filter((id) => id !== leavingUser); 
+
+    if (call) {
+      if (call.joined.includes(leavingUser)) {
+        call.joined = call.joined.filter((id) => id !== leavingUser);
+      }
+      if (call.invited.includes(leavingUser)) {
+        call.invited = call.invited.push(leavingUser)
+      }
     }
-    if(call.invited.includes(leavingUser)){
-      call.invited =  call.invited.push(leavingUser) 
-    }
-  }
-  socket.to(roomId).emit("call:update-participant-list", call);
+    socket.to(roomId).emit("call:update-participant-list", call);
 
     socket.to(targetSocketId).emit("participant-left", {
       leavingUser,
@@ -477,14 +477,14 @@ function handleCallAccept(socket, data) {
 
   socket.join(roomId);
   const call = activeCalls[roomId];
-  console.log("call", call,roomId);
-  
+  console.log("call", call, roomId);
+
   if (call) {
     if (!call.joined.includes(fromEmail)) {
       call.joined.push(fromEmail);
       call.invited = call.invited.filter((id) => id !== fromEmail)
     }
-    if(!call.joined.includes(toEmail)){
+    if (!call.joined.includes(toEmail)) {
       call.joined.push(toEmail);
       call.invited = call.invited.filter((id) => id !== toEmail)
     }
@@ -506,7 +506,7 @@ function handleCallAccept(socket, data) {
         joinedUsers: callRoom.joinedUsers,
       });
     }
-    
+
     // Send call acceptance to the caller
     socket.to(targetSocketId).emit("call-accepted", {
       signal,
@@ -558,13 +558,15 @@ function handleCallEnd(socket, data) {
 
     const call = activeCalls[roomId];
     if (call) {
+
       call.joined = call.joined.filter((id) => id !== from);
       call.joined = call.joined.filter((id) => id !== to);
       call.ringing = call.ringing.filter((id) => id !== from);
       call.ringing = call.ringing.filter((id) => id !== to);
     }
-    call.invited =  call.invited.push(from) 
-    call.invited =  call.invited.push(to) 
+    console.log(call, from, to)
+    call.invited = call.invited.push(from)
+    call.invited = call.invited.push(to)
 
     socket.to(roomId).emit("call:update-participant-list", call);
 
@@ -700,15 +702,17 @@ async function handleUpdateGroup(socket, data) {
     } else if (updateType == "icon") {
       contentData = `**${userData.userName}** Changed Group icon`;
     }
-
-    await saveMessage({
-      senderId: groupId,
-      receiverId: groupId,
-      content: {
-        type: "system",
-        content: contentData,
-      },
-    });
+    // console.log("aa",contentData);
+    if (updateType == "name" || updateType == "bio" || updateCallRoom == "icon") {
+      await saveMessage({
+        senderId: groupId,
+        receiverId: groupId,
+        content: {
+          type: "system",
+          content: contentData,
+        },
+      });
+    }
 
     members.forEach((memberId) => {
       const memberSocket = onlineUsers.get(memberId);
@@ -915,8 +919,7 @@ function handleCameraStatusChange(socket, data) {
   const { userId, isCameraOn } = data;
 
   console.log(
-    `[Camera Status] Backend received: User ${userId} camera status change to ${
-      isCameraOn ? "ON" : "OFF"
+    `[Camera Status] Backend received: User ${userId} camera status change to ${isCameraOn ? "ON" : "OFF"
     }`
   );
 
@@ -1028,8 +1031,8 @@ function initializeSocket(io) {
     socket.on("call-signal", (data) => handleCallSignal(socket, data));
     socket.on("end-call", (data) => handleCallEnd(socket, data));
     socket.on("call-invite", (data) => handleCallInvite(socket, data));
-    socket.on("participant-join", (data) =>handleParticipantJoined(socket, data));
-    socket.on("participant-left", (data) =>handleParticipantLeft(socket, data));
+    socket.on("participant-join", (data) => handleParticipantJoined(socket, data));
+    socket.on("participant-left", (data) => handleParticipantLeft(socket, data));
 
     // ===========================save call message=============================
 

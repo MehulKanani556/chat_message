@@ -32,21 +32,8 @@ import { FaRegClock } from "react-icons/fa";
 import { IMG_URL } from "../utils/baseUrl";
 import { HiOutlinePhoneMissedCall } from "react-icons/hi";
 import { LuForward, LuReply } from "react-icons/lu";
-const decryptMessage = (encrypted) => {
-  const key = 'chat';
-  if (typeof encrypted === 'string' && encrypted.startsWith('data:')) {
-    // strip the "data:" prefix and base64‐decode
-    const raw = atob(encrypted.split('data:')[1]);
-    let out = '';
-    for (let i = 0; i < raw.length; i++) {
-      out += String.fromCharCode(
-        raw.charCodeAt(i) ^ key.charCodeAt(i % key.length)
-      );
-    }
-    return out;
-  }
-  return encrypted;
-};
+import { decryptMessage } from "../utils/decryptMess";
+
 
 const MessageList = ({
   messages,
@@ -212,7 +199,7 @@ const SystemMessage = ({ message }) => (
   <div className="flex justify-center my-2">
     <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-sm px-4 py-1.5 rounded-full min-w-80 text-center">
       {message.content.content
-        .split("**")
+        ?.split("**")
         .map((part, index) =>
           index % 2 === 1 ? (
             <strong key={index}>{part}</strong>
@@ -517,27 +504,7 @@ const FileMessage = ({
       console.error("Decryption error:", error);
     }
   }
-  function decryptMessage(encryptedText) {
-    if (typeof encryptedText === 'string' && encryptedText.startsWith('data:')) {
-      try {
-        const key = 'chat';
-        // Remove the 'data:' prefix
-        const encodedText = encryptedText.split('data:')[1];
-        // Decode from base64
-        const decodedText = atob(encodedText);
-        let result = '';
-        // XOR each character with the key
-        for (let i = 0; i < decodedText.length; i++) {
-          result += String.fromCharCode(decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-        }
-        return result;
-      } catch (error) {
-        console.error('Decryption error:', error);
-        return encryptedText; // Return original text if decryption fails
-      }
-    }
-    return encryptedText; // Return original text if not encrypted
-  }
+ 
   const handleDownload = async (e) => {
     e.preventDefault();
     setIsDownloading(true);
@@ -626,7 +593,6 @@ const FileMessage = ({
         <div className=" flex justify-content-between gap-1">
           {message?.content?.fileType === "application/pdf" ? (
             <span className="text-sm ml-1 flex gap-1 items-center">
-
               {/* PDF Icon */}
               <div>
                 <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
@@ -638,6 +604,7 @@ const FileMessage = ({
                 </svg>
               </div>
               <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+               
                 {highlightText(messageContent, searchInputbox)}
               </div>
             </span>
