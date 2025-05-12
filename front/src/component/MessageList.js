@@ -38,6 +38,92 @@ import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
 
+const DownloadButton = ({ fileUrl, fileName, className = "" }) => {
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    try {
+      const response = await fetch(fileUrl);
+      const contentLength = response.headers.get("content-length");
+      const total = parseInt(contentLength, 10);
+      let loaded = 0;
+
+      const reader = response.body.getReader();
+      const chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        loaded += value.length;
+        setDownloadProgress((loaded / total) * 100);
+      }
+
+      const blob = new Blob(chunks);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleDownload}
+      className={`p-2 bg-white rounded-full dark:text-primary-light hover:underline disabled:opacity-50 relative ${className}`}
+    >
+      <span className="text-primary">
+        <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+        </svg>
+      </span>
+      {isDownloading && (
+        <div className="absolute -inset-4 flex items-center justify-center">
+          <svg className="w-12 h-12" viewBox="0 0 36 36">
+            <circle
+              cx="18"
+              cy="18"
+              r="15.9155"
+              fill="none"
+              stroke="#e2e8f0"
+              strokeWidth="2"
+            />
+            <circle
+              cx="18"
+              cy="18"
+              r="15.9155"
+              fill="none"
+              className="stroke-primary/90"
+              strokeWidth="2"
+              strokeDasharray={`${downloadProgress}, 100`}
+              strokeLinecap="round"
+              style={{
+                transition: "stroke-dasharray 0.3s ease 0s",
+                transform: "rotate(-90deg)",
+                transformOrigin: "50% 50%",
+              }}
+            />
+          </svg>
+        </div>
+      )}
+    </button>
+  );
+};
 
 const MessageList = ({
   messages,
@@ -481,8 +567,7 @@ const FileMessage = ({
   highlightText,
   searchInputbox,
 }) => {
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
+
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
@@ -506,47 +591,6 @@ const FileMessage = ({
     }
   }
 
-  const handleDownload = async (e) => {
-    e.preventDefault();
-    setIsDownloading(true);
-    setDownloadProgress(0);
-
-    try {
-      const response = await fetch(
-        `${message?.content?.fileUrl?.replace(/\\/g, "/")}`
-      );
-      const contentLength = response.headers.get("content-length");
-      const total = parseInt(contentLength, 10);
-      let loaded = 0;
-
-      const reader = response.body.getReader();
-      const chunks = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        chunks.push(value);
-        loaded += value.length;
-        setDownloadProgress((loaded / total) * 100);
-      }
-
-      const blob = new Blob(chunks);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = decryptMessage(message?.content?.content);
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-    } finally {
-      setIsDownloading(false);
-      setDownloadProgress(0);
-    }
-  };
 
   // Get thumbnails for different file types
   const { thumbnail: pdfThumbnail, error: pdfError } = usePdfThumbnail(
@@ -589,50 +633,15 @@ const FileMessage = ({
                   style={{ objectPosition: "top" }}
                 />
                 <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
-                  <button
-                    onClick={handleDownload}
-                    // disabled={isDownloading}
+                  <DownloadButton
+                    fileUrl={pdfThumbnail}
+                    fileName={decryptMessage(message?.content?.content)}
                     className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
-                  >
-                    <span className="text-primary">
-                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-                      </svg>
-                    </span>
-                    {isDownloading && (
-                      <div className="absolute -inset-4 flex items-center justify-center">
-                        <svg className="w-12 h-12" viewBox="0 0 36 36">
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            stroke="#e2e8f0"
-                            strokeWidth="2"
-                          />
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            className="stroke-primary"
-                            strokeWidth="2"
-                            strokeDasharray={`${downloadProgress}, 100`}
-                            strokeLinecap="round"
-                            style={{
-                              transition: "stroke-dasharray 0.3s ease 0s",
-                              transform: "rotate(-90deg)",
-                              transformOrigin: "50% 50%",
-                            }}
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
+                  />
                 </div>
               </div>
             ) : (
-              <div className="text-gray-500">Loading thumbnail...</div>
+              <div className="text-gray-500">Loading...</div>
             )}
             <span className="text-sm ml-1 py-2 flex gap-1 items-center">
               <div>
@@ -663,52 +672,16 @@ const FileMessage = ({
                   style={{ objectPosition: "top" }}
                 />
                 <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
-                  <button
-                    onClick={handleDownload}
-                    // disabled={isDownloading}
+                  <DownloadButton
+                    fileUrl={excelThumbnail}
+                    fileName={decryptMessage(message?.content?.content)}
                     className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
-                  >
-                    <span className="text-primary">
-                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-                      </svg>
-
-                    </span>
-                    {isDownloading && (
-                      <div className="absolute -inset-4 flex items-center justify-center">
-                        <svg className="w-12 h-12" viewBox="0 0 36 36">
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            stroke="#e2e8f0"
-                            strokeWidth="2"
-                          />
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            className="stroke-primary"
-                            strokeWidth="2"
-                            strokeDasharray={`${downloadProgress}, 100`}
-                            strokeLinecap="round"
-                            style={{
-                              transition: "stroke-dasharray 0.3s ease 0s",
-                              transform: "rotate(-90deg)",
-                              transformOrigin: "50% 50%",
-                            }}
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
+                  />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
-                <span className="text-gray-500">No preview available</span>
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50/50 rounded-t-md">
+                <span className="text-gray-500">Loading...</span>
               </div>
             )}
             <span className="text-sm ml-1 py-2 flex gap-1 items-center">
@@ -743,52 +716,16 @@ const FileMessage = ({
                   style={{ objectPosition: "top" }}
                 />
                 <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
-                  <button
-                    onClick={handleDownload}
-                    // disabled={isDownloading}
+                  <DownloadButton
+                    fileUrl={pptThumbnail}
+                    fileName={decryptMessage(message?.content?.content)}
                     className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
-                  >
-                    <span className="text-primary">
-                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-                      </svg>
-
-                    </span>
-                    {isDownloading && (
-                      <div className="absolute -inset-4 flex items-center justify-center">
-                        <svg className="w-12 h-12" viewBox="0 0 36 36">
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            stroke="#e2e8f0"
-                            strokeWidth="2"
-                          />
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            className="stroke-primary"
-                            strokeWidth="2"
-                            strokeDasharray={`${downloadProgress}, 100`}
-                            strokeLinecap="round"
-                            style={{
-                              transition: "stroke-dasharray 0.3s ease 0s",
-                              transform: "rotate(-90deg)",
-                              transformOrigin: "50% 50%",
-                            }}
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
+                  />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
-                <span className="text-gray-500">No preview available</span>
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50/50 rounded-t-md">
+                <span className="text-gray-500">Loading...</span>
               </div>
             )}
             <span className="text-sm ml-1 py-2 flex gap-1 items-center">
@@ -822,52 +759,16 @@ const FileMessage = ({
                   style={{ objectPosition: "top" }}
                 />
                 <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
-                  <button
-                    onClick={handleDownload}
-                    // disabled={isDownloading}
+                  <DownloadButton
+                    fileUrl={wordThumbnail}
+                    fileName={decryptMessage(message?.content?.content)}
                     className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
-                  >
-                    <span className="text-primary">
-                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-                      </svg>
-
-                    </span>
-                    {isDownloading && (
-                      <div className="absolute -inset-4 flex items-center justify-center">
-                        <svg className="w-12 h-12" viewBox="0 0 36 36">
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                            stroke="#e2e8f0"
-                            strokeWidth="2"
-                          />
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="15.9155"
-                            fill="none"
-                           className="stroke-primary"
-                            strokeWidth="2"
-                            strokeDasharray={`${downloadProgress}, 100`}
-                            strokeLinecap="round"
-                            style={{
-                              transition: "stroke-dasharray 0.3s ease 0s",
-                              transform: "rotate(-90deg)",
-                              transformOrigin: "50% 50%",
-                            }}
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
+                  />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
-                <span className="text-gray-500">No preview available</span>
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50/50 rounded-t-md">
+                <span className="text-gray-500">Loading...</span>
               </div>
             )}
             <span className="text-sm ml-1 py-2 flex gap-1 items-center">
@@ -890,46 +791,11 @@ const FileMessage = ({
         ) : (
           <>
             <div className="relative inline-flex items-center justify-center">
-              <button
-                onClick={handleDownload}
-                // disabled={isDownloading}
+              <DownloadButton
+                fileUrl={`${message?.content?.fileUrl?.replace(/\\/g, "/")}`}
+                fileName={decryptMessage(message?.content?.content)}
                 className="ml-2 my-2 p-2 bg-white rounded-full dark:text-primary-light hover:underline disabled:opacity-50 relative"
-              >
-                <span className="text-primary">
-                  <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-                  </svg>
-                </span>
-                {isDownloading && (
-                  <div className="absolute -inset-4 flex items-center justify-center">
-                    <svg className="w-12 h-12" viewBox="0 0 36 36">
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="15.9155"
-                        fill="none"
-                        stroke="#e2e8f0"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx="18"
-                        cy="18"
-                        r="15.9155"
-                        fill="none"
-                       className="stroke-primary/90"
-                        strokeWidth="2"
-                        strokeDasharray={`${downloadProgress}, 100`}
-                        strokeLinecap="round"
-                        style={{
-                          transition: "stroke-dasharray 0.3s ease 0s",
-                          transform: "rotate(-90deg)",
-                          transformOrigin: "50% 50%",
-                        }}
-                      />
-                    </svg>
-                  </div>
-                )}
-              </button>
+              />
             </div>
             <div className=" flex justify-content-between gap-1">
               {message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
@@ -1676,14 +1542,15 @@ const MessageReactions = ({
                   width={250}
                   height={300}
                   searchDisabled
+                  reactionsDefaultOpen
                   skinTonesDisabled
                   previewConfig={{
                     showPreview: false,
                   }}
                   theme="light"
                   emojiSize={20}
-                  emojiStyle="facebook"
-                  emojiSet="facebook"
+                  emojiStyle="google"
+                  emojiSet="google"
                   lazyLoadEmojis={true}
                 />
               </div>
