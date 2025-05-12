@@ -33,6 +33,10 @@ import { IMG_URL } from "../utils/baseUrl";
 import { HiOutlinePhoneMissedCall } from "react-icons/hi";
 import { LuForward, LuReply } from "react-icons/lu";
 import { decryptMessage } from "../utils/decryptMess";
+import usePdfThumbnail from "../hooks/usePdfThumbnail";
+import useExcelThumbnail from "../hooks/useExcelThumbnail";
+import usePptThumbnail from "../hooks/usePptThumbnail";
+import useWordThumbnail from "../hooks/useWordThumbnail";
 
 
 const MessageList = ({
@@ -488,8 +492,6 @@ const FileMessage = ({
   ) {
     try {
       const key = "chat";
-      // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
-      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
       const encodedText = messageContent.split("data:")[1];
       const decodedText = atob(encodedText);
       let result = "";
@@ -499,23 +501,20 @@ const FileMessage = ({
         );
       }
       messageContent = result;
-      // console.log(messageContent)
     } catch (error) {
       console.error("Decryption error:", error);
     }
   }
- 
+
   const handleDownload = async (e) => {
     e.preventDefault();
     setIsDownloading(true);
     setDownloadProgress(0);
 
     try {
-      console.log(message?.content.fileUrl)
       const response = await fetch(
         `${message?.content?.fileUrl?.replace(/\\/g, "/")}`
       );
-      console.log(response)
       const contentLength = response.headers.get("content-length");
       const total = parseInt(contentLength, 10);
       let loaded = 0;
@@ -549,83 +548,170 @@ const FileMessage = ({
     }
   };
 
+  // Get thumbnails for different file types
+  const { thumbnail: pdfThumbnail, error: pdfError } = usePdfThumbnail(
+    message?.content?.fileType === "application/pdf"
+      ? message?.content?.fileUrl?.replace(/\\/g, "/")
+      : null
+  );
+
+  const { thumbnail: excelThumbnail, error: excelError } = useExcelThumbnail(
+    message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ? message?.content?.fileUrl?.replace(/\\/g, "/")
+      : null
+  );
+
+  const { thumbnail: pptThumbnail, error: pptError } = usePptThumbnail(
+    message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ? message?.content?.fileUrl?.replace(/\\/g, "/")
+      : null
+  );
+
+  const { thumbnail: wordThumbnail, error: wordError } = useWordThumbnail(
+    message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ? message?.content?.fileUrl?.replace(/\\/g, "/")
+      : null
+  );
+
   return (
     <div className={`max-w-[300px]`}>
       <div className="flex items-center flex-col">
-        <div className="relative inline-flex items-center justify-center">
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="ml-2 p-2 dark:text-primary-light hover:underline disabled:opacity-50 relative"
-          >
-            <FaDownload className="w-6 h-6" />
-            {isDownloading && (
-              <div className="absolute -inset-4 flex items-center justify-center">
-                <svg className="w-12 h-12" viewBox="0 0 36 36">
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9155"
-                    fill="none"
-                    stroke="#e2e8f0"
-                    strokeWidth="2"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.9155"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                    strokeDasharray={`${downloadProgress}, 100`}
-                    strokeLinecap="round"
-                    style={{
-                      transition: "stroke-dasharray 0.3s ease 0s",
-                      transform: "rotate(-90deg)",
-                      transformOrigin: "50% 50%",
-                    }}
-                  />
-                </svg>
+        {message?.content?.fileType === "application/pdf" ? (
+          <>
+            {pdfError ? (
+              <div className="text-red-500">Error loading thumbnail: {pdfError}</div>
+            ) : pdfThumbnail ? (
+              <div className="relative w-full">
+                <img
+                  src={pdfThumbnail}
+                  alt="PDF thumbnail"
+                  className="rounded-t-md w-full h-24 object-cover mb-2 mt-1"
+                  style={{ objectPosition: "top" }}
+                />
+                <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
+                  <button
+                    onClick={handleDownload}
+                    // disabled={isDownloading}
+                    className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
+                  >
+                    <span className="text-primary">
+                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+                      </svg>
+                    </span>
+                    {isDownloading && (
+                      <div className="absolute -inset-4 flex items-center justify-center">
+                        <svg className="w-12 h-12" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="2"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            className="stroke-primary"
+                            strokeWidth="2"
+                            strokeDasharray={`${downloadProgress}, 100`}
+                            strokeLinecap="round"
+                            style={{
+                              transition: "stroke-dasharray 0.3s ease 0s",
+                              transform: "rotate(-90deg)",
+                              transformOrigin: "50% 50%",
+                            }}
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-500">Loading thumbnail...</div>
+            )}
+            <span className="text-sm ml-1 py-2 flex gap-1 items-center">
+              <div>
+                <img src={require('../img/pdf.png')} className="w-[20px] h-[20px]" alt="" />
+              </div>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+                <div className="flex flex-col">
+                  {highlightText(messageContent, searchInputbox)}
+                </div>
+              </div>
+              <div className="text-[12px] dark:text-gray-300 shrink-0 ms-2">
+                {message?.content?.size}
+              </div>
+            </span>
+          </>
+        ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+          <>
+            {excelError ? (
+              <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md">
+                Error loading thumbnail: {excelError}
+              </div>
+            ) : excelThumbnail ? (
+              <div className="relative w-full">
+                <img
+                  src={excelThumbnail}
+                  alt="PDF thumbnail"
+                  className="rounded-t-md w-full h-24 object-cover mb-2 mt-1"
+                  style={{ objectPosition: "top" }}
+                />
+                <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
+                  <button
+                    onClick={handleDownload}
+                    // disabled={isDownloading}
+                    className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
+                  >
+                    <span className="text-primary">
+                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+                      </svg>
+
+                    </span>
+                    {isDownloading && (
+                      <div className="absolute -inset-4 flex items-center justify-center">
+                        <svg className="w-12 h-12" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="2"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            className="stroke-primary"
+                            strokeWidth="2"
+                            strokeDasharray={`${downloadProgress}, 100`}
+                            strokeLinecap="round"
+                            style={{
+                              transition: "stroke-dasharray 0.3s ease 0s",
+                              transform: "rotate(-90deg)",
+                              transformOrigin: "50% 50%",
+                            }}
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
+                <span className="text-gray-500">No preview available</span>
               </div>
             )}
-          </button>
-        </div>
-        <div className=" flex justify-content-between gap-1">
-          {message?.content?.fileType === "application/pdf" ? (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* PDF Icon */}
-              <div>
-                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                  <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-                  <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-                  <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-                  <path fillRule="evenodd" clipRule="evenodd" d="M7.5 10h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Zm0 2h9a.5.5 0 0 0 0-1h-9a.5.5 0 0 0 0 1Z" fill="#C8C6C4"></path>
-                  <path fillRule="evenodd" clipRule="evenodd" d="M14.5 20.5h-5a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1Z" stroke="#D65532" strokeLinecap="round" strokeLinejoin="round" fill="#fff"></path>
-                </svg>
-              </div>
-              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
-               
-                {highlightText(messageContent, searchInputbox)}
-              </div>
-            </span>
-          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* Word Icon */}
-              <div>
-                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                  <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
-                  <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
-                  <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
-                  <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
-                </svg>
-              </div>
-              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
-                {highlightText(messageContent, searchInputbox)}
-              </div>
-            </span>
-          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* Excel Icon */}
+            <span className="text-sm ml-1 py-2 flex gap-1 items-center">
               <div>
                 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
                   <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
@@ -634,15 +720,79 @@ const FileMessage = ({
                   <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
                 </svg>
               </div>
-              <div className="font-medium text-sm " style={{ wordBreak: "break-all" }}>
+              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
+              <div className="text-[12px] dark:text-gray-300 shrink-0 ms-2">
+                {message?.content?.size}
+              </div>
             </span>
-          ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* PowerPoint Icon */}
-              <div>
+          </>
+        ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
+          <>
+            {pptError ? (
+              <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md">
+                Error loading thumbnail: {pptError}
+              </div>
+            ) : pptThumbnail ? (
+              <div className="relative w-full">
+                <img
+                  src={pptThumbnail}
+                  alt="PDF thumbnail"
+                  className="rounded-t-md w-full h-24 object-cover mb-2 mt-1"
+                  style={{ objectPosition: "top" }}
+                />
+                <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
+                  <button
+                    onClick={handleDownload}
+                    // disabled={isDownloading}
+                    className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
+                  >
+                    <span className="text-primary">
+                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+                      </svg>
 
+                    </span>
+                    {isDownloading && (
+                      <div className="absolute -inset-4 flex items-center justify-center">
+                        <svg className="w-12 h-12" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="2"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            className="stroke-primary"
+                            strokeWidth="2"
+                            strokeDasharray={`${downloadProgress}, 100`}
+                            strokeLinecap="round"
+                            style={{
+                              transition: "stroke-dasharray 0.3s ease 0s",
+                              transform: "rotate(-90deg)",
+                              transformOrigin: "50% 50%",
+                            }}
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
+                <span className="text-gray-500">No preview available</span>
+              </div>
+            )}
+            <span className="text-sm ml-1 py-2 flex gap-1 items-center">
+              <div>
                 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
                   <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
                   <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
@@ -652,38 +802,215 @@ const FileMessage = ({
               <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
+              <div className="text-[12px] dark:text-gray-300 shrink-0 ms-2">
+                {message?.content?.size}
+              </div>
             </span>
-          ) : message?.content?.fileType === "application/zip" ? (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* ZIP Icon */}
+          </>
+        ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+          <>
+            {wordError ? (
+              <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md">
+                Error loading thumbnail: {wordError}
+              </div>
+            ) : wordThumbnail ? (
+              <div className="relative w-full">
+                <img
+                  src={wordThumbnail}
+                  alt="PDF thumbnail"
+                  className="rounded-t-md w-full h-24 object-cover mb-2 mt-1"
+                  style={{ objectPosition: "top" }}
+                />
+                <div className="absolute top-0 left-0 bg-primary-dark/50 w-full h-24  mb-2 mt-1 grid place-content-center rounded-t-md">
+                  <button
+                    onClick={handleDownload}
+                    // disabled={isDownloading}
+                    className=" p-2 dark:text-primary-light bg-white rounded-full hover:underline disabled:opacity-50 relative"
+                  >
+                    <span className="text-primary">
+                      <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+                      </svg>
+
+                    </span>
+                    {isDownloading && (
+                      <div className="absolute -inset-4 flex items-center justify-center">
+                        <svg className="w-12 h-12" viewBox="0 0 36 36">
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="2"
+                          />
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.9155"
+                            fill="none"
+                           className="stroke-primary"
+                            strokeWidth="2"
+                            strokeDasharray={`${downloadProgress}, 100`}
+                            strokeLinecap="round"
+                            style={{
+                              transition: "stroke-dasharray 0.3s ease 0s",
+                              transform: "rotate(-90deg)",
+                              transformOrigin: "50% 50%",
+                            }}
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-full h-24 bg-gray-50 rounded-t-md">
+                <span className="text-gray-500">No preview available</span>
+              </div>
+            )}
+            <span className="text-sm ml-1 py-2 flex gap-1 items-center">
               <div>
                 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                  <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                  <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                  <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                  <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                  <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
                 </svg>
               </div>
               <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
                 {highlightText(messageContent, searchInputbox)}
               </div>
-            </span>
-          ) : (
-            <span className="text-sm ml-1 flex gap-1 items-center">
-              {/* Default File Icon */}
-              <div>
-                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                  <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
-                  <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
-                  <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
-                </svg>
-              </div>
-              <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
-                {highlightText(messageContent, searchInputbox)}
+              <div className="text-[12px] dark:text-gray-300 shrink-0 ms-2">
+                {message?.content?.size}
               </div>
             </span>
-          )}
-          <div className="text-[12px] dark:text-gray-300  shrink-0">
-            {message?.content?.size}
-          </div>
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="relative inline-flex items-center justify-center">
+              <button
+                onClick={handleDownload}
+                // disabled={isDownloading}
+                className="ml-2 my-2 p-2 bg-white rounded-full dark:text-primary-light hover:underline disabled:opacity-50 relative"
+              >
+                <span className="text-primary">
+                  <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+                  </svg>
+                </span>
+                {isDownloading && (
+                  <div className="absolute -inset-4 flex items-center justify-center">
+                    <svg className="w-12 h-12" viewBox="0 0 36 36">
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15.9155"
+                        fill="none"
+                        stroke="#e2e8f0"
+                        strokeWidth="2"
+                      />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15.9155"
+                        fill="none"
+                       className="stroke-primary/90"
+                        strokeWidth="2"
+                        strokeDasharray={`${downloadProgress}, 100`}
+                        strokeLinecap="round"
+                        style={{
+                          transition: "stroke-dasharray 0.3s ease 0s",
+                          transform: "rotate(-90deg)",
+                          transformOrigin: "50% 50%",
+                        }}
+                      />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            </div>
+            <div className=" flex justify-content-between gap-1">
+              {message?.content?.fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+                <span className="text-sm ml-1 flex gap-1 items-center">
+                  {/* Word Icon */}
+                  <div>
+                    <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                      <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                      <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                      <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                      <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+                    </svg>
+                  </div>
+                  <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+                    {highlightText(messageContent, searchInputbox)}
+                  </div>
+                </span>
+              ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+                <span className="text-sm ml-1 flex gap-1 items-center">
+                  {/* Excel Icon */}
+                  <div>
+                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                      <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                      <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                      <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                      <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+                    </svg>
+                  </div>
+                  <div className="font-medium text-sm " style={{ wordBreak: "break-all" }}>
+                    {highlightText(messageContent, searchInputbox)}
+                  </div>
+                </span>
+              ) : message?.content?.fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
+                <span className="text-sm ml-1 flex gap-1 items-center">
+                  {/* PowerPoint Icon */}
+                  <div>
+
+                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                      <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                      <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                      <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+                    </svg>
+                  </div>
+                  <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+                    {highlightText(messageContent, searchInputbox)}
+                  </div>
+                </span>
+              ) : message?.content?.fileType === "application/zip" ? (
+                <span className="text-sm ml-1 flex gap-1 items-center">
+                  {/* ZIP Icon */}
+                  <div>
+                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                      <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                    </svg>
+                  </div>
+                  <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+                    {highlightText(messageContent, searchInputbox)}
+                  </div>
+                </span>
+              ) : (
+                <span className="text-sm ml-1 flex gap-1 items-center">
+                  {/* Default File Icon */}
+                  <div>
+                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                      <path d="M5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .275.225.5.5.5Z" fill="#fff"></path>
+                      <path d="M18.293 6 15 2.707V5.5c0 .275.225.5.5.5h2.793Z" fill="#fff"></path>
+                      <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="m19.56 5.854-4.414-4.415A1.51 1.51 0 0 0 14.086 1H5.5C4.673 1 4 1.673 4 2.5v19c0 .827.673 1.5 1.5 1.5h13c.827 0 1.5-.673 1.5-1.5V6.914c0-.4-.156-.777-.44-1.06ZM15 2.707 18.293 6H15.5a.501.501 0 0 1-.5-.5V2.707ZM5.5 22h13c.275 0 .5-.225.5-.5V7h-3.5c-.827 0-1.5-.673-1.5-1.5V2H5.5c-.275 0-.5.225-.5.5v19c0 .276.224.5.5.5Z" fill="#605E5C"></path>
+                    </svg>
+                  </div>
+                  <div className="font-medium text-sm" style={{ wordBreak: "break-all" }}>
+                    {highlightText(messageContent, searchInputbox)}
+                  </div>
+                </span>
+              )}
+              <div className="text-[12px] dark:text-gray-300  shrink-0">
+                {message?.content?.size}
+              </div>
+            </div>
+          </>
+
+        )}
       </div>
     </div>
   );
@@ -944,7 +1271,7 @@ const ReplyPreview = ({
           </>
         ) : message?.replyTo?.content?.fileType ==
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-          message?.replyTo?.content?.fileType == "application/vnd.ms-excel" ? (
+          message?.replyTo?.content?.fileType == "application/ms-excel" ? (
           <>
             <span className="text-center grid place-content-center">
               <svg
@@ -1459,7 +1786,7 @@ const MessageContextMenu = ({
                   }}
                 >
                   <span className="mr-2">
-                    <svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2.50834 18C2.44155 18.0001 2.3754 17.9869 2.3137 17.9613C2.25201 17.9357 2.19599 17.8982 2.14886 17.8508C2.08679 17.7888 2.04185 17.7118 2.01843 17.6273C1.995 17.5427 1.99389 17.4536 2.0152 17.3685L2.97035 13.5346C2.99264 13.4451 3.03884 13.3632 3.10401 13.2979L13.8564 2.54547C14.5836 1.81818 15.7675 1.81818 16.4948 2.54547L17.454 3.50472C18.1814 4.23208 18.1814 5.41591 17.454 6.14311L6.70177 16.8955C6.63654 16.9609 6.55466 17.0071 6.46501 17.0292L2.63122 17.9843C2.59114 17.995 2.54983 18.0002 2.50837 18H2.50834ZM3.92289 13.9173L3.20651 16.7924L6.08165 16.076L16.7349 5.42335C17.0653 5.09294 17.0653 4.55429 16.7349 4.22387L15.7757 3.26462C15.4446 2.93357 14.9059 2.93418 14.5762 3.26462L3.92289 13.9173Z" fill="currentColor" />
                       <path d="M15.441 7.94777C15.3107 7.94777 15.1804 7.89819 15.0814 7.79856L12.2029 4.92068C12.004 4.72179 12.004 4.39958 12.2029 4.20083C12.4017 4.00207 12.7239 4.00207 12.9227 4.20083L15.8013 7.07947C16.0001 7.27823 16.0001 7.60044 15.8013 7.79919C15.7008 7.89819 15.5706 7.94777 15.441 7.94777ZM6.34325 17.0455C6.21296 17.0455 6.0828 16.9959 5.98377 16.8962L3.10512 14.0177C2.90637 13.8188 2.90637 13.4966 3.10512 13.2978C3.30388 13.0991 3.62612 13.0991 3.82501 13.2978L6.70352 16.1765C6.90228 16.3752 6.90228 16.6975 6.70352 16.8962C6.65629 16.9436 6.60014 16.9812 6.5383 17.0069C6.47647 17.0325 6.41018 17.0456 6.34325 17.0455Z" fill="currentColor" />
                     </svg>
@@ -1507,7 +1834,7 @@ const MessageContextMenu = ({
           >
             <span className="mr-2">
 
-              <svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15.6562 3.875H13.3125V3.40625C13.3125 2.63084 12.6817 2 11.9062 2H8.15625C7.38084 2 6.75 2.63084 6.75 3.40625V3.875H4.40625C3.63084 3.875 3 4.50584 3 5.28125C3 5.904 3.40703 6.43316 3.96891 6.61753L4.805 16.7105C4.86522 17.4336 5.48078 18 6.20638 18H13.8561C14.5817 18 15.1973 17.4336 15.2576 16.7103L16.0936 6.6175C16.6555 6.43316 17.0625 5.904 17.0625 5.28125C17.0625 4.50584 16.4317 3.875 15.6562 3.875ZM7.6875 3.40625C7.6875 3.14778 7.89778 2.9375 8.15625 2.9375H11.9062C12.1647 2.9375 12.375 3.14778 12.375 3.40625V3.875H7.6875V3.40625ZM14.3232 16.6327C14.3032 16.8737 14.098 17.0625 13.8561 17.0625H6.20638C5.96453 17.0625 5.75934 16.8737 5.73931 16.6329L4.91544 6.6875H15.1471L14.3232 16.6327ZM15.6562 5.75H4.40625C4.14778 5.75 3.9375 5.53972 3.9375 5.28125C3.9375 5.02278 4.14778 4.8125 4.40625 4.8125H15.6562C15.9147 4.8125 16.125 5.02278 16.125 5.28125C16.125 5.53972 15.9147 5.75 15.6562 5.75Z" fill="currentColor" />
                 <path d="M8.15538 15.6273L7.68663 8.06477C7.6706 7.80636 7.44694 7.60983 7.18979 7.62592C6.93138 7.64195 6.73491 7.86439 6.75091 8.12277L7.21966 15.6853C7.23507 15.9338 7.44144 16.125 7.68707 16.125C7.95854 16.125 8.17204 15.8964 8.15538 15.6273ZM10.0313 7.62505C9.77241 7.62505 9.56254 7.83492 9.56254 8.0938V15.6563C9.56254 15.9152 9.77241 16.125 10.0313 16.125C10.2902 16.125 10.5 15.9152 10.5 15.6563V8.0938C10.5 7.83492 10.2902 7.62505 10.0313 7.62505ZM12.8728 7.62595C12.6149 7.60992 12.3919 7.80639 12.3759 8.0648L11.9072 15.6273C11.8912 15.8857 12.0877 16.1081 12.346 16.1241C12.6046 16.1401 12.8269 15.9436 12.8429 15.6853L13.3116 8.1228C13.3276 7.86439 13.1312 7.64195 12.8728 7.62595Z" fill="currentColor" />
               </svg>
