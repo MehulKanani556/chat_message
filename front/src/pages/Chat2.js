@@ -2732,7 +2732,9 @@ const Chat2 = () => {
                                       )
                                       ? "calc(100vh - 280px)"
                                       : "calc(100vh -  229px)"
-                                    : "calc(100vh - 173px)",
+                                    : window.innerWidth < 768
+                                      ? "calc(100vh - 179px)"
+                                      : "calc(100vh - 173px)",
                             }}
                             ref={messagesContainerRef}
                           >
@@ -3007,7 +3009,7 @@ const Chat2 = () => {
                                   className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
                                     ? "rounded-b-lg"
                                     : "rounded-lg"
-                                    } px-4 py-2 w-full max-w-full`}
+                                    } md:px-4 md:py-2 w-full max-w-full`}
                                 >
                                   {isRecording ?
                                     <>
@@ -3104,7 +3106,7 @@ const Chat2 = () => {
                                             </div>
                                           </div>
                                         )}
-                                        <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                                        <div className="flex-1 min-w-0 p-1 md:p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
                                           <input
                                             ref={inputRef}
                                             type="text"
@@ -3115,7 +3117,7 @@ const Chat2 = () => {
                                                 ? "Edit message..."
                                                 : "Type a message..."
                                             }
-                                            className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                            className="w-full px-2 py-1 outline-none text-sm md:text-base text-black dark:text-white bg-transparent"
                                             onKeyDown={async (e) => {
                                               if (e.key === "Enter") {
                                                 e.preventDefault();

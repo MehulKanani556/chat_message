@@ -33,6 +33,11 @@ const Setting = () => {
     const [editedUserName, setEditedUserName] = useState(user?.userName || "");
     const [isEditingUserName, setIsEditingUserName] = useState(false);
     const [isToggled, setIsToggled] = useState(false);
+    const [theme, setTheme] = useState(() => {
+        const savedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        return savedTheme === "dark" || (!savedTheme && prefersDark) ? "dark" : "light";
+    });
 
     // Add refs for the dropdowns
     const privacyDropdownRef = useRef(null);
@@ -44,6 +49,12 @@ const Setting = () => {
     useEffect(() => {
         initializePrimaryColor();
     }, []);
+
+    // Initialize theme on component mount
+    useEffect(() => {
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        localStorage.setItem("theme", theme);
+    }, [theme]);
 
     // Add useEffect for handling clicks outside
     useEffect(() => {
@@ -71,7 +82,7 @@ const Setting = () => {
         phone: '',
         bio: '',
         profileImage: '',
-        mobileNumber:''
+        mobileNumber: ''
     });
     const [tempData, setTempData] = useState({ ...profileData });
 
@@ -258,8 +269,12 @@ const Setting = () => {
         dispatch(updateUser({ id: user._id, values: { notification: isToggled } }))
     };
 
+    const handleThemeChange = (newTheme) => {
+        setTheme(newTheme);
+    };
+
     return (
-        <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+        <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-[100vh] overflow-hidden  relative"
             style={{
                 boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
             }}>
@@ -272,7 +287,7 @@ const Setting = () => {
                     <h1 className="text-lg font-semibold ">Profile</h1>
                 </div>
             </div>
-            <div className="">
+            <div className="overflow-auto h-[calc(100%-118px)] md:h-[calc(100%-50px)]">
                 {/* Profile Header */}
                 <div className="flex flex-col items-center justify-center p-6  rounded-lg max-w-xs mx-auto">
                     <div className="relative group">
@@ -444,7 +459,7 @@ const Setting = () => {
 
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Email</p>
-                                        <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
+                                        <p className="text-black font-semibold dark:text-primary-light break-words">{profileData.email}</p>
                                     </div>
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Mobile Number</p>
@@ -602,7 +617,7 @@ const Setting = () => {
                             >
                                 <div className="flex items-center space-x-2">
                                     <span className="w-4 h-4 rounded-full bg-primary"></span>
-                                    <span className=" text-lg font-medium">Theme Color</span>
+                                    <span className=" text-lg font-medium">Theme</span>
                                 </div>
                                 {showColorPicker ? (
                                     <FaChevronUp size={12} />
@@ -611,8 +626,38 @@ const Setting = () => {
                                 )}
                             </button>
 
+
+
                             {showColorPicker && (
                                 <div className="px-4 py-4">
+
+                                    <div className="md:hidden flex flex-col gap-2 mb-2">
+                                        <p className="text-gray-400 text-sm mb-1">Mode</p>
+                                        <div className="flex items-center gap-6">
+                                            <label className="flex items-center cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="theme"
+                                                    value="dark"
+                                                    checked={theme === "dark"}
+                                                    onChange={() => handleThemeChange("dark")}
+                                                    className="accent-primary "
+                                                />
+                                                <span className="ml-2 text-gray-800 dark:text-white">Dark</span>
+                                            </label>
+                                            <label className="flex items-center cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="theme"
+                                                    value="light"
+                                                    checked={theme === "light"}
+                                                    onChange={() => handleThemeChange("light")}
+                                                    className="accent-primary "
+                                                />
+                                                <span className="ml-2 text-gray-800 dark:text-white">Light</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                     <ColorPicker />
                                 </div>
                             )}

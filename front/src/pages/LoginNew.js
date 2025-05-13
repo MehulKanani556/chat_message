@@ -185,7 +185,7 @@ const LoginNew = () => {
           <h3 className="text-xl text-white font-semibold mb-6">
             Scan to Login with Chat App
           </h3>
-          <div className="bg-white p-4 rounded-lg mb-6">
+          <div className="bg-white p-4 rounded-lg mb-6 ">
            <QRLoginPage />
           </div>
           <div className="text-center">

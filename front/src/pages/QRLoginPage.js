@@ -115,7 +115,7 @@ const QRLoginPage = () => {
         {sessionId && (
           <QRCodeCanvas 
             value={getQRData()}
-            size={256}
+            size={200}
             level="H"
           />
         )}

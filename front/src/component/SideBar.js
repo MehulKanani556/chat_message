@@ -114,7 +114,7 @@ const Sidebar = ({ user, onProfileClick }) => {
       w-full md:w-16 md:h-screen
       bg-white dark:bg-primary-dark
       border-t md:border-t-0 
-      border-gray-400 dark:border-gray-700z
+      border-gray-400/30 dark:border-gray-700z
       transition-all duration-300
       z-50"
     // style={{
@@ -124,7 +124,7 @@ const Sidebar = ({ user, onProfileClick }) => {
       <div className="
         flex md:flex-col
         items-center justify-around md:justify-start
-        h-16 md:h-full
+        h-10 md:h-full
         px-2 md:px-3
         py-2 md:py-4
         gap-1 md:gap-6
@@ -150,12 +150,13 @@ const Sidebar = ({ user, onProfileClick }) => {
         ))}
 
         {/* Profile Image at Bottom (only visible on desktop) */}
-        <div className="md:flex mt-auto mb-4 md:flex-col items-center relative" ref={dropdownRef}>
+        <div className="flex md:mt-auto md:mb-4 md:flex-col items-center relative gap-2" ref={dropdownRef}>
           <button
             onClick={toggleTheme}
             className={`
-              relative flex items-center justify-center
-              mb-3
+              relative md:flex items-center justify-center
+              hidden 
+              md:mb-3
               w-10 h-10 rounded-full
               transition-colors duration-200
               ${isDarkMode
@@ -166,7 +167,7 @@ const Sidebar = ({ user, onProfileClick }) => {
           >
             {isDarkMode ? <MdOutlineWbSunny size={20} /> : <BsMoonStars size={20} />}
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary overflow-hidden flex items-center justify-center border border-gray-800">
+          <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary overflow-hidden flex items-center justify-center border border-gray-800">
             {user?.photo && user.photo !== "null" ? (
               <img
                 src={`${user.photo.replace(/\\/g, "/")}`}
@@ -189,7 +190,7 @@ const Sidebar = ({ user, onProfileClick }) => {
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute right-0 md:right-auto md:left-[55px] mt-2 w-48 bg-white dark:bg-primary-dark rounded-md shadow-lg py-1 z-50">
+            <div className="absolute bottom-[50px] md:bottom-0 right-0 md:right-auto md:left-[55px] mt-2 w-48 bg-white dark:bg-primary-dark rounded-md shadow-lg py-1 z-50">
               <div className="py-1">
                 <button
                   onClick={() => {
