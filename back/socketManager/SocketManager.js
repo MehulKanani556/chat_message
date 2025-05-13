@@ -564,9 +564,8 @@ function handleCallEnd(socket, data) {
       call.ringing = call.ringing.filter((id) => id !== from);
       call.ringing = call.ringing.filter((id) => id !== to);
     }
-    console.log(call, from, to)
-    call.invited = call.invited.push(from)
-    call.invited = call.invited.push(to)
+    call.invited.push(from)
+    call.invited.push(to)
 
     socket.to(roomId).emit("call:update-participant-list", call);
 
