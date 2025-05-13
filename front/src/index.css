@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-<<<<<<< HEAD
 /* Drag and Drop Animations */
 .drop-zone {
   transition: all 0.3s ease;
@@ -68,8 +67,6 @@
   animation: wave 2s infinite;
 }
 
-=======
->>>>>>> parent of 6b14cd1 (set a videocall)
 
 
 
