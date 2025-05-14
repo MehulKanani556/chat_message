@@ -24,7 +24,7 @@ const MessageInputForm = ({
       <div className="w-full max-w-4xl mx-auto px-4 rounded-lg ">
         <form
           onSubmit={handleSubmit}
-          className={`flex items-center gap-2 rounded-${editingMessage ? "b-" : ""}xl px-4 py-2 shadow w-full max-w-full`}
+          className={`flex items-center gap-2 rounded-${editingMessage ? "b-" : ""}xl px-4 py-2  shadow w-full max-w-full`}
           style={{ backgroundColor: "#e5e7eb" }}
         >
           <button

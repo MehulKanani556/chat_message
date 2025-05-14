@@ -694,6 +694,8 @@ async function handleUpdateGroup(socket, data) {
     const userData = await User.findById(user);
     let contentData;
 
+    // console.log("icon",updateType)
+
     if (updateType == "name") {
       contentData = `**${userData.userName}** Changed Group name  **${oldData}** to  **${newData}**`;
     } else if (updateType == "bio") {
@@ -702,7 +704,7 @@ async function handleUpdateGroup(socket, data) {
       contentData = `**${userData.userName}** Changed Group icon`;
     }
     // console.log("aa",contentData);
-    if (updateType == "name" || updateType == "bio" || updateCallRoom == "icon") {
+    if (updateType == "name" || updateType == "bio" || updateType == "icon") {
       await saveMessage({
         senderId: groupId,
         receiverId: groupId,
@@ -716,6 +718,7 @@ async function handleUpdateGroup(socket, data) {
     members.forEach((memberId) => {
       const memberSocket = onlineUsers.get(memberId);
       if (memberSocket) {
+        // console.log("aa",updatedGroup)
         socket.to(memberSocket).emit("group-updated", {
           type: "updated",
           // group: updatedGroup,

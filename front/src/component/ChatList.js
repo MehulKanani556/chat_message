@@ -931,7 +931,7 @@ const ChatList = ({
           </div>
         )}
         <div
-          className={`bg-primary cursor-pointer w-10 h-10 absolute bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center ${findUser ? "hidden" : "block"}`}
+          className={`bg-primary cursor-pointer w-10 h-10 absolute bottom-24 md:bottom-7 right-4 rounded-full text-xl text-white text-center flex justify-center ${findUser ? "hidden" : "block"}`}
           style={{
             alignItems: "center",
           }}

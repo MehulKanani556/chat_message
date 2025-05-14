@@ -2729,9 +2729,11 @@ const Chat2 = () => {
                                       replyingTo?.content?.fileType?.startsWith(
                                         "image/"
                                       )
-                                      ? "calc(100vh - 281px)"
-                                      : "calc(100vh -  226px)"
-                                    : "calc(100vh - 173px)",
+                                      ? "calc(100vh - 280px)"
+                                      : "calc(100vh -  229px)"
+                                    : window.innerWidth < 768
+                                      ? "calc(100vh - 179px)"
+                                      : "calc(100vh - 173px)",
                             }}
                             ref={messagesContainerRef}
                           >
@@ -2981,7 +2983,7 @@ const Chat2 = () => {
                                   className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
                                     ? "rounded-b-lg"
                                     : "rounded-lg"
-                                    } px-4 py-2 w-full max-w-full`}
+                                    } md:px-4 md:py-2 w-full max-w-full`}
                                 >
                                   {isRecording ?
                                     <>
