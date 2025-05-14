@@ -201,8 +201,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
       if (socketRef.current?.connected) {
         console.log(
-          `[Camera Status] User ${userId} is ${
-            newStatus ? "turning ON" : "turning OFF"
+          `[Camera Status] User ${userId} is ${newStatus ? "turning ON" : "turning OFF"
           } their camera`
         );
         socketRef.current.emit("camera-status-change", {
@@ -720,37 +719,37 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       addToRingingUsers(data.fromEmail);
     });
 
-    socketRef.current.on("participant-joined",async ({ newParticipantId, from, participants, roomId }) => {
-        if (newParticipantId !== userId && streamRef.current) {
-          addToJoinedUsers(newParticipantId);
-          const peer = new Peer({
-            initiator: false,
-            trickle: false,
-            stream: streamRef.current,
-          });
+    socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants, roomId }) => {
+      if (newParticipantId !== userId && streamRef.current) {
+        addToJoinedUsers(newParticipantId);
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream: streamRef.current,
+        });
 
-          peer.on("signal", (signal) => {
-            socketRef.current.emit("call-signal", {
-              signal,
-              to: newParticipantId,
-              from: userId,
-              roomId,
-            });
+        peer.on("signal", (signal) => {
+          socketRef.current.emit("call-signal", {
+            signal,
+            to: newParticipantId,
+            from: userId,
+            roomId,
           });
+        });
 
-          peer.on("stream", (stream) => {
-            setRemoteStreams((prev) =>
-              new Map(prev).set(newParticipantId, stream)
-            );
-            setAllCallUsers((prev) =>
-              new Map(prev).set(newParticipantId, stream)
-            );
-          });
+        peer.on("stream", (stream) => {
+          setRemoteStreams((prev) =>
+            new Map(prev).set(newParticipantId, stream)
+          );
+          setAllCallUsers((prev) =>
+            new Map(prev).set(newParticipantId, stream)
+          );
+        });
 
-          peersRef.current[newParticipantId] = peer;
-          setCallParticipants((prev) => new Set([...prev, newParticipantId]));
-        }
+        peersRef.current[newParticipantId] = peer;
+        setCallParticipants((prev) => new Set([...prev, newParticipantId]));
       }
+    }
     );
 
     socketRef.current.on("call-signal", ({ signal, from, roomId }) => {
@@ -873,7 +872,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     try {
       let stream = null;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getDisplayMedia({
           video: calltype == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
@@ -985,7 +984,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     console.log("cvcvcvc", newParticipantId);
 
     setCallFrom(userId);
-    if (!streamRef.current) return;
+    // if (!streamRef.current) return;
 
     try {
       const newPeer = new Peer({
@@ -1048,7 +1047,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       let stream = null;
       try {
         // Try to get media stream but don't block if devices aren't available
-        stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getDisplayMedia({
           video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
@@ -1482,8 +1481,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       "camera-status-change",
       ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
         console.log(
-          `[Camera Status] Received update: User ${remoteUserId} camera is now ${
-            remoteCameraStatus ? "ON" : "OFF"
+          `[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? "ON" : "OFF"
           }`
         );
         setCameraStatus((prev) => ({
