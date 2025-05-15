@@ -2083,19 +2083,19 @@ const Chat2 = () => {
     { id: 1, name: 'User 1', videoEnabled: true, audioEnabled: true },
   ];
 
-  const [participants, setParticipants] = useState(demoUsers);
+  const [participants, setParticipants] = useState(Array.from(remoteStreams));
   const [isJoined, setIsJoined] = useState(false);
 
   // Simulate adding a new user when joining
   const handleJoinCall = () => {
-    if (participants.length < 12) {
+    if (Array.from(remoteStreams).length < 12) {
       const newUser = {
-        id: participants.length + 1,
-        name: `User ${participants.length + 1}`,
+        id: Array.from(remoteStreams).length + 1,
+        name: `User ${Array.from(remoteStreams).length + 1}`,
         videoEnabled: Math.random() > 0.3,
         audioEnabled: Math.random() > 0.3
       };
-      setParticipants([...participants, newUser]);
+      setParticipants([...Array.from(remoteStreams), newUser]);
     }
     setIsJoined(true);
   };
@@ -2121,8 +2121,8 @@ const Chat2 = () => {
     return rows;
   };
 
-  const participantRows = arrangeParticipantsInRows(participants);
-  const { gap } = getLayoutConfig(participants.length);
+  const participantRows = arrangeParticipantsInRows(Array.from(remoteStreams));
+  const { gap } = getLayoutConfig(Array.from(remoteStreams).length);
 
   const [showBell, setShowBell] = useState(false);
   useEffect(() => {
@@ -3499,8 +3499,28 @@ const Chat2 = () => {
 
               // Video call screen
               <div className="flex-1 flex flex-col relative overflow-hidden">
+
+                {/* Always show the video grid */}
+                {/* <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+                  <div className={`w-full h-full flex flex-col ${gap} max-w-7xl mx-auto`}>
+                    {participantRows.map((row, rowIndex) => (
+                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
+
+                        {row.map(user => (
+                          <div
+                            key={user.id}
+                            className="flex-1 min-w-0"
+                            style={{ maxWidth: `${100 / getLayoutConfig(Array.from(remoteStreams).length).cols}%` }}
+                          >
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div> */}
                 {/* Always show the video grid */}
                 <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+
                   <div className={`w-full h-full grid ${getLayoutConfig(Object.keys(remoteStreams).length + 1).gap} max-w-7xl mx-auto`}
                     style={{
                       gridTemplateColumns: `repeat(${getLayoutConfig(Object.keys(remoteStreams).length + 1).cols}, minmax(0, 1fr))`,
@@ -3647,7 +3667,7 @@ const Chat2 = () => {
                     <AiOutlineVideoCamera className="text-xl" />
                   </button>
 
-                  {participants.length < 12 && (
+                  {Array.from(remoteStreams).length < 12 && (
                     <button
                       className="text-blue-400 hover:text-blue-300 text-xs"
                       onClick={handleJoinCall}
@@ -4027,7 +4047,7 @@ const Chat2 = () => {
                         ))}
                     </div>
                     <div className="mt-4 flex justify-center w-full">
-                      {participants.length < 12 && (
+                      {Array.from(remoteStreams).length < 12 && (
                         <button
                           className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                           onClick={() => {
