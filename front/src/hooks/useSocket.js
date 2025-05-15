@@ -872,10 +872,14 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     try {
       let stream = null;
       try {
-        stream = await navigator.mediaDevices.getDisplayMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: calltype == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
+        // stream = await navigator.mediaDevices.getDisplayMedia({
+        //   video: true,
+        // });
+
       } catch (err) {
         console.warn("Could not get media devices:", err);
       }
@@ -1047,7 +1051,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       let stream = null;
       try {
         // Try to get media stream but don't block if devices aren't available
-        stream = await navigator.mediaDevices.getDisplayMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });

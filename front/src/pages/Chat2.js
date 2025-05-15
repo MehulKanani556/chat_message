@@ -3352,8 +3352,8 @@ const Chat2 = () => {
           className={`flex-1 relative ${isReceiving ? "flex items-center justify-center" : `grid ${getGridColumns(Object.keys(userStreams).length)} gap-4`}`}
         >
 
-          {Object.keys(userStreams).length > 0 ? (
-            Object.keys(userStreams).map((userId) => (
+          {Object.keys(remoteStreams).length > 0 ? (
+            Object.keys(remoteStreams).map((userId) => (
               <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
                 <video autoPlay playsInline className="w-full h-full object-cover rounded-lg" ref={(el) => { if (el) { el.srcObject = userStreams[userId]; } }} />
                 <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
@@ -3455,78 +3455,71 @@ const Chat2 = () => {
               <div className="flex-1 flex flex-col relative overflow-hidden">
                 {/* Always show the video grid */}
                 <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-                  <div className={`w-full h-full flex flex-col ${gap} max-w-7xl mx-auto`}>
-                    {participantRows.map((row, rowIndex) => (
-                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
-                        {row.map(user => (
-                          <div
-                            key={user.id}
-                            className="flex-1 min-w-0"
-                            style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
-                          >
-                            <VideoParticipant user={user} selectedChat={selectedChat} IMG_URL={IMG_URL} />
-                          </div>
-                        ))}
-                      </div>
-                    ))}
+                  <div className={`w-full h-full grid ${getLayoutConfig(Object.keys(remoteStreams).length + 1).gap} max-w-7xl mx-auto`}
+                    style={{
+                      gridTemplateColumns: `repeat(${getLayoutConfig(Object.keys(remoteStreams).length + 1).cols}, minmax(0, 1fr))`,
+                      gap: '8px'
+                    }}>
+
+                    {/* Local participant video */}
+                    <div className="relative w-full h-full min-h-[120px] aspect-video">
+                      <VideoParticipant
+                        user={{ videoEnabled: isCameraOn, audioEnabled: isMicrophoneOn, name: user?.userName || "You" }}
+                        selectedChat={selectedChat}
+                        IMG_URL={IMG_URL}
+                        isLocal={true}
+                      />
+                    </div>
+
+                    {/* Remote participants */}
+                    {Array.from(remoteStreams).map(([participantId, stream]) => {
+                      const participant = allUsers.find(user => user._id === participantId);
+                      const isCameraEnabled = cameraStatus?.[participantId] !== false;
+
+                      return (
+                        <div key={participantId} className="relative w-full h-full min-h-[120px] aspect-video">
+                          {isCameraEnabled ? (
+                            <div className="relative w-full h-full">
+                              <video
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover rounded-lg"
+                                ref={(el) => {
+                                  if (el) el.srcObject = stream;
+                                }}
+                              />
+                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
+                                {participant?.userName || "Participant"}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
+                              <div className="w-20 h-20 rounded-full overflow-hidden">
+                                {participant?.photo && participant.photo !== "null" ? (
+                                  <img
+                                    src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+                                    <span className="text-white text-2xl">
+                                      {participant?.userName?.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
+                                {participant?.userName || "Participant"}
+                                <span className="ml-2 text-xs">(Camera Off)</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-
-                {Array.from(remoteStreams).map(([participantId, stream]) => {
-                  const participant = allUsers.find(
-                    (user) => user._id === participantId
-                  );
-                  const isCameraEnabled = cameraStatus?.[participantId] !== false;
-
-                  return (
-                    <div key={participantId} className="relative w-full">
-                      {isCameraEnabled ? (
-                        <video
-                          autoPlay
-                          playsInline
-                          className="w-full h-full object-contain max-h-[80vh]"
-                          ref={(el) => {
-                            if (el) {
-                              el.srcObject = stream;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center bg-primary-dark"
-                          style={{ maxHeight: "80vh" }}
-                        >
-                          <div className="w-32 h-32 rounded-full overflow-hidden">
-                            {participant?.photo &&
-                              participant.photo !== "null" ? (
-                              <img
-                                src={`${IMG_URL}${participant.photo.replace(
-                                  /\\/g,
-                                  "/"
-                                )}`}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-                                <span className="text-white text-4xl">
-                                  {participant?.userName?.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                        {participant?.userName?.charAt(0).toUpperCase() +
-                          participant?.userName?.slice(1) || "Participant"}
-                        {!isCameraEnabled && (
-                          <span className="ml-2 text-sm">(Camera Off)</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
 
                 {/* Always show controls buttons*/}
                 <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
@@ -4395,6 +4388,7 @@ const VideoParticipant = ({ user, selectedChat, IMG_URL }) => {
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
                     className="object-cover border rounded-full w-24 h-24"
+
                   />
                 ) : (
                   <div className="flex items-center justify-center">
