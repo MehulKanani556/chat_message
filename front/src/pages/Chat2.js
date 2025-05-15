@@ -1913,6 +1913,7 @@ const Chat2 = () => {
       if (backCams.length > 0) setBackCameraAvailable(true);
 
       if (videoRef.current) {
+        // console.log(stream)
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
@@ -2783,6 +2784,7 @@ const Chat2 = () => {
                                   <RxCross2 />
                                 </button>
                               }
+                              {console.log(videoRef)}
                               <video
                                 ref={videoRef}
                                 className="w-full"
@@ -3039,7 +3041,7 @@ const Chat2 = () => {
 
                                   {!isRecording && (
                                     <>
-                                      <div className="flex-1 min-w-0 p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10">
+                                      <div className="flex-1 min-w-0 p-1 md:p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative">
                                         <input
                                           ref={inputRef}
                                           type="text"
@@ -3050,7 +3052,7 @@ const Chat2 = () => {
                                               ? "Edit message..."
                                               : "Type a message..."
                                           }
-                                          className="w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                          className="ps-9 md:ps-2 w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
                                           onKeyDown={async (e) => {
                                             if (e.key === "Enter") {
                                               e.preventDefault();
@@ -3071,10 +3073,54 @@ const Chat2 = () => {
                                             }
                                           }}
                                         />
+                                        <button
+                                          type="button"
+                                          className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                          aria-label="Add emoji"
+                                          onClick={() =>
+                                            setIsEmojiPickerOpen(!isEmojiPickerOpen)
+                                          }
+                                        >
+                                          <PiSmiley className="w-6 h-6 " />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          aria-label="Attach file"
+                                          onClick={() =>
+                                            // document
+                                            //   .getElementById("file-upload")
+                                            //   .click()
+                                            setDocModel(!docModel)
+
+                                          }
+                                        >
+                                          {selectedFiles &&
+                                            selectedFiles.length > 0 ? (
+                                            <GoPlusCircle className="w-6 h-6 " />
+                                          ) : (
+                                            <svg
+                                              width={24}
+                                              height={24}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              className="w-6 h-6"
+                                            >
+                                              <path
+                                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              />
+                                            </svg>
+                                          )}
+                                        </button>
                                       </div>
                                       <button
                                         type="button"
-                                        className="p-1 hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                        className="p-1 hover:bg-gray-100 hidden md:block dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
                                         aria-label="Add emoji"
                                         onClick={() =>
                                           setIsEmojiPickerOpen(!isEmojiPickerOpen)
@@ -3463,12 +3509,28 @@ const Chat2 = () => {
 
                     {/* Local participant video */}
                     <div className="relative w-full h-full min-h-[120px] aspect-video">
-                      <VideoParticipant
-                        user={{ videoEnabled: isCameraOn, audioEnabled: isMicrophoneOn, name: user?.userName || "You" }}
-                        selectedChat={selectedChat}
-                        IMG_URL={IMG_URL}
-                        isLocal={true}
-                      />
+                      {isVideoCalling && (
+                        <div className="relative w-full h-full">
+                          <video
+                            ref={localVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
+                            {user?.userName || "You"}
+                          </div>
+                        </div>
+                      )}
+                      {!isVideoCalling && (
+                        <VideoParticipant
+                          user={{ videoEnabled: isCameraOn, audioEnabled: isMicrophoneOn, name: user?.userName || "You" }}
+                          selectedChat={selectedChat}
+                          IMG_URL={IMG_URL}
+                          isLocal={true}
+                        />
+                      )}
                     </div>
 
                     {/* Remote participants */}
@@ -3485,7 +3547,10 @@ const Chat2 = () => {
                                 playsInline
                                 className="w-full h-full object-cover rounded-lg"
                                 ref={(el) => {
-                                  if (el) el.srcObject = stream;
+                                  if (el) {
+                                    el.srcObject = stream;
+                                    el.play().catch(err => console.error("Error playing remote video:", err));
+                                  }
                                 }}
                               />
                               <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">

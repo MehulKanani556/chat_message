@@ -872,19 +872,13 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     try {
       let stream = null;
       try {
+        console.log("Requesting media devices...");
         stream = await navigator.mediaDevices.getUserMedia({
           video: calltype == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
-        // stream = await navigator.mediaDevices.getDisplayMedia({
-        //   video: true,
-        // });
-
-      } catch (err) {
-        console.warn("Could not get media devices:", err);
-      }
-
-      if (stream) {
+        console.log("Media stream obtained:", stream);
+        
         if (calltype == "video") {
           setIsCameraOn(true);
         }
@@ -892,13 +886,21 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
         streamRef.current = stream;
 
         if (localVideoRef?.current) {
+          console.log("Attaching stream to local video element");
           localVideoRef.current.srcObject = stream;
           try {
             await localVideoRef.current.play();
+            console.log("Local video playback started");
           } catch (err) {
             console.error("Error playing local video:", err);
           }
+        } else {
+          console.error("Local video element not found");
         }
+      } catch (err) {
+        console.error("Could not get media devices:", err);
+        setError("Failed to access camera/microphone. Please check your device permissions.");
+        return;
       }
 
       setCallStartTime(new Date());
@@ -1320,9 +1322,6 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     setCallStartTime(null);
     setPeerEmail(null);
     setRemoteStreams(new Map());
-    setAllCallUsers(new Map());
-    setCallStatus("ended");
-    resetCallState();
   };
 
   const rejectCall = (type, userId, groupId) => {

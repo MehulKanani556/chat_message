@@ -287,7 +287,7 @@ const DateHeader = ({ date }) => (
 
 const SystemMessage = ({ message }) => (
   <div className="flex justify-center my-2">
-    <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-sm px-4 py-1.5 rounded-full min-w-80 text-center">
+    <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-[12px] md:text-sm px-4 py-1.5 rounded-full min-w-60 md:min-w-80 text-center">
       {message.content.content
         ?.split("**")
         .map((part, index) =>
