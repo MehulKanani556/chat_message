@@ -1335,6 +1335,7 @@ const Chat2 = () => {
     }
   }, [isVideoCalling, isReceiving]);
 
+
   const handleProfileImageClick = (imageUrl) => {
     setSelectedProfileImage(imageUrl);
     setIsProfileImageModalOpen(true);
@@ -2077,28 +2078,55 @@ const Chat2 = () => {
     return "grid-cols-5 md:grid-cols-5";
   };
 
-  // console.log(remoteStreams);
+  console.log(remoteStreams);
 
-  const demoUsers = [
-    { id: 1, name: 'User 1', videoEnabled: true, audioEnabled: true },
-  ];
+  // const demoUsers = [
+  //   { id: 1, name: 'User 1', videoEnabled: true, audioEnabled: true },
+  // ];
 
-  const [participants, setParticipants] = useState(Array.from(remoteStreams));
-  const [isJoined, setIsJoined] = useState(false);
+  const [participants, setParticipants] = useState(() => {
+    const allStreams = new Map();
+      allStreams.set(userId, localVideoRef?.current?.srcObject);
+    return Array.from(allStreams);
+  });
+  
+  useEffect(() => {
+    setParticipants(prev => {
+      const allStreams = new Map();
+      allStreams.set(userId, localVideoRef?.current?.srcObject);
+      return Array.from(allStreams);
+    });
+  }, [localVideoRef?.current?.srcObject]);
 
-  // Simulate adding a new user when joining
-  const handleJoinCall = () => {
-    if (Array.from(remoteStreams).length < 12) {
-      const newUser = {
-        id: Array.from(remoteStreams).length + 1,
-        name: `User ${Array.from(remoteStreams).length + 1}`,
-        videoEnabled: Math.random() > 0.3,
-        audioEnabled: Math.random() > 0.3
-      };
-      setParticipants([...Array.from(remoteStreams), newUser]);
-    }
-    setIsJoined(true);
-  };
+  useEffect(() => {
+    setParticipants(prev => {
+      const allStreams = new Map(prev);
+      // Update or add remote streams
+      remoteStreams.forEach((stream, id) => {
+        if (allStreams.has(id)) {
+          allStreams.set(id, stream);
+        } else {
+          allStreams.set(id, stream);
+        }
+      });
+      return Array.from(allStreams);
+    });
+  }, [remoteStreams]);
+  // const [isJoined, setIsJoined] = useState(false);
+
+  // // Simulate adding a new user when joining
+  // const handleJoinCall = () => {
+  //   if (Array.from(remoteStreams).length < 12) {
+  //     const newUser = {
+  //       id: Array.from(remoteStreams).length + 1,
+  //       name: `User ${Array.from(remoteStreams).length + 1}`,
+  //       videoEnabled: Math.random() > 0.3,
+  //       audioEnabled: Math.random() > 0.3
+  //     };
+  //     setParticipants([...Array.from(remoteStreams), newUser]);
+  //   }
+  //   setIsJoined(true);
+  // };
 
   // Determine optimal grid configuration based on participant count and screen size
   const getLayoutConfig = (count) => {
@@ -2113,16 +2141,21 @@ const Chat2 = () => {
   const arrangeParticipantsInRows = (participants) => {
     const { cols } = getLayoutConfig(participants.length);
     const rows = [];
-
-    for (let i = 0; i < participants.length; i += cols) {
-      rows.push(participants.slice(i, i + cols));
+    const maxParticipants = 12; // Limit to 12 participants
+    const limitedParticipants = participants.slice(0, maxParticipants);
+    for (let i = 0; i < limitedParticipants.length; i += cols) {
+      rows.push(limitedParticipants.slice(i, i + cols));
     }
+  
 
     return rows;
   };
 
-  const participantRows = arrangeParticipantsInRows(Array.from(remoteStreams));
-  const { gap } = getLayoutConfig(Array.from(remoteStreams).length);
+  console.log("-----------------------------------------",participants);
+  
+
+  const participantRows = arrangeParticipantsInRows(participants);
+  const { gap } = getLayoutConfig(participants.length);
 
   const [showBell, setShowBell] = useState(false);
   useEffect(() => {
@@ -2784,7 +2817,6 @@ const Chat2 = () => {
                                   <RxCross2 />
                                 </button>
                               }
-                              {console.log(videoRef)}
                               <video
                                 ref={videoRef}
                                 className="w-full"
@@ -3495,86 +3527,61 @@ const Chat2 = () => {
                 </div>
               </div>
             ) : (
-
+         
+           
 
               // Video call screen
-              <div className="flex-1 flex flex-col relative overflow-hidden">
-
-                {/* Always show the video grid */}
-                {/* <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-                  <div className={`w-full h-full flex flex-col ${gap} max-w-7xl mx-auto`}>
-                    {participantRows.map((row, rowIndex) => (
-                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
-
-                        {row.map(user => (
-                          <div
-                            key={user.id}
-                            className="flex-1 min-w-0"
-                            style={{ maxWidth: `${100 / getLayoutConfig(Array.from(remoteStreams).length).cols}%` }}
-                          >
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div> */}
+              <div className="flex-1 flex flex-col relative overflow-hidden h-screen">
                 {/* Always show the video grid */}
                 <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-
-                  <div className={`w-full h-full grid ${getLayoutConfig(Object.keys(remoteStreams).length + 1).gap} max-w-7xl mx-auto`}
-                    style={{
-                      gridTemplateColumns: `repeat(${getLayoutConfig(Object.keys(remoteStreams).length + 1).cols}, minmax(0, 1fr))`,
-                      gap: '8px'
-                    }}>
-
-                    {/* Local participant video */}
-                    <div className="relative w-full h-full min-h-[120px] aspect-video">
-                      {isVideoCalling && (
-                        <div className="relative w-full h-full">
-                          <video
-                            ref={localVideoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                          <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-                            {user?.userName || "You"}
-                          </div>
-                        </div>
-                      )}
-                      {!isVideoCalling && (
-                        <VideoParticipant
-                          user={{ videoEnabled: isCameraOn, audioEnabled: isMicrophoneOn, name: user?.userName || "You" }}
-                          selectedChat={selectedChat}
-                          IMG_URL={IMG_URL}
-                          isLocal={true}
-                        />
-                      )}
-                    </div>
-
-                    {/* Remote participants */}
-                    {Array.from(remoteStreams).map(([participantId, stream]) => {
+                  <div className={`w-full h-full flex flex-col ${gap} mx-auto`}>
+                    {participantRows.map((row, rowIndex) => (
+                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1 h-full`}>
+                        {row.map(([participantId, stream]) => {
                       const participant = allUsers.find(user => user._id === participantId);
                       const isCameraEnabled = cameraStatus?.[participantId] !== false;
-
+                      const isLocalUser = participantId === currentUser;
                       return (
-                        <div key={participantId} className="relative w-full h-full min-h-[120px] aspect-video">
+
+                          <div
+                            key={participantId}
+                            className="aspect-video relative bg-primary-dark rounded-lg overflow-hidden"
+                            style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
+                          >
                           {isCameraEnabled ? (
-                            <div className="relative w-full h-full">
-                              <video
-                                autoPlay
-                                playsInline
-                                className="w-full h-full object-cover rounded-lg"
-                                ref={(el) => {
-                                  if (el) {
-                                    el.srcObject = stream;
-                                    el.play().catch(err => console.error("Error playing remote video:", err));
-                                  }
-                                }}
-                              />
+                            <div className="relative w-full">
+                             {isLocalUser ? (
+                                      <video
+                                      ref={localVideoRef}
+                                      autoPlay
+                                      playsInline
+                                      muted
+                                      className=" w-full object-cover rounded-lg"
+                                      onLoadedMetadata={() => {
+                                        // Ensure the video plays when metadata is loaded
+                                        if (localVideoRef.current) {
+                                          localVideoRef.current.play().catch(err => 
+                                            console.error("Error playing local video:", err)
+                                          );
+                                        }
+                                      }}
+                                    />
+                                    ) : (
+                                      // Remote user video
+                                      <video
+                                        autoPlay
+                                        playsInline
+                                        className="h-full w-full object-cover rounded-lg"
+                                        ref={(el) => {
+                                          if (el) {
+                                            el.srcObject = stream;
+                                            el.play().catch(err => console.error("Error playing remote video:", err));
+                                          }
+                                        }}
+                                      />
+                                    )}
                               <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-                                {participant?.userName || "Participant"}
+                                {isLocalUser ? "You": participant?.userName || "Participant"}
                               </div>
                             </div>
                           ) : (
@@ -3603,8 +3610,12 @@ const Chat2 = () => {
                         </div>
                       );
                     })}
+                      </div>
+                    ))}
                   </div>
                 </div>
+                {/* Always show the video grid */}
+             
 
                 {/* Always show controls buttons*/}
                 <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
@@ -3667,14 +3678,7 @@ const Chat2 = () => {
                     <AiOutlineVideoCamera className="text-xl" />
                   </button>
 
-                  {Array.from(remoteStreams).length < 12 && (
-                    <button
-                      className="text-blue-400 hover:text-blue-300 text-xs"
-                      onClick={handleJoinCall}
-                    >
-                      +User
-                    </button>
-                  )}
+                  
                 </div>
               </div>
             )
@@ -4047,7 +4051,7 @@ const Chat2 = () => {
                         ))}
                     </div>
                     <div className="mt-4 flex justify-center w-full">
-                      {Array.from(remoteStreams).length < 12 && (
+                      {participants.length < 12 && (
                         <button
                           className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                           onClick={() => {
