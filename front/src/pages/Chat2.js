@@ -1543,6 +1543,7 @@ const Chat2 = () => {
     const handleClickOutside = (event) => {
       if ((menuOpen || docModel) && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
+        setDocModel(false);
       }
     };
 
@@ -2784,7 +2785,6 @@ const Chat2 = () => {
                                   <RxCross2 />
                                 </button>
                               }
-                              {console.log(videoRef)}
                               <video
                                 ref={videoRef}
                                 className="w-full"
@@ -3167,7 +3167,7 @@ const Chat2 = () => {
                                         />
                                         <button
                                           type="button"
-                                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          className="p-1 hover:bg-gray-100  hidden md:block rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                                           aria-label="Attach file"
                                           onClick={() =>
                                             // document
@@ -3201,7 +3201,7 @@ const Chat2 = () => {
                                         </button>
                                         <button
                                           type="button"
-                                          className="p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                          className={`${selectedFiles.length>0 ||messageInput ||cameraStream ?'hidden md:block' :'block md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
                                           aria-label="Voice message"
                                           onClick={() => { handleVoiceMessage(); startRecording() }}
                                         >
@@ -3212,41 +3212,9 @@ const Chat2 = () => {
                                         </button>
                                       </>
                                     }
-                                    {docModel && (
-                                      <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
-                                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                          <ul className="dark:text-white  flex flex-col ">
-                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(); }}>
-                                              <span className="w-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
-                                              </span>
-                                              <span>Camera</span>
-                                            </li>
-                                            <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
-                                              <span className="w-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
-
-                                              </span>
-                                              <span className="text-nowrap">
-                                                Photo & Video
-                                              </span>
-                                            </li>
-                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
-                                              <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
-                                                <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
-                                                <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
-                                                <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
-                                              </svg>
-
-                                              </span> <span>Document</span></li>
-                                          </ul>
-                                        </div>
-                                      </div>
-                                    )}
-                                    <button
+                                      <button
                                       type="submit"
-                                      className="p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black"
+                                      className={`${selectedFiles.length>0 ||messageInput  ||cameraStream || isRecording?'block md:block' :'hidden md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
                                       onClick={() => {
                                         if (selectedFiles.length > 0) {
                                           handleMultipleFileUpload(selectedFiles); // Upload selected files
@@ -3280,6 +3248,39 @@ const Chat2 = () => {
                                         </g>
                                       </svg>
                                     </button>
+                                    {docModel && (
+                                      <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
+                                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                          <ul className="dark:text-white  flex flex-col ">
+                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(false); }}>
+                                              <span className="w-5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
+                                              </span>
+                                              <span>Camera</span>
+                                            </li>
+                                            <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
+                                              <span className="w-5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
+
+                                              </span>
+                                              <span className="text-nowrap">
+                                                Photo & Video
+                                              </span>
+                                            </li>
+                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
+                                              <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
+                                                <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
+                                                <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
+                                                <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
+                                              </svg>
+
+                                              </span> <span>Document</span></li>
+                                          </ul>
+                                        </div>
+                                      </div>
+                                    )}
+                                  
                                   </div>
                                   {editingMessage && (
                                     <button
