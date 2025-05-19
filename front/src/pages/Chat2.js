@@ -114,6 +114,7 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
+import VideoCallLayout from "../component/VideoCallLayout";
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -3479,153 +3480,173 @@ const Chat2 = () => {
               </div>
             ) : (
        // ===============Video call screen================
-       <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-                {/* Always show the video grid */}
-                  <div className={`flex flex-col justify-center items-center w-full h-[calc(100vh-100px)] ${gap} mx-auto `}>
-                    {participantRows.map((row, rowIndex) => (
-                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
-                        {row.map(([participantId, stream]) => {
-                      const participant = allUsers.find(user => user._id === participantId);
-                      const isCameraEnabled = cameraStatus?.[participantId] !== false;
-                      const isLocalUser = participantId === currentUser;
-                      return (
+       <VideoCallLayout
+       participants={participants}
+       currentUser={currentUser}
+       localVideoRef={localVideoRef}
+       allUsers={allUsers}
+       cameraStatus={cameraStatus}
+       IMG_URL={IMG_URL}
+       endCall={endCall}
+       toggleMicrophone={toggleMicrophone}
+       toggleCamera={toggleCamera}
+       setSelectedChatModule={setSelectedChatModule}
+       selectedChatModule={selectedChatModule}
+       isMicrophoneOn={isMicrophoneOn}
+       isCameraOn={isCameraOn}
+       isVideoCalling={isVideoCalling}
+       isVoiceCalling={isVoiceCalling}
+       setParticipantOpen={setParticipantOpen}
+       setShowFirstSection={setShowFirstSection}
+       cleanupConnection={cleanupConnection}
+       />
+      //  <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+      //           {/* Always show the video grid */}
+      //             <div className={`flex flex-col justify-center items-center w-full h-[calc(100vh-100px)] ${gap} mx-auto `}>
+      //               {participantRows.map((row, rowIndex) => (
+      //                 <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
+      //                   {row.map(([participantId, stream]) => {
+      //                 const participant = allUsers.find(user => user._id === participantId);
+      //                 const isCameraEnabled = cameraStatus?.[participantId] !== false;
+      //                 const isLocalUser = participantId === currentUser;
+      //                 return (
 
-                          <div
-                            key={participantId}
-                            className="flex-1 min-w-0 items-center    justify-center  overflow-hidden relative bg-primary-dark rounded-lg"
-                            style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
-                          >
-                          {isCameraEnabled ? (
-                            <>
-                             {isLocalUser ? (
-                                      <video
-                                      ref={localVideoRef}
-                                      autoPlay
-                                      playsInline
-                                      muted
-                                      className=" w-full object-cover rounded-lg flex-shrink"
-                                      onLoadedMetadata={() => {
-                                        // Ensure the video plays when metadata is loaded
-                                        if (localVideoRef.current) {
-                                          localVideoRef.current.play().catch(err => 
-                                            console.error("Error playing local video:", err)
-                                          );
-                                        }
-                                      }}
-                                    />
-                                    ) : (
-                                      // Remote user video
-                                      <video
-                                        autoPlay
-                                        playsInline
-                                        className="w-full object-cover rounded-lg flex-shrink"
-                                        ref={(el) => {
-                                          if (el) {
-                                            el.srcObject = stream;
-                                            el.play().catch(err => console.error("Error playing remote video:", err));
-                                          }
-                                        }}
-                                      />
-                                    )}
-                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-                                {isLocalUser ? "You": participant?.userName || "Participant"}
-                              </div>
-                            </>
-                          ) : (
-                            <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
-                              <div className="w-20 h-20 rounded-full overflow-hidden">
-                                {participant?.photo && participant.photo !== "null" ? (
-                                  <img
-                                    src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-                                    <span className="text-white text-2xl">
-                                      {participant?.userName?.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
-                                {participant?.userName || "Participant"}
-                                <span className="ml-2 text-xs">(Camera Off)</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                      </div>
-                    ))}
-                  </div>
-                {/* Always show the video grid */}
+      //                     <div
+      //                       key={participantId}
+      //                       className="flex-1 min-w-0 items-center    justify-center  overflow-hidden relative bg-primary-dark rounded-lg"
+      //                       style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
+      //                     >
+      //                     {isCameraEnabled ? (
+      //                       <>
+      //                        {isLocalUser ? (
+      //                                 <video
+      //                                 ref={localVideoRef}
+      //                                 autoPlay
+      //                                 playsInline
+      //                                 muted
+      //                                 className=" w-full object-cover rounded-lg flex-shrink"
+      //                                 onLoadedMetadata={() => {
+      //                                   // Ensure the video plays when metadata is loaded
+      //                                   if (localVideoRef.current) {
+      //                                     localVideoRef.current.play().catch(err => 
+      //                                       console.error("Error playing local video:", err)
+      //                                     );
+      //                                   }
+      //                                 }}
+      //                               />
+      //                               ) : (
+      //                                 // Remote user video
+      //                                 <video
+      //                                   autoPlay
+      //                                   playsInline
+      //                                   className="w-full object-cover rounded-lg flex-shrink"
+      //                                   ref={(el) => {
+      //                                     if (el) {
+      //                                       el.srcObject = stream;
+      //                                       el.play().catch(err => console.error("Error playing remote video:", err));
+      //                                     }
+      //                                   }}
+      //                                 />
+      //                               )}
+      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
+      //                           {isLocalUser ? "You": participant?.userName || "Participant"}
+      //                         </div>
+      //                       </>
+      //                     ) : (
+      //                       <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
+      //                         <div className="w-20 h-20 rounded-full overflow-hidden">
+      //                           {participant?.photo && participant.photo !== "null" ? (
+      //                             <img
+      //                               src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
+      //                               alt="Profile"
+      //                               className="w-full h-full object-cover"
+      //                             />
+      //                           ) : (
+      //                             <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+      //                               <span className="text-white text-2xl">
+      //                                 {participant?.userName?.charAt(0).toUpperCase()}
+      //                               </span>
+      //                             </div>
+      //                           )}
+      //                         </div>
+      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
+      //                           {participant?.userName || "Participant"}
+      //                           <span className="ml-2 text-xs">(Camera Off)</span>
+      //                         </div>
+      //                       </div>
+      //                     )}
+      //                   </div>
+      //                 );
+      //               })}
+      //                 </div>
+      //               ))}
+      //             </div>
+      //           {/* Always show the video grid */}
              
-                {/* Always show controls buttons*/}
-                <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-                  <button
-                    onClick={() => setSelectedChatModule(!selectedChatModule)}
-                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                  >
-                    <BsChatDots className="text-xl" />
-                  </button>
+      //           {/* Always show controls buttons*/}
+      //           <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
+      //             <button
+      //               onClick={() => setSelectedChatModule(!selectedChatModule)}
+      //               className="w-10 grid place-content-center rounded-full h-10 border text-white"
+      //             >
+      //               <BsChatDots className="text-xl" />
+      //             </button>
 
-                  <button
-                    onClick={toggleMicrophone}
-                    className="w-10 grid place-content-center border rounded-full h-10 text-white"
-                  >
-                    {isMicrophoneOn ? (
-                      <IoMicOffOutline className="text-xl" />
-                    ) : (
-                      <IoMicOffCircleOutline className="text-xl" />
-                    )}
-                  </button>
+      //             <button
+      //               onClick={toggleMicrophone}
+      //               className="w-10 grid place-content-center border rounded-full h-10 text-white"
+      //             >
+      //               {isMicrophoneOn ? (
+      //                 <IoMicOffOutline className="text-xl" />
+      //               ) : (
+      //                 <IoMicOffCircleOutline className="text-xl" />
+      //               )}
+      //             </button>
 
-                  <button
-                    onClick={toggleCamera}
-                    className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-                  >
-                    {isCameraOn ? (
-                      <BsCameraVideo className="text-xl" />
-                    ) : (
-                      <BsCameraVideoOff className="text-xl" />
-                    )}
-                  </button>
+      //             <button
+      //               onClick={toggleCamera}
+      //               className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+      //             >
+      //               {isCameraOn ? (
+      //                 <BsCameraVideo className="text-xl" />
+      //               ) : (
+      //                 <BsCameraVideoOff className="text-xl" />
+      //               )}
+      //             </button>
 
-                  <button
-                    onClick={() => {
-                      endCall();
-                      cleanupConnection();
-                    }}
-                    className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <IoCallOutline className="text-2xl" />
-                  </button>
+      //             <button
+      //               onClick={() => {
+      //                 endCall();
+      //                 cleanupConnection();
+      //               }}
+      //               className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+      //             >
+      //               <IoCallOutline className="text-2xl" />
+      //             </button>
 
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <GoUnmute className="text-xl" />
-                  </button>
+      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+      //               <GoUnmute className="text-xl" />
+      //             </button>
 
-                  {(isVideoCalling || isVoiceCalling) && (
-                    <button
-                      onClick={() => {
-                        setParticipantOpen(true);
-                        setShowFirstSection(true);
-                      }}
-                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                    >
-                      <MdOutlineGroupAdd className="text-xl" />
-                    </button>
-                  )}
+      //             {(isVideoCalling || isVoiceCalling) && (
+      //               <button
+      //                 onClick={() => {
+      //                   setParticipantOpen(true);
+      //                   setShowFirstSection(true);
+      //                 }}
+      //                 className="w-10 grid place-content-center rounded-full h-10 border text-white"
+      //               >
+      //                 <MdOutlineGroupAdd className="text-xl" />
+      //               </button>
+      //             )}
 
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <AiOutlineVideoCamera className="text-xl" />
-                  </button>
+      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+      //               <AiOutlineVideoCamera className="text-xl" />
+      //             </button>
 
                   
-                </div>
-              </div>
+      //           </div>
+      //         </div>
             )
           )}
       </div>
