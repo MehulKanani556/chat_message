@@ -4,7 +4,6 @@ import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
-import Draggable from "react-draggable";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
