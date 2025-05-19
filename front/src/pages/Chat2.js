@@ -114,6 +114,7 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
+import VideoCallLayout from "../component/VideoCallLayout";
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -1335,6 +1336,7 @@ const Chat2 = () => {
     }
   }, [isVideoCalling, isReceiving]);
 
+
   const handleProfileImageClick = (imageUrl) => {
     setSelectedProfileImage(imageUrl);
     setIsProfileImageModalOpen(true);
@@ -2042,6 +2044,8 @@ const Chat2 = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isImageModalOpen, selectedImage, messages]);
+
+
   useEffect(() => {
     // Cleanup function to close the participant section when the component unmounts
     return () => {
@@ -2049,57 +2053,37 @@ const Chat2 = () => {
     };
   }, []);
 
-  const handleUserJoin = (userId, stream) => {
-    setUserStreams((prevStreams) => ({
-      ...prevStreams,
-      [userId]: stream, // Store the stream for the user
-    }));
-  };
+  console.log(remoteStreams);
+
+// ---------------------Video call screen Layout-------------------
+  const [participants, setParticipants] = useState(() => {
+    const allStreams = new Map();
+      allStreams.set(userId, localVideoRef?.current?.srcObject);
+    return Array.from(allStreams);
+  });
+  
+  useEffect(() => {
+    setParticipants(prev => {
+      const allStreams = new Map();
+      allStreams.set(userId, localVideoRef?.current?.srcObject);
+      return Array.from(allStreams);
+    });
+  }, [localVideoRef?.current?.srcObject]);
 
   useEffect(() => {
-    if (!socket) return; // Only add listener if socket is ready
-
-    const handler = (data) => setIncomingCall(data);
-    socket.on('incoming-call', handler);
-
-    // Clean up the listener when the component unmounts or socket changes
-    return () => {
-      socket.off('incoming-call', handler);
-    };
-  }, [socket]);
-
-  const getGridCols = (count) => {
-    if (count === 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-2";
-    if (count <= 4) return "grid-cols-2 md:grid-cols-2";
-    if (count <= 6) return "grid-cols-3 md:grid-cols-3";
-    if (count <= 9) return "grid-cols-3 md:grid-cols-3";
-    if (count <= 12) return "grid-cols-4 md:grid-cols-4";
-    return "grid-cols-5 md:grid-cols-5";
-  };
-
-  // console.log(remoteStreams);
-
-  const demoUsers = [
-    { id: 1, name: 'User 1', videoEnabled: true, audioEnabled: true },
-  ];
-
-  const [participants, setParticipants] = useState(Array.from(remoteStreams));
-  const [isJoined, setIsJoined] = useState(false);
-
-  // Simulate adding a new user when joining
-  const handleJoinCall = () => {
-    if (Array.from(remoteStreams).length < 12) {
-      const newUser = {
-        id: Array.from(remoteStreams).length + 1,
-        name: `User ${Array.from(remoteStreams).length + 1}`,
-        videoEnabled: Math.random() > 0.3,
-        audioEnabled: Math.random() > 0.3
-      };
-      setParticipants([...Array.from(remoteStreams), newUser]);
-    }
-    setIsJoined(true);
-  };
+    setParticipants(prev => {
+      const allStreams = new Map(prev);
+      // Update or add remote streams
+      remoteStreams.forEach((stream, id) => {
+        if (allStreams.has(id)) {
+          allStreams.set(id, stream);
+        } else {
+          allStreams.set(id, stream);
+        }
+      });
+      return Array.from(allStreams);
+    });
+  }, [remoteStreams]);
 
   // Determine optimal grid configuration based on participant count and screen size
   const getLayoutConfig = (count) => {
@@ -2114,16 +2098,16 @@ const Chat2 = () => {
   const arrangeParticipantsInRows = (participants) => {
     const { cols } = getLayoutConfig(participants.length);
     const rows = [];
-
-    for (let i = 0; i < participants.length; i += cols) {
-      rows.push(participants.slice(i, i + cols));
+    const maxParticipants = 12; // Limit to 12 participants
+    const limitedParticipants = participants.slice(0, maxParticipants);
+    for (let i = 0; i < limitedParticipants.length; i += cols) {
+      rows.push(limitedParticipants.slice(i, i + cols));
     }
-
     return rows;
   };
 
-  const participantRows = arrangeParticipantsInRows(Array.from(remoteStreams));
-  const { gap } = getLayoutConfig(Array.from(remoteStreams).length);
+  const participantRows = arrangeParticipantsInRows(participants);
+  const { gap } = getLayoutConfig(participants.length);
 
   const [showBell, setShowBell] = useState(false);
   useEffect(() => {
@@ -2153,8 +2137,7 @@ const Chat2 = () => {
           }}
         />
       )}
-
-      {/* Right Sidebar */}
+{/* ==============================Right Sidebar============================== */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           {/* Left Side */}
@@ -2703,7 +2686,7 @@ const Chat2 = () => {
                         )}
 
 
-                        {/*========== Messages ==========*/}
+{/*========================== Messages ==============================*/}
                         <div className="relative">
                           {/* {console.log("replyingTo",replyingTo)} */}
                           {isDragging && (
@@ -3297,7 +3280,7 @@ const Chat2 = () => {
                               </div>
                             ))}
                         </div>
-                        {/* Show Send to Bottom button only if user has scrolled up */}
+    {/* Show Send to Bottom button only if user has scrolled up */}
                         {showScrollToBottom && (
                           <button
                             type="button"
@@ -3315,6 +3298,8 @@ const Chat2 = () => {
                   </>
                 )}
             </div>
+
+{/* ==============================right sidebar=========================================== */}
 
             <div
               className={`transition-all duration-300 ease-in-out shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
@@ -3384,21 +3369,18 @@ const Chat2 = () => {
                 />
               )}
             </div>
+
           </>
         </>
       )}
 
-      {/*========== screen share ==========*/}
+{/*=========================================== screen share ==================================*/}
       <div
-        className={`flex-grow flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
+        className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
           ? ""
           : "hidden"
           } ${participantOpen ? "mr-96" : ""}`}
       >
-        <div
-          className={`flex-1 relative ${isReceiving ? "flex items-center justify-center" : `grid ${getGridColumns(Object.keys(userStreams).length)} gap-4`}`}
-        >
-
           {Object.keys(remoteStreams).length > 0 ? (
             Object.keys(remoteStreams).map((userId) => (
               <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
@@ -3409,6 +3391,9 @@ const Chat2 = () => {
               </div>
             ))
           ) : (
+
+
+      // ========================screen share section===============
             isVoiceCalling ? (
               // Voice call screen
               <div className="relative flex items-center justify-center w-full h-full">
@@ -3496,191 +3481,176 @@ const Chat2 = () => {
                 </div>
               </div>
             ) : (
+       // ===============Video call screen================
+       <VideoCallLayout
+       participants={participants}
+       currentUser={currentUser}
+       localVideoRef={localVideoRef}
+       allUsers={allUsers}
+       cameraStatus={cameraStatus}
+       IMG_URL={IMG_URL}
+       endCall={endCall}
+       toggleMicrophone={toggleMicrophone}
+       toggleCamera={toggleCamera}
+       setSelectedChatModule={setSelectedChatModule}
+       selectedChatModule={selectedChatModule}
+       isMicrophoneOn={isMicrophoneOn}
+       isCameraOn={isCameraOn}
+       isVideoCalling={isVideoCalling}
+       isVoiceCalling={isVoiceCalling}
+       setParticipantOpen={setParticipantOpen}
+       setShowFirstSection={setShowFirstSection}
+       cleanupConnection={cleanupConnection}
+       />
+      //  <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+      //           {/* Always show the video grid */}
+      //             <div className={`flex flex-col justify-center items-center w-full h-[calc(100vh-100px)] ${gap} mx-auto `}>
+      //               {participantRows.map((row, rowIndex) => (
+      //                 <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
+      //                   {row.map(([participantId, stream]) => {
+      //                 const participant = allUsers.find(user => user._id === participantId);
+      //                 const isCameraEnabled = cameraStatus?.[participantId] !== false;
+      //                 const isLocalUser = participantId === currentUser;
+      //                 return (
 
+      //                     <div
+      //                       key={participantId}
+      //                       className="flex-1 min-w-0 items-center    justify-center  overflow-hidden relative bg-primary-dark rounded-lg"
+      //                       style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
+      //                     >
+      //                     {isCameraEnabled ? (
+      //                       <>
+      //                        {isLocalUser ? (
+      //                                 <video
+      //                                 ref={localVideoRef}
+      //                                 autoPlay
+      //                                 playsInline
+      //                                 muted
+      //                                 className=" w-full object-cover rounded-lg flex-shrink"
+      //                                 onLoadedMetadata={() => {
+      //                                   // Ensure the video plays when metadata is loaded
+      //                                   if (localVideoRef.current) {
+      //                                     localVideoRef.current.play().catch(err => 
+      //                                       console.error("Error playing local video:", err)
+      //                                     );
+      //                                   }
+      //                                 }}
+      //                               />
+      //                               ) : (
+      //                                 // Remote user video
+      //                                 <video
+      //                                   autoPlay
+      //                                   playsInline
+      //                                   className="w-full object-cover rounded-lg flex-shrink"
+      //                                   ref={(el) => {
+      //                                     if (el) {
+      //                                       el.srcObject = stream;
+      //                                       el.play().catch(err => console.error("Error playing remote video:", err));
+      //                                     }
+      //                                   }}
+      //                                 />
+      //                               )}
+      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
+      //                           {isLocalUser ? "You": participant?.userName || "Participant"}
+      //                         </div>
+      //                       </>
+      //                     ) : (
+      //                       <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
+      //                         <div className="w-20 h-20 rounded-full overflow-hidden">
+      //                           {participant?.photo && participant.photo !== "null" ? (
+      //                             <img
+      //                               src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
+      //                               alt="Profile"
+      //                               className="w-full h-full object-cover"
+      //                             />
+      //                           ) : (
+      //                             <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+      //                               <span className="text-white text-2xl">
+      //                                 {participant?.userName?.charAt(0).toUpperCase()}
+      //                               </span>
+      //                             </div>
+      //                           )}
+      //                         </div>
+      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
+      //                           {participant?.userName || "Participant"}
+      //                           <span className="ml-2 text-xs">(Camera Off)</span>
+      //                         </div>
+      //                       </div>
+      //                     )}
+      //                   </div>
+      //                 );
+      //               })}
+      //                 </div>
+      //               ))}
+      //             </div>
+      //           {/* Always show the video grid */}
+             
+      //           {/* Always show controls buttons*/}
+      //           <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
+      //             <button
+      //               onClick={() => setSelectedChatModule(!selectedChatModule)}
+      //               className="w-10 grid place-content-center rounded-full h-10 border text-white"
+      //             >
+      //               <BsChatDots className="text-xl" />
+      //             </button>
 
-              // Video call screen
-              <div className="flex-1 flex flex-col relative overflow-hidden">
+      //             <button
+      //               onClick={toggleMicrophone}
+      //               className="w-10 grid place-content-center border rounded-full h-10 text-white"
+      //             >
+      //               {isMicrophoneOn ? (
+      //                 <IoMicOffOutline className="text-xl" />
+      //               ) : (
+      //                 <IoMicOffCircleOutline className="text-xl" />
+      //               )}
+      //             </button>
 
-                {/* Always show the video grid */}
-                {/* <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-                  <div className={`w-full h-full flex flex-col ${gap} max-w-7xl mx-auto`}>
-                    {participantRows.map((row, rowIndex) => (
-                      <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
+      //             <button
+      //               onClick={toggleCamera}
+      //               className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+      //             >
+      //               {isCameraOn ? (
+      //                 <BsCameraVideo className="text-xl" />
+      //               ) : (
+      //                 <BsCameraVideoOff className="text-xl" />
+      //               )}
+      //             </button>
 
-                        {row.map(user => (
-                          <div
-                            key={user.id}
-                            className="flex-1 min-w-0"
-                            style={{ maxWidth: `${100 / getLayoutConfig(Array.from(remoteStreams).length).cols}%` }}
-                          >
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div> */}
-                {/* Always show the video grid */}
-                <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+      //             <button
+      //               onClick={() => {
+      //                 endCall();
+      //                 cleanupConnection();
+      //               }}
+      //               className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+      //             >
+      //               <IoCallOutline className="text-2xl" />
+      //             </button>
 
-                  <div className={`w-full h-full grid ${getLayoutConfig(Object.keys(remoteStreams).length + 1).gap} max-w-7xl mx-auto`}
-                    style={{
-                      gridTemplateColumns: `repeat(${getLayoutConfig(Object.keys(remoteStreams).length + 1).cols}, minmax(0, 1fr))`,
-                      gap: '8px'
-                    }}>
+      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+      //               <GoUnmute className="text-xl" />
+      //             </button>
 
-                    {/* Local participant video */}
-                    <div className="relative w-full h-full min-h-[120px] aspect-video">
-                      {isVideoCalling && (
-                        <div className="relative w-full h-full">
-                          <video
-                            ref={localVideoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                          <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-                            {user?.userName || "You"}
-                          </div>
-                        </div>
-                      )}
-                      {!isVideoCalling && (
-                        <VideoParticipant
-                          user={{ videoEnabled: isCameraOn, audioEnabled: isMicrophoneOn, name: user?.userName || "You" }}
-                          selectedChat={selectedChat}
-                          IMG_URL={IMG_URL}
-                          isLocal={true}
-                        />
-                      )}
-                    </div>
+      //             {(isVideoCalling || isVoiceCalling) && (
+      //               <button
+      //                 onClick={() => {
+      //                   setParticipantOpen(true);
+      //                   setShowFirstSection(true);
+      //                 }}
+      //                 className="w-10 grid place-content-center rounded-full h-10 border text-white"
+      //               >
+      //                 <MdOutlineGroupAdd className="text-xl" />
+      //               </button>
+      //             )}
 
-                    {/* Remote participants */}
-                    {Array.from(remoteStreams).map(([participantId, stream]) => {
-                      const participant = allUsers.find(user => user._id === participantId);
-                      const isCameraEnabled = cameraStatus?.[participantId] !== false;
+      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+      //               <AiOutlineVideoCamera className="text-xl" />
+      //             </button>
 
-                      return (
-                        <div key={participantId} className="relative w-full h-full min-h-[120px] aspect-video">
-                          {isCameraEnabled ? (
-                            <div className="relative w-full h-full">
-                              <video
-                                autoPlay
-                                playsInline
-                                className="w-full h-full object-cover rounded-lg"
-                                ref={(el) => {
-                                  if (el) {
-                                    el.srcObject = stream;
-                                    el.play().catch(err => console.error("Error playing remote video:", err));
-                                  }
-                                }}
-                              />
-                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-                                {participant?.userName || "Participant"}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
-                              <div className="w-20 h-20 rounded-full overflow-hidden">
-                                {participant?.photo && participant.photo !== "null" ? (
-                                  <img
-                                    src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-                                    <span className="text-white text-2xl">
-                                      {participant?.userName?.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
-                                {participant?.userName || "Participant"}
-                                <span className="ml-2 text-xs">(Camera Off)</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Always show controls buttons*/}
-                <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-                  <button
-                    onClick={() => setSelectedChatModule(!selectedChatModule)}
-                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                  >
-                    <BsChatDots className="text-xl" />
-                  </button>
-
-                  <button
-                    onClick={toggleMicrophone}
-                    className="w-10 grid place-content-center border rounded-full h-10 text-white"
-                  >
-                    {isMicrophoneOn ? (
-                      <IoMicOffOutline className="text-xl" />
-                    ) : (
-                      <IoMicOffCircleOutline className="text-xl" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={toggleCamera}
-                    className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-                  >
-                    {isCameraOn ? (
-                      <BsCameraVideo className="text-xl" />
-                    ) : (
-                      <BsCameraVideoOff className="text-xl" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      endCall();
-                      cleanupConnection();
-                    }}
-                    className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <IoCallOutline className="text-2xl" />
-                  </button>
-
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <GoUnmute className="text-xl" />
-                  </button>
-
-                  {(isVideoCalling || isVoiceCalling) && (
-                    <button
-                      onClick={() => {
-                        setParticipantOpen(true);
-                        setShowFirstSection(true);
-                      }}
-                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                    >
-                      <MdOutlineGroupAdd className="text-xl" />
-                    </button>
-                  )}
-
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <AiOutlineVideoCamera className="text-xl" />
-                  </button>
-
-                  {Array.from(remoteStreams).length < 12 && (
-                    <button
-                      className="text-blue-400 hover:text-blue-300 text-xs"
-                      onClick={handleJoinCall}
-                    >
-                      +User
-                    </button>
-                  )}
-                </div>
-              </div>
+                  
+      //           </div>
+      //         </div>
             )
           )}
-        </div >
       </div>
 
 
@@ -4048,7 +4018,7 @@ const Chat2 = () => {
                         ))}
                     </div>
                     <div className="mt-4 flex justify-center w-full">
-                      {Array.from(remoteStreams).length < 12 && (
+                      {participants.length < 12 && (
                         <button
                           className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                           onClick={() => {

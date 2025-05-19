@@ -84,6 +84,9 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     groupId: null,
   });
 
+  console.log(localVideoRef);
+  
+
   const dispatch = useDispatch();
 
   // Helper functions for call management
@@ -667,7 +670,7 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
           setIsVoiceCalling(false);
           cleanupConnection();
         }
-      }, 30000);
+      }, 3000000);
     }
 
     // Cleanup timeout on unmount or when dependencies change
