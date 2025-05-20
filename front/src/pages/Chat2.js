@@ -2255,7 +2255,7 @@ const Chat2 = () => {
                                     "/"
                                   )}`}
                                   alt="Profile"
-                                  className="object-cover"
+                                  className="object-cover h-full"
                                 />
                               ) : (
                                 <span className="text-white text-xl font-bold">
@@ -3184,7 +3184,7 @@ const Chat2 = () => {
                                         </button>
                                         <button
                                           type="button"
-                                          className={`${selectedFiles.length>0 ||messageInput ||cameraStream ?'hidden md:block' :'block md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
+                                          className={`${selectedFiles.length > 0 || messageInput || cameraStream ? 'hidden md:block' : 'block md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
                                           aria-label="Voice message"
                                           onClick={() => { handleVoiceMessage(); startRecording() }}
                                         >
@@ -3195,9 +3195,9 @@ const Chat2 = () => {
                                         </button>
                                       </>
                                     }
-                                      <button
+                                    <button
                                       type="submit"
-                                      className={`${selectedFiles.length>0 ||messageInput  ||cameraStream || isRecording?'block md:block' :'hidden md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
+                                      className={`${selectedFiles.length > 0 || messageInput || cameraStream || isRecording ? 'block md:block' : 'hidden md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
                                       onClick={() => {
                                         if (selectedFiles.length > 0) {
                                           handleMultipleFileUpload(selectedFiles); // Upload selected files
@@ -3263,7 +3263,7 @@ const Chat2 = () => {
                                         </div>
                                       </div>
                                     )}
-                                  
+
                                   </div>
                                   {editingMessage && (
                                     <button
@@ -3302,10 +3302,10 @@ const Chat2 = () => {
 {/* ==============================right sidebar=========================================== */}
 
             <div
-              className={`transition-all duration-300 ease-in-out shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
                 isGroupCreateModalOpen ||
                 (isUserProfileModalOpen && !selectedChat.members)
-                ? "2xl:w-[380px] xs:w-full opacity-100"
+                ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
                 : "w-0 opacity-0"
                 }`}
               style={{
