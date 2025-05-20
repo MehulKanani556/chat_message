@@ -35,9 +35,9 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
-  const [currentUser] = useState(sessionStorage.getItem("userId")); 
+  const [currentUser] = useState(sessionStorage.getItem("userId"));
   const { user, } =
-  useSelector((state) => state.user);
+    useSelector((state) => state.user);
 
   const dispatch = useDispatch();
 
@@ -106,13 +106,15 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   }, [messages]);
 
   return (
-    // <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
     <div
+      className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)", }} >
+      {/* <div
       className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
       }}
-    >
+    > */}
       {attachFile ? (
         <>
           <div>
@@ -144,31 +146,28 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
             <div className="mt-5">
               <div className="flex ">
                 <button
-                  className={`flex-1 px-4 py-3 text-sm font-medium border-b  ${
-                    activeTab === "media"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b  ${activeTab === "media"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    }`}
                   onClick={() => setActiveTab("media")}
                 >
                   Media
                 </button>
                 <button
-                  className={`flex-1 px-4 py-3 text-sm font-medium border-b ${
-                    activeTab === "docs"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b ${activeTab === "docs"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    }`}
                   onClick={() => setActiveTab("docs")}
                 >
                   Docs
                 </button>
                 <button
-                  className={`flex-1 px-4 py-3 text-sm font-medium border-b   ${
-                    activeTab === "links"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
-                  }`}
+                  className={`flex-1 px-4 py-3 text-sm font-medium border-b   ${activeTab === "links"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    }`}
                   onClick={() => setActiveTab("links")}
                 >
                   Links
@@ -218,8 +217,8 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                 {message.content?.fileType?.includes(
                                   "image/"
                                 ) ||
-                                message.content?.fileType?.includes("png") ||
-                                message.content?.fileType?.includes("gif") ? (
+                                  message.content?.fileType?.includes("png") ||
+                                  message.content?.fileType?.includes("gif") ? (
                                   <img
                                     src={`${IMG_URL}${message.content.fileUrl.replace(
                                       /\\/g,
@@ -347,32 +346,32 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                       className="w-10 h-10 text-red-500"
                                     />
                                   ) : message.content.fileType?.includes(
-                                      "word"
-                                    ) ? (
+                                    "word"
+                                  ) ? (
                                     <img
                                       src={require("../img/word.png")}
                                       alt="Word Icon"
                                       className="w-10 h-10 text-blue-500"
                                     />
                                   ) : message.content.fileType?.includes(
-                                      "excel"
-                                    ) ? (
+                                    "excel"
+                                  ) ? (
                                     <img
                                       src={require("../img/execel.png")}
                                       alt="Excel Icon"
                                       className="w-10 h-10 text-green-500"
                                     />
                                   ) : message.content.fileType?.includes(
-                                      "audio"
-                                    ) ? (
+                                    "audio"
+                                  ) ? (
                                     <img
                                       src={require("../img/audio.png")}
                                       alt="Audio Icon"
                                       className="w-10 h-10 text-purple-500"
                                     />
                                   ) : message.content.fileType?.includes(
-                                      "zip"
-                                    ) ? (
+                                    "zip"
+                                  ) ? (
                                     <img
                                       src={require("../img/zip.png")}
                                       alt="Zip Icon"
@@ -537,9 +536,9 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden mb-3">
                   {selectedChat?.photo &&
-                  selectedChat.photo !== "null" &&
-                  (selectedChat?.profilePhoto == "Everyone" ||
-                    selectedChat.isGroup) ? (
+                    selectedChat.photo !== "null" &&
+                    (selectedChat?.profilePhoto == "Everyone" ||
+                      selectedChat.isGroup) ? (
                     <img
                       src={`${IMG_URL}${selectedChat?.photo}`}
                       alt="Profile"
@@ -548,10 +547,10 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                   ) : (
                     <div
                       className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                      // style={{
-                      //   background:
-                      //     "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                      // }}
+                    // style={{
+                    //   background:
+                    //     "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
+                    // }}
                     >
                       <span className="text-primary font-medium text-2xl">
                         {selectedChat?.userName.charAt(0).toUpperCase()}
@@ -710,16 +709,16 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                                     ) ? (
                                       <FaFilePdf className="w-12 h-12 text-red-500" />
                                     ) : message.content.fileType?.includes(
-                                        "word"
-                                      ) ? (
+                                      "word"
+                                    ) ? (
                                       <FaFileWord className="w-12 h-12 text-blue-500" />
                                     ) : message.content.fileType?.includes(
-                                        "excel"
-                                      ) ? (
+                                      "excel"
+                                    ) ? (
                                       <FaFileExcel className="w-12 h-12 text-green-500" />
                                     ) : message.content.fileType?.includes(
-                                        "audio"
-                                      ) ? (
+                                      "audio"
+                                    ) ? (
                                       <FaFileAudio className="w-12 h-12 text-purple-500" />
                                     ) : (
                                       <FaFile className="w-12 h-12 text-gray-500" />
@@ -757,63 +756,60 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
-              <button
-                className="w-full flex justify-between items-center"
+              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+                <button
+                  className="w-full flex justify-between items-center"
                 // onClick={() => {
                 //   setGroupUsers(selectedChat?.members);
                 //   setIsGroupModalOpen(false);
                 //   setIsModalOpen(true);
                 // }}
-              >
-                <div className="flex items-center space-x-2">
-                  <IoNotificationsOutline size={18} />
-                  <span className="font-medium">Notification</span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={enabled}
-                    onChange={() => setEnabled(!enabled)}
-                    className="sr-only peer"
-                  />
-                  <div
-                    className={`w-9 h-5 rounded-full transition-colors duration-300 ${
-                      enabled ? "bg-primary" : "bg-gray-300 dark:bg-white/15"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                        enabled ? "translate-x-4" : ""
-                      }`}
-                    ></div>
+                >
+                  <div className="flex items-center space-x-2">
+                    <IoNotificationsOutline size={18} />
+                    <span className="font-medium">Notification</span>
                   </div>
-                </label>
-              </button>
-            </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={() => setEnabled(!enabled)}
+                      className="sr-only peer"
+                    />
+                    <div
+                      className={`w-9 h-5 rounded-full transition-colors duration-300 ${enabled ? "bg-primary" : "bg-gray-300 dark:bg-white/15"
+                        }`}
+                    >
+                      <div
+                        className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full shadow-md transform transition-transform duration-300 ${enabled ? "translate-x-4" : ""
+                          }`}
+                      ></div>
+                    </div>
+                  </label>
+                </button>
+              </div>
 
-            <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
-              <button
-                className="w-full flex justify-between items-center text-[#FF0000]"
-                onClick={async () => {
-                  await dispatch(
-                    blockUser({
-                      selectedUserId: selectedChat?._id,
-                    })
-                  );
-                  await dispatch(getUser(currentUser));
-                  await dispatch(getAllMessageUsers());
-                }}
-              >
-                <div className="flex items-center space-x-2">
-                  <MdBlock size={18} className={""} />
-                  <span className="font-medium"> {user.blockedUsers?.includes(selectedChat?._id)? "Unblock": "Block"}</span>
-                </div>
-              </button>
+              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
+                <button
+                  className="w-full flex justify-between items-center text-[#FF0000]"
+                  onClick={async () => {
+                    await dispatch(
+                      blockUser({
+                        selectedUserId: selectedChat?._id,
+                      })
+                    );
+                    await dispatch(getUser(currentUser));
+                    await dispatch(getAllMessageUsers());
+                  }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <MdBlock size={18} className={""} />
+                    <span className="font-medium"> {user.blockedUsers?.includes(selectedChat?._id) ? "Unblock" : "Block"}</span>
+                  </div>
+                </button>
+              </div>
             </div>
-
           </div>
         </>
       )}
