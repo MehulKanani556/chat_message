@@ -2277,7 +2277,7 @@ const Chat2 = () => {
                                     "/"
                                   )}`}
                                   alt="Profile"
-                                  className="object-cover"
+                                  className="object-cover h-full"
                                 />
                               ) : (
                                 <span className="text-white text-xl font-bold">
@@ -3432,10 +3432,10 @@ const Chat2 = () => {
 {/* ==============================right sidebar=========================================== */}
 
             <div
-              className={`transition-all duration-300 ease-in-out shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
                 isGroupCreateModalOpen ||
                 (isUserProfileModalOpen && !selectedChat.members)
-                ? "2xl:w-[380px] xs:w-full opacity-100"
+                ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
                 : "w-0 opacity-0"
                 }`}
               style={{

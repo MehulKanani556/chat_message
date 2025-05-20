@@ -72,35 +72,17 @@ const CallHistory = ({ setShowLeftSidebar }) => {
   };
 
   return (
-    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full flex flex-col relative"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
       }}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div className="flex items-center">
-          {/* <button
-            onClick={() =>{
-              setShowLeftSidebar(false);
-            }}
-            className="mr-4 text-gray-600 dark:text-gray-300 md600:hidden"
-          >
-            <FaChevronLeft  size={16}/>
-          </button> */}
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Call History</h2>
         </div>
-        {/* <button 
-          onClick={toggleMissedCallsFilter}
-          className={`px-3 py-1 rounded-full text-sm ${
-            showMissedCallsOnly 
-              ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-200' 
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-          }`}
-        >
-          {showMissedCallsOnly ? 'Show All Calls' : 'Missed Calls Only'}
-        </button> */}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-80px)] scrollbar-hide">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>

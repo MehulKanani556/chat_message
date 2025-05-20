@@ -299,8 +299,8 @@ const GroupProfile = ({
               <div className="flex ">
                 <button
                   className={`flex-1 px-4 py-3 text-sm font-medium border-b  ${activeTab === "media"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
                     }`}
                   onClick={() => setActiveTab("media")}
                 >
@@ -308,8 +308,8 @@ const GroupProfile = ({
                 </button>
                 <button
                   className={`flex-1 px-4 py-3 text-sm font-medium border-b ${activeTab === "docs"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
                     }`}
                   onClick={() => setActiveTab("docs")}
                 >
@@ -317,8 +317,8 @@ const GroupProfile = ({
                 </button>
                 <button
                   className={`flex-1 px-4 py-3 text-sm font-medium border-b   ${activeTab === "links"
-                      ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
-                      : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
+                    ? "text-primary-dark dark:text-white bg-primary/20 border-primary"
+                    : "text-gray-600 dark:text-gray-400 dark:border-gray-700 bg-primary-light/20"
                     }`}
                   onClick={() => setActiveTab("links")}
                 >
@@ -752,7 +752,7 @@ const GroupProfile = ({
 
             <div className="overflow-y-auto scrollbar-hide h-[calc(100vh-300px)]">
 
-              <div className="max-w-md flex mb-3 gap-5">
+              <div className="max-w-md flex gap-5 mx-auto mb-5">
 
                 <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
                   <IoCallOutline
@@ -778,7 +778,7 @@ const GroupProfile = ({
                 </button>
               </div>
               {/* Accordion content */}
-              <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5">
+              <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5 mx-auto mt-5">
                 {/* User Info Section */}
                 <div className="border-b border-gray-300">
                   <button className="w-full px-4 py-3 flex justify-between items-center">
@@ -881,7 +881,7 @@ const GroupProfile = ({
                 </div>
               </div>
 
-              <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3">
+              <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3 mx-auto">
                 <button className="w-full px-2 flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <HiOutlineUserGroup size={18} />
@@ -893,7 +893,7 @@ const GroupProfile = ({
                   ref={containerRef}
                   className="flex flex-col h-[190px] overflow-y-auto scrollbar-hide p-2"
                 >
-                  {selectedChat?.members
+                  {selectedChat?.members?.length > 0 ? selectedChat.members
                     .slice()
                     .sort((a, b) => (a == userId ? -1 : b == userId ? 1 : 0))
                     .map((member, index) => {
@@ -915,8 +915,8 @@ const GroupProfile = ({
                               />
                             ) : (
                               <span className="text-gray-900 text-lg font-bold">
-                                {user.userName
-                                  .split(" ")
+                                {user?.userName
+                                  ?.split(" ")
                                   .map((n) => n[0].toUpperCase())
                                   .join("")}
                               </span>
@@ -951,11 +951,13 @@ const GroupProfile = ({
                           )}
                         </div>
                       );
-                    })}
+                    }) : (
+                    <div className="text-center text-gray-500">No members found</div>
+                  )}
                 </div>
               </div>
 
-              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3 mx-auto">
                 <button
                   className="w-full flex justify-between items-center"
                 // onClick={() => {
@@ -985,7 +987,7 @@ const GroupProfile = ({
                 </button>
               </div>
 
-              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3 mx-auto">
                 <button
                   className="w-full flex justify-between items-center"
                   onClick={() => {
@@ -1002,7 +1004,7 @@ const GroupProfile = ({
                 </button>
               </div>
 
-              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
+              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3 mx-auto">
                 <button
                   className="w-full flex justify-between items-center text-red-600"
                   onClick={() => handleLeaveGroup(userId)}
