@@ -117,11 +117,11 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
-<<<<<<< Updated upstream
+
 import VideoCallLayout from "../component/VideoCallLayout";
-=======
+
 import { decryptMessage } from "../utils/decryptMess";
->>>>>>> Stashed changes
+
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
