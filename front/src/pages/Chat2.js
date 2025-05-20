@@ -24,6 +24,9 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaRegBell,
+  FaImage,
+  FaVideo,
+  FaMusic,
 } from "react-icons/fa";
 import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
 import {
@@ -114,7 +117,11 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
+<<<<<<< Updated upstream
 import VideoCallLayout from "../component/VideoCallLayout";
+=======
+import { decryptMessage } from "../utils/decryptMess";
+>>>>>>> Stashed changes
 
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
@@ -753,17 +760,23 @@ const Chat2 = () => {
   //===========handle multiple file upload===========
 
   const handleMultipleFileUpload = async (files, userId) => {
-    const filesArray = Array.from(files); // Convert FileList to an array
+    const filesArray = Array.from(files);
     for (const file of filesArray) {
       const formData = new FormData();
       formData.append("file", file);
-      console.log("multiple file upload", file);
 
       try {
         const response = await axios.post(`${BASE_URL}/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(prev => ({
+              ...prev,
+              [file.name]: { percentCompleted, size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`, fileType: file.type },
+            }));
           },
         });
 
@@ -780,6 +793,12 @@ const Chat2 = () => {
         }
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
+      } finally {
+        setUploadProgress(prev => {
+          const updated = { ...prev };
+          delete updated[file.name];
+          return updated;
+        });
       }
     }
   };
@@ -2118,6 +2137,10 @@ const Chat2 = () => {
     }
   }, [invitedUsers]);
 
+  const [uploadProgress, setUploadProgress] = useState({});
+  console.log("aa", uploadProgress)
+
+
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -2141,7 +2164,6 @@ const Chat2 = () => {
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           {/* Left Side */}
-
           <div
             className={`${window.innerWidth <= 600
               ? "ml-0 w-full"
@@ -2529,9 +2551,9 @@ const Chat2 = () => {
                             </div>
 
                             {/* Show three dots menu on mobile */}
-                            <div className="md:hidden relative mobile-menu flex items-center gap-2">
+                            <div className="md:hidden relative mobile-menu flex items-center gap-2 dark:text-white">
                               <IoMdSearch
-                                className="w-6 h-6 cursor-pointer"
+                                className="w-6 h-6 cursor-pointer "
                                 onClick={() =>
                                   setIsSearchBoxOpen((prev) => !prev)
                                 }
@@ -2703,22 +2725,40 @@ const Chat2 = () => {
                               </div>
                             </div>
                           )}
+                          {console.log(Object.keys(uploadProgress).length)}
+                          {console.log("height:", 
+                                selectedFiles.length > 0
+                                  ? "calc(100vh -  276px)"
+                                  : Object.keys(uploadProgress).length != 0
+                                    ? "calc(100vh - 234 px)"
+                                    : replyingTo
+                                      ? replyingTo?.content?.fileType &&
+                                        replyingTo?.content?.fileType?.startsWith(
+                                          "image/"
+                                        )
+                                        ? "calc(100vh - 280px)"
+                                        : "calc(100vh -  229px)"
+                                      : window.innerWidth < 768
+                                        ? "calc(100vh - 179px)"
+                                        : "calc(100vh - 173px")}
                           <div
                             className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
                             style={{
                               height:
                                 selectedFiles.length > 0
                                   ? "calc(100vh -  276px)"
-                                  : replyingTo
-                                    ? replyingTo?.content?.fileType &&
-                                      replyingTo?.content?.fileType?.startsWith(
-                                        "image/"
-                                      )
-                                      ? "calc(100vh - 280px)"
-                                      : "calc(100vh -  229px)"
-                                    : window.innerWidth < 768
-                                      ? "calc(100vh - 179px)"
-                                      : "calc(100vh - 173px)",
+                                  : Object.keys(uploadProgress).length != 0
+                                    ? "calc(100vh - 250px)"
+                                    : replyingTo
+                                      ? replyingTo?.content?.fileType &&
+                                        replyingTo?.content?.fileType?.startsWith(
+                                          "image/"
+                                        )
+                                        ? "calc(100vh - 280px)"
+                                        : "calc(100vh - 229px)"
+                                      : window.innerWidth < 768
+                                        ? "calc(100vh - 179px)"
+                                        : "calc(100vh - 173px)",
                             }}
                             ref={messagesContainerRef}
                           >
@@ -2886,47 +2926,6 @@ const Chat2 = () => {
                             </div>
                           )}
 
-                          {replyingTo && (
-                            <div className="w-full dark:bg-primary-dark/15">
-                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
-                                <div>
-                                  <div className="text-sm text-blue-500 font-medium">
-                                    Replying to{" "}
-                                    {
-                                      allUsers.find(
-                                        (user) => user._id === replyingTo.sender
-                                      )?.userName
-                                    }
-                                  </div>
-                                  <div className="text-gray-600 text-sm line-clamp-2">
-                                    {console.log(
-                                      replyingTo.content.fileType === "image/jpeg"
-                                    )}
-                                    {replyingTo.content.content}
-                                    {replyingTo?.content?.fileType &&
-                                      replyingTo?.content?.fileType?.startsWith(
-                                        "image/"
-                                      ) && (
-                                        <img
-                                          src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
-                                            /\\/g,
-                                            "/"
-                                          )}`}
-                                          alt=""
-                                          className="h-10"
-                                        />
-                                      )}
-                                  </div>
-                                  <button
-                                    onClick={() => setReplyingTo(null)}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <RxCross2 size={20} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
 
                           {/*========== Message Input ==========*/}
                           {selectedChat &&
@@ -2963,6 +2962,7 @@ const Chat2 = () => {
                               </div>
                             ) : (
                               <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
+
                                 <form
                                   onSubmit={handleSubmit}
                                   className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
@@ -2970,6 +2970,7 @@ const Chat2 = () => {
                                     : "rounded-lg"
                                     } md:px-4 md:py-2 w-full max-w-full`}
                                 >
+
                                   {isRecording ?
                                     <>
                                       <div>
@@ -2986,6 +2987,7 @@ const Chat2 = () => {
                                         </button>
 
                                       </div>
+
                                       <div className="flex-1">
                                         <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
                                           <div className="flex items-center justify-start h-full w-full relative">
@@ -3022,85 +3024,213 @@ const Chat2 = () => {
 
                                     : ''}
 
+
                                   {!isRecording && (
                                     <>
-                                      <div className="flex-1 min-w-0 p-1 md:p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative">
-                                        <input
-                                          ref={inputRef}
-                                          type="text"
-                                          value={messageInput}
-                                          onChange={handleInputChange}
-                                          placeholder={
-                                            editingMessage
-                                              ? "Edit message..."
-                                              : "Type a message..."
-                                          }
-                                          className="ps-9 md:ps-2 w-full px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                                          onKeyDown={async (e) => {
-                                            if (e.key === "Enter") {
-                                              e.preventDefault();
+                                      <div className="flex-1">
+                                        {replyingTo && (
+                                          <div className="w-full dark:bg-primary-dark/15">
+                                            <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                                              <div>
+                                                <div className="text-sm text-blue-500 font-medium">
+                                                  Replying to{" "}
+                                                  {
+                                                    allUsers.find(
+                                                      (user) => user._id === replyingTo.sender
+                                                    )?.userName
+                                                  }
+                                                </div>
+                                                <div className="text-gray-600 text-sm line-clamp-2">
+                                                  {decryptMessage(replyingTo.content.content)}
+                                                  {replyingTo?.content?.fileType &&
+                                                    replyingTo?.content?.fileType?.startsWith(
+                                                      "image/"
+                                                    ) && (
+                                                      <img
+                                                        src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                                                          /\\/g,
+                                                          "/"
+                                                        )}`}
+                                                        alt=""
+                                                        className="h-10"
+                                                      />
+                                                    )}
+                                                </div>
+                                              </div>
+                                              <button
+                                                onClick={() => setReplyingTo(null)}
+                                                className="text-gray-500 hover:text-gray-700"
+                                              >
+                                                <RxCross2 size={20} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                        {Object.keys(uploadProgress).length != 0 && (
+                                          <div className="w-full dark:bg-primary-dark/15">
+                                            <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                                              <div className="flex justify-between w-full">
+                                                <div className="w-full">
+                                                  {Object.keys(uploadProgress).map((file, index) => (
+                                                    <div key={index} className="">
+                                                      <div className="flex gap-2 items-center">
+                                                        <div>
+                                                          {uploadProgress[file].fileType?.startsWith('image/') ? (
+                                                            <img src={require('../img/img.png')} className="w-[20px] h-[20px]" alt="" />
+                                                          ) : uploadProgress[file].fileType === 'application/pdf' ? (
+                                                            <img src={require('../img/pdf.png')} className="w-[20px] h-[20px]" alt="" />
+                                                          ) : uploadProgress[file].fileType?.includes('video/') ? (
+                                                            <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf" gradientcolor1="#afafaf" gradientcolor2="#afafaf" >
+                                                              <path d="M3.5 21h17c.275 0 .5-.225.5-.5v-17c0-.275-.225-.5-.5-.5h-17c-.275 0-.5.225-.5.5v17c0 .275.225.5.5.5Z" fill="#fff" ></path>
+                                                              <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="M3.5 22h17c.827 0 1.5-.673 1.5-1.5v-17c0-.827-.673-1.5-1.5-1.5h-17C2.673 2 2 2.673 2 3.5v17c0 .827.673 1.5 1.5 1.5ZM3 3.5a.5.5 0 0 1 .5-.5h17a.5.5 0 0 1 .5.5v17a.5.5 0 0 1-.5.5h-17a.5.5 0 0 1-.5-.5v-17Z" fill="#605E5C"></path>
+                                                              <path d="M16 12a.47.47 0 0 1-.24.4l-6 3.53a.48.48 0 0 1-.26.07.5.5 0 0 1-.24-.06.46.46 0 0 1-.26-.41V12h7Z" fill="#BC1948"></path>
+                                                              <path d="M16 12a.47.47 0 0 0-.24-.4l-6-3.536a.52.52 0 0 0-.5 0 .46.46 0 0 0-.26.4V12h7Z" fill="#E8467C"></path>
+                                                            </svg>
+                                                          ) : uploadProgress[file].fileType?.includes('audio/') ? (
+                                                            <img src={require('../img/audio.png')} className="w-[20px] h-[20px]" alt="" />
+                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+                                                            <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                              <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                                                              <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                                                              <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                                                              <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+                                                            </svg>
+                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                              <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                                                              <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                                                              <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                                                              <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+                                                            </svg>
+                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
+                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                              <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                                                              <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                                                              <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+                                                            </svg>
+                                                          ) : uploadProgress[file].fileType?.includes('zip') || uploadProgress[file].fileType?.includes('compressed') ? (
+                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                              <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                                                            </svg>
+                                                          ) : (
+                                                            <FaPaperclip className="w-4 h-4 text-gray-400" />
+                                                          )}
+                                                        </div>
+                                                        <div>
+                                                          {console.log(uploadProgress)}
 
-                                              if (selectedFiles.length > 0) {
-                                                await handleMultipleFileUpload(
-                                                  selectedFiles
-                                                ); // Upload selected files
-                                                setSelectedFiles([]); // Clear selected files after sending
-                                              }
-                                              await handleSubmit(e);
-                                            } else if (
-                                              e.key === "Escape" &&
+                                                          <div className="text-white text-sm line-clamp-2 ">
+                                                            {file}
+                                                          </div>
+                                                          <div className="text-sm text-gray-500 hover:text-gray-700">
+                                                            {uploadProgress[file].size}
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <div className="flex justify-between items-center">
+                                                        <div className="w-full bg-gray-200 h-[8px] dark:bg-gray-700 rounded-full overflow-hidden flex">
+                                                          <div
+                                                            className="bg-blue-600 h-[8px] rounded-full"
+                                                            style={{ width: `${uploadProgress[file].percentCompleted}%` }}
+                                                          ></div>
+                                                        </div>
+                                                        <div className="ml-2 text-sm text-gray-500 hover:text-gray-700">
+                                                          {uploadProgress[file].percentCompleted}%
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+
+                                                <button
+                                                  onClick={() => setUploadProgress({})}
+                                                  className="text-gray-500 hover:text-gray-700 ml-4"
+                                                >
+                                                  <RxCross2 size={20} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                        <div className={`flex-1 min-w-0 p-1 md:p-2 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative`}>
+                                          <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={messageInput}
+                                            onChange={handleInputChange}
+                                            placeholder={
                                               editingMessage
-                                            ) {
-                                              setEditingMessage(null);
-                                              setMessageInput("");
+                                                ? "Edit message..."
+                                                : "Type a message..."
                                             }
-                                          }}
-                                        />
-                                        <button
-                                          type="button"
-                                          className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                                          aria-label="Add emoji"
-                                          onClick={() =>
-                                            setIsEmojiPickerOpen(!isEmojiPickerOpen)
-                                          }
-                                        >
-                                          <PiSmiley className="w-6 h-6 " />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                          aria-label="Attach file"
-                                          onClick={() =>
-                                            // document
-                                            //   .getElementById("file-upload")
-                                            //   .click()
-                                            setDocModel(!docModel)
+                                            className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                            onKeyDown={async (e) => {
+                                              if (e.key === "Enter") {
+                                                e.preventDefault();
 
-                                          }
-                                        >
-                                          {selectedFiles &&
-                                            selectedFiles.length > 0 ? (
-                                            <GoPlusCircle className="w-6 h-6 " />
-                                          ) : (
-                                            <svg
-                                              width={24}
-                                              height={24}
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              className="w-6 h-6"
-                                            >
-                                              <path
-                                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                                stroke="currentColor"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              />
-                                            </svg>
-                                          )}
-                                        </button>
+                                                if (selectedFiles.length > 0) {
+                                                  await handleMultipleFileUpload(
+                                                    selectedFiles
+                                                  ); // Upload selected files
+                                                  setSelectedFiles([]); // Clear selected files after sending
+                                                }
+                                                await handleSubmit(e);
+                                              } else if (
+                                                e.key === "Escape" &&
+                                                editingMessage
+                                              ) {
+                                                setEditingMessage(null);
+                                                setMessageInput("");
+                                              }
+                                            }}
+                                          />
+                                          <button
+                                            type="button"
+                                            className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                            aria-label="Add emoji"
+                                            onClick={() =>
+                                              setIsEmojiPickerOpen(!isEmojiPickerOpen)
+                                            }
+                                          >
+                                            <PiSmiley className="w-6 h-6 " />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                            aria-label="Attach file"
+                                            onClick={() =>
+                                              // document
+                                              //   .getElementById("file-upload")
+                                              //   .click()
+                                              setDocModel(!docModel)
+
+                                            }
+                                          >
+                                            {selectedFiles &&
+                                              selectedFiles.length > 0 ? (
+                                              <GoPlusCircle className="w-6 h-6 " />
+                                            ) : (
+                                              <svg
+                                                width={24}
+                                                height={24}
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="w-6 h-6"
+                                              >
+                                                <path
+                                                  d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                                  stroke="currentColor"
+                                                  strokeWidth="1.5"
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                />
+                                              </svg>
+                                            )}
+                                          </button>
+                                        </div>
                                       </div>
+
                                       <button
                                         type="button"
                                         className="p-1 hover:bg-gray-100 hidden md:block dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
@@ -3184,7 +3314,7 @@ const Chat2 = () => {
                                         </button>
                                         <button
                                           type="button"
-                                          className={`${selectedFiles.length>0 ||messageInput ||cameraStream ?'hidden md:block' :'block md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
+                                          className={`${selectedFiles.length > 0 || messageInput || cameraStream ? 'hidden md:block' : 'block md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
                                           aria-label="Voice message"
                                           onClick={() => { handleVoiceMessage(); startRecording() }}
                                         >
@@ -3195,9 +3325,9 @@ const Chat2 = () => {
                                         </button>
                                       </>
                                     }
-                                      <button
+                                    <button
                                       type="submit"
-                                      className={`${selectedFiles.length>0 ||messageInput  ||cameraStream || isRecording?'block md:block' :'hidden md:block' } p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
+                                      className={`${selectedFiles.length > 0 || messageInput || cameraStream || isRecording ? 'block md:block' : 'hidden md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
                                       onClick={() => {
                                         if (selectedFiles.length > 0) {
                                           handleMultipleFileUpload(selectedFiles); // Upload selected files
@@ -3263,7 +3393,7 @@ const Chat2 = () => {
                                         </div>
                                       </div>
                                     )}
-                                  
+
                                   </div>
                                   {editingMessage && (
                                     <button
