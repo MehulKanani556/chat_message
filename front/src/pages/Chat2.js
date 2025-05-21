@@ -130,31 +130,31 @@ import MediaViewer from "../component/MediaViewer";
 const Chat2 = () => {
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
     useSelector((state) => state.user);
-    const {
-      remoteStreams,
-      isConnected,
-      onlineUsers,
-      isVideoCalling,
-      incomingCall,
-      isCameraOn,
-      isSharing,
-      isReceiving,
-      incomingShare,
-      isVoiceCalling,
-      callParticipants,
-      isMicrophoneOn,
-      cameraStatus,
-      selectedChatModule,
-      showProfile,
-      showSettings,
-      showGroups,
-      showCallHistory,
-      isGroupModalOpen,
-      isModalOpen,
-      isGroupCreateModalOpen,
-      isUserProfileModalOpen,
-      showLeftSidebar
-    } = useSelector(state => state.magageState)
+  const {
+    remoteStreams,
+    isConnected,
+    onlineUsers,
+    isVideoCalling,
+    incomingCall,
+    isCameraOn,
+    isSharing,
+    isReceiving,
+    incomingShare,
+    isVoiceCalling,
+    callParticipants,
+    isMicrophoneOn,
+    cameraStatus,
+    selectedChatModule,
+    showProfile,
+    showSettings,
+    showGroups,
+    showCallHistory,
+    isGroupModalOpen,
+    isModalOpen,
+    isGroupCreateModalOpen,
+    isUserProfileModalOpen,
+    showLeftSidebar
+  } = useSelector(state => state.magageState)
 
   const dispatch = useDispatch();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -167,7 +167,7 @@ const Chat2 = () => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const navigate = useNavigate();
-  const [contextMenu, setContextMenu] = useState({visible: false, x: 0,y: 0,messageId: null});
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
   const [docModel, setDocModel] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -190,7 +190,7 @@ const Chat2 = () => {
   const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
   const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
   const [participantOpen, setParticipantOpen] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState({ messageId: null,position: null});
+  const [showEmojiPicker, setShowEmojiPicker] = useState({ messageId: null, position: null });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const mobileMenuRef = useRef(null);
@@ -202,7 +202,7 @@ const Chat2 = () => {
   const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
   const [waveformData, setWaveformData] = useState([]);
   const [userStreams, setUserStreams] = useState({});
- 
+
   //===========Use the custom socket hook===========
   const {
     socket,
@@ -1769,29 +1769,29 @@ const Chat2 = () => {
     });
   }, [localVideoRef?.current?.srcObject]);
 
-//       if(allStreams.has(userId)){
-//         allStreams.set(userId, localVideoRef?.current?.srcObject);
-//       }else{
-//         allStreams.set(userId, localVideoRef?.current?.srcObject);
-//       }
-//       return Array.from(allStreams);
-//     });
-//   }, [localVideoRef?.current?.srcObject]);
+  //       if(allStreams.has(userId)){
+  //         allStreams.set(userId, localVideoRef?.current?.srcObject);
+  //       }else{
+  //         allStreams.set(userId, localVideoRef?.current?.srcObject);
+  //       }
+  //       return Array.from(allStreams);
+  //     });
+  //   }, [localVideoRef?.current?.srcObject]);
 
-//   useEffect(() => {
-//     setParticipants(prev => {
-//       const allStreams = new Map(prev);
-//       // Update or add remote streams
-//       remoteStreams.forEach((stream, id) => {
-//         if (allStreams.has(id)) {
-//           allStreams.set(id, stream);
-//         } else {
-//           allStreams.set(id, stream);
-//         }
-//       });
-//       return Array.from(allStreams);
-//     });
-//   }, [remoteStreams]);
+  //   useEffect(() => {
+  //     setParticipants(prev => {
+  //       const allStreams = new Map(prev);
+  //       // Update or add remote streams
+  //       remoteStreams.forEach((stream, id) => {
+  //         if (allStreams.has(id)) {
+  //           allStreams.set(id, stream);
+  //         } else {
+  //           allStreams.set(id, stream);
+  //         }
+  //       });
+  //       return Array.from(allStreams);
+  //     });
+  //   }, [remoteStreams]);
 
 
 
@@ -3085,7 +3085,7 @@ const Chat2 = () => {
                 )}
             </div>
 
-{/* ============================== right sidebar =========================================== */}
+            {/* ============================== right sidebar =========================================== */}
 
             <div
               className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
@@ -3153,7 +3153,7 @@ const Chat2 = () => {
 
       {/*=========================================== screen share ==================================*/}
       <div
-        className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling 
+        className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling
           ? ""
           : "hidden"
           } ${participantOpen ? "mr-96" : ""}`}
@@ -3199,7 +3199,7 @@ const Chat2 = () => {
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%]">
                 <div className="bg-gray-800 p-2 flex justify-center items-center space-x-3 md:space-x-4">
                   <button
-                     onClick={() => dispatch(setSelectedChatModule(!selectedChatModule))}
+                    onClick={() => dispatch(setSelectedChatModule(!selectedChatModule))}
                     className="w-10 grid place-content-center rounded-full h-10 border text-white"
                   >
                     <BsChatDots className="text-xl" />
@@ -3245,38 +3245,37 @@ const Chat2 = () => {
                     <button
                       onClick={() => {
                         setParticipantOpen(true);
-                        setShowFirstSection(true);
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >
                       <MdOutlineGroupAdd className="text-xl" />
                     </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            ) : (
-       // ===============Video call screen================
+            </div>
+          ) : (
+            // ===============Video call screen================
             <VideoCallLayout
-            currentUser={currentUser}
-            localVideoRef={localVideoRef}
-            allUsers={allUsers}
-            cameraStatus={cameraStatus}
-            IMG_URL={IMG_URL}
-            endCall={endCall}
-            toggleMicrophone={toggleMicrophone}
-            toggleCamera={toggleCamera}
-            setSelectedChatModule={setSelectedChatModule}
-            selectedChatModule={selectedChatModule}
-            isMicrophoneOn={isMicrophoneOn}
-            isCameraOn={isCameraOn}
-            isVideoCalling={isVideoCalling}
-            isVoiceCalling={isVoiceCalling}
-            setParticipantOpen={setParticipantOpen}
-            cleanupConnection={cleanupConnection}
+              currentUser={currentUser}
+              localVideoRef={localVideoRef}
+              allUsers={allUsers}
+              cameraStatus={cameraStatus}
+              IMG_URL={IMG_URL}
+              endCall={endCall}
+              toggleMicrophone={toggleMicrophone}
+              toggleCamera={toggleCamera}
+              setSelectedChatModule={setSelectedChatModule}
+              selectedChatModule={selectedChatModule}
+              isMicrophoneOn={isMicrophoneOn}
+              isCameraOn={isCameraOn}
+              isVideoCalling={isVideoCalling}
+              isVoiceCalling={isVoiceCalling}
+              setParticipantOpen={setParticipantOpen}
+              cleanupConnection={cleanupConnection}
             />
-            )
-          )}
+          )
+        )}
       </div>
       {/* ========= incoming call ========= */}
       {
@@ -3326,22 +3325,22 @@ const Chat2 = () => {
       }
 
       {/*======================= Call participant modal ==========================*/}
-          <CallParticipantModal
-            participantOpen={participantOpen}
-            searchInput={searchInput}
-            setSearchInput={setSearchInput}
-            allUsers={allUsers}
-            callParticipants={callParticipants}
-            userId={userId}
-            selectedCallUsers={selectedCallUsers}
-            setSelectedCallUsers={setSelectedCallUsers}
-            setParticipantOpen={setParticipantOpen}
-            setInvitedUsers={setInvitedUsers}
-            inviteToCall={inviteToCall}
-            invitedUsers={invitedUsers}
-            showBell={showBell}
-            IMG_URL={IMG_URL}
-          />
+      <CallParticipantModal
+        participantOpen={participantOpen}
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        allUsers={allUsers}
+        callParticipants={callParticipants}
+        userId={userId}
+        selectedCallUsers={selectedCallUsers}
+        setSelectedCallUsers={setSelectedCallUsers}
+        setParticipantOpen={setParticipantOpen}
+        setInvitedUsers={setInvitedUsers}
+        inviteToCall={inviteToCall}
+        invitedUsers={invitedUsers}
+        showBell={showBell}
+        IMG_URL={IMG_URL}
+      />
 
       {/* Add a hidden file input for photo upload */}
       <input
