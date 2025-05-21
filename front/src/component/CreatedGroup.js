@@ -6,15 +6,13 @@ import { createGroup, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useDispatch } from "react-redux";
 import { RiUserAddLine } from "react-icons/ri";
 import { FaChevronRight } from "react-icons/fa";
+import { setIsGroupCreateModalOpen, setIsModalOpen } from "../redux/slice/manageState.slice";
 const CreatedGroup = ({
   isOpen,
-  onClose,
   allUsers,
   currentUser,
   onCreateGroup,
   socket,
-  setIsGroupCreateModalOpen,
-  setIsModalOpen,
   creatGroup,
   setCreatGroup,
   groupUsers,
@@ -45,7 +43,7 @@ const CreatedGroup = ({
       bio:groupBio,
       members: [...groupUsers, currentUser], // Add current user as member
     });
-    onClose(); // Close modal after attempting creation
+    dispatch(setIsGroupCreateModalOpen(false));
   };
 
   const handleCreateGroup = async () => {
@@ -62,7 +60,7 @@ const CreatedGroup = ({
       setGroupPhoto(null);
       setGroupName("");
       setGroupBio("");
-      onClose();
+      dispatch(setIsGroupCreateModalOpen(false));
       dispatch(getAllMessageUsers());
     } catch (error) {
       // Handle any errors that occur during group creation
@@ -82,7 +80,7 @@ const CreatedGroup = ({
         <h2 className="text-lg font-bold dark:text-primary-light">
           Create Group
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <button onClick={() => dispatch(setIsGroupCreateModalOpen(false))} className="text-gray-500 hover:text-gray-700">
           <ImCross />
         </button>
       </div>
@@ -188,8 +186,8 @@ const CreatedGroup = ({
             onClick={() => {
               // setGroupUsers(selectedChat?.members);
               setCreatGroup(true);
-              setIsGroupCreateModalOpen(false);
-              setIsModalOpen(true);
+              dispatch(setIsGroupCreateModalOpen(false));
+              dispatch(setIsModalOpen(true));
             }}
           >
             <div className="flex items-center space-x-2">

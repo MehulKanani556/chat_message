@@ -22,6 +22,7 @@ import { RiDeleteBin6Line, RiUserAddLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
 import { IoCallOutline, IoNotificationsOutline, IoVideocamOutline } from "react-icons/io5";
 import { PiLinkSimpleBold } from "react-icons/pi";
+import { setIsGroupModalOpen, setIsModalOpen } from "../redux/slice/manageState.slice";
 
 const fetchUrlTitle = async (url) => {
   try {
@@ -36,11 +37,8 @@ const fetchUrlTitle = async (url) => {
     return 'Could not fetch title';
   }
 };
-
 const GroupProfile = ({
   selectedChat,
-  setIsGroupModalOpen,
-  setIsModalOpen,
   setGroupUsers,
   allUsers,
   userId,
@@ -94,7 +92,7 @@ const GroupProfile = ({
       members: selectedChat?.members.filter((id) => id !== userId),
     });
     dispatch(getAllMessageUsers());
-    setIsGroupModalOpen(false);
+    dispatch(setIsGroupModalOpen(false));
     setSelectedChat(null);
   };
 
@@ -284,7 +282,7 @@ const GroupProfile = ({
           <div className="flex justify-between items-center p-4 py-5">
             <h2 className="text-lg font-bold flex items-center">  <FaChevronLeft className="mr-2 cursor-pointer" onClick={() => setAttachFile(false)} />  Attach File</h2>
             <button
-              onClick={() => setIsGroupModalOpen(false)}
+              onClick={() => dispatch(setIsGroupModalOpen(false))}
               className="text-gray-500 hover:text-gray-700"
             >
               <ImCross />
@@ -674,7 +672,7 @@ const GroupProfile = ({
           <div className="flex justify-between items-center p-4 py-6">
             <h2 className="text-lg font-bold"> Group Info</h2>
             <button
-              onClick={() => setIsGroupModalOpen(false)}
+              onClick={() => dispatch(setIsGroupModalOpen(false))}
               className="text-gray-500 hover:text-gray-700"
             >
               <ImCross />
@@ -992,8 +990,8 @@ const GroupProfile = ({
                   className="w-full flex justify-between items-center"
                   onClick={() => {
                     setGroupUsers(selectedChat?.members);
-                    setIsGroupModalOpen(false);
-                    setIsModalOpen(true);
+                    dispatch(setIsGroupModalOpen(false));
+                    dispatch(setIsModalOpen(true));
                   }}
                 >
                   <div className="flex items-center space-x-2">
