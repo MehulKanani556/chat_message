@@ -1751,17 +1751,23 @@ const Chat2 = () => {
       setParticipantOpen(false);
     };
   }, []);
-  
-// // ---------------------Video call screen Layout-------------------
-//   const [participants, setParticipants] = useState(() => {
-//     const allStreams = new Map();
-//       allStreams.set(userId, localVideoRef?.current?.srcObject);
-//     return Array.from(allStreams);
-//   });
-  
-//   useEffect(() => {
-//     setParticipants(prev => {
-//       const allStreams = new Map(prev);
+
+  console.log(remoteStreams);
+
+  // ---------------------Video call screen Layout-------------------
+  const [participants, setParticipants] = useState(() => {
+    const allStreams = new Map();
+    allStreams.set(userId, localVideoRef?.current?.srcObject);
+    return Array.from(allStreams);
+  });
+
+  useEffect(() => {
+    setParticipants(prev => {
+      const allStreams = new Map();
+      allStreams.set(userId, localVideoRef?.current?.srcObject);
+      return Array.from(allStreams);
+    });
+  }, [localVideoRef?.current?.srcObject]);
 
 //       if(allStreams.has(userId)){
 //         allStreams.set(userId, localVideoRef?.current?.srcObject);
@@ -2238,8 +2244,8 @@ const Chat2 = () => {
                               />
 
                               {mobileMenuOpen && (
-                                <div 
-                                  className="optionMenu absolute right-0 top-full mt-2 bg-white dark:bg-gray-800  rounded-lg shadow-lg z-50"
+                                <div
+                                  className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg z-50 dark:bg-gray-800"
                                   ref={mobileMenuRef}
                                 >
                                   <div className="p-2 ">
@@ -2393,7 +2399,6 @@ const Chat2 = () => {
                               </div>
                             </div>
                           )}
-
                           <div
                             className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
                             style={{
@@ -2461,7 +2466,7 @@ const Chat2 = () => {
                               }
                               <video
                                 ref={videoRef}
-                                className="w-full"
+                                className="w-full aspect-video max-h-full h-[75vh] object-cover"
                                 autoPlay
                                 // -   style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }}
                                 // only mirror when using front camera
@@ -2592,7 +2597,7 @@ const Chat2 = () => {
                                       setIsDeleteChatModalOpen(true);
                                     }}
                                   >
-                                    Delete Chat
+                                    Delete
                                   </button>
 
                                   <button
@@ -3146,9 +3151,7 @@ const Chat2 = () => {
         </>
       )}
 
-     {/* { console.log(isReceiving, isVideoCalling, isVoiceCalling)} */}
-      
-{/*=========================================== screen share ==================================*/}
+      {/*=========================================== screen share ==================================*/}
       <div
         className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling 
           ? ""
