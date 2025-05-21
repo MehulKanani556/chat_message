@@ -1431,13 +1431,13 @@ const Chat2 = () => {
   // Add useEffect to handle initial sidebar state based on screen width and selected chat
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 600) {
-        setShowLeftSidebar(true);
+      if (window.innerWidth > 600) {
+        setShowLeftSidebar(false); // On desktop, always show chat screen
       } else {
-        setShowLeftSidebar(false);
+        // On mobile, do not override showLeftSidebar here!
+        // Let the selectedChat effect handle it
       }
     };
-    handleResize(); // Set initial state
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -1575,13 +1575,15 @@ const Chat2 = () => {
   }, [menuOpen, docModel]);
 
   useEffect(() => {
-    // Set showLeftSidebar to true when no chat is selected
-    if (!selectedChat) {
-      if (window.innerWidth <= 600) {
-        setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
+    if (window.innerWidth <= 600) {
+      if (selectedChat) {
+        setShowLeftSidebar(false); // On mobile, show chat screen
       } else {
-        setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
+        setShowLeftSidebar(true); // On mobile, show chat list
       }
+    } else {
+      // On desktop, only show chat list if user wants it
+      setShowLeftSidebar(false);
     }
   }, [selectedChat]);
 
