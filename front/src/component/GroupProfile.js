@@ -754,10 +754,9 @@ const GroupProfile = ({
 
               <div className="max-w-md flex gap-5 mx-auto mb-5">
 
-                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col" onClick={() => handleMakeCall("voice")}>
                   <IoCallOutline
                     className="w-6 h-6 cursor-pointer"
-                    onClick={() => handleMakeCall("voice")}
                     title="Voice Call"
                     data-tooltip="Voice Call"
                     data-tooltip-delay="0"
@@ -765,10 +764,9 @@ const GroupProfile = ({
                   />
                   <p className="">Voice Call</p>
                 </button>
-                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col" onClick={() => handleMakeCall("video")}>
                   <IoVideocamOutline
                     className="w-6 h-6 cursor-pointer"
-                    onClick={() => handleMakeCall("video")}
                     title="Video Call"
                     data-tooltip="Video Call"
                     data-tooltip-delay="0"
@@ -781,7 +779,7 @@ const GroupProfile = ({
               <div className=" max-w-md bg-[#F9FAFA] dark:bg-primary-light/15  rounded-lg mb-5 mx-auto mt-5">
                 {/* User Info Section */}
                 <div className="border-b border-gray-300">
-                  <button className="w-full px-4 py-3 flex justify-between items-center">
+                  <button className="w-full px-4 py-3 flex justify-between items-center cursor-default">
                     <div className="flex items-center space-x-2">
                       <MdInfoOutline size={18} />
                       <span className="text-md font-medium ">About</span>
@@ -882,7 +880,7 @@ const GroupProfile = ({
               </div>
 
               <div className="max-w-md bg-[#F9FAFA] dark:bg-primary-light/15 rounded-lg p-3 mx-auto">
-                <button className="w-full px-2 flex justify-between items-center">
+                <button className="w-full px-2 flex justify-between items-center cursor-default">
                   <div className="flex items-center space-x-2">
                     <HiOutlineUserGroup size={18} />
                     <span className="text-md font-medium">Group Members</span>

@@ -577,10 +577,9 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
             {/* Profile Content */}
             <div className="max-w-md mx-auto  dark:text-primary-light mt-4">
               <div className="max-w-md flex mb-3 gap-5">
-                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col" onClick={() => handleMakeCall("voice")}>
                   <IoCallOutline
                     className="w-6 h-6 cursor-pointer"
-                    onClick={() => handleMakeCall("voice")}
                     title="Voice Call"
                     data-tooltip="Voice Call"
                     data-tooltip-delay="0"
@@ -588,10 +587,9 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                   />
                   <p className="">Voice Call</p>
                 </button>
-                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col">
+                <button className="bg-[#F9FAFA] dark:bg-primary-dark  rounded-md p-2 flex-1 items-center flex flex-col" onClick={() => handleMakeCall("video")}>
                   <IoVideocamOutline
                     className="w-6 h-6 cursor-pointer"
-                    onClick={() => handleMakeCall("video")}
                     title="Video Call"
                     data-tooltip="Video Call"
                     data-tooltip-delay="0"
@@ -605,7 +603,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                 {/* User Info Section */}
                 <div className="border-b border-gray-300">
                   <button
-                    className="w-full px-4 py-3 flex justify-between items-center"
+                    className="w-full px-4 py-3 flex justify-between items-center cursor-default"
                     onClick={() => setUserInfoOpen(!userInfoOpen)}
                   >
                     <div className="flex items-center space-x-2">
