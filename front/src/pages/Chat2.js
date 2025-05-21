@@ -2074,13 +2074,13 @@ const Chat2 = () => {
 
   console.log(remoteStreams);
 
-// ---------------------Video call screen Layout-------------------
+  // ---------------------Video call screen Layout-------------------
   const [participants, setParticipants] = useState(() => {
     const allStreams = new Map();
-      allStreams.set(userId, localVideoRef?.current?.srcObject);
+    allStreams.set(userId, localVideoRef?.current?.srcObject);
     return Array.from(allStreams);
   });
-  
+
   useEffect(() => {
     setParticipants(prev => {
       const allStreams = new Map();
@@ -2160,7 +2160,7 @@ const Chat2 = () => {
           }}
         />
       )}
-{/* ==============================Right Sidebar============================== */}
+      {/* ==============================Right Sidebar============================== */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           {/* Left Side */}
@@ -2180,6 +2180,7 @@ const Chat2 = () => {
               />
             )}
             {showProfile && <Profile />}
+            {console.log("object",selectedChatModule)}
             {selectedChatModule && (
               <ChatList
                 allMessageUsers={allMessageUsers}
@@ -2201,6 +2202,7 @@ const Chat2 = () => {
           </div>
 
           {/* Right Side */}
+          {console.log("showLeftSidebar",showLeftSidebar)}
           <>
             <div
               className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -2216,6 +2218,16 @@ const Chat2 = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
+              {console.log("kk",isGroupModalOpen ,
+                isModalOpen ,
+                isGroupCreateModalOpen ,
+                isUserProfileModalOpen,!showOverlay,(!(
+                  isGroupModalOpen ||
+                  isModalOpen ||
+                  isGroupCreateModalOpen ||
+                  isUserProfileModalOpen
+                ) ||
+                  !showOverlay),selectedChat)}
 
               {(!(
                 isGroupModalOpen ||
@@ -2708,7 +2720,7 @@ const Chat2 = () => {
                         )}
 
 
-{/*========================== Messages ==============================*/}
+                        {/*========================== Messages ==============================*/}
                         <div className="relative">
                           {/* {console.log("replyingTo",replyingTo)} */}
                           {isDragging && (
@@ -2726,21 +2738,21 @@ const Chat2 = () => {
                             </div>
                           )}
                           {console.log(Object.keys(uploadProgress).length)}
-                          {console.log("height:", 
-                                selectedFiles.length > 0
-                                  ? "calc(100vh -  276px)"
-                                  : Object.keys(uploadProgress).length != 0
-                                    ? "calc(100vh - 234 px)"
-                                    : replyingTo
-                                      ? replyingTo?.content?.fileType &&
-                                        replyingTo?.content?.fileType?.startsWith(
-                                          "image/"
-                                        )
-                                        ? "calc(100vh - 280px)"
-                                        : "calc(100vh -  229px)"
-                                      : window.innerWidth < 768
-                                        ? "calc(100vh - 179px)"
-                                        : "calc(100vh - 173px")}
+                          {console.log("height:",
+                            selectedFiles.length > 0
+                              ? "calc(100vh -  276px)"
+                              : Object.keys(uploadProgress).length != 0
+                                ? "calc(100vh - 234 px)"
+                                : replyingTo
+                                  ? replyingTo?.content?.fileType &&
+                                    replyingTo?.content?.fileType?.startsWith(
+                                      "image/"
+                                    )
+                                    ? "calc(100vh - 280px)"
+                                    : "calc(100vh -  229px)"
+                                  : window.innerWidth < 768
+                                    ? "calc(100vh - 179px)"
+                                    : "calc(100vh - 173px")}
                           <div
                             className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
                             style={{
@@ -3410,7 +3422,7 @@ const Chat2 = () => {
                               </div>
                             ))}
                         </div>
-    {/* Show Send to Bottom button only if user has scrolled up */}
+                        {/* Show Send to Bottom button only if user has scrolled up */}
                         {showScrollToBottom && (
                           <button
                             type="button"
@@ -3429,7 +3441,7 @@ const Chat2 = () => {
                 )}
             </div>
 
-{/* ==============================right sidebar=========================================== */}
+            {/* ==============================right sidebar=========================================== */}
 
             <div
               className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
@@ -3504,283 +3516,281 @@ const Chat2 = () => {
         </>
       )}
 
-{/*=========================================== screen share ==================================*/}
+      {/*=========================================== screen share ==================================*/}
       <div
         className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData
           ? ""
           : "hidden"
           } ${participantOpen ? "mr-96" : ""}`}
       >
-          {Object.keys(remoteStreams).length > 0 ? (
-            Object.keys(remoteStreams).map((userId) => (
-              <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
-                <video autoPlay playsInline className="w-full h-full object-cover rounded-lg" ref={(el) => { if (el) { el.srcObject = userStreams[userId]; } }} />
-                <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                  {allUsers.find((user) => user._id === userId)?.userName || "Participant"}
-                </div>
+        {Object.keys(remoteStreams).length > 0 ? (
+          Object.keys(remoteStreams).map((userId) => (
+            <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
+              <video autoPlay playsInline className="w-full h-full object-cover rounded-lg" ref={(el) => { if (el) { el.srcObject = userStreams[userId]; } }} />
+              <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
+                {allUsers.find((user) => user._id === userId)?.userName || "Participant"}
               </div>
-            ))
-          ) : (
+            </div>
+          ))
+        ) : (
+          // ========================screen share section===============
+          isVoiceCalling ? (
+            // Voice call screen
+            <div className="relative flex items-center justify-center w-full h-full">
+              <div className="absolute top-1/2 -translate-y-1/2">
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
+                {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+                    alt="User profile"
+                    className="object-cover border rounded-full w-24 h-24"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <span className="text-white text-4xl">
+                      {selectedChat?.userName?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <p className="absolute bottom-72 text-white text-lg font-medium">
+                  {selectedChat?.userName || "Unknown User"}
+                </p>
+              </div>
 
+              {/* Always show controls buttons*/}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%]">
+                <div className="bg-gray-800 p-2 flex justify-center items-center space-x-3 md:space-x-4">
+                  <button
+                    onClick={() => setSelectedChatModule(!selectedChatModule)}
+                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
+                  >
+                    <BsChatDots className="text-xl" />
+                  </button>
 
-      // ========================screen share section===============
-            isVoiceCalling ? (
-              // Voice call screen
-              <div className="relative flex items-center justify-center w-full h-full">
-                <div className="absolute top-1/2 -translate-y-1/2">
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
-                  {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
-                    <img
-                      src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
-                      alt="User profile"
-                      className="object-cover border rounded-full w-24 h-24"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <span className="text-white text-4xl">
-                        {selectedChat?.userName?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <p className="absolute bottom-72 text-white text-lg font-medium">
-                    {selectedChat?.userName || "Unknown User"}
-                  </p>
-                </div>
+                  <button
+                    onClick={toggleMicrophone}
+                    className="w-10 grid place-content-center border rounded-full h-10 text-white"
+                  >
+                    {isMicrophoneOn ? (
+                      <IoMicOffOutline className="text-xl" />
+                    ) : (
+                      <IoMicOffCircleOutline className="text-xl" />
+                    )}
+                  </button>
 
-                {/* Always show controls buttons*/}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%]">
-                  <div className="bg-gray-800 p-2 flex justify-center items-center space-x-3 md:space-x-4">
-                    <button
-                      onClick={() => setSelectedChatModule(!selectedChatModule)}
-                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                    >
-                      <BsChatDots className="text-xl" />
-                    </button>
+                  <button
+                    onClick={toggleCamera}
+                    className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+                  >
+                    {isCameraOn ? (
+                      <BsCameraVideo className="text-xl" />
+                    ) : (
+                      <BsCameraVideoOff className="text-xl" />
+                    )}
+                  </button>
 
-                    <button
-                      onClick={toggleMicrophone}
-                      className="w-10 grid place-content-center border rounded-full h-10 text-white"
-                    >
-                      {isMicrophoneOn ? (
-                        <IoMicOffOutline className="text-xl" />
-                      ) : (
-                        <IoMicOffCircleOutline className="text-xl" />
-                      )}
-                    </button>
+                  <button
+                    onClick={() => {
+                      endCall();
+                      cleanupConnection();
+                    }}
+                    className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <IoCallOutline className="text-2xl" />
+                  </button>
 
-                    <button
-                      onClick={toggleCamera}
-                      className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-                    >
-                      {isCameraOn ? (
-                        <BsCameraVideo className="text-xl" />
-                      ) : (
-                        <BsCameraVideoOff className="text-xl" />
-                      )}
-                    </button>
+                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+                    <GoUnmute className="text-xl" />
+                  </button>
 
+                  {(isVideoCalling || isVoiceCalling) && (
                     <button
                       onClick={() => {
-                        endCall();
-                        cleanupConnection();
+                        setParticipantOpen(true);
+                        setShowFirstSection(true);
                       }}
-                      className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >
-                      <IoCallOutline className="text-2xl" />
+                      <MdOutlineGroupAdd className="text-xl" />
                     </button>
-
-                    <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                      <GoUnmute className="text-xl" />
-                    </button>
-
-                    {(isVideoCalling || isVoiceCalling) && (
-                      <button
-                        onClick={() => {
-                          setParticipantOpen(true);
-                          setShowFirstSection(true);
-                        }}
-                        className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                      >
-                        <MdOutlineGroupAdd className="text-xl" />
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            ) : (
-       // ===============Video call screen================
-       <VideoCallLayout
-       participants={participants}
-       currentUser={currentUser}
-       localVideoRef={localVideoRef}
-       allUsers={allUsers}
-       cameraStatus={cameraStatus}
-       IMG_URL={IMG_URL}
-       endCall={endCall}
-       toggleMicrophone={toggleMicrophone}
-       toggleCamera={toggleCamera}
-       setSelectedChatModule={setSelectedChatModule}
-       selectedChatModule={selectedChatModule}
-       isMicrophoneOn={isMicrophoneOn}
-       isCameraOn={isCameraOn}
-       isVideoCalling={isVideoCalling}
-       isVoiceCalling={isVoiceCalling}
-       setParticipantOpen={setParticipantOpen}
-       setShowFirstSection={setShowFirstSection}
-       cleanupConnection={cleanupConnection}
-       />
-      //  <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
-      //           {/* Always show the video grid */}
-      //             <div className={`flex flex-col justify-center items-center w-full h-[calc(100vh-100px)] ${gap} mx-auto `}>
-      //               {participantRows.map((row, rowIndex) => (
-      //                 <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
-      //                   {row.map(([participantId, stream]) => {
-      //                 const participant = allUsers.find(user => user._id === participantId);
-      //                 const isCameraEnabled = cameraStatus?.[participantId] !== false;
-      //                 const isLocalUser = participantId === currentUser;
-      //                 return (
+            </div>
+          ) : (
+            // ===============Video call screen================
+            <VideoCallLayout
+              participants={participants}
+              currentUser={currentUser}
+              localVideoRef={localVideoRef}
+              allUsers={allUsers}
+              cameraStatus={cameraStatus}
+              IMG_URL={IMG_URL}
+              endCall={endCall}
+              toggleMicrophone={toggleMicrophone}
+              toggleCamera={toggleCamera}
+              setSelectedChatModule={setSelectedChatModule}
+              selectedChatModule={selectedChatModule}
+              isMicrophoneOn={isMicrophoneOn}
+              isCameraOn={isCameraOn}
+              isVideoCalling={isVideoCalling}
+              isVoiceCalling={isVoiceCalling}
+              setParticipantOpen={setParticipantOpen}
+              setShowFirstSection={setShowFirstSection}
+              cleanupConnection={cleanupConnection}
+            />
+            //  <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden">
+            //           {/* Always show the video grid */}
+            //             <div className={`flex flex-col justify-center items-center w-full h-[calc(100vh-100px)] ${gap} mx-auto `}>
+            //               {participantRows.map((row, rowIndex) => (
+            //                 <div key={rowIndex} className={`flex justify-center ${gap} flex-1`}>
+            //                   {row.map(([participantId, stream]) => {
+            //                 const participant = allUsers.find(user => user._id === participantId);
+            //                 const isCameraEnabled = cameraStatus?.[participantId] !== false;
+            //                 const isLocalUser = participantId === currentUser;
+            //                 return (
 
-      //                     <div
-      //                       key={participantId}
-      //                       className="flex-1 min-w-0 items-center    justify-center  overflow-hidden relative bg-primary-dark rounded-lg"
-      //                       style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
-      //                     >
-      //                     {isCameraEnabled ? (
-      //                       <>
-      //                        {isLocalUser ? (
-      //                                 <video
-      //                                 ref={localVideoRef}
-      //                                 autoPlay
-      //                                 playsInline
-      //                                 muted
-      //                                 className=" w-full object-cover rounded-lg flex-shrink"
-      //                                 onLoadedMetadata={() => {
-      //                                   // Ensure the video plays when metadata is loaded
-      //                                   if (localVideoRef.current) {
-      //                                     localVideoRef.current.play().catch(err => 
-      //                                       console.error("Error playing local video:", err)
-      //                                     );
-      //                                   }
-      //                                 }}
-      //                               />
-      //                               ) : (
-      //                                 // Remote user video
-      //                                 <video
-      //                                   autoPlay
-      //                                   playsInline
-      //                                   className="w-full object-cover rounded-lg flex-shrink"
-      //                                   ref={(el) => {
-      //                                     if (el) {
-      //                                       el.srcObject = stream;
-      //                                       el.play().catch(err => console.error("Error playing remote video:", err));
-      //                                     }
-      //                                   }}
-      //                                 />
-      //                               )}
-      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
-      //                           {isLocalUser ? "You": participant?.userName || "Participant"}
-      //                         </div>
-      //                       </>
-      //                     ) : (
-      //                       <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
-      //                         <div className="w-20 h-20 rounded-full overflow-hidden">
-      //                           {participant?.photo && participant.photo !== "null" ? (
-      //                             <img
-      //                               src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
-      //                               alt="Profile"
-      //                               className="w-full h-full object-cover"
-      //                             />
-      //                           ) : (
-      //                             <div className="w-full h-full bg-gray-500 flex items-center justify-center">
-      //                               <span className="text-white text-2xl">
-      //                                 {participant?.userName?.charAt(0).toUpperCase()}
-      //                               </span>
-      //                             </div>
-      //                           )}
-      //                         </div>
-      //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
-      //                           {participant?.userName || "Participant"}
-      //                           <span className="ml-2 text-xs">(Camera Off)</span>
-      //                         </div>
-      //                       </div>
-      //                     )}
-      //                   </div>
-      //                 );
-      //               })}
-      //                 </div>
-      //               ))}
-      //             </div>
-      //           {/* Always show the video grid */}
-             
-      //           {/* Always show controls buttons*/}
-      //           <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-      //             <button
-      //               onClick={() => setSelectedChatModule(!selectedChatModule)}
-      //               className="w-10 grid place-content-center rounded-full h-10 border text-white"
-      //             >
-      //               <BsChatDots className="text-xl" />
-      //             </button>
+            //                     <div
+            //                       key={participantId}
+            //                       className="flex-1 min-w-0 items-center    justify-center  overflow-hidden relative bg-primary-dark rounded-lg"
+            //                       style={{ maxWidth: `${100 / getLayoutConfig(participants.length).cols}%` }}
+            //                     >
+            //                     {isCameraEnabled ? (
+            //                       <>
+            //                        {isLocalUser ? (
+            //                                 <video
+            //                                 ref={localVideoRef}
+            //                                 autoPlay
+            //                                 playsInline
+            //                                 muted
+            //                                 className=" w-full object-cover rounded-lg flex-shrink"
+            //                                 onLoadedMetadata={() => {
+            //                                   // Ensure the video plays when metadata is loaded
+            //                                   if (localVideoRef.current) {
+            //                                     localVideoRef.current.play().catch(err => 
+            //                                       console.error("Error playing local video:", err)
+            //                                     );
+            //                                   }
+            //                                 }}
+            //                               />
+            //                               ) : (
+            //                                 // Remote user video
+            //                                 <video
+            //                                   autoPlay
+            //                                   playsInline
+            //                                   className="w-full object-cover rounded-lg flex-shrink"
+            //                                   ref={(el) => {
+            //                                     if (el) {
+            //                                       el.srcObject = stream;
+            //                                       el.play().catch(err => console.error("Error playing remote video:", err));
+            //                                     }
+            //                                   }}
+            //                                 />
+            //                               )}
+            //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full">
+            //                           {isLocalUser ? "You": participant?.userName || "Participant"}
+            //                         </div>
+            //                       </>
+            //                     ) : (
+            //                       <div className="w-full h-full bg-primary-dark rounded-lg flex items-center justify-center">
+            //                         <div className="w-20 h-20 rounded-full overflow-hidden">
+            //                           {participant?.photo && participant.photo !== "null" ? (
+            //                             <img
+            //                               src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
+            //                               alt="Profile"
+            //                               className="w-full h-full object-cover"
+            //                             />
+            //                           ) : (
+            //                             <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+            //                               <span className="text-white text-2xl">
+            //                                 {participant?.userName?.charAt(0).toUpperCase()}
+            //                               </span>
+            //                             </div>
+            //                           )}
+            //                         </div>
+            //                         <div className="absolute bottom-2 left-2 text-white text-sm bg-blue-500 px-3 py-1 rounded-full flex items-center">
+            //                           {participant?.userName || "Participant"}
+            //                           <span className="ml-2 text-xs">(Camera Off)</span>
+            //                         </div>
+            //                       </div>
+            //                     )}
+            //                   </div>
+            //                 );
+            //               })}
+            //                 </div>
+            //               ))}
+            //             </div>
+            //           {/* Always show the video grid */}
 
-      //             <button
-      //               onClick={toggleMicrophone}
-      //               className="w-10 grid place-content-center border rounded-full h-10 text-white"
-      //             >
-      //               {isMicrophoneOn ? (
-      //                 <IoMicOffOutline className="text-xl" />
-      //               ) : (
-      //                 <IoMicOffCircleOutline className="text-xl" />
-      //               )}
-      //             </button>
+            //           {/* Always show controls buttons*/}
+            //           <div className="p-2 flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
+            //             <button
+            //               onClick={() => setSelectedChatModule(!selectedChatModule)}
+            //               className="w-10 grid place-content-center rounded-full h-10 border text-white"
+            //             >
+            //               <BsChatDots className="text-xl" />
+            //             </button>
 
-      //             <button
-      //               onClick={toggleCamera}
-      //               className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-      //             >
-      //               {isCameraOn ? (
-      //                 <BsCameraVideo className="text-xl" />
-      //               ) : (
-      //                 <BsCameraVideoOff className="text-xl" />
-      //               )}
-      //             </button>
+            //             <button
+            //               onClick={toggleMicrophone}
+            //               className="w-10 grid place-content-center border rounded-full h-10 text-white"
+            //             >
+            //               {isMicrophoneOn ? (
+            //                 <IoMicOffOutline className="text-xl" />
+            //               ) : (
+            //                 <IoMicOffCircleOutline className="text-xl" />
+            //               )}
+            //             </button>
 
-      //             <button
-      //               onClick={() => {
-      //                 endCall();
-      //                 cleanupConnection();
-      //               }}
-      //               className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-      //             >
-      //               <IoCallOutline className="text-2xl" />
-      //             </button>
+            //             <button
+            //               onClick={toggleCamera}
+            //               className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+            //             >
+            //               {isCameraOn ? (
+            //                 <BsCameraVideo className="text-xl" />
+            //               ) : (
+            //                 <BsCameraVideoOff className="text-xl" />
+            //               )}
+            //             </button>
 
-      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-      //               <GoUnmute className="text-xl" />
-      //             </button>
+            //             <button
+            //               onClick={() => {
+            //                 endCall();
+            //                 cleanupConnection();
+            //               }}
+            //               className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+            //             >
+            //               <IoCallOutline className="text-2xl" />
+            //             </button>
 
-      //             {(isVideoCalling || isVoiceCalling) && (
-      //               <button
-      //                 onClick={() => {
-      //                   setParticipantOpen(true);
-      //                   setShowFirstSection(true);
-      //                 }}
-      //                 className="w-10 grid place-content-center rounded-full h-10 border text-white"
-      //               >
-      //                 <MdOutlineGroupAdd className="text-xl" />
-      //               </button>
-      //             )}
+            //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            //               <GoUnmute className="text-xl" />
+            //             </button>
 
-      //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-      //               <AiOutlineVideoCamera className="text-xl" />
-      //             </button>
+            //             {(isVideoCalling || isVoiceCalling) && (
+            //               <button
+            //                 onClick={() => {
+            //                   setParticipantOpen(true);
+            //                   setShowFirstSection(true);
+            //                 }}
+            //                 className="w-10 grid place-content-center rounded-full h-10 border text-white"
+            //               >
+            //                 <MdOutlineGroupAdd className="text-xl" />
+            //               </button>
+            //             )}
 
-                  
-      //           </div>
-      //         </div>
-            )
-          )}
+            //             <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            //               <AiOutlineVideoCamera className="text-xl" />
+            //             </button>
+
+
+            //           </div>
+            //         </div>
+          )
+        )}
       </div>
 
 
