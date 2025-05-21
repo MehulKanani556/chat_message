@@ -2588,13 +2588,13 @@ const Chat2 = () => {
                               />
 
                               {mobileMenuOpen && (
-                                <div
-                                  className="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg z-50"
+                                <div 
+                                  className="optionMenu absolute right-0 top-full mt-2 bg-white dark:bg-gray-800  rounded-lg shadow-lg z-50"
                                   ref={mobileMenuRef}
                                 >
-                                  <div className="py-2 w-48">
+                                  <div className="p-2 ">
                                     <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                                       onClick={() => {
                                         setIsClearChatModalOpen(true);
                                         setMobileMenuOpen(false);
@@ -2605,7 +2605,7 @@ const Chat2 = () => {
                                     </button>
 
                                     <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                                       onClick={() => {
                                         setIsDeleteChatModalOpen(true);
                                         setMobileMenuOpen(false);
@@ -2616,7 +2616,7 @@ const Chat2 = () => {
                                     </button>
 
                                     <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                                       onClick={() => {
                                         handleStartScreenShare();
                                         setMobileMenuOpen(false);
@@ -2628,7 +2628,7 @@ const Chat2 = () => {
 
                                     {selectedChat?.members && (
                                       <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                                         onClick={() => {
                                           if (selectedChat?.members) {
                                             setGroupUsers(
@@ -2647,7 +2647,7 @@ const Chat2 = () => {
                                     )}
 
                                     <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center text-nowrap"
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                                       onClick={() => {
                                         handleMakeCall("video");
                                         setMobileMenuOpen(false);
@@ -2658,7 +2658,7 @@ const Chat2 = () => {
                                     </button>
 
                                     <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center"
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                                       onClick={() => {
                                         handleMakeCall("voice");
                                         setMobileMenuOpen(false);
