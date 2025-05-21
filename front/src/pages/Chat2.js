@@ -2181,7 +2181,7 @@ const Chat2 = () => {
               />
             )}
             {showProfile && <Profile />}
-            {console.log("object",selectedChatModule)}
+            {console.log("object", selectedChatModule)}
             {selectedChatModule && (
               <ChatList
                 allMessageUsers={allMessageUsers}
@@ -2203,7 +2203,7 @@ const Chat2 = () => {
           </div>
 
           {/* Right Side */}
-          {console.log("showLeftSidebar",showLeftSidebar)}
+          {console.log("showLeftSidebar", showLeftSidebar)}
           <>
             <div
               className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -2219,16 +2219,16 @@ const Chat2 = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {console.log("kk",isGroupModalOpen ,
-                isModalOpen ,
-                isGroupCreateModalOpen ,
-                isUserProfileModalOpen,!showOverlay,(!(
+              {console.log("kk", isGroupModalOpen,
+                isModalOpen,
+                isGroupCreateModalOpen,
+                isUserProfileModalOpen, !showOverlay, (!(
                   isGroupModalOpen ||
                   isModalOpen ||
                   isGroupCreateModalOpen ||
                   isUserProfileModalOpen
                 ) ||
-                  !showOverlay),selectedChat)}
+                  !showOverlay), selectedChat)}
 
               {(!(
                 isGroupModalOpen ||
@@ -2738,40 +2738,7 @@ const Chat2 = () => {
                               </div>
                             </div>
                           )}
-                          {console.log(Object.keys(uploadProgress).length)}
-<<<<<<< Updated upstream
-                          {console.log("height:",
-                            selectedFiles.length > 0
-                              ? "calc(100vh -  276px)"
-                              : Object.keys(uploadProgress).length != 0
-                                ? "calc(100vh - 234 px)"
-                                : replyingTo
-                                  ? replyingTo?.content?.fileType &&
-                                    replyingTo?.content?.fileType?.startsWith(
-                                      "image/"
-                                    )
-                                    ? "calc(100vh - 280px)"
-                                    : "calc(100vh -  229px)"
-                                  : window.innerWidth < 768
-                                    ? "calc(100vh - 179px)"
-                                    : "calc(100vh - 173px")}
-=======
-                          {console.log("height:", 
-                                selectedFiles.length > 0
-                                  ? "calc(100vh -  276px)"
-                                  : Object.keys(uploadProgress).length != 0
-                                    ? "calc(100vh - 234 px)"
-                                    : replyingTo
-                                      ? replyingTo?.content?.fileType &&
-                                        replyingTo?.content?.fileType?.startsWith(
-                                          "image/"
-                                        )
-                                        ? "calc(100vh - 280px)"
-                                        : "calc(100vh -  229px)"
-                                      : window.innerWidth < 768
-                                        ? "calc(100vh - 179px)"
-                                        : "calc(100vh - 173px")}
->>>>>>> Stashed changes
+
                           <div
                             className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
                             style={{
