@@ -7,7 +7,7 @@ import { getAllCallUsers } from '../redux/slice/user.slice';
 import { FaChevronLeft } from 'react-icons/fa';
 import { FiArrowDownLeft, FiArrowUpRight, FiPhoneMissed } from 'react-icons/fi';
 
-const CallHistory = ({ setShowLeftSidebar }) => {
+const CallHistory = ({ }) => {
   const [callHistory, setCallHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showMissedCallsOnly, setShowMissedCallsOnly] = useState(false);

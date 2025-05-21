@@ -8,9 +8,10 @@ import { createGroup } from "../redux/slice/user.slice";
 import { useSocket } from "../hooks/useSocket";
 import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
+import { setIsGroupCreateModalOpen, setShowLeftSidebar } from '../redux/slice/manageState.slice';
 
 
-const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreateModalOpen, setIsGroupCreateModalOpen}) => {
+const Groups = ({setSelectedChat, selectedChat}) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
@@ -22,6 +23,8 @@ const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreat
     const [userId, setUserId] = useState(sessionStorage.getItem("userId"));
     const { allUsers } = useSelector((state) => state.user);
     const { socket } = useSocket(currentUser,);
+
+    const { isGroupCreateModalOpen } = useSelector(state => state.magageState);
 
     useEffect(() => {
         dispatch(getAllGroups());
@@ -38,7 +41,7 @@ const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreat
             });
             window.dispatchEvent(event);
             setSelectedChat(group);
-            setShowLeftSidebar(false);
+            dispatch(setShowLeftSidebar(false));
         } else {
             alert("You are not a member of this group");
         }
@@ -55,7 +58,7 @@ const Groups = ({setShowLeftSidebar, setSelectedChat, selectedChat, isGroupCreat
                         <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">Groups</h1>
                     </div>
                     <button
-                        onClick={ ()=> setIsGroupCreateModalOpen(true)}
+                        onClick={ ()=> dispatch(setIsGroupCreateModalOpen(true))}
                         className="w-5 h-5 rounded-full hover:text-primary dark:text-primary-light"
                     >
                         <FaUserPlus className="hover:text-primary" />
