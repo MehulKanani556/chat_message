@@ -117,6 +117,7 @@ import { SlPin } from "react-icons/sl";
 import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
 import { debounce } from 'lodash';
+import { decryptMessage } from "../utils/decryptMess";
 
 import VideoCallLayout from "../component/VideoCallLayout";
 
@@ -2738,6 +2739,7 @@ const Chat2 = () => {
                             </div>
                           )}
                           {console.log(Object.keys(uploadProgress).length)}
+<<<<<<< Updated upstream
                           {console.log("height:",
                             selectedFiles.length > 0
                               ? "calc(100vh -  276px)"
@@ -2753,6 +2755,23 @@ const Chat2 = () => {
                                   : window.innerWidth < 768
                                     ? "calc(100vh - 179px)"
                                     : "calc(100vh - 173px")}
+=======
+                          {console.log("height:", 
+                                selectedFiles.length > 0
+                                  ? "calc(100vh -  276px)"
+                                  : Object.keys(uploadProgress).length != 0
+                                    ? "calc(100vh - 234 px)"
+                                    : replyingTo
+                                      ? replyingTo?.content?.fileType &&
+                                        replyingTo?.content?.fileType?.startsWith(
+                                          "image/"
+                                        )
+                                        ? "calc(100vh - 280px)"
+                                        : "calc(100vh -  229px)"
+                                      : window.innerWidth < 768
+                                        ? "calc(100vh - 179px)"
+                                        : "calc(100vh - 173px")}
+>>>>>>> Stashed changes
                           <div
                             className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
                             style={{
