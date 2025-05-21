@@ -121,7 +121,7 @@ import { decryptMessage } from "../utils/decryptMess";
 
 import VideoCallLayout from "../component/VideoCallLayout";
 
-import { decryptMessage } from "../utils/decryptMess";
+
 
 
 const Chat2 = () => {
@@ -1434,7 +1434,6 @@ const Chat2 = () => {
       if (window.innerWidth <= 600) {
         setShowLeftSidebar(true);
       } else {
-
         setShowLeftSidebar(false);
       }
     };
@@ -1578,7 +1577,11 @@ const Chat2 = () => {
   useEffect(() => {
     // Set showLeftSidebar to true when no chat is selected
     if (!selectedChat) {
-      setShowLeftSidebar(false);
+      if (window.innerWidth <= 600) {
+        setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
+      } else {
+        setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
+      }
     }
   }, [selectedChat]);
 
