@@ -4,18 +4,18 @@ import { useDispatch } from 'react-redux';
 import { updateGroup, getAllMessageUsers, addParticipants } from '../redux/slice/user.slice';
 import { IoIosArrowBack } from "react-icons/io";
 import { IMG_URL } from '../utils/baseUrl';
+import { setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsModalOpen } from '../redux/slice/manageState.slice';
 
 const AddParticipants = ({
   selectedChat,
-  setIsModalOpen,
+  // setIsModalOpen,
   allUsers,
   userId,
   socket,
   groupUsers,
   setGroupUsers,
-  setIsGroupModalOpen,
+  // setIsGroupModalOpen,
   creatGroup,
-  setIsGroupCreateModalOpen
 }) => {
   const dispatch = useDispatch();
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -32,8 +32,8 @@ const AddParticipants = ({
 
   const handleAddParticipants = async () => {
     if(creatGroup){
-      setIsModalOpen(false);
-      setIsGroupCreateModalOpen(true);
+      dispatch(setIsModalOpen(false));
+      dispatch(setIsGroupCreateModalOpen(true));
     }else{
 
       try {
@@ -47,8 +47,8 @@ const AddParticipants = ({
            if (result.status === true) {
             socket.emit("update-group", data);
             setGroupUsers([]);
-            setIsModalOpen(false);
-            setIsGroupModalOpen(true);
+            dispatch(setIsModalOpen(false));
+            dispatch(setIsGroupModalOpen(true));
             dispatch(getAllMessageUsers());
            }
       } catch (error) {
@@ -75,9 +75,9 @@ const AddParticipants = ({
       }}
     >
      <div className="flex justify-between items-center p-4 py-6">
-        <h2 className="text-lg font-bold flex items-center"><IoIosArrowBack className="mr-2 cursor-pointer hover:text-primary" onClick={() => {setIsGroupModalOpen(true); setIsModalOpen(false);}}/>Add Participants</h2>
+        <h2 className="text-lg font-bold flex items-center"><IoIosArrowBack className="mr-2 cursor-pointer hover:text-primary" onClick={() => {dispatch(setIsGroupModalOpen(true)); dispatch(setIsModalOpen(false));}}/>Add Participants</h2>
         <button
-          onClick={() => setIsModalOpen(false)}
+          onClick={() => dispatch(setIsModalOpen(false))}
           className="text-gray-500 hover:text-gray-700"
         >
           <ImCross />

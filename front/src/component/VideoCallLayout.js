@@ -1,9 +1,11 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
+import { useSocket } from "../hooks/useSocket";
+import { useSelector } from "react-redux";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
@@ -15,8 +17,7 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = ({
-    participants,
-    currentUser,
+  currentUser,
   localVideoRef,
   allUsers,
   cameraStatus,
@@ -31,19 +32,22 @@ const VideoCallLayout = ({
   isVideoCalling,
   isVoiceCalling,
   setParticipantOpen,
-  setShowFirstSection,
   cleanupConnection
 }) => {
+
+
+  const {remoteStreams,participants} = useSelector(state => state.magageState)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black">
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
-       { participants.map(([participantId, stream]) => {
+       {participants.length > 0 && Array.from(participants)?.map(([participantId, stream]) => {
           const participant = allUsers.find(u => u._id === participantId);
           const isCameraEnabled = cameraStatus?.[participantId] !== false;
           const isLocalUser = participantId === currentUser;
-          const widthClass = getParticipantWidth(participants.length);
+          const widthClass = getParticipantWidth(participants?.length);
+          // localVideoRef.current.srcObject = isLocalUser ? stream : null
 
           return (
             <div
@@ -54,38 +58,26 @@ const VideoCallLayout = ({
               <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
                 {isCameraEnabled ? (
                   <>
-                    {isLocalUser ? (
-                      <video
-                        ref={localVideoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover rounded-xl"
-                        onLoadedMetadata={() => {
-                          if (localVideoRef.current) {
-                            localVideoRef.current.play().catch(err =>
-                              console.error("Local video error:", err)
-                            );
-                          }
-                        }}
-                      />
-                    ) : (
-                      <video
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover rounded-xl"
-                        ref={(el) => {
-                          if (el) {
-                            el.srcObject = stream;
-                            el.play().catch(err =>
-                              console.error("Remote video error:", err)
-                            );
-                          }
-                        }}
-                      />
-                    )}
+                   <video
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover rounded-xl"
+                    muted={participantId === currentUser}
+                    ref={el => {
+                      if (el && stream instanceof MediaStream) {
+                        el.srcObject = stream;
+                        el.play().catch(err =>
+                          console.error("Remote video error:", err)
+                        );
+                      }
+                      // If you want to keep localVideoRef for the current user:
+                      if (participantId === currentUser && localVideoRef) {
+                        localVideoRef.current = el;
+                      }
+                    }}
+                  />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
-                      {isLocalUser ? "You" : participant?.userName || "Participant"}
+                      {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
                   </>
                 ) : (
@@ -106,7 +98,7 @@ const VideoCallLayout = ({
                       )}
                     </div>
                     <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
-                      {participant?.userName || "Participant"} (Camera Off)
+                      {participant?.userName || "Pa"} (Camera Off)
                     </div>
                   </div>
                 )}
@@ -164,7 +156,6 @@ const VideoCallLayout = ({
                     <button
                       onClick={() => {
                         setParticipantOpen(true);
-                        setShowFirstSection(true);
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >

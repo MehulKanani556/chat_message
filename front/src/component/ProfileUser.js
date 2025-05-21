@@ -27,7 +27,7 @@ const fetchUrlTitle = async (url) => {
   }
 };
 
-export default function ProfileUser({ isOpen, onClose, selectedChat, messages, handleImageClick, handleMakeCall, onlineUsers }) {
+export default function ProfileUser({ isOpen, onClose, selectedChat, messages, handleImageClick, handleMakeCall }) {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   const [currentUser] = useState(sessionStorage.getItem("userId")); 
   const { user, } =
   useSelector((state) => state.user);
-
+  const {onlineUsers} = useSelector(state => state.magageState)
   const dispatch = useDispatch();
 
   const toggleAccordion = () => {

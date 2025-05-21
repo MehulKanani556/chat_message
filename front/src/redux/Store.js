@@ -3,6 +3,10 @@ import { thunk } from "redux-thunk";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { rootReducer } from "./rootReducer.js";
+import { enableMapSet } from 'immer';
+
+// Enable Map and Set support in Immer
+enableMapSet();
 
 export const configureStore = () => {
   const persistConfig = {

@@ -454,20 +454,20 @@ function handleParticipantLeft(socket, data) {
     const call = activeCalls[roomId];
 
     if (call) {
-      if (call.joined.includes(leavingUser)) {
-        call.joined = call.joined.filter((id) => id !== leavingUser);
+      if (call?.joined.includes(leavingUser)) {
+        call.joined = call?.joined.filter((id) => id !== leavingUser);
       }
-      if (call.invited.includes(leavingUser)) {
-        call.invited = call.invited.push(leavingUser)
+      if (!call?.invited.includes(leavingUser)) {
+        call.invited = call?.invited.push(leavingUser)
       }
     }
-    socket.to(roomId).emit("call:update-participant-list", call);
-
-    socket.to(targetSocketId).emit("participant-left", {
+    
+    socket.to(targetSocketId).emit("participant-lefted", {
       leavingUser,
       duration,
       roomId,
     });
+    socket.to(roomId).emit("call:update-participant-list", call);
   }
   socket.leave(roomId);
 }
@@ -482,11 +482,11 @@ function handleCallAccept(socket, data) {
   if (call) {
     if (!call.joined.includes(fromEmail)) {
       call.joined.push(fromEmail);
-      call.invited = call.invited.filter((id) => id !== fromEmail)
+      call.invited = call.invited.filter((id) => id != fromEmail)
     }
     if (!call.joined.includes(toEmail)) {
       call.joined.push(toEmail);
-      call.invited = call.invited.filter((id) => id !== toEmail)
+      call.invited = call.invited.filter((id) => id != toEmail)
     }
     call.ringing = call.ringing.filter((id) => id !== fromEmail);
     call.ringing = call.ringing.filter((id) => id !== toEmail);

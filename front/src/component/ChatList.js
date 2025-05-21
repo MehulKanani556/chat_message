@@ -3,19 +3,17 @@ import { PiPencilSimpleBold } from "react-icons/pi";
 import { VscCallIncoming, VscCallOutgoing } from "react-icons/vsc";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
+import { setShowLeftSidebar } from "../redux/slice/manageState.slice";
 const ChatList = ({
   allMessageUsers,
   item,
   currentUser,
-  onlineUsers,
-  IMG_URL,
   selectedChat,
   setSelectedChat,
-  setShowLeftSidebar,
   allUsers,
   handleMultipleFileUpload,
   typingUsers
@@ -26,7 +24,9 @@ const ChatList = ({
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
   const { user } =
     useSelector((state) => state.user);
+    const {onlineUsers} = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     let filteredUsers = [];
@@ -216,7 +216,7 @@ const ChatList = ({
                       }}
                       onClick={() => {
                         setSelectedChat(item);
-                        setShowLeftSidebar(false);
+                        dispatch(setShowLeftSidebar(false));
                       }}
                     >
                       <div className="flex items-center">
@@ -889,7 +889,7 @@ const ChatList = ({
                     setSearchInput("");
                     setFindUser(!findUser);
                     if (window.innerWidth <= 425) {
-                      setShowLeftSidebar(false);
+                      dispatch(setShowLeftSidebar(false));
                     }
                   }}
                 >
