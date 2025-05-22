@@ -71,7 +71,7 @@ const CreatedGroup = ({
 
   return (
     <div
-      className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
+      className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
       }}
@@ -198,80 +198,15 @@ const CreatedGroup = ({
           </button>
         </div>
       </div>
-      <div className="mt-4 p-4">
-        {/* <div className="flex items-center justify-between p-2 border-b border-gray-400">
-          <span className="text-gray-600 font-bold dark:text-primary-light">
-            Participants
-          </span>
-         
-          <span className="text-gray-800 dark:text-primary-light">
-            {groupUsers.length + 1}
-          </span>
-        </div> */}
-        {/* <div className="flex flex-col h-[calc(100vh-360px)] overflow-y-auto cursor-pointer scrollbar-hide">
-          {allUsers
-            .filter((user) => user._id !== currentUser) // Exclude current user from list
-            .map((user, index) => {
-              const isChecked = groupUsers.includes(user._id);
-              console.log(allUsers);
-              
-              return (
-                <div
-                  key={index}
-                  className={`flex items-center justify-between p-2 hover:bg-primary/50 rounded ${
-                    isChecked ? "order-first" : ""
-                  }`}
-                  onClick={() => handleUserSelection(user._id)}
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 dark:bg-primary-light/15 overflow-hidden flex items-center justify-center">
-                      {user?.photo && user.photo !== "null" ? (
-                        <img
-                          src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                          alt={`${user.userName}`}
-                          className="object-cover h-full w-full"
-                        />
-                      ) : (
-                        <span className="text-gray-900 dark:text-primary-light text-sm font-bold">
-                          {user?.userName
-                            .split(" ")
-                            .map((n) => n[0].toUpperCase())
-                            .join("")}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-gray-900 dark:text-primary-light/70">
-                      {user?.userName}
-                    </span>
-                  </div>
-                  <input
-                    id={`checkbox-${user._id}`}
-                    type="checkbox"
-                    checked={isChecked}
-                    readOnly
-                    className="form-checkbox rounded-full accent-primary"
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      border: "2px solid #ccc",
-                      backgroundColor: "#fff",
-                      cursor: "pointer",
-                    }}
-                  />
-                </div>
-              );
-            })}
-        </div> */}
-        <div className="fixed bottom-8  mt-4 flex justify-center max-w-[350px] w-full">
-          <button
-            onClick={handleCreateGroup}
-            disabled={!groupName && groupUsers.length === 0} // Optional: Disable button if no name and no users selected
-            className="bg-primary w-full text-white px-4 py-1 rounded-md hover:bg-primary/70 disabled:opacity-50"
-          >
-            Create Group
-          </button>
-        </div>
+      {/* <div className="fixed bottom-8  mt-4 flex justify-center max-w-[350px] w-full"> */}
+      <div className=" fixed bottom-8 max-w-md bg-[#F9FAFA] w-[350px] flex rounded-lg m-3">
+        <button
+          onClick={handleCreateGroup}
+          disabled={!groupName && groupUsers.length === 0} // Optional: Disable button if no name and no users selected
+          className="bg-primary w-full text-white px-4 py-1 rounded-md hover:bg-primary/70 disabled:opacity-50"
+        >
+          Create Group
+        </button>
       </div>
     </div>
   );

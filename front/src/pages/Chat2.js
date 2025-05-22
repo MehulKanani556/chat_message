@@ -3085,13 +3085,15 @@ const Chat2 = () => {
                 )}
             </div>
 
+            {console.log(isModalOpen, isGroupCreateModalOpen)}
+
             {/* ============================== right sidebar =========================================== */}
 
             <div
               className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
-                isGroupCreateModalOpen ||
+                isGroupCreateModalOpen || isModalOpen ||
                 (isUserProfileModalOpen && !selectedChat.members)
-                ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
+                ? "2xl:w-[380px]  sm:max-w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px]  opacity-100"
                 : "w-0 opacity-0"
                 }`}
               style={{
