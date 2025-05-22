@@ -1130,7 +1130,8 @@ const Chat2 = () => {
       }
     } else {
       // Handle text and emoji copying
-      const content = message.content || message;
+      const content = decryptMessage(message.content || message);
+      console.log("content", content, message);
       navigator.clipboard.writeText(content).then(callback);
     }
   };
@@ -1805,8 +1806,6 @@ const Chat2 = () => {
   }, [invitedUsers]);
 
   const [uploadProgress, setUploadProgress] = useState({});
-  console.log("aa", uploadProgress)
-
 
 
   return (
@@ -1844,7 +1843,6 @@ const Chat2 = () => {
               />
             )}
             {showProfile && <Profile />}
-            {console.log("object", selectedChatModule)}
             {selectedChatModule && (
               <ChatList
                 allMessageUsers={allMessageUsers}
@@ -1864,7 +1862,6 @@ const Chat2 = () => {
           </div>
 
           {/* Right Side */}
-          {console.log("showLeftSidebar", showLeftSidebar)}
           <>
             <div
               className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -1880,16 +1877,7 @@ const Chat2 = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {console.log("kk", isGroupModalOpen,
-                isModalOpen,
-                isGroupCreateModalOpen,
-                isUserProfileModalOpen, !showOverlay, (!(
-                  isGroupModalOpen ||
-                  isModalOpen ||
-                  isGroupCreateModalOpen ||
-                  isUserProfileModalOpen
-                ) ||
-                  !showOverlay), selectedChat)}
+              
 
               {(!(
                 isGroupModalOpen ||
@@ -3245,6 +3233,10 @@ const Chat2 = () => {
                     <button
                       onClick={() => {
                         setParticipantOpen(true);
+<<<<<<< Updated upstream
+=======
+                        // setShowFirstSection(true);
+>>>>>>> Stashed changes
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >
