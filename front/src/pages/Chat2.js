@@ -153,7 +153,9 @@ const Chat2 = () => {
     isModalOpen,
     isGroupCreateModalOpen,
     isUserProfileModalOpen,
-    showLeftSidebar
+    showLeftSidebar,
+    callChatList,
+    chatMessages
   } = useSelector(state => state.magageState)
 
   const dispatch = useDispatch();
@@ -1810,7 +1812,7 @@ const Chat2 = () => {
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
-      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+      {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
         <Sidebar
           user={user}
           onProfileClick={(userId) => {
@@ -1827,181 +1829,186 @@ const Chat2 = () => {
         />
       )}
       {/* ==============================Right Sidebar============================== */}
-      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+      {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
         <>
           {/* Left Side */}
-          <div
-            className={`${window.innerWidth <= 600
-              ? "ml-0 w-full"
-              : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
-              } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
-          >
-            {showGroups && (
-              <Groups
-                setSelectedChat={setSelectedChat}
-                selectedChat={selectedChat}
-              />
-            )}
-            {showProfile && <Profile />}
-            {selectedChatModule && (
-              <ChatList
-                allMessageUsers={allMessageUsers}
-                currentUser={currentUser}
-                setSelectedChat={setSelectedChat}
-                IMG_URL={IMG_URL}
-                selectedChat={selectedChat}
-                allUsers={allUsers}
-                handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
-                typingUsers={typingUsers}
-              />
-            )}
-            {showSettings && <Setting />}
-            {showCallHistory && (
-              <CallHistory />
-            )}
-          </div>
+
+          {(callChatList || showGroups || showProfile || selectedChatModule || showSettings || showCallHistory) &&
+            <div
+              className={`${window.innerWidth <= 600
+                ? "ml-0 w-full"
+                : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+                } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
+            >
+              {showGroups && (
+                <Groups
+                  setSelectedChat={setSelectedChat}
+                  selectedChat={selectedChat}
+                />
+              )}
+              {showProfile && <Profile />}
+              {selectedChatModule && (
+                <ChatList
+                  allMessageUsers={allMessageUsers}
+                  currentUser={currentUser}
+                  setSelectedChat={setSelectedChat}
+                  IMG_URL={IMG_URL}
+                  selectedChat={selectedChat}
+                  allUsers={allUsers}
+                  handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
+                  typingUsers={typingUsers}
+                />
+              )}
+              {showSettings && <Setting />}
+              {showCallHistory && (
+                <CallHistory />
+              )}
+            </div>
+          }
 
           {/* Right Side */}
           <>
-            <div
-              className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
-                (isGroupModalOpen ||
+
+            {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
+              <div
+                className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
+                  (isGroupModalOpen ||
+                    isModalOpen ||
+                    isGroupCreateModalOpen ||
+                    isUserProfileModalOpen)
+                  ? "w-0 opacity-0"
+                  : "w-full opacity-100"
+                  } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+
+
+                {(!(
+                  isGroupModalOpen ||
                   isModalOpen ||
                   isGroupCreateModalOpen ||
-                  isUserProfileModalOpen)
-                ? "w-0 opacity-0"
-                : "w-full opacity-100"
-                } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              
-
-              {(!(
-                isGroupModalOpen ||
-                isModalOpen ||
-                isGroupCreateModalOpen ||
-                isUserProfileModalOpen
-              ) ||
-                !showOverlay) && (
-                  <>
-                    {selectedChat ? (
-                      <>
-                        <div
-                          className="flex items-center justify-between p-4  relative dark:bg-[#1A1A1A] bg:primary-light border-b border-gray-200 dark:border-transparent"
-                        // style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
-                        >
-                          <div className="flex items-center">
-                            {/* Add back button for mobile */}
-                            {window.innerWidth <= 600 && (
-                              <button
-                                className=" text-gray-600 hover:text-gray-800 mr-2"
-                                onClick={() => dispatch(setShowLeftSidebar(true))}
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-6 w-6"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
+                  isUserProfileModalOpen
+                ) ||
+                  !showOverlay) && (
+                    <>
+                      {selectedChat ? (
+                        <>
+                          <div
+                            className="flex items-center justify-between p-4  relative dark:bg-[#1A1A1A] bg:primary-light border-b border-gray-200 dark:border-transparent"
+                          // style={{ boxShadow: "0px 0px 5px 1px #80808054" }}
+                          >
+                            <div className="flex items-center">
+                              {/* Add back button for mobile */}
+                              {window.innerWidth <= 600 && (
+                                <button
+                                  className=" text-gray-600 hover:text-gray-800 mr-2"
+                                  onClick={() => dispatch(setShowLeftSidebar(true))}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 19l-7-7 7-7"
-                                  />
-                                </svg>
-                              </button>
-                            )}
-                            <div
-                              className="w-10 h-10 rounded-full bg-primary  overflow-hidden flex items-center justify-center cursor-pointer"
-                              onClick={() => {
-                                if (
-                                  selectedChat?.photo &&
-                                  selectedChat.photo !== "null"
-                                ) {
-                                  handleProfileImageClick(
-                                    `${IMG_URL}${selectedChat.photo.replace(
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 19l-7-7 7-7"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                              <div
+                                className="w-10 h-10 rounded-full bg-primary  overflow-hidden flex items-center justify-center cursor-pointer"
+                                onClick={() => {
+                                  if (
+                                    selectedChat?.photo &&
+                                    selectedChat.photo !== "null"
+                                  ) {
+                                    handleProfileImageClick(
+                                      `${IMG_URL}${selectedChat.photo.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`
+                                    );
+                                  }
+                                }}
+                              >
+                                {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
+                                  <img
+                                    src={`${IMG_URL}${selectedChat.photo.replace(
                                       /\\/g,
                                       "/"
-                                    )}`
-                                  );
-                                }
-                              }}
-                            >
-                              {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
-                                <img
-                                  src={`${IMG_URL}${selectedChat.photo.replace(
-                                    /\\/g,
-                                    "/"
-                                  )}`}
-                                  alt="Profile"
-                                  className="object-cover h-full"
-                                />
-                              ) : (
-                                <span className="text-white text-xl font-bold">
-                                  {selectedChat?.userName &&
-                                    selectedChat?.userName.includes(" ")
-                                    ? selectedChat?.userName.split(
-                                      " "
-                                    )?.[0][0] +
-                                    selectedChat?.userName.split(" ")?.[1][0]
-                                    : selectedChat?.userName?.[0]}
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              className="ml-3 cursor-pointer"
-                              onClick={() => {
-                                console.log("selectedChat", selectedChat);
-                                if (selectedChat?.members) {
-                                  console.log("selectedChat");
-                                  dispatch(setIsGroupModalOpen(true));
-                                } else {
-                                  dispatch(setIsUserProfileModalOpen(true));
-                                  // setIsModalOpen(true);
-                                }
-                              }}
-                            >
-                              <div className="font-medium dark:text-primary-light">
-                                {selectedChat?.userName || "Select a chat"}
+                                    )}`}
+                                    alt="Profile"
+                                    className="object-cover h-full"
+                                  />
+                                ) : (
+                                  <span className="text-white text-xl font-bold">
+                                    {selectedChat?.userName &&
+                                      selectedChat?.userName.includes(" ")
+                                      ? selectedChat?.userName.split(
+                                        " "
+                                      )?.[0][0] +
+                                      selectedChat?.userName.split(" ")?.[1][0]
+                                      : selectedChat?.userName?.[0]}
+                                  </span>
+                                )}
                               </div>
-                              {selectedChat?.members ? (
-                                <div className="text-sm text-gray-500">
-                                  {selectedChat?.members?.length} participants
+                              <div
+                                className="ml-3 cursor-pointer"
+                                onClick={() => {
+                                  console.log("selectedChat", selectedChat);
+                                  if (selectedChat?.members) {
+                                    console.log("selectedChat");
+                                    dispatch(setIsGroupModalOpen(true));
+                                  } else {
+                                    dispatch(setIsUserProfileModalOpen(true));
+                                    // setIsModalOpen(true);
+                                  }
+                                }}
+                              >
+                                <div className="font-medium dark:text-primary-light">
+                                  {selectedChat?.userName || "Select a chat"}
                                 </div>
-                              ) : (
-                                <div
-                                  className={`text-sm ${onlineUsers.includes(selectedChat?._id)
-                                    ? "text-green-500"
-                                    : "text-gray-500"
-                                    }`}
-                                >
-                                  {onlineUsers.includes(selectedChat?._id)
-                                    ? "Online"
-                                    : "Offline"}
-                                </div>
-                              )}
+                                {selectedChat?.members ? (
+                                  <div className="text-sm text-gray-500">
+                                    {selectedChat?.members?.length} participants
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`text-sm ${onlineUsers.includes(selectedChat?._id)
+                                      ? "text-green-500"
+                                      : "text-gray-500"
+                                      }`}
+                                  >
+                                    {onlineUsers.includes(selectedChat?._id)
+                                      ? "Online"
+                                      : "Offline"}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            {/* Show regular icons on larger screens */}
-                            <div className="hidden md:flex items-center gap-4 dark:text-white">
-                              <IoMdSearch
-                                className="w-6 h-6 cursor-pointer"
-                                onClick={() =>
-                                  setIsSearchBoxOpen((prev) => !prev)
-                                }
-                                title="Find"
-                                data-tooltip="Find"
-                                data-tooltip-delay="0"
-                                data-tooltip-duration="0"
-                              />
+                            <div className="flex items-center space-x-4">
+                              {/* Show regular icons on larger screens */}
+                              <div className="hidden md:flex items-center gap-4 dark:text-white">
+                                <IoMdSearch
+                                  className="w-6 h-6 cursor-pointer"
+                                  onClick={() =>
+                                    setIsSearchBoxOpen((prev) => !prev)
+                                  }
+                                  title="Find"
+                                  data-tooltip="Find"
+                                  data-tooltip-delay="0"
+                                  data-tooltip-duration="0"
+                                />
 
-                              {/* <MdOutlineDeleteSweep
+                                {/* <MdOutlineDeleteSweep
                       onClick={() => setIsClearChatModalOpen(true)}
                       title="Clear chat"
                       data-tooltip="Clear chat"
@@ -2009,187 +2016,587 @@ const Chat2 = () => {
                       data-tooltip-duration="0"
                       className="w-7 h-7 cursor-pointer hover:text-red-600 text-4xl"
                     /> */}
-                              {isSharing ? (
-                                <LuScreenShareOff
-                                  title="Stop sharing"
-                                  data-tooltip="Stop sharing"
+                                {isSharing ? (
+                                  <LuScreenShareOff
+                                    title="Stop sharing"
+                                    data-tooltip="Stop sharing"
+                                    data-tooltip-delay="0"
+                                    data-tooltip-duration="0"
+                                    className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 animate-bounce"
+                                    onClick={() => cleanupConnection()}
+                                  />
+                                ) : (
+                                  // <LuScreenShare
+                                  //   title="Screen sharing"
+                                  //   data-tooltip="Screen sharing"
+                                  //   data-tooltip-delay="0"
+                                  //   data-tooltip-duration="0"
+                                  //   className="w-6 h-6 cursor-pointer"
+                                  //   onClick={() => handleStartScreenShare()}
+                                  // />
+                                  <div
+                                    className="w-6 h-6 cursor-pointer"
+                                    onClick={() => handleStartScreenShare()}
+                                  >
+                                    <svg
+                                      width={24}
+                                      height={24}
+                                      x={0}
+                                      y={0}
+                                      viewBox="0 0 32 32"
+                                      style={{
+                                        enableBackground: "new 0 0 512 512",
+                                      }}
+                                      xmlSpace="preserve"
+                                      className
+                                    >
+                                      <g>
+                                        <path
+                                          d="M14.592 8.39a2.453 2.453 0 0 1 2.817 0l4.764 3.339a1 1 0 0 1-1.148 1.639l-5.024-3.522-5.024 3.522a1 1 0 0 1-1.148-1.639l4.764-3.339z"
+                                          fill="currentColor"
+                                          opacity={1}
+                                          data-original="#000000"
+                                        />
+                                        <path
+                                          d="M15 8.742h2v10.815a1 1 0 0 1-2 0z"
+                                          fill="currentColor"
+                                          opacity={1}
+                                          data-original="#000000"
+                                        />
+                                        <path
+                                          d="M25 25H7c-3.309 0-6-2.691-6-6V9c0-3.308 2.691-6 6-6h18c3.309 0 6 2.691 6 6v10c0 3.309-2.691 6-6 6zM7 5C4.794 5 3 6.794 3 9v10c0 2.206 1.794 4 4 4h18c2.206 0 4-1.794 4-4V9c0-2.206-1.794-4-4-4z"
+                                          fill="currentColor"
+                                          opacity={1}
+                                          data-original="#000000"
+                                        />
+                                        <path
+                                          d="M19 29h-6c-1.654 0-3-1.346-3-3v-3h12v3c0 1.654-1.346 3-3 3zm-7-4v1a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1z"
+                                          fill="currentColor"
+                                          opacity={1}
+                                          data-original="#000000"
+                                        />
+                                      </g>
+                                    </svg>
+                                  </div>
+                                )}
+
+                                <IoVideocamOutline
+                                  className="w-6 h-6 cursor-pointer"
+                                  onClick={() => handleMakeCall("video")}
+                                  title="Video Call"
+                                  data-tooltip="Video Call"
                                   data-tooltip-delay="0"
                                   data-tooltip-duration="0"
-                                  className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 animate-bounce"
-                                  onClick={() => cleanupConnection()}
                                 />
-                              ) : (
-                                // <LuScreenShare
-                                //   title="Screen sharing"
-                                //   data-tooltip="Screen sharing"
-                                //   data-tooltip-delay="0"
-                                //   data-tooltip-duration="0"
-                                //   className="w-6 h-6 cursor-pointer"
-                                //   onClick={() => handleStartScreenShare()}
-                                // />
-                                <div
+                                <IoCallOutline
                                   className="w-6 h-6 cursor-pointer"
-                                  onClick={() => handleStartScreenShare()}
-                                >
-                                  <svg
-                                    width={24}
-                                    height={24}
-                                    x={0}
-                                    y={0}
-                                    viewBox="0 0 32 32"
-                                    style={{
-                                      enableBackground: "new 0 0 512 512",
-                                    }}
-                                    xmlSpace="preserve"
-                                    className
-                                  >
-                                    <g>
-                                      <path
-                                        d="M14.592 8.39a2.453 2.453 0 0 1 2.817 0l4.764 3.339a1 1 0 0 1-1.148 1.639l-5.024-3.522-5.024 3.522a1 1 0 0 1-1.148-1.639l4.764-3.339z"
-                                        fill="currentColor"
-                                        opacity={1}
-                                        data-original="#000000"
-                                      />
-                                      <path
-                                        d="M15 8.742h2v10.815a1 1 0 0 1-2 0z"
-                                        fill="currentColor"
-                                        opacity={1}
-                                        data-original="#000000"
-                                      />
-                                      <path
-                                        d="M25 25H7c-3.309 0-6-2.691-6-6V9c0-3.308 2.691-6 6-6h18c3.309 0 6 2.691 6 6v10c0 3.309-2.691 6-6 6zM7 5C4.794 5 3 6.794 3 9v10c0 2.206 1.794 4 4 4h18c2.206 0 4-1.794 4-4V9c0-2.206-1.794-4-4-4z"
-                                        fill="currentColor"
-                                        opacity={1}
-                                        data-original="#000000"
-                                      />
-                                      <path
-                                        d="M19 29h-6c-1.654 0-3-1.346-3-3v-3h12v3c0 1.654-1.346 3-3 3zm-7-4v1a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1z"
-                                        fill="currentColor"
-                                        opacity={1}
-                                        data-original="#000000"
-                                      />
-                                    </g>
-                                  </svg>
-                                </div>
-                              )}
-
-                              <IoVideocamOutline
-                                className="w-6 h-6 cursor-pointer"
-                                onClick={() => handleMakeCall("video")}
-                                title="Video Call"
-                                data-tooltip="Video Call"
-                                data-tooltip-delay="0"
-                                data-tooltip-duration="0"
-                              />
-                              <IoCallOutline
-                                className="w-6 h-6 cursor-pointer"
-                                onClick={() => handleMakeCall("voice")}
-                                title="Voice Call"
-                                data-tooltip="Voice Call"
-                                data-tooltip-delay="0"
-                                data-tooltip-duration="0"
-                              />
-                              <BsThreeDotsVertical
-                                className="text-2xl cursor-pointer "
-                                onClick={() => setMenuOpen(!menuOpen)}
-                                title="More options"
-                                data-tooltip="More options"
-                                data-tooltip-delay="0"
-                                data-tooltip-duration="0"
-                              />
-                              {menuOpen && (
-                                <div className="optionMenu absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
-                                  <ul>
-                                    <li
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                      onClick={async () => {
-                                        await dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
-                                        await dispatch(getUser(currentUser));
-                                        await dispatch(getAllMessageUsers());
-                                      }}
-                                    >
-                                      {console.log(user)}
-
-                                      <SlPin className="text-lg" />{" "}
-                                      {user.pinChatFor?.includes(selectedChat?._id)
-                                        ? "UnPin Chat"
-                                        : "Pin Chat"}
-                                    </li>
-
-                                    <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                      onClick={async () => {
-                                        await dispatch(muteChat({ selectedUserId: selectedChat?._id, }));
-                                        await dispatch(getUser(currentUser));
-                                        await dispatch(getAllMessageUsers());
-                                      }}>
-                                      {/* <GoMute className="text-lg" />  */}
-                                      {user.muteUsers?.includes(selectedChat?._id) ?
-                                        <>
-                                          <IoVolumeOffOutline className="text-2xl w-5" />
-                                          UnMute
-                                        </>
-                                        :
-                                        <>
-                                          <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
-                                          </svg>
-                                          Mute
-                                        </>}
-                                    </li>
-                                    {selectedChat?.members && (
+                                  onClick={() => handleMakeCall("voice")}
+                                  title="Voice Call"
+                                  data-tooltip="Voice Call"
+                                  data-tooltip-delay="0"
+                                  data-tooltip-duration="0"
+                                />
+                                <BsThreeDotsVertical
+                                  className="text-2xl cursor-pointer "
+                                  onClick={() => setMenuOpen(!menuOpen)}
+                                  title="More options"
+                                  data-tooltip="More options"
+                                  data-tooltip-delay="0"
+                                  data-tooltip-duration="0"
+                                />
+                                {menuOpen && (
+                                  <div className="optionMenu absolute right-5 top-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36">
+                                    <ul>
                                       <li
                                         className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                        onClick={() => {
-                                          dispatch(setIsModalOpen(true));
-                                        }}>
-                                        <RiUserAddLine
-                                          title="Add to group"
-                                          data-tooltip="Add to group"
-                                          data-tooltip-delay="0"
-                                          data-tooltip-duration="0"
-                                          className=" cursor-pointer text-lg" />
-                                        Add Members
-                                      </li>
-                                    )}
-                                    <li
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                      onClick={async () => {
-                                        await dispatch(
-                                          archiveUser({
-                                            selectedUserId: selectedChat?._id,
-                                          })
-                                        );
-                                        await dispatch(getUser(currentUser));
-                                      }}
-                                    >
-                                      <IoArchiveOutline className="text-lg" />
-                                      {user.archiveUsers.includes(
-                                        selectedChat?._id
-                                      )
-                                        ? "UnArchive Chat"
-                                        : "Archive Chat"}
-                                    </li>
-                                    <li
-                                      onClick={() => {
-                                        setIsClearChatModalOpen(true);
-                                      }}
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                                    >
-                                      <MdOutlineCancel className="text-lg" />{" "}
-                                      Clear Chat
-                                    </li>
+                                        onClick={async () => {
+                                          await dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
+                                          await dispatch(getUser(currentUser));
+                                          await dispatch(getAllMessageUsers());
+                                        }}
+                                      >
+                                        {console.log(user)}
 
-                                    <li
+                                        <SlPin className="text-lg" />{" "}
+                                        {user.pinChatFor?.includes(selectedChat?._id)
+                                          ? "UnPin Chat"
+                                          : "Pin Chat"}
+                                      </li>
+
+                                      <li className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                        onClick={async () => {
+                                          await dispatch(muteChat({ selectedUserId: selectedChat?._id, }));
+                                          await dispatch(getUser(currentUser));
+                                          await dispatch(getAllMessageUsers());
+                                        }}>
+                                        {/* <GoMute className="text-lg" />  */}
+                                        {user.muteUsers?.includes(selectedChat?._id) ?
+                                          <>
+                                            <IoVolumeOffOutline className="text-2xl w-5" />
+                                            UnMute
+                                          </>
+                                          :
+                                          <>
+                                            <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path d="M9.20285 4.59811L13.4544 1.40611C13.5041 1.36989 13.5626 1.34782 13.6239 1.34226C13.6851 1.33669 13.7467 1.34784 13.8021 1.37451C13.8575 1.40118 13.9046 1.44237 13.9384 1.4937C13.9722 1.54504 13.9915 1.60458 13.9942 1.666V8.99627C13.9942 9.173 14.0644 9.3425 14.1894 9.46747C14.3143 9.59245 14.4838 9.66265 14.6606 9.66265C14.8373 9.66265 15.0068 9.59245 15.1318 9.46747C15.2567 9.3425 15.3269 9.173 15.3269 8.99627V1.666C15.3269 1.35661 15.2408 1.05334 15.0781 0.790152C14.9155 0.526969 14.6827 0.31428 14.406 0.175916C14.1293 0.0375526 13.8195 -0.0210183 13.5114 0.00676668C13.2032 0.0345517 12.9089 0.147595 12.6614 0.333229L8.40318 3.53189C8.33317 3.5844 8.27419 3.65018 8.2296 3.72548C8.18502 3.80078 8.1557 3.88413 8.14332 3.97076C8.13095 4.05739 8.13576 4.14561 8.15748 4.23038C8.17919 4.31516 8.2174 4.39482 8.2699 4.46483C8.32241 4.53484 8.38819 4.59382 8.46349 4.63841C8.53879 4.68299 8.62214 4.71231 8.70877 4.72469C8.7954 4.73706 8.88363 4.73226 8.9684 4.71054C9.05317 4.68882 9.13284 4.65062 9.20285 4.59811ZM18.4256 14.8205L1.09957 0.159968C0.965254 0.0450888 0.7908 -0.0117266 0.61459 0.00202033C0.438379 0.0157672 0.274847 0.0989504 0.159968 0.233271C0.0450888 0.367591 -0.0117266 0.542045 0.00202033 0.718255C0.0157672 0.894466 0.0989503 1.058 0.23327 1.17288L4.09165 4.43818C3.85605 4.62435 3.6654 4.86121 3.53389 5.13117C3.40237 5.40112 3.33336 5.69724 3.33197 5.99752V9.99585C3.33197 10.5261 3.5426 11.0346 3.91751 11.4095C4.29243 11.7844 4.80092 11.995 5.33113 11.995H7.77678L12.6614 15.6668C12.9089 15.8524 13.2032 15.9655 13.5114 15.9933C13.8195 16.0211 14.1293 15.9625 14.406 15.8241C14.6827 15.6858 14.9155 15.4731 15.0781 15.2099C15.2408 14.9467 15.3269 14.6434 15.3269 14.334V13.9542L17.5593 15.8401C17.681 15.9409 17.8345 15.9952 17.9925 15.9933C18.1287 15.9933 18.2617 15.9516 18.3735 15.8737C18.4852 15.7959 18.5705 15.6856 18.6177 15.5578C18.6649 15.43 18.6718 15.2908 18.6374 15.159C18.6031 15.0272 18.5292 14.909 18.4256 14.8205ZM13.9942 14.3274C13.9899 14.3873 13.97 14.4452 13.9366 14.4951C13.9032 14.5451 13.8573 14.5855 13.8035 14.6124C13.7497 14.6393 13.6899 14.6518 13.6298 14.6485C13.5698 14.6453 13.5116 14.6265 13.4611 14.5939L8.39652 10.7955C8.28117 10.709 8.14087 10.6622 7.99669 10.6622H5.33113C5.1544 10.6622 4.9849 10.592 4.85993 10.4671C4.73496 10.3421 4.66475 10.1726 4.66475 9.99585V5.99752C4.66098 5.84348 4.71072 5.69289 4.80549 5.57139C4.90026 5.44989 5.0342 5.36499 5.18453 5.33113L13.9942 12.8147V14.3274Z" fill="currentColor" />
+                                            </svg>
+                                            Mute
+                                          </>}
+                                      </li>
+                                      {selectedChat?.members && (
+                                        <li
+                                          className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                          onClick={() => {
+                                            dispatch(setIsModalOpen(true));
+                                          }}>
+                                          <RiUserAddLine
+                                            title="Add to group"
+                                            data-tooltip="Add to group"
+                                            data-tooltip-delay="0"
+                                            data-tooltip-duration="0"
+                                            className=" cursor-pointer text-lg" />
+                                          Add Members
+                                        </li>
+                                      )}
+                                      <li
+                                        className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                        onClick={async () => {
+                                          await dispatch(
+                                            archiveUser({
+                                              selectedUserId: selectedChat?._id,
+                                            })
+                                          );
+                                          await dispatch(getUser(currentUser));
+                                        }}
+                                      >
+                                        <IoArchiveOutline className="text-lg" />
+                                        {user.archiveUsers.includes(
+                                          selectedChat?._id
+                                        )
+                                          ? "UnArchive Chat"
+                                          : "Archive Chat"}
+                                      </li>
+                                      <li
+                                        onClick={() => {
+                                          setIsClearChatModalOpen(true);
+                                        }}
+                                        className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                      >
+                                        <MdOutlineCancel className="text-lg" />{" "}
+                                        Clear Chat
+                                      </li>
+
+                                      <li
+                                        onClick={() => {
+                                          setIsDeleteChatModalOpen(true);
+                                        }}
+                                        className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                                      >
+                                        <RiDeleteBinLine className="text-lg" />{" "}
+                                        Delete Chat
+                                      </li>
+                                      <li
+                                        className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-red-500"
+                                        onClick={async () => {
+                                          await dispatch(
+                                            blockUser({
+                                              selectedUserId: selectedChat?._id,
+                                            })
+                                          );
+                                          await dispatch(getUser(currentUser));
+                                          await dispatch(getAllMessageUsers());
+                                        }}
+                                      >
+                                        <MdOutlineBlock className="text-lg text-red-500" />
+                                        {user.blockedUsers?.includes(
+                                          selectedChat?._id
+                                        )
+                                          ? "Unblock"
+                                          : "Block"}
+                                      </li>
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Show three dots menu on mobile */}
+                              <div className="md:hidden relative mobile-menu flex items-center gap-2 dark:text-white">
+                                <IoMdSearch
+                                  className="w-6 h-6 cursor-pointer "
+                                  onClick={() =>
+                                    setIsSearchBoxOpen((prev) => !prev)
+                                  }
+                                  title="Find"
+                                  data-tooltip="Find"
+                                  data-tooltip-delay="0"
+                                  data-tooltip-duration="0"
+                                />
+                                <BsThreeDotsVertical
+                                  className="w-6 h-6 cursor-pointer"
+                                  onClick={() =>
+                                    setMobileMenuOpen(!mobileMenuOpen)
+                                  }
+                                />
+
+                                {mobileMenuOpen && (
+                                  <div
+                                    className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg z-50 dark:bg-gray-800"
+                                    ref={mobileMenuRef}
+                                  >
+                                    <div className="p-2 ">
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsClearChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
+                                        <span>Clear Chat</span>
+                                      </button>
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          setIsDeleteChatModalOpen(true);
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <RiDeleteBinLine className="w-5 h-5 mr-2" />
+                                        <span>Delete Chat</span>
+                                      </button>
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          handleStartScreenShare();
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <LuScreenShare className="w-5 h-5 mr-2" />
+                                        <span>Screen Share</span>
+                                      </button>
+
+                                      {selectedChat?.members && (
+                                        <button
+                                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
+                                          onClick={() => {
+                                            if (selectedChat?.members) {
+                                              setGroupUsers(
+                                                selectedChat?.members
+                                              );
+                                            } else {
+                                              setGroupUsers([selectedChat?._id]);
+                                            }
+                                            dispatch(setIsModalOpen(true));
+                                            setMobileMenuOpen(false);
+                                          }}
+                                        >
+                                          <MdGroupAdd className="w-5 h-5 mr-2" />
+                                          <span>Add to Group</span>
+                                        </button>
+                                      )}
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
+                                        onClick={() => {
+                                          handleMakeCall("video");
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <GoDeviceCameraVideo className="w-5 h-5 mr-2" />
+                                        <span>Video Call</span>
+                                      </button>
+
+                                      <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                                        onClick={() => {
+                                          handleMakeCall("voice");
+                                          setMobileMenuOpen(false);
+                                        }}
+                                      >
+                                        <IoCallOutline className="w-5 h-5 mr-2" />
+                                        <span>Voice Call</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {isSearchBoxOpen && (
+                            <div className="absolute top-32 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
+                              style={{
+                                transform: "translate(-50%, -50%)",
+                              }}>
+                              <div
+                                className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
+                                ref={searchBoxRef}
+                              >
+                                <FaSearch className="text-gray-500 mr-2" />
+                                <input
+                                  type="text"
+                                  placeholder="Search..."
+                                  className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
+                                  value={searchInputbox}
+                                  onChange={(e) => {
+                                    setSearchInputbox(e.target.value);
+                                    setCurrentSearchIndex(0); // Reset current search index
+                                  }}
+                                />
+                                <span className="mx-2 text-gray-500">
+                                  {totalMatches > 0
+                                    ? `${currentSearchIndex + 1} / ${totalMatches}`
+                                    : "0 / 0"}
+                                </span>
+                                <button
+                                  className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
+                                  onClick={() => handleSearchNavigation("up")}
+                                >
+                                  <IoIosArrowUp />
+                                </button>
+                                <button
+                                  className="hover:text-black hover:dark:text-white text-xl"
+                                  onClick={() => handleSearchNavigation("down")}
+                                >
+                                  <IoIosArrowDown />
+                                </button>
+
+                              </div>
+                              <button
+                                className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
+                                onClick={() => {
+                                  setIsSearchBoxOpen(false);
+                                  setSearchInputbox(""); // Clear the input box
+                                }}
+                              >
+                                <RxCross2 />
+                              </button>
+                            </div>
+                          )}
+
+
+                          {/*========================== Messages ==============================*/}
+                          <div className="relative">
+                            {/* {console.log("replyingTo",replyingTo)} */}
+                            {isDragging && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
+                                <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
+                                  <div className="text-center">
+                                    <div className="mb-4">
+                                      <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                      </svg>
+                                    </div>
+                                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div
+                              className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
+                              style={{
+                                height:
+                                  selectedFiles.length > 0
+                                    ? "calc(100vh -  276px)"
+                                    : Object.keys(uploadProgress).length != 0
+                                      ? "calc(100vh - 250px)"
+                                      : replyingTo
+                                        ? replyingTo?.content?.fileType &&
+                                          replyingTo?.content?.fileType?.startsWith(
+                                            "image/"
+                                          )
+                                          ? "calc(100vh - 280px)"
+                                          : "calc(100vh - 229px)"
+                                        : window.innerWidth < 768
+                                          ? "calc(100vh - 179px)"
+                                          : "calc(100vh - 173px)",
+                              }}
+                              ref={messagesContainerRef}
+                            >
+                              {/* {visibleDate && <FloatingDateIndicator />} */}
+
+                              {cameraStream ? <></> :
+                                <MessageList
+                                  messages={messages}
+                                  groupMessagesByDate={groupMessagesByDate}
+                                  userId={userId}
+                                  handleMakeCall={handleMakeCall}
+                                  handleContextMenu={handleContextMenu}
+                                  handleDropdownToggle={handleDropdownToggle}
+                                  handleEditMessage={handleEditMessage}
+                                  handleDeleteMessage={handleDeleteMessage}
+                                  handleCopyMessage={handleCopyMessage}
+                                  handleReplyMessage={handleReplyMessage}
+                                  handleForwardMessage={handleForwardMessage}
+                                  highlightText={highlightText}
+                                  searchInputbox={searchInputbox}
+                                  activeMessageId={activeMessageId}
+                                  contextMenu={contextMenu}
+                                  setContextMenu={setContextMenu}
+                                  setActiveMessageId={setActiveMessageId}
+                                  allUsers={allUsers}
+                                  selectedChat={selectedChat}
+                                  IMG_URL={IMG_URL}
+                                  showEmojiPicker={showEmojiPicker}
+                                  setShowEmojiPicker={setShowEmojiPicker}
+                                  addMessageReaction={addMessageReaction}
+                                  setSelectedFiles={setSelectedFiles}
+                                  selectedFiles={selectedFiles}
+                                  setReplyingTo={setReplyingTo}
+                                  replyingTo={replyingTo}
+                                  setMessageInput={setMessageInput}
+                                  messageInput={messageInput}
+                                  handleImageClick={handleImageClick}
+                                  sendPrivateMessage={sendPrivateMessage}
+                                  typingUsers={typingUsers}
+                                />
+                              }
+                              <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
+                                {openCameraState &&
+                                  <button className="absolute top-2 right-2 text-white z-10 text-xl" onClick={() => { closeCamera() }}>
+                                    <RxCross2 />
+                                  </button>
+                                }
+                                <video
+                                  ref={videoRef}
+                                  className="w-full aspect-video max-h-full h-[75vh] object-cover"
+                                  autoPlay
+                                  // -   style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }}
+                                  // only mirror when using front camera
+                                  style={{
+                                    display: cameraStream ? 'block' : 'none',
+                                    transform: facingMode === 'user' ? 'scaleX(-1)' : 'none'
+                                  }}
+                                />
+                                {openCameraState && (
+                                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                                    <button className="btn  text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
+                                      <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
+                                    </button>
+                                  </div>
+
+                                )}
+
+                                {openCameraState && backCameraAvailable && (
+                                  <button
+                                    className="btn absolute bottom-3 right-4 text-white rounded-full "
+                                    onClick={switchCamera}
+                                  >
+                                    <div className="bg-white/40 w-10 h-10 flex items-center justify-center text-2xl rounded-full hover:bg-white/80">
+                                      <MdOutlineFlipCameraIos />
+                                    </div>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {selectedFiles && selectedFiles.length > 0 && (
+                              <div className="flex px-6  dark:bg-primary-dark">
+                                {selectedFiles.map((file, index) => {
+                                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                                  let fileIcon;
+                                  if (file.type.startsWith("image/")) {
+                                    fileIcon = (
+                                      <img
+                                        src={fileUrl}
+                                        alt={`Selected ${index}`}
+                                        className="w-20 h-[40px] object-cover "
+                                      />
+                                    );
+                                  } else if (file.type === "application/pdf") {
+                                    fileIcon = (
+                                      <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                    ); // PDF file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-excel" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                    ); // Excel file icon
+                                  } else if (
+                                    file.type === "application/msword" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                    ); // Word file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-powerpoint" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                    ); // PowerPoint file icon
+                                  } else if (file.type === "application/zip") {
+                                    fileIcon = (
+                                      <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                    ); // ZIP file icon
+                                  } else {
+                                    fileIcon = (
+                                      <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                    ); // Generic file icon
+                                  }
+                                  return (
+                                    <div className=" rounded-t-lg  p-2">
+                                      <div
+                                        key={index}
+                                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
+                                      >
+                                        {fileIcon}
+                                        <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                          {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                        </div>{" "}
+                                        {/* Display file name */}
+                                        <span className="text-xs text-gray-500">
+                                          {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                          MB
+                                        </span>{" "}
+                                        {/* Display file size */}
+                                        <button
+                                          className="absolute top-1 right-1 bg-white rounded-full"
+                                          onClick={() => {
+                                            setSelectedFiles(
+                                              selectedFiles.filter(
+                                                (_, i) => i !== index
+                                              )
+                                            );
+                                          }}
+                                        >
+                                          <RxCross2 />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+
+                            {/*========== Message Input ==========*/}
+                            {selectedChat &&
+                              (user.blockedUsers?.includes(selectedChat._id) ? (
+                                <div className="w-full mx-auto px-4 py-2 mb-5 md:mb-0 dark:bg-primary-dark/95 text-white">
+                                  <div className="text-center text-red-700 mb-2">
+                                    This user is blocked.
+                                  </div>
+                                  <div className="flex justify-center items-center gap-4 mb-4">
+                                    <button
+                                      className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
                                       onClick={() => {
                                         setIsDeleteChatModalOpen(true);
                                       }}
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                                     >
-                                      <RiDeleteBinLine className="text-lg" />{" "}
-                                      Delete Chat
-                                    </li>
-                                    <li
-                                      className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2 text-red-500"
+                                      Delete
+                                    </button>
+
+                                    <button
+                                      className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
                                       onClick={async () => {
                                         await dispatch(
                                           blockUser({
@@ -2200,647 +2607,331 @@ const Chat2 = () => {
                                         await dispatch(getAllMessageUsers());
                                       }}
                                     >
-                                      <MdOutlineBlock className="text-lg text-red-500" />
-                                      {user.blockedUsers?.includes(
-                                        selectedChat?._id
-                                      )
-                                        ? "Unblock"
-                                        : "Block"}
-                                    </li>
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Show three dots menu on mobile */}
-                            <div className="md:hidden relative mobile-menu flex items-center gap-2 dark:text-white">
-                              <IoMdSearch
-                                className="w-6 h-6 cursor-pointer "
-                                onClick={() =>
-                                  setIsSearchBoxOpen((prev) => !prev)
-                                }
-                                title="Find"
-                                data-tooltip="Find"
-                                data-tooltip-delay="0"
-                                data-tooltip-duration="0"
-                              />
-                              <BsThreeDotsVertical
-                                className="w-6 h-6 cursor-pointer"
-                                onClick={() =>
-                                  setMobileMenuOpen(!mobileMenuOpen)
-                                }
-                              />
-
-                              {mobileMenuOpen && (
-                                <div
-                                  className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg z-50 dark:bg-gray-800"
-                                  ref={mobileMenuRef}
-                                >
-                                  <div className="p-2 ">
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        setIsClearChatModalOpen(true);
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <MdOutlineDeleteSweep className="w-5 h-5 mr-2" />
-                                      <span>Clear Chat</span>
-                                    </button>
-
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        setIsDeleteChatModalOpen(true);
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <RiDeleteBinLine className="w-5 h-5 mr-2" />
-                                      <span>Delete Chat</span>
-                                    </button>
-
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        handleStartScreenShare();
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <LuScreenShare className="w-5 h-5 mr-2" />
-                                      <span>Screen Share</span>
-                                    </button>
-
-                                    {selectedChat?.members && (
-                                      <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
-                                        onClick={() => {
-                                          if (selectedChat?.members) {
-                                            setGroupUsers(
-                                              selectedChat?.members
-                                            );
-                                          } else {
-                                            setGroupUsers([selectedChat?._id]);
-                                          }
-                                          dispatch(setIsModalOpen(true));
-                                          setMobileMenuOpen(false);
-                                        }}
-                                      >
-                                        <MdGroupAdd className="w-5 h-5 mr-2" />
-                                        <span>Add to Group</span>
-                                      </button>
-                                    )}
-
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
-                                      onClick={() => {
-                                        handleMakeCall("video");
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <GoDeviceCameraVideo className="w-5 h-5 mr-2" />
-                                      <span>Video Call</span>
-                                    </button>
-
-                                    <button
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                                      onClick={() => {
-                                        handleMakeCall("voice");
-                                        setMobileMenuOpen(false);
-                                      }}
-                                    >
-                                      <IoCallOutline className="w-5 h-5 mr-2" />
-                                      <span>Voice Call</span>
+                                      Unblock
                                     </button>
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                              ) : (
+                                <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
 
-                        {isSearchBoxOpen && (
-                          <div className="absolute top-32 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
-                            style={{
-                              transform: "translate(-50%, -50%)",
-                            }}>
-                            <div
-                              className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
-                              ref={searchBoxRef}
-                            >
-                              <FaSearch className="text-gray-500 mr-2" />
-                              <input
-                                type="text"
-                                placeholder="Search..."
-                                className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
-                                value={searchInputbox}
-                                onChange={(e) => {
-                                  setSearchInputbox(e.target.value);
-                                  setCurrentSearchIndex(0); // Reset current search index
-                                }}
-                              />
-                              <span className="mx-2 text-gray-500">
-                                {totalMatches > 0
-                                  ? `${currentSearchIndex + 1} / ${totalMatches}`
-                                  : "0 / 0"}
-                              </span>
-                              <button
-                                className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
-                                onClick={() => handleSearchNavigation("up")}
-                              >
-                                <IoIosArrowUp />
-                              </button>
-                              <button
-                                className="hover:text-black hover:dark:text-white text-xl"
-                                onClick={() => handleSearchNavigation("down")}
-                              >
-                                <IoIosArrowDown />
-                              </button>
-
-                            </div>
-                            <button
-                              className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
-                              onClick={() => {
-                                setIsSearchBoxOpen(false);
-                                setSearchInputbox(""); // Clear the input box
-                              }}
-                            >
-                              <RxCross2 />
-                            </button>
-                          </div>
-                        )}
-
-
-                        {/*========================== Messages ==============================*/}
-                        <div className="relative">
-                          {/* {console.log("replyingTo",replyingTo)} */}
-                          {isDragging && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
-                              <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="mb-4">
-                                    <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                  </div>
-                                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          <div
-                            className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
-                            style={{
-                              height:
-                                selectedFiles.length > 0
-                                  ? "calc(100vh -  276px)"
-                                  : Object.keys(uploadProgress).length != 0
-                                    ? "calc(100vh - 250px)"
-                                    : replyingTo
-                                      ? replyingTo?.content?.fileType &&
-                                        replyingTo?.content?.fileType?.startsWith(
-                                          "image/"
-                                        )
-                                        ? "calc(100vh - 280px)"
-                                        : "calc(100vh - 229px)"
-                                      : window.innerWidth < 768
-                                        ? "calc(100vh - 179px)"
-                                        : "calc(100vh - 173px)",
-                            }}
-                            ref={messagesContainerRef}
-                          >
-                            {/* {visibleDate && <FloatingDateIndicator />} */}
-
-                            {cameraStream ? <></> :
-                              <MessageList
-                                messages={messages}
-                                groupMessagesByDate={groupMessagesByDate}
-                                userId={userId}
-                                handleMakeCall={handleMakeCall}
-                                handleContextMenu={handleContextMenu}
-                                handleDropdownToggle={handleDropdownToggle}
-                                handleEditMessage={handleEditMessage}
-                                handleDeleteMessage={handleDeleteMessage}
-                                handleCopyMessage={handleCopyMessage}
-                                handleReplyMessage={handleReplyMessage}
-                                handleForwardMessage={handleForwardMessage}
-                                highlightText={highlightText}
-                                searchInputbox={searchInputbox}
-                                activeMessageId={activeMessageId}
-                                contextMenu={contextMenu}
-                                setContextMenu={setContextMenu}
-                                setActiveMessageId={setActiveMessageId}
-                                allUsers={allUsers}
-                                selectedChat={selectedChat}
-                                IMG_URL={IMG_URL}
-                                showEmojiPicker={showEmojiPicker}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                                addMessageReaction={addMessageReaction}
-                                setSelectedFiles={setSelectedFiles}
-                                selectedFiles={selectedFiles}
-                                setReplyingTo={setReplyingTo}
-                                replyingTo={replyingTo}
-                                setMessageInput={setMessageInput}
-                                messageInput={messageInput}
-                                handleImageClick={handleImageClick}
-                                sendPrivateMessage={sendPrivateMessage}
-                                typingUsers={typingUsers}
-                              />
-                            }
-                            <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
-                              {openCameraState &&
-                                <button className="absolute top-2 right-2 text-white z-10 text-xl" onClick={() => { closeCamera() }}>
-                                  <RxCross2 />
-                                </button>
-                              }
-                              <video
-                                ref={videoRef}
-                                className="w-full aspect-video max-h-full h-[75vh] object-cover"
-                                autoPlay
-                                // -   style={{ display: cameraStream ? 'block' : 'none', transform: 'scaleX(-1)' }}
-                                // only mirror when using front camera
-                                style={{
-                                  display: cameraStream ? 'block' : 'none',
-                                  transform: facingMode === 'user' ? 'scaleX(-1)' : 'none'
-                                }}
-                              />
-                              {openCameraState && (
-                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-                                  <button className="btn  text-white  rounded-full border-4 border-white hover:border-white/75" onClick={capturePhoto}>
-                                    <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
-                                  </button>
-                                </div>
-
-                              )}
-
-                              {openCameraState && backCameraAvailable && (
-                                <button
-                                  className="btn absolute bottom-3 right-4 text-white rounded-full "
-                                  onClick={switchCamera}
-                                >
-                                  <div className="bg-white/40 w-10 h-10 flex items-center justify-center text-2xl rounded-full hover:bg-white/80">
-                                    <MdOutlineFlipCameraIos />
-                                  </div>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {selectedFiles && selectedFiles.length > 0 && (
-                            <div className="flex px-6  dark:bg-primary-dark">
-                              {selectedFiles.map((file, index) => {
-                                const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                                let fileIcon;
-                                if (file.type.startsWith("image/")) {
-                                  fileIcon = (
-                                    <img
-                                      src={fileUrl}
-                                      alt={`Selected ${index}`}
-                                      className="w-20 h-[40px] object-cover "
-                                    />
-                                  );
-                                } else if (file.type === "application/pdf") {
-                                  fileIcon = (
-                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                  ); // PDF file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-excel" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                  ); // Excel file icon
-                                } else if (
-                                  file.type === "application/msword" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                  ); // Word file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-powerpoint" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                ) {
-                                  fileIcon = (
-                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                  ); // PowerPoint file icon
-                                } else if (file.type === "application/zip") {
-                                  fileIcon = (
-                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                  ); // ZIP file icon
-                                } else {
-                                  fileIcon = (
-                                    <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                  ); // Generic file icon
-                                }
-                                return (
-                                  <div className=" rounded-t-lg  p-2">
-                                    <div
-                                      key={index}
-                                      className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                    >
-                                      {fileIcon}
-                                      <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                        {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                      </div>{" "}
-                                      {/* Display file name */}
-                                      <span className="text-xs text-gray-500">
-                                        {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                        MB
-                                      </span>{" "}
-                                      {/* Display file size */}
-                                      <button
-                                        className="absolute top-1 right-1 bg-white rounded-full"
-                                        onClick={() => {
-                                          setSelectedFiles(
-                                            selectedFiles.filter(
-                                              (_, i) => i !== index
-                                            )
-                                          );
-                                        }}
-                                      >
-                                        <RxCross2 />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-
-                          {/*========== Message Input ==========*/}
-                          {selectedChat &&
-                            (user.blockedUsers?.includes(selectedChat._id) ? (
-                              <div className="w-full mx-auto px-4 py-2 mb-5 md:mb-0 dark:bg-primary-dark/95 text-white">
-                                <div className="text-center text-red-700 mb-2">
-                                  This user is blocked.
-                                </div>
-                                <div className="flex justify-center items-center gap-4 mb-4">
-                                  <button
-                                    className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
-                                    onClick={() => {
-                                      setIsDeleteChatModalOpen(true);
-                                    }}
+                                  <form
+                                    onSubmit={handleSubmit}
+                                    className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
+                                      ? "rounded-b-lg"
+                                      : "rounded-lg"
+                                      } md:px-4 md:py-2 w-full max-w-full`}
                                   >
-                                    Delete
-                                  </button>
 
-                                  <button
-                                    className="bg-primary  dark:hover:bg-primary/70 py-1 rounded-md w-32"
-                                    onClick={async () => {
-                                      await dispatch(
-                                        blockUser({
-                                          selectedUserId: selectedChat?._id,
-                                        })
-                                      );
-                                      await dispatch(getUser(currentUser));
-                                      await dispatch(getAllMessageUsers());
-                                    }}
-                                  >
-                                    Unblock
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
+                                    {isRecording ?
+                                      <>
+                                        <div>
+                                          <button
+                                            type="button"
+                                            className="p-2 hover:bg-gray-100 rounded-full transition-colors bg-primary  dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                            aria-label="Voice message"
+                                            onClick={handleVoiceMessage}
+                                          >
+                                            <IoMicOutline
+                                              className={`w-6 h-6 ${isRecording ? "text-white" : ""
+                                                }`}
+                                            />
+                                          </button>
 
-                                <form
-                                  onSubmit={handleSubmit}
-                                  className={`flex items-center gap-2 ${replyingTo || selectedFiles.length > 0
-                                    ? "rounded-b-lg"
-                                    : "rounded-lg"
-                                    } md:px-4 md:py-2 w-full max-w-full`}
-                                >
+                                        </div>
 
-                                  {isRecording ?
-                                    <>
-                                      <div>
-                                        <button
-                                          type="button"
-                                          className="p-2 hover:bg-gray-100 rounded-full transition-colors bg-primary  dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                          aria-label="Voice message"
-                                          onClick={handleVoiceMessage}
-                                        >
-                                          <IoMicOutline
-                                            className={`w-6 h-6 ${isRecording ? "text-white" : ""
-                                              }`}
-                                          />
-                                        </button>
+                                        <div className="flex-1">
+                                          <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
+                                            <div className="flex items-center justify-start h-full w-full relative">
+                                              <div className="flex items-center  gap-1 h-full absolute">
+                                                {barHeights.map((height, index) => {
+                                                  // Calculate a height that centers around the middle
+                                                  const variationFactor = recording ? 1 : 0.6;
+                                                  const barHeight = height * variationFactor;
 
-                                      </div>
-
-                                      <div className="flex-1">
-                                        <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
-                                          <div className="flex items-center justify-start h-full w-full relative">
-                                            <div className="flex items-center  gap-1 h-full absolute">
-                                              {barHeights.map((height, index) => {
-                                                // Calculate a height that centers around the middle
-                                                const variationFactor = recording ? 1 : 0.6;
-                                                const barHeight = height * variationFactor;
-
-                                                return (
-                                                  <div
-                                                    key={index}
-                                                    className="flex flex-col justify-center h-full"
-                                                  >
+                                                  return (
                                                     <div
-                                                      style={{
-                                                        width: '3px',
-                                                        height: `${barHeight * 2}%`,
-                                                        marginTop: `-${barHeight / 2}%`
-                                                      }}
-                                                      className="bg-black dark:bg-white rounded-xl"
-                                                    />
-                                                  </div>
-                                                );
-                                              })}
+                                                      key={index}
+                                                      className="flex flex-col justify-center h-full"
+                                                    >
+                                                      <div
+                                                        style={{
+                                                          width: '3px',
+                                                          height: `${barHeight * 2}%`,
+                                                          marginTop: `-${barHeight / 2}%`
+                                                        }}
+                                                        className="bg-black dark:bg-white rounded-xl"
+                                                      />
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
-                                      <div className=" text-black/60 dark:text-white/60  me-3 text-sm">
-                                        {isRecording && <span>{new Date(recordingTime * 1000).toISOString().substr(14, 5)}</span>} {/* Display recording time in mm:ss format */}
-                                      </div>
-                                    </>
+                                        <div className=" text-black/60 dark:text-white/60  me-3 text-sm">
+                                          {isRecording && <span>{new Date(recordingTime * 1000).toISOString().substr(14, 5)}</span>} {/* Display recording time in mm:ss format */}
+                                        </div>
+                                      </>
 
-                                    : ''}
+                                      : ''}
 
 
-                                  {!isRecording && (
-                                    <>
-                                      <div className="flex-1">
-                                        {replyingTo && (
-                                          <div className="w-full dark:bg-primary-dark/15">
-                                            <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
-                                              <div>
-                                                <div className="text-sm text-blue-500 font-medium">
-                                                  Replying to{" "}
-                                                  {
-                                                    allUsers.find(
-                                                      (user) => user._id === replyingTo.sender
-                                                    )?.userName
-                                                  }
+                                    {!isRecording && (
+                                      <>
+                                        <div className="flex-1">
+                                          {replyingTo && (
+                                            <div className="w-full dark:bg-primary-dark/15">
+                                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                                                <div>
+                                                  <div className="text-sm text-blue-500 font-medium">
+                                                    Replying to{" "}
+                                                    {
+                                                      allUsers.find(
+                                                        (user) => user._id === replyingTo.sender
+                                                      )?.userName
+                                                    }
+                                                  </div>
+                                                  <div className="text-gray-600 text-sm line-clamp-2">
+                                                    {decryptMessage(replyingTo.content.content)}
+                                                    {replyingTo?.content?.fileType &&
+                                                      replyingTo?.content?.fileType?.startsWith(
+                                                        "image/"
+                                                      ) && (
+                                                        <img
+                                                          src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
+                                                            /\\/g,
+                                                            "/"
+                                                          )}`}
+                                                          alt=""
+                                                          className="h-10"
+                                                        />
+                                                      )}
+                                                  </div>
                                                 </div>
-                                                <div className="text-gray-600 text-sm line-clamp-2">
-                                                  {decryptMessage(replyingTo.content.content)}
-                                                  {replyingTo?.content?.fileType &&
-                                                    replyingTo?.content?.fileType?.startsWith(
-                                                      "image/"
-                                                    ) && (
-                                                      <img
-                                                        src={`${IMG_URL}${replyingTo.content.fileUrl.replace(
-                                                          /\\/g,
-                                                          "/"
-                                                        )}`}
-                                                        alt=""
-                                                        className="h-10"
-                                                      />
-                                                    )}
-                                                </div>
-                                              </div>
-                                              <button
-                                                onClick={() => setReplyingTo(null)}
-                                                className="text-gray-500 hover:text-gray-700"
-                                              >
-                                                <RxCross2 size={20} />
-                                              </button>
-                                            </div>
-                                          </div>
-                                        )}
-                                        {Object.keys(uploadProgress).length != 0 && (
-                                          <div className="w-full dark:bg-primary-dark/15">
-                                            <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
-                                              <div className="flex justify-between w-full">
-                                                <div className="w-full">
-                                                  {Object.keys(uploadProgress).map((file, index) => (
-                                                    <div key={index} className="">
-                                                      <div className="flex gap-2 items-center">
-                                                        <div>
-                                                          {uploadProgress[file].fileType?.startsWith('image/') ? (
-                                                            <img src={require('../img/img.png')} className="w-[20px] h-[20px]" alt="" />
-                                                          ) : uploadProgress[file].fileType === 'application/pdf' ? (
-                                                            <img src={require('../img/pdf.png')} className="w-[20px] h-[20px]" alt="" />
-                                                          ) : uploadProgress[file].fileType?.includes('video/') ? (
-                                                            <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf" gradientcolor1="#afafaf" gradientcolor2="#afafaf" >
-                                                              <path d="M3.5 21h17c.275 0 .5-.225.5-.5v-17c0-.275-.225-.5-.5-.5h-17c-.275 0-.5.225-.5.5v17c0 .275.225.5.5.5Z" fill="#fff" ></path>
-                                                              <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="M3.5 22h17c.827 0 1.5-.673 1.5-1.5v-17c0-.827-.673-1.5-1.5-1.5h-17C2.673 2 2 2.673 2 3.5v17c0 .827.673 1.5 1.5 1.5ZM3 3.5a.5.5 0 0 1 .5-.5h17a.5.5 0 0 1 .5.5v17a.5.5 0 0 1-.5.5h-17a.5.5 0 0 1-.5-.5v-17Z" fill="#605E5C"></path>
-                                                              <path d="M16 12a.47.47 0 0 1-.24.4l-6 3.53a.48.48 0 0 1-.26.07.5.5 0 0 1-.24-.06.46.46 0 0 1-.26-.41V12h7Z" fill="#BC1948"></path>
-                                                              <path d="M16 12a.47.47 0 0 0-.24-.4l-6-3.536a.52.52 0 0 0-.5 0 .46.46 0 0 0-.26.4V12h7Z" fill="#E8467C"></path>
-                                                            </svg>
-                                                          ) : uploadProgress[file].fileType?.includes('audio/') ? (
-                                                            <img src={require('../img/audio.png')} className="w-[20px] h-[20px]" alt="" />
-                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
-                                                            <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                                                              <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
-                                                              <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
-                                                              <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
-                                                              <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
-                                                            </svg>
-                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
-                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                                                              <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
-                                                              <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
-                                                              <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
-                                                              <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
-                                                            </svg>
-                                                          ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
-                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                                                              <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
-                                                              <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
-                                                              <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
-                                                            </svg>
-                                                          ) : uploadProgress[file].fileType?.includes('zip') || uploadProgress[file].fileType?.includes('compressed') ? (
-                                                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
-                                                              <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
-                                                            </svg>
-                                                          ) : (
-                                                            <FaPaperclip className="w-4 h-4 text-gray-400" />
-                                                          )}
-                                                        </div>
-                                                        <div>
-                                                          {console.log(uploadProgress)}
-
-                                                          <div className="text-white text-sm line-clamp-2 ">
-                                                            {file}
-                                                          </div>
-                                                          <div className="text-sm text-gray-500 hover:text-gray-700">
-                                                            {uploadProgress[file].size}
-                                                          </div>
-                                                        </div>
-                                                      </div>
-                                                      <div className="flex justify-between items-center">
-                                                        <div className="w-full bg-gray-200 h-[8px] dark:bg-gray-700 rounded-full overflow-hidden flex">
-                                                          <div
-                                                            className="bg-blue-600 h-[8px] rounded-full"
-                                                            style={{ width: `${uploadProgress[file].percentCompleted}%` }}
-                                                          ></div>
-                                                        </div>
-                                                        <div className="ml-2 text-sm text-gray-500 hover:text-gray-700">
-                                                          {uploadProgress[file].percentCompleted}%
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  ))}
-                                                </div>
-
                                                 <button
-                                                  onClick={() => setUploadProgress({})}
-                                                  className="text-gray-500 hover:text-gray-700 ml-4"
+                                                  onClick={() => setReplyingTo(null)}
+                                                  className="text-gray-500 hover:text-gray-700"
                                                 >
                                                   <RxCross2 size={20} />
                                                 </button>
                                               </div>
                                             </div>
-                                          </div>
-                                        )}
-                                        <div className={`flex-1 min-w-0 p-1 md:p-2 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative`}>
-                                          <input
-                                            ref={inputRef}
-                                            type="text"
-                                            value={messageInput}
-                                            onChange={handleInputChange}
-                                            placeholder={
-                                              editingMessage
-                                                ? "Edit message..."
-                                                : "Type a message..."
-                                            }
-                                            className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                                            onKeyDown={async (e) => {
-                                              if (e.key === "Enter") {
-                                                e.preventDefault();
+                                          )}
+                                          {Object.keys(uploadProgress).length != 0 && (
+                                            <div className="w-full dark:bg-primary-dark/15">
+                                              <div className="bg-gray-100 dark:bg-primary-dark/15 p-3 rounded-t-lg flex justify-between items-start border-l-4 border-blue-500">
+                                                <div className="flex justify-between w-full">
+                                                  <div className="w-full">
+                                                    {Object.keys(uploadProgress).map((file, index) => (
+                                                      <div key={index} className="">
+                                                        <div className="flex gap-2 items-center">
+                                                          <div>
+                                                            {uploadProgress[file].fileType?.startsWith('image/') ? (
+                                                              <img src={require('../img/img.png')} className="w-[20px] h-[20px]" alt="" />
+                                                            ) : uploadProgress[file].fileType === 'application/pdf' ? (
+                                                              <img src={require('../img/pdf.png')} className="w-[20px] h-[20px]" alt="" />
+                                                            ) : uploadProgress[file].fileType?.includes('video/') ? (
+                                                              <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf" gradientcolor1="#afafaf" gradientcolor2="#afafaf" >
+                                                                <path d="M3.5 21h17c.275 0 .5-.225.5-.5v-17c0-.275-.225-.5-.5-.5h-17c-.275 0-.5.225-.5.5v17c0 .275.225.5.5.5Z" fill="#fff" ></path>
+                                                                <path opacity="0.64" fillRule="evenodd" clipRule="evenodd" d="M3.5 22h17c.827 0 1.5-.673 1.5-1.5v-17c0-.827-.673-1.5-1.5-1.5h-17C2.673 2 2 2.673 2 3.5v17c0 .827.673 1.5 1.5 1.5ZM3 3.5a.5.5 0 0 1 .5-.5h17a.5.5 0 0 1 .5.5v17a.5.5 0 0 1-.5.5h-17a.5.5 0 0 1-.5-.5v-17Z" fill="#605E5C"></path>
+                                                                <path d="M16 12a.47.47 0 0 1-.24.4l-6 3.53a.48.48 0 0 1-.26.07.5.5 0 0 1-.24-.06.46.46 0 0 1-.26-.41V12h7Z" fill="#BC1948"></path>
+                                                                <path d="M16 12a.47.47 0 0 0-.24-.4l-6-3.536a.52.52 0 0 0-.5 0 .46.46 0 0 0-.26.4V12h7Z" fill="#E8467C"></path>
+                                                              </svg>
+                                                            ) : uploadProgress[file].fileType?.includes('audio/') ? (
+                                                              <img src={require('../img/audio.png')} className="w-[20px] h-[20px]" alt="" />
+                                                            ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+                                                              <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                                <path d="M21.167 3H7.82a.82.82 0 0 0-.82.82v3.17l7.5 2.194L22 6.99V3.833A.836.836 0 0 0 21.167 3" fill="#41A5EE"></path>
+                                                                <path d="M22 7H7v5l7.5 2.016L22 12V7Z" fill="#2B7CD3"></path>
+                                                                <path d="M22 12H7v5l8 2 7-2v-5Z" fill="#185ABD"></path>
+                                                                <path d="M22 17H7v3.177c0 .455.368.823.823.823h13.354a.822.822 0 0 0 .823-.823V17Z" fill="#103F91"></path>
+                                                              </svg>
+                                                            ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+                                                              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                                <path d="M15 3H7.8c-.442 0-.8.298-.8.667V7l8 5 3.5 1.5L22 12V7l-7-4Z" fill="#21A366"></path>
+                                                                <path d="M7 12h8V7H7v5Z" fill="#107C41"></path>
+                                                                <path d="M22 3.82V7h-7V3h6.17c.46 0 .83.37.83.82" fill="#33C481"></path>
+                                                                <path d="M15 12H7v8.167c0 .46.373.833.833.833h13.334c.46 0 .833-.373.833-.833V17l-7-5Z" fill="#185C37"></path>
+                                                              </svg>
+                                                            ) : uploadProgress[file].fileType == "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
+                                                              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                                <path d="M13 3c-4.95 0-9 4.05-9 9l11 1.5L13 3Z" fill="#ED6C47"></path>
+                                                                <path d="M13 3c4.95 0 9 4.05 9 9l-4.5 2-4.5-2V3Z" fill="#FF8F6B"></path>
+                                                                <path d="M22 12c0 4.95-4.05 9-9 9s-9-4.05-9-9h18Z" fill="#D35230"></path>
+                                                              </svg>
+                                                            ) : uploadProgress[file].fileType?.includes('zip') || uploadProgress[file].fileType?.includes('compressed') ? (
+                                                              <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#afafaf">
+                                                                <path d="m12 6-1.268-1.268A2.5 2.5 0 0 0 8.964 4H2.5A1.5 1.5 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21.5 6H12Z" fill="#FFB900"></path>
+                                                              </svg>
+                                                            ) : (
+                                                              <FaPaperclip className="w-4 h-4 text-gray-400" />
+                                                            )}
+                                                          </div>
+                                                          <div>
+                                                            {console.log(uploadProgress)}
 
-                                                if (selectedFiles.length > 0) {
-                                                  await handleMultipleFileUpload(
-                                                    selectedFiles
-                                                  ); // Upload selected files
-                                                  setSelectedFiles([]); // Clear selected files after sending
-                                                }
-                                                await handleSubmit(e);
-                                              } else if (
-                                                e.key === "Escape" &&
+                                                            <div className="text-white text-sm line-clamp-2 ">
+                                                              {file}
+                                                            </div>
+                                                            <div className="text-sm text-gray-500 hover:text-gray-700">
+                                                              {uploadProgress[file].size}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                          <div className="w-full bg-gray-200 h-[8px] dark:bg-gray-700 rounded-full overflow-hidden flex">
+                                                            <div
+                                                              className="bg-blue-600 h-[8px] rounded-full"
+                                                              style={{ width: `${uploadProgress[file].percentCompleted}%` }}
+                                                            ></div>
+                                                          </div>
+                                                          <div className="ml-2 text-sm text-gray-500 hover:text-gray-700">
+                                                            {uploadProgress[file].percentCompleted}%
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+
+                                                  <button
+                                                    onClick={() => setUploadProgress({})}
+                                                    className="text-gray-500 hover:text-gray-700 ml-4"
+                                                  >
+                                                    <RxCross2 size={20} />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                          <div className={`flex-1 min-w-0 p-1 md:p-2 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative`}>
+                                            <input
+                                              ref={inputRef}
+                                              type="text"
+                                              value={messageInput}
+                                              onChange={handleInputChange}
+                                              placeholder={
                                                 editingMessage
-                                              ) {
-                                                setEditingMessage(null);
-                                                setMessageInput("");
+                                                  ? "Edit message..."
+                                                  : "Type a message..."
                                               }
-                                            }}
+                                              className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent"
+                                              onKeyDown={async (e) => {
+                                                if (e.key === "Enter") {
+                                                  e.preventDefault();
+
+                                                  if (selectedFiles.length > 0) {
+                                                    await handleMultipleFileUpload(
+                                                      selectedFiles
+                                                    ); // Upload selected files
+                                                    setSelectedFiles([]); // Clear selected files after sending
+                                                  }
+                                                  await handleSubmit(e);
+                                                } else if (
+                                                  e.key === "Escape" &&
+                                                  editingMessage
+                                                ) {
+                                                  setEditingMessage(null);
+                                                  setMessageInput("");
+                                                }
+                                              }}
+                                            />
+                                            <button
+                                              type="button"
+                                              className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                              aria-label="Add emoji"
+                                              onClick={() =>
+                                                setIsEmojiPickerOpen(!isEmojiPickerOpen)
+                                              }
+                                            >
+                                              <PiSmiley className="w-6 h-6 " />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                              aria-label="Attach file"
+                                              onClick={() =>
+                                                // document
+                                                //   .getElementById("file-upload")
+                                                //   .click()
+                                                setDocModel(!docModel)
+
+                                              }
+                                            >
+                                              {selectedFiles &&
+                                                selectedFiles.length > 0 ? (
+                                                <GoPlusCircle className="w-6 h-6 " />
+                                              ) : (
+                                                <svg
+                                                  width={24}
+                                                  height={24}
+                                                  viewBox="0 0 24 24"
+                                                  fill="none"
+                                                  xmlns="http://www.w3.org/2000/svg"
+                                                  className="w-6 h-6"
+                                                >
+                                                  <path
+                                                    d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                  />
+                                                </svg>
+                                              )}
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          className="p-1 hover:bg-gray-100 hidden md:block dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
+                                          aria-label="Add emoji"
+                                          onClick={() =>
+                                            setIsEmojiPickerOpen(!isEmojiPickerOpen)
+                                          }
+                                        >
+                                          <PiSmiley className="w-6 h-6 " />
+                                        </button>
+                                      </>
+                                    )}
+
+                                    {isEmojiPickerOpen && (
+                                      <div
+                                        ref={emojiPickerRef}
+                                        className="absolute rounded shadow-lg bottom-[90px] right-[100px] z-50"
+                                      >
+                                        <EmojiPicker
+                                          onEmojiClick={onEmojiClick}
+                                          previewConfig={{
+                                            showPreview: false,
+                                          }}
+                                        >
+                                        </EmojiPicker>
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                      {!isRecording &&
+                                        <>
+                                          <input
+                                            id="file-upload"
+                                            type="file"
+                                            multiple
+                                            accept="*/*"
+                                            className="hidden"
+                                            onChange={handleInputChange}
+                                          />
+                                          <input
+                                            id="image-upload"
+                                            type="file"
+                                            multiple
+                                            accept=".jpg, .jpeg, .png, .mp4, .avi, .mov, .gif, .heic, .webp, .svg, .m4v"
+                                            className="hidden"
+                                            onChange={handleInputChange}
                                           />
                                           <button
                                             type="button"
-                                            className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                                            aria-label="Add emoji"
-                                            onClick={() =>
-                                              setIsEmojiPickerOpen(!isEmojiPickerOpen)
-                                            }
-                                          >
-                                            <PiSmiley className="w-6 h-6 " />
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
+                                            className="p-1 hover:bg-gray-100  hidden md:block rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                                             aria-label="Attach file"
                                             onClick={() =>
                                               // document
@@ -2872,270 +2963,189 @@ const Chat2 = () => {
                                               </svg>
                                             )}
                                           </button>
-                                        </div>
-                                      </div>
-
+                                          <button
+                                            type="button"
+                                            className={`${selectedFiles.length > 0 || messageInput || cameraStream ? 'hidden md:block' : 'block md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
+                                            aria-label="Voice message"
+                                            onClick={() => { handleVoiceMessage(); startRecording() }}
+                                          >
+                                            <IoMicOutline
+                                              className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
+                                                }`}
+                                            />
+                                          </button>
+                                        </>
+                                      }
                                       <button
-                                        type="button"
-                                        className="p-1 hover:bg-gray-100 hidden md:block dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
-                                        aria-label="Add emoji"
-                                        onClick={() =>
-                                          setIsEmojiPickerOpen(!isEmojiPickerOpen)
-                                        }
-                                      >
-                                        <PiSmiley className="w-6 h-6 " />
-                                      </button>
-                                    </>
-                                  )}
-
-                                  {isEmojiPickerOpen && (
-                                    <div
-                                      ref={emojiPickerRef}
-                                      className="absolute rounded shadow-lg bottom-[90px] right-[100px] z-50"
-                                    >
-                                      <EmojiPicker
-                                        onEmojiClick={onEmojiClick}
-                                        previewConfig={{
-                                          showPreview: false,
-                                        }}
-                                      >
-                                      </EmojiPicker>
-                                    </div>
-                                  )}
-
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {!isRecording &&
-                                      <>
-                                        <input
-                                          id="file-upload"
-                                          type="file"
-                                          multiple
-                                          accept="*/*"
-                                          className="hidden"
-                                          onChange={handleInputChange}
-                                        />
-                                        <input
-                                          id="image-upload"
-                                          type="file"
-                                          multiple
-                                          accept=".jpg, .jpeg, .png, .mp4, .avi, .mov, .gif, .heic, .webp, .svg, .m4v"
-                                          className="hidden"
-                                          onChange={handleInputChange}
-                                        />
-                                        <button
-                                          type="button"
-                                          className="p-1 hover:bg-gray-100  hidden md:block rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
-                                          aria-label="Attach file"
-                                          onClick={() =>
-                                            // document
-                                            //   .getElementById("file-upload")
-                                            //   .click()
-                                            setDocModel(!docModel)
-
+                                        type="submit"
+                                        className={`${selectedFiles.length > 0 || messageInput || cameraStream || isRecording ? 'block md:block' : 'hidden md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
+                                        onClick={() => {
+                                          if (selectedFiles.length > 0) {
+                                            handleMultipleFileUpload(selectedFiles); // Upload selected files
+                                            setSelectedFiles([]); // Clear selected files after sending
                                           }
-                                        >
-                                          {selectedFiles &&
-                                            selectedFiles.length > 0 ? (
-                                            <GoPlusCircle className="w-6 h-6 " />
-                                          ) : (
-                                            <svg
-                                              width={24}
-                                              height={24}
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              className="w-6 h-6"
-                                            >
-                                              <path
-                                                d="M11.9688 12V15.5C11.9688 17.43 13.5388 19 15.4688 19C17.3987 19 18.9688 17.43 18.9688 15.5V10C18.9688 6.13 15.8388 3 11.9688 3C8.09875 3 4.96875 6.13 4.96875 10V16C4.96875 19.31 7.65875 22 10.9688 22"
-                                                stroke="currentColor"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              />
-                                            </svg>
-                                          )}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className={`${selectedFiles.length > 0 || messageInput || cameraStream ? 'hidden md:block' : 'block md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black`}
-                                          aria-label="Voice message"
-                                          onClick={() => { handleVoiceMessage(); startRecording() }}
-                                        >
-                                          <IoMicOutline
-                                            className={`w-6 h-6 ${isRecording ? "text-red-500" : ""
-                                              }`}
-                                          />
-                                        </button>
-                                      </>
-                                    }
-                                    <button
-                                      type="submit"
-                                      className={`${selectedFiles.length > 0 || messageInput || cameraStream || isRecording ? 'block md:block' : 'hidden md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
-                                      onClick={() => {
-                                        if (selectedFiles.length > 0) {
-                                          handleMultipleFileUpload(selectedFiles); // Upload selected files
-                                          setSelectedFiles([]); // Clear selected files after sending
-                                        }
-                                        if (isRecording) {
-                                          handleVoiceMessage();
-                                        }
-                                      }}
-                                    >
-                                      <svg
-                                        width={20}
-                                        height={20}
-                                        x={0}
-                                        y={0}
-                                        viewBox="0 0 32 32"
-                                        style={{
-                                          enableBackground: "new 0 0 24 24",
+                                          if (isRecording) {
+                                            handleVoiceMessage();
+                                          }
                                         }}
-                                        xmlSpace="preserve"
-                                        className
                                       >
-                                        <g>
-                                          <path
-                                            d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
-                                            fill="currentColor"
-                                            opacity={1}
-                                            data-original="#000000"
-                                            className
-                                          />
-                                        </g>
-                                      </svg>
-                                    </button>
-                                    {docModel && (
-                                      <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
-                                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                          <ul className="dark:text-white  flex flex-col ">
-                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(false); }}>
-                                              <span className="w-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
-                                              </span>
-                                              <span>Camera</span>
-                                            </li>
-                                            <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
-                                              <span className="w-5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
+                                        <svg
+                                          width={20}
+                                          height={20}
+                                          x={0}
+                                          y={0}
+                                          viewBox="0 0 32 32"
+                                          style={{
+                                            enableBackground: "new 0 0 24 24",
+                                          }}
+                                          xmlSpace="preserve"
+                                          className
+                                        >
+                                          <g>
+                                            <path
+                                              d="M28.986 3.014a3.415 3.415 0 0 0-3.336-.893L4.56 7.77a3.416 3.416 0 0 0-2.55 3.066 3.415 3.415 0 0 0 2.041 3.426l8.965 3.984c.329.146.59.408.737.738l3.984 8.964a3.41 3.41 0 0 0 3.426 2.04 3.416 3.416 0 0 0 3.066-2.55l5.65-21.089a3.416 3.416 0 0 0-.893-3.336zm-7.98 24.981c-.493.04-1.133-.166-1.442-.859 0 0-4.066-9.107-4.105-9.181l5.152-5.152a1 1 0 1 0-1.414-1.414l-5.152 5.152c-.073-.04-9.181-4.105-9.181-4.105-.693-.309-.898-.947-.86-1.442.04-.495.342-1.095 1.074-1.29C5.543 9.63 26.083 3.975 26.55 4c.379 0 .742.149 1.02.427.372.372.513.896.377 1.404l-5.651 21.09c-.196.732-.796 1.035-1.29 1.073z"
+                                              fill="currentColor"
+                                              opacity={1}
+                                              data-original="#000000"
+                                              className
+                                            />
+                                          </g>
+                                        </svg>
+                                      </button>
+                                      {docModel && (
+                                        <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
+                                          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                            <ul className="dark:text-white  flex flex-col ">
+                                              <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(false); }}>
+                                                <span className="w-5">
+                                                  <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} x={0} y={0} viewBox="0 0 512 512" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#477b9e" d="M431.159 118.263v-9.562c0-24.511-19.968-44.566-44.374-44.566H253.843c-24.406 0-44.374 20.055-44.374 44.566v9.562z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M311.846 64.135h-58.003c-24.406 0-44.374 20.055-44.374 44.566v9.562h58.003v-9.562c-.001-24.511 19.968-44.566 44.374-44.566zM136.449 179.924v223.208c0 15.71-12.854 28.564-28.564 28.564h375.551c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#3f6d8e" /><path fill="#365e7d" d="M191.656 403.133V179.924h-55.207v223.208c0 15.71-12.854 28.564-28.564 28.564h55.207c15.71.001 28.564-12.853 28.564-28.563z" opacity={1} data-original="#365e7d" className /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#b5dcff" d="M483.436 118.03H107.885c15.711 0 28.564 12.854 28.564 28.564v35.391H512v-35.391c0-15.71-12.853-28.564-28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#8bcaff" d="M163.092 118.03h-55.207c15.711 0 28.564 12.854 28.564 28.564v35.391h55.207v-35.391c0-15.71-12.854-28.564-28.564-28.564z" opacity={1} data-original="#8bcaff" /><path fill="#477b9e" d="M94.406 77.486H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991h50.302c7.114 0 12.935-5.846 12.935-12.991V90.477c-.001-7.145-5.821-12.991-12.935-12.991z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M69.255 105.272V90.477c0-7.145 5.821-12.991 12.935-12.991H44.104c-7.114 0-12.935 5.846-12.935 12.991v14.795c0 7.145 5.821 12.991 12.935 12.991H82.19c-7.115 0-12.935-5.846-12.935-12.991z" opacity={1} data-original="#3f6d8e" /><path fill="#477b9e" d="M0 179.924v223.208c0 15.71 12.854 28.564 28.564 28.564h81.381c15.71 0 28.564-12.854 28.564-28.564V179.924z" opacity={1} data-original="#477b9e" /><path fill="#3f6d8e" d="M51.695 403.133V179.924H0v223.208c0 15.71 12.854 28.564 28.564 28.564h51.695c-15.71.001-28.564-12.853-28.564-28.563z" opacity={1} data-original="#3f6d8e" /><path fill="#dbedff" d="M109.945 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h138.51v-35.391c0-15.71-12.854-28.564-28.565-28.564z" opacity={1} data-original="#dbedff" /><path fill="#b5dcff" d="M80.259 118.03H28.564C12.854 118.03 0 130.884 0 146.594v35.391h51.695v-35.391c0-15.71 12.854-28.564 28.564-28.564z" opacity={1} data-original="#b5dcff" /><path fill="#365e7d" d="M320.314 447.866c-82.219 0-149.109-66.89-149.109-149.109s66.89-149.109 149.109-149.109 149.109 66.89 149.109 149.109-66.891 149.109-149.109 149.109z" opacity={1} data-original="#365e7d" className /><path fill="#294b64" d="M221.27 298.757c0-73.689 53.735-135.055 124.076-146.996a149.48 149.48 0 0 0-25.032-2.113c-82.219 0-149.109 66.89-149.109 149.109s66.89 149.109 149.109 149.109c8.53 0 16.891-.73 25.032-2.112-70.341-11.942-124.076-73.308-124.076-146.997z" opacity={1} data-original="#294b64" className /><circle cx="320.314" cy="298.757" r="116.772" fill="#7fb3fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#7fb3fa" className /><path fill="#64a6f4" d="M253.607 298.757c0-55.797 39.341-102.571 91.739-114.061a116.755 116.755 0 0 0-25.032-2.71c-64.389 0-116.772 52.384-116.772 116.772S255.926 415.53 320.314 415.53c8.591 0 16.965-.941 25.032-2.71-52.398-11.492-91.739-58.266-91.739-114.063z" opacity={1} data-original="#64a6f4" className /><circle cx="320.314" cy="298.757" r="71.576" fill="#64a6f4" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#64a6f4" className /><path fill="#3d8bd8" d="M298.803 298.757c0-30.664 19.387-56.877 46.544-67.049a71.225 71.225 0 0 0-25.033-4.527c-39.467 0-71.576 32.109-71.576 71.576s32.109 71.576 71.576 71.576a71.23 71.23 0 0 0 25.033-4.527c-27.157-10.172-46.544-36.385-46.544-67.049z" opacity={1} data-original="#3d8bd8" /><circle cx="320.314" cy="298.757" r="21.813" fill="#9cc5fa" transform="rotate(-45 320.284 298.838)" opacity={1} data-original="#9cc5fa" /><path fill="#7fb3fa" d="M320.314 298.757c0-8.053 4.398-15.083 10.907-18.862a21.655 21.655 0 0 0-10.907-2.951c-12.028 0-21.813 9.785-21.813 21.813s9.786 21.813 21.813 21.813c3.975 0 7.694-1.086 10.907-2.952-6.509-3.778-10.907-10.808-10.907-18.861z" opacity={1} data-original="#7fb3fa" className /></g></svg>
+                                                </span>
+                                                <span>Camera</span>
+                                              </li>
+                                              <li className="flex gap-2 items-center hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("image-upload").click(); setDocModel(false); }}>
+                                                <span className="w-5">
+                                                  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlnsXlink="http://www.w3.org/1999/xlink" width={22} height={22} x={0} y={0} viewBox="0 0 64 64" style={{ enableBackground: 'new 0 0 512 512' }} xmlSpace="preserve" className><g><path fill="#29afea" d="M44.8 13.5h4.7c2.6 0 4.7 2.1 4.7 4.7v27.6c0 2.6-2.1 4.7-4.7 4.7h-35c-2.6 0-4.7-2.1-4.7-4.7V18.2c0-2.6 2.1-4.7 4.7-4.7h4.7z" opacity={1} data-original="#29afea" className /><path fill="#436dcd" d="M9.8 43.4 26 36.6c1.5-.6 3.3-.3 4.4 1 1.3 1.4 3.3 1.7 4.9.7L46 31.6c1.3-.8 3-.8 4.3.1l4 2.7v11.5c0 2.6-2.1 4.6-4.6 4.6H14.4c-2.6 0-4.6-2.1-4.6-4.6z" opacity={1} data-original="#436dcd" /><circle cx={24} cy={24} r={4} fill="#cdecfa" opacity={1} data-original="#cdecfa" /></g></svg>
 
-                                              </span>
-                                              <span className="text-nowrap">
-                                                Photo & Video
-                                              </span>
-                                            </li>
-                                            <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
-                                              <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
-                                                <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
-                                                <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
-                                                <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
-                                              </svg>
+                                                </span>
+                                                <span className="text-nowrap">
+                                                  Photo & Video
+                                                </span>
+                                              </li>
+                                              <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { document.getElementById("file-upload").click(); setDocModel(false) }}>
+                                                <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                  <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
+                                                  <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
+                                                  <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
+                                                  <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
+                                                </svg>
 
-                                              </span> <span>Document</span></li>
-                                          </ul>
+                                                </span> <span>Document</span></li>
+                                            </ul>
+                                          </div>
                                         </div>
-                                      </div>
+                                      )}
+
+                                    </div>
+                                    {editingMessage && (
+                                      <button
+                                        onClick={() => {
+                                          setEditingMessage(null);
+                                          setMessageInput("");
+                                        }}
+                                        className="ml-2 text-gray-500"
+                                      >
+                                        Cancel
+                                      </button>
                                     )}
+                                  </form>
+                                </div>
+                              ))}
+                          </div>
+                          {/* Show Send to Bottom button only if user has scrolled up */}
+                          {showScrollToBottom && (
+                            <button
+                              type="button"
+                              className="absolute bottom-24 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
+                              onClick={scrollToBottom}
+                              aria-label="Send to Bottom"
+                            >
+                              <FaArrowDown className="w-5 h-5" />
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
+                      )}
+                    </>
+                  )}
+              </div>
+            }
 
-                                  </div>
-                                  {editingMessage && (
-                                    <button
-                                      onClick={() => {
-                                        setEditingMessage(null);
-                                        setMessageInput("");
-                                      }}
-                                      className="ml-2 text-gray-500"
-                                    >
-                                      Cancel
-                                    </button>
-                                  )}
-                                </form>
-                              </div>
-                            ))}
-                        </div>
-                        {/* Show Send to Bottom button only if user has scrolled up */}
-                        {showScrollToBottom && (
-                          <button
-                            type="button"
-                            className="absolute bottom-24 right-4 p-2 bg-primary/50 text-white rounded-full shadow-lg "
-                            onClick={scrollToBottom}
-                            aria-label="Send to Bottom"
-                          >
-                            <FaArrowDown className="w-5 h-5" />
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
-                    )}
-                  </>
-                )}
-            </div>
 
-            {console.log(isModalOpen, isGroupCreateModalOpen)}
+            {/* {console.log(isModalOpen, isGroupCreateModalOpen)} */}
 
             {/* ============================== right sidebar =========================================== */}
-
-            <div
-              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
-                isGroupCreateModalOpen || isModalOpen ||
-                (isUserProfileModalOpen && !selectedChat.members)
-                ? "2xl:w-[380px]  sm:max-w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px]  opacity-100"
-                : "w-0 opacity-0"
-                }`}
-              style={{
-                boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
-              }}
-            >
-              {isGroupModalOpen && (
-                <GroupProfile
-                  selectedChat={selectedChat}
-                  setGroupUsers={setGroupUsers}
-                  allUsers={allUsers}
-                  userId={userId}
-                  socket={socket}
-                  IMG_URL={IMG_URL}
-                  setSelectedChat={setSelectedChat}
-                  handleMakeCall={handleMakeCall}
-                  messages={messages}
-                  handleImageClick={handleImageClick}
-                />
-              )}
-              {isModalOpen && (
-                <AddParticipants
-                  selectedChat={selectedChat}
-                  allUsers={allUsers}
-                  userId={userId}
-                  socket={socket}
-                  groupUsers={groupUsers}
-                  setGroupUsers={setGroupUsers}
-                  creatGroup={creatGroup}
-                />
-              )}
-              {isGroupCreateModalOpen && (
-                <CreatedGroup
-                  isOpen={isGroupCreateModalOpen}
-                  allUsers={allUsers}
-                  currentUser={currentUser}
-                  socket={socket}
-                  creatGroup={creatGroup}
-                  setCreatGroup={setCreatGroup}
-                  groupUsers={groupUsers}
-                  setGroupUsers={setGroupUsers}
-                />
-              )}
-              {isUserProfileModalOpen && !selectedChat.members && (
-                <ProfileUser
-                  isOpen={isUserProfileModalOpen}
-                  selectedChat={selectedChat}
-                  messages={messages}
-                  handleImageClick={handleImageClick}
-                  handleMakeCall={handleMakeCall}
-                  onlineUsers={onlineUsers}
-                />
-              )}
-            </div>
+            {!(isReceiving || isVideoCalling || isVoiceCalling) &&
+              <div
+                className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+                  isGroupCreateModalOpen || isModalOpen ||
+                  (isUserProfileModalOpen && !selectedChat.members)
+                  ? "2xl:w-[380px]  sm:max-w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px]  opacity-100"
+                  : "w-0 opacity-0"
+                  }`}
+                style={{
+                  boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
+                }}
+              >
+                {isGroupModalOpen && (
+                  <GroupProfile
+                    selectedChat={selectedChat}
+                    setGroupUsers={setGroupUsers}
+                    allUsers={allUsers}
+                    userId={userId}
+                    socket={socket}
+                    IMG_URL={IMG_URL}
+                    setSelectedChat={setSelectedChat}
+                    handleMakeCall={handleMakeCall}
+                    messages={messages}
+                    handleImageClick={handleImageClick}
+                  />
+                )}
+                {isModalOpen && (
+                  <AddParticipants
+                    selectedChat={selectedChat}
+                    allUsers={allUsers}
+                    userId={userId}
+                    socket={socket}
+                    groupUsers={groupUsers}
+                    setGroupUsers={setGroupUsers}
+                    creatGroup={creatGroup}
+                  />
+                )}
+                {isGroupCreateModalOpen && (
+                  <CreatedGroup
+                    isOpen={isGroupCreateModalOpen}
+                    allUsers={allUsers}
+                    currentUser={currentUser}
+                    socket={socket}
+                    creatGroup={creatGroup}
+                    setCreatGroup={setCreatGroup}
+                    groupUsers={groupUsers}
+                    setGroupUsers={setGroupUsers}
+                  />
+                )}
+                {isUserProfileModalOpen && !selectedChat.members && (
+                  <ProfileUser
+                    isOpen={isUserProfileModalOpen}
+                    selectedChat={selectedChat}
+                    messages={messages}
+                    handleImageClick={handleImageClick}
+                    handleMakeCall={handleMakeCall}
+                    onlineUsers={onlineUsers}
+                  />
+                )}
+              </div>
+            }
 
           </>
         </>
@@ -3235,10 +3245,7 @@ const Chat2 = () => {
                     <button
                       onClick={() => {
                         setParticipantOpen(true);
-<<<<<<< Updated upstream
-=======
                         // setShowFirstSection(true);
->>>>>>> Stashed changes
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >

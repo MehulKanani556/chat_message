@@ -24,7 +24,7 @@ const ChatList = ({
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
   const { user } =
     useSelector((state) => state.user);
-    const {onlineUsers} = useSelector(state => state.magageState)
+  const { onlineUsers } = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
 
