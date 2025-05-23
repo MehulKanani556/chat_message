@@ -1629,7 +1629,23 @@ const MessageContextMenu = ({
       transform: "translate(-50%, 0)",
     };
   };
-  // console.log(message.content?.type?.includes("text"), message.content)
+
+  // Add useEffect to handle wheel event prevention
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+
+    if (contextMenu.visible) {
+      // Add wheel event listener when menu is visible
+      document.addEventListener('wheel', preventScroll, { passive: false });
+    }
+
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener('wheel', preventScroll);
+    };
+  }, [contextMenu.visible]);
 
   return (
     <>
