@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -121,15 +121,12 @@ import { decryptMessage } from "../utils/decryptMess";
 
 import VideoCallLayout from "../component/VideoCallLayout";
 import CallParticipantModal from "../component/CallParticipantModal";
-import { setCameraStatus, setIncomingShare, setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsModalOpen, setIsUserProfileModalOpen, setSelectedChatModule, setShowCallHistory, setShowGroups, setShowLeftSidebar, setShowProfile, setShowSettings } from "../redux/slice/manageState.slice";
+import { setCameraStatus, setIncomingShare, setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsImageModalOpen, setIsModalOpen, setIsUserProfileModalOpen, setSelectedChat, setSelectedChatModule, setSelectedImage, setShowCallHistory, setShowGroups, setShowLeftSidebar, setShowProfile, setShowSettings } from "../redux/slice/manageState.slice";
 import MediaViewer from "../component/MediaViewer";
 
 
-
-
-const Chat2 = () => {
-  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } =
-    useSelector((state) => state.user);
+const Chat2 = memo(() => {
+  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
   const {
     remoteStreams,
     isConnected,
@@ -153,12 +150,14 @@ const Chat2 = () => {
     isModalOpen,
     isGroupCreateModalOpen,
     isUserProfileModalOpen,
-    showLeftSidebar
+    showLeftSidebar,
+    selectedChat,
+    selectedImage,
+    isImageModalOpen,
   } = useSelector(state => state.magageState)
 
   const dispatch = useDispatch();
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(false);
+  // const [selectedChat, setSelectedChat] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef(null);
@@ -175,12 +174,10 @@ const Chat2 = () => {
   const [userId] = useState(sessionStorage.getItem("userId"));
   const [groupUsers, setGroupUsers] = useState([]);
   const messagesContainerRef = useRef(null);
-  const [searchInput, setSearchInput] = useState("");
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const [activeMessageId, setActiveMessageId] = useState(null);
-  const dropdownRef = useRef(null);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+
+  // const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  // const [selectedImage, setSelectedImage] = useState(null);
   const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
   const [searchInputbox, setSearchInputbox] = useState("");
   const [totalMatches, setTotalMatches] = useState(0);
@@ -199,7 +196,7 @@ const Chat2 = () => {
   const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
   const [creatGroup, setCreatGroup] = useState(false)
   const [isDragging, setIsDragging] = useState(false);
-  const [videoDurations, setVideoDurations] = useState({}); // Object to hold durations keyed by message ID
+// Object to hold durations keyed by message ID
   const [waveformData, setWaveformData] = useState([]);
   const [userStreams, setUserStreams] = useState({});
 
@@ -339,12 +336,11 @@ const Chat2 = () => {
   //===========get all users===========
   useEffect(() => {
     dispatch(getAllUsers());
-    // dispatch(getOnlineUsers());
     dispatch(getAllMessageUsers());
     dispatch(getAllGroups());
     dispatch(getUser(currentUser));
     dispatch(getAllCallUsers());
-  }, [dispatch]);
+  }, []);
 
 
   useEffect(() => {
@@ -354,13 +350,13 @@ const Chat2 = () => {
       );
       // console.log("updatedChat", updatedChat);
       if (updatedChat) {
-        setSelectedChat(updatedChat);
+        dispatch(setSelectedChat(updatedChat));
       }
     }
   }, [allMessageUsers]);
 
   useEffect(() => {
-    if (selectedChat) {
+    if (messages) {
       // Get unread messages for this conversation
       const unreadMessages = messages
         .filter(
@@ -377,19 +373,8 @@ const Chat2 = () => {
         // dispatch(getAllMessageUsers());
       }
     }
-  }, [selectedChat, messages]);
+  }, [messages]);
 
-  //===========profile dropdown===========
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isProfileDropdownOpen && !event.target.closest(".profile-dropdown")) {
-        setIsProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isProfileDropdownOpen]);
 
   //===========get all messages ===========
   useEffect(() => {
@@ -406,6 +391,10 @@ const Chat2 = () => {
       if (message.type === "delete") {
         if (selectedChat) {
           dispatch(getAllMessages({ selectedId: selectedChat._id }));
+        }
+      } else if (message.type === "reaction") {
+        if (selectedChat) {
+          dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
         }
       } else {
         if (selectedChat) {
@@ -431,24 +420,24 @@ const Chat2 = () => {
     return () => {
       unsubscribeMessages?.();
     };
-  }, [isConnected, selectedChat, notificationPermission, allUsers]);
+  }, [isConnected, selectedChat, allUsers]);
 
   // ===========================typing=============================
 
+  const handleTypingStatus = useCallback((data) => {
+    if (data.isTyping) {
+      setTypingUsers((prev) => [...new Set([...prev, data.userId])]);
+      setTimeout(() => {
+        setTypingUsers((prev) => [...new Set(prev.filter(id => id !== data.userId))]);
+      }, 5000);
+    }
+    // }
+  }, []);
+
   useEffect(() => {
 
-
     if (!isConnected) return;
-
-    const handleTypingStatus = (data) => {
-      if (data.isTyping) {
-        setTypingUsers((prev) => [...new Set([...prev, data.userId])]);
-        setTimeout(() => {
-          setTypingUsers((prev) => [...new Set(prev.filter(id => id !== data.userId))]);
-        }, 5000);
-      }
-      // }
-    };
+  
     socket.on("user-typing", handleTypingStatus);
     return () => {
       if (socket) {
@@ -457,7 +446,7 @@ const Chat2 = () => {
     };
   }, [isConnected, selectedChat]);
 
-  // console.log(typingUsers);
+  console.log(typingUsers);
 
 
   let typingTimeout; // define outside the function
@@ -471,6 +460,7 @@ const Chat2 = () => {
       return;
     }
 
+    // console.log("e.target.value", e.target.value);
     setMessageInput(e.target.value);
 
     if (selectedChat) {
@@ -482,25 +472,25 @@ const Chat2 = () => {
     }
   };
 
-  const handleDragEnter = (e) => {
+  const handleDragEnter = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
-  };
+  }, []);
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.currentTarget.contains(e.relatedTarget)) return;
     setIsDragging(false);
-  };
+  }, []);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleDrop = async (e) => {
+  const handleDrop = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
@@ -509,7 +499,7 @@ const Chat2 = () => {
     if (files.length > 0) {
       setSelectedFiles((prev) => [...prev, ...files]);
     }
-  };
+  }, [selectedChat]);
 
   //===========handle send message ===========
 
@@ -534,8 +524,7 @@ const Chat2 = () => {
         console.error("Failed to update message:", error);
       }
     } else {
-      const isBlockedByRecipient =
-        selectedChat.blockedUsers?.includes(currentUser);
+      const isBlockedByRecipient = selectedChat?.blockedUsers?.includes(currentUser);
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
         !(selectedChat || userId)
@@ -562,7 +551,7 @@ const Chat2 = () => {
   };
 
   //===========handle send group message===========
-  const handleSendGroupMessage = async (data) => {
+  const handleSendGroupMessage = useCallback(async (data) => {
     if (data.content.trim() === "") return;
 
     try {
@@ -571,13 +560,13 @@ const Chat2 = () => {
     } catch (error) {
       console.error("Failed to send group message:", error);
     }
-  };
+  }, []);
   // console.log("object")
   //===========emoji picker===========
-  const onEmojiClick = (event, emojiObject) => {
+  const onEmojiClick = useCallback((event, emojiObject) => {
     // console.log("event", event, emojiObject);
     setMessageInput((prevMessage) => prevMessage + event.emoji);
-  };
+  }, [])  ;
 
   //===========emoji picker===========
   useEffect(() => {
@@ -610,7 +599,7 @@ const Chat2 = () => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload = async (files, userId) => {
+  const handleMultipleFileUpload = useCallback(async (files, userId) => {
     const filesArray = Array.from(files);
     for (const file of filesArray) {
       const formData = new FormData();
@@ -652,11 +641,11 @@ const Chat2 = () => {
         });
       }
     }
-  };
+  }, []);
 
   //================screen sharing================
 
-  const handleStartScreenShare = async () => {
+  const handleStartScreenShare = useCallback(async () => {
     // console.log(selectedChat);
     if (selectedChat) {
       const success = await startSharing(selectedChat);
@@ -665,16 +654,13 @@ const Chat2 = () => {
         console.error("Failed to start screen sharing");
       }
     }
-  };
-
-
-
+  }, []);
 
   // =========================== video call=============================
 
   // Add call handling functions
 
-  const handleMakeCall = async (type) => {
+  const handleMakeCall = useCallback(async (type) => {
     if (!selectedChat) return;
     if (selectedChat?.members) {
       const success = await startCall(selectedChat._id, true, selectedChat, type);
@@ -689,11 +675,11 @@ const Chat2 = () => {
         console.error("Failed to start screen sharing");
       }
     }
-  };
+  }, []);
 
   // ===========================delete message=============================
 
-  const handleContextMenu = (e, message) => {
+  const handleContextMenu = useCallback((e, message) => {
     e.preventDefault();
     setContextMenu({
       visible: true,
@@ -702,9 +688,9 @@ const Chat2 = () => {
       messageId: message._id,
       message: message,
     });
-  };
+  }, []);
 
-  const handleDeleteMessage = async (messageId) => {
+  const handleDeleteMessage = useCallback(async (messageId) => {
     try {
       // Emit socket event for real-time deletion
       await socket.emit("delete-message", messageId);
@@ -716,16 +702,16 @@ const Chat2 = () => {
       console.error("Failed to delete message:", error);
     }
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
-  };
+  }, []);
 
-  const handleEditMessage = (message) => {
+  const handleEditMessage = useCallback((message) => {
     setEditingMessage(message);
     setMessageInput(message.content.content);
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleClickaaa = () =>
@@ -733,45 +719,11 @@ const Chat2 = () => {
     document.addEventListener("click", handleClickaaa);
     return () => document.removeEventListener("click", handleClickaaa);
   }, []);
-  // ==================group chat=================
-
-  // Subscribe to group messages
-  useEffect(() => {
-    if (!isConnected) return;
-
-    const unsubscribeGroupMessages = subscribeToMessages((message) => {
-      if (message.type === "group") {
-        if (selectedChat) {
-          dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
-        }
-      } else if (message.type === "reaction") {
-        if (selectedChat) {
-          dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
-        }
-      }
-      if (
-        message.type !== "status" &&
-        message.type !== "read" &&
-        message.type !== "reaction"
-      ) {
-        // Find sender name
-        const sender = allUsers.find((user) => user._id === message.sender);
-        const senderName = sender ? sender.userName : "Someone";
-
-        // Show notification
-        showMessageNotification(message, senderName);
-      }
-      dispatch(getAllMessageUsers());
-      dispatch(getAllCallUsers());
-    });
-
-    return () => {
-      unsubscribeGroupMessages?.();
-    };
-  }, [isConnected, selectedChat, notificationPermission, allUsers]);
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("messageInput", messageInput);
     const data = {
       type: messageInput instanceof FileList ? "file" : "text",
       content: messageInput,
@@ -787,13 +739,13 @@ const Chat2 = () => {
     setMessageInput("");
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       const element = messagesContainerRef.current;
       element.scrollTop = element.scrollHeight;
       setShowScrollToBottom(false);
     }
-  };
+  }, [messagesContainerRef]);
 
   // Scroll event listener to show/hide the button
   useEffect(() => {
@@ -819,17 +771,6 @@ const Chat2 = () => {
     };
   }, [messages]);
 
-  // Scroll when chat is selected
-  useEffect(() => {
-    if (selectedChat) {
-      scrollToBottom();
-    }
-  }, [selectedChat]);
-
-  // Add this effect to ensure scrolling works after the component mounts
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
 
   // Ensure scroll happens after messages are loaded
   useEffect(() => {
@@ -854,42 +795,11 @@ const Chat2 = () => {
     }
   }, []);
 
-  //===========group messages by date===========
-  const groupMessagesByDate = (messages) => {
-    const groups = {};
-    messages.forEach((message) => {
-      if (message.isBlocked && message.sender !== currentUser) return;
-      const date = new Date(message.createdAt).toLocaleDateString("en-GB");
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
-    });
-    return groups;
-  };
 
-
-  const handleDropdownToggle = (messageId) => {
-    setActiveMessageId((prev) => (prev === messageId ? null : messageId));
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setActiveMessageId(null); // Close the dropdown by setting activeMessageId to null
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
-
-  const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl);
-    setIsImageModalOpen(true);
-  };
+  const handleImageClick = useCallback((imageUrl) => {
+    dispatch(setSelectedImage(imageUrl));
+    dispatch(setIsImageModalOpen(true));
+  }, [dispatch]);
 
   // ================== highlight word ==================
 
@@ -1106,34 +1016,10 @@ const Chat2 = () => {
     }
   };
 
-  const handleProfileImageClick = (imageUrl) => {
+  const handleProfileImageClick = useCallback((imageUrl) => {
     setSelectedProfileImage(imageUrl);
     setIsProfileImageModalOpen(true);
-  };
-
-  // Update the handleCopyMessage function to handle both text and images
-  const handleCopyMessage = async (message, callback) => {
-    if (message.type === "file" && message.fileType?.includes("image/")) {
-      try {
-        const response = await fetch(
-          `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
-        );
-        const blob = await response.blob();
-        const item = new ClipboardItem({
-          [blob.type]: blob,
-        });
-
-        await navigator.clipboard.write([item]);
-        callback();
-      } catch (error) {
-        console.error("Error copying image:", error);
-      }
-    } else {
-      // Handle text and emoji copying
-      const content = message.content || message;
-      navigator.clipboard.writeText(content).then(callback);
-    }
-  };
+  }, []);
 
   // Add this useEffect to handle paste events
   useEffect(() => {
@@ -1177,7 +1063,6 @@ const Chat2 = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-
   // console.log("aaaaaa-------", callUsers);
   // clear chat
   const handleClearChat = async () => {
@@ -1188,7 +1073,7 @@ const Chat2 = () => {
     });
   };
 
-  const handleDeleteChat = async () => {
+  const handleDeleteChat = useCallback(async () => {
     await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
       dispatch(deleteChat({ selectedUserId: selectedChat._id })).then(() => {
         if (user.pinChatFor?.includes(selectedChat?._id)) {
@@ -1197,24 +1082,23 @@ const Chat2 = () => {
         dispatch(getAllMessages({ selectedId: selectedChat._id }));
         dispatch(getAllMessageUsers());
         setIsDeleteChatModalOpen(false);
-        setSelectedChat('')
+        dispatch(setSelectedChat(null));
       });
     });
 
 
-  };
+  }, [dispatch]);
 
   // Add useEffect to handle input focus when chat is selected
   useEffect(() => {
     if (selectedChat && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [selectedChat]); // Dependency on selectedChat
+  }, [selectedChat]);
 
   const [replyingTo, setReplyingTo] = useState(null);
   const [forwardingMessage, setForwardingMessage] = useState(null);
   const [showForwardModal, setShowForwardModal] = useState(false);
-  const [invitedUsers, setInvitedUsers] = useState([]);
 
   const handleReplyMessage = (message) => {
     setReplyingTo(message);
@@ -1224,8 +1108,6 @@ const Chat2 = () => {
       inputRef.current.focus();
     }
   };
-
-
   const handleForwardMessage = (message) => {
     setForwardingMessage(message);
     setShowForwardModal(true);
@@ -1243,7 +1125,6 @@ const Chat2 = () => {
       console.error("Error forwarding message:", error);
     }
   };
-
 
   // ======================Download file =====================
   const handleDownload = (fileUrl, fileName) => {
@@ -1287,7 +1168,7 @@ const Chat2 = () => {
   useEffect(() => {
     // Listen for the resetSelectedChat event
     const handleResetSelectedChat = () => {
-      setSelectedChat(null);
+      dispatch(setSelectedChat(null));
       dispatch(setShowLeftSidebar(true));
     };
 
@@ -1303,7 +1184,7 @@ const Chat2 = () => {
     const handleShowChatList = (event) => {
       dispatch(setShowGroups(false));
       if (event.detail?.selectedChat) {
-        setSelectedChat(event.detail.selectedChat);
+        dispatch(setSelectedChat(event.detail.selectedChat));
       }
       if (event.detail?.openGroupCreateModal) {
         dispatch(setIsGroupCreateModalOpen(true));
@@ -1318,7 +1199,6 @@ const Chat2 = () => {
   }, []);
 
   // const [showGroups, setShowGroups] = useState(false);
-
 
   useEffect(() => {
     // Listen for the showProfile event
@@ -1391,24 +1271,10 @@ const Chat2 = () => {
     if (selectedChat && user) {
       // If the selectedChat is the current user, update it with the latest user data
       if (selectedChat._id === user._id) {
-        setSelectedChat(user);
+        dispatch(setSelectedChat(user));
       }
     }
   }, [user, selectedChat?._id]);
-
-  // Function to get video duration
-  const getVideoDuration = (videoElement) => {
-    return videoElement.duration; // Return the duration of the video
-  };
-
-  // Function to handle video metadata loading
-  const handleVideoMetadataLoad = (messageId, videoElement) => {
-    const duration = getVideoDuration(videoElement); // Get the duration using the utility function
-    setVideoDurations((prev) => ({
-      ...prev,
-      [messageId]: duration, // Store duration by message ID
-    }));
-  };
 
   // let audioContext;
 
@@ -1441,6 +1307,7 @@ const Chat2 = () => {
   const chunksRef = useRef([]);
   // For storing cumulative data
   const cumulativeDataRef = useRef([]);
+
   useEffect(() => {
     return () => {
       if (animationRef.current) {
@@ -1580,16 +1447,7 @@ const Chat2 = () => {
   };
   const barHeights = generateBarHeights();
 
-  const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
-
-  const handleEndCall = () => {
-    setParticipantOpen(false);
-    setSelectedCallUsers(new Set());
-    // ... existing end call logic ...
-  };
-
-
-  // ==========================capture photo
+  // ==========================capture photo===================
 
   const [cameraStream, setCameraStream] = useState(null);
   const videoRef = useRef(null);
@@ -1622,6 +1480,7 @@ const Chat2 = () => {
       console.error("Error accessing the camera: ", error);
     }
   };
+
   function dataURLtoBlob(dataurl) {
     const arr = dataurl.split(',');
     const mime = arr[0].match(/:(.*?);/)[1];
@@ -1646,6 +1505,7 @@ const Chat2 = () => {
   //     console.log(photoData);
   //   }
   // };
+
   const capturePhoto = () => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -1673,6 +1533,7 @@ const Chat2 = () => {
       console.log(photoData);
     }
   };
+
   const closeCamera = () => {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
@@ -1683,6 +1544,7 @@ const Chat2 = () => {
       }
     }
   };
+
   const handleUploadCapturePic = (dataUrl) => {
     const blob = dataURLtoBlob(dataUrl);
     // Optionally, give it a filename
@@ -1717,34 +1579,6 @@ const Chat2 = () => {
     }
   };
 
-  // button
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isImageModalOpen || !selectedImage) return;
-
-      const mediaMessages = messages.filter(message =>
-        message.content &&
-        message.content.fileType &&
-        (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
-      );
-      const currentIndex = mediaMessages.findIndex(message =>
-        `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
-      );
-
-      if (e.key === 'ArrowLeft') {
-        const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
-        setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
-      } else if (e.key === 'ArrowRight') {
-        const nextIndex = (currentIndex + 1) % mediaMessages.length;
-        setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isImageModalOpen, selectedImage, messages]);
-
-
   useEffect(() => {
     // Cleanup function to close the participant section when the component unmounts
     return () => {
@@ -1752,62 +1586,17 @@ const Chat2 = () => {
     };
   }, []);
 
-  console.log(remoteStreams);
-
-  // ---------------------Video call screen Layout-------------------
-  const [participants, setParticipants] = useState(() => {
-    const allStreams = new Map();
-    allStreams.set(userId, localVideoRef?.current?.srcObject);
-    return Array.from(allStreams);
-  });
-
-  useEffect(() => {
-    setParticipants(prev => {
-      const allStreams = new Map();
-      allStreams.set(userId, localVideoRef?.current?.srcObject);
-      return Array.from(allStreams);
-    });
-  }, [localVideoRef?.current?.srcObject]);
-
-  //       if(allStreams.has(userId)){
-  //         allStreams.set(userId, localVideoRef?.current?.srcObject);
-  //       }else{
-  //         allStreams.set(userId, localVideoRef?.current?.srcObject);
-  //       }
-  //       return Array.from(allStreams);
-  //     });
-  //   }, [localVideoRef?.current?.srcObject]);
-
-  //   useEffect(() => {
-  //     setParticipants(prev => {
-  //       const allStreams = new Map(prev);
-  //       // Update or add remote streams
-  //       remoteStreams.forEach((stream, id) => {
-  //         if (allStreams.has(id)) {
-  //           allStreams.set(id, stream);
-  //         } else {
-  //           allStreams.set(id, stream);
-  //         }
-  //       });
-  //       return Array.from(allStreams);
-  //     });
-  //   }, [remoteStreams]);
-
-
-
   const [showBell, setShowBell] = useState(false);
-  useEffect(() => {
-    setShowBell(false);
-    if (invitedUsers && invitedUsers.length > 0) {
-      const timer = setTimeout(() => setShowBell(true), 30000);
-      return () => clearTimeout(timer);
-    }
-  }, [invitedUsers]);
+  // useEffect(() => {
+  //   setShowBell(false);
+  //   if (invitedUsers && invitedUsers.length > 0) {
+  //     const timer = setTimeout(() => setShowBell(true), 3000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [invitedUsers]);
 
   const [uploadProgress, setUploadProgress] = useState({});
-  console.log("aa", uploadProgress)
-
-
+  console.log("aa")
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -1827,7 +1616,7 @@ const Chat2 = () => {
           }}
         />
       )}
-      {/* ==============================Right Sidebar============================== */}
+      {/* ==============================Right Sidebar chat list ============================== */}
       {!(isReceiving || isVideoCalling || isVoiceCalling) && (
         <>
           {/* Left Side */}
@@ -1837,34 +1626,26 @@ const Chat2 = () => {
               : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
               } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
           >
-            {showGroups && (
-              <Groups
-                setSelectedChat={setSelectedChat}
-                selectedChat={selectedChat}
-              />
-            )}
+            {showGroups && ( <Groups/> )}
             {showProfile && <Profile />}
-            {console.log("object", selectedChatModule)}
+            {/* {console.log("object", selectedChatModule)} */}
             {selectedChatModule && (
               <ChatList
-                allMessageUsers={allMessageUsers}
-                currentUser={currentUser}
-                setSelectedChat={setSelectedChat}
-                IMG_URL={IMG_URL}
-                selectedChat={selectedChat}
-                allUsers={allUsers}
+                // allMessageUsers={allMessageUsers}
+                // currentUser={currentUser}
+                // setSelectedChat={setSelectedChat}
+                // IMG_URL={IMG_URL}
+                // selectedChat={selectedChat}
+                // allUsers={allUsers}
                 handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
                 typingUsers={typingUsers}
               />
             )}
             {showSettings && <Setting />}
-            {showCallHistory && (
-              <CallHistory />
-            )}
+            {showCallHistory && ( <CallHistory />)}
           </div>
 
           {/* Right Side */}
-          {console.log("showLeftSidebar", showLeftSidebar)}
           <>
             <div
               className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -1880,17 +1661,6 @@ const Chat2 = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {console.log("kk", isGroupModalOpen,
-                isModalOpen,
-                isGroupCreateModalOpen,
-                isUserProfileModalOpen, !showOverlay, (!(
-                  isGroupModalOpen ||
-                  isModalOpen ||
-                  isGroupCreateModalOpen ||
-                  isUserProfileModalOpen
-                ) ||
-                  !showOverlay), selectedChat)}
-
               {(!(
                 isGroupModalOpen ||
                 isModalOpen ||
@@ -1933,15 +1703,8 @@ const Chat2 = () => {
                               onClick={() => {
                                 if (
                                   selectedChat?.photo &&
-                                  selectedChat.photo !== "null"
-                                ) {
-                                  handleProfileImageClick(
-                                    `${IMG_URL}${selectedChat.photo.replace(
-                                      /\\/g,
-                                      "/"
-                                    )}`
-                                  );
-                                }
+                                  selectedChat?.photo !== "null"
+                                ) { handleProfileImageClick(`${IMG_URL}${selectedChat?.photo.replace( /\\/g,"/")}`);}
                               }}
                             >
                               {selectedChat?.photo && selectedChat.photo !== "null" && (selectedChat?.profilePhoto == "Everyone" || selectedChat.isGroup) ? (
@@ -2012,15 +1775,6 @@ const Chat2 = () => {
                                 data-tooltip-delay="0"
                                 data-tooltip-duration="0"
                               />
-
-                              {/* <MdOutlineDeleteSweep
-                      onClick={() => setIsClearChatModalOpen(true)}
-                      title="Clear chat"
-                      data-tooltip="Clear chat"
-                      data-tooltip-delay="0"
-                      data-tooltip-duration="0"
-                      className="w-7 h-7 cursor-pointer hover:text-red-600 text-4xl"
-                    /> */}
                               {isSharing ? (
                                 <LuScreenShareOff
                                   title="Stop sharing"
@@ -2031,14 +1785,6 @@ const Chat2 = () => {
                                   onClick={() => cleanupConnection()}
                                 />
                               ) : (
-                                // <LuScreenShare
-                                //   title="Screen sharing"
-                                //   data-tooltip="Screen sharing"
-                                //   data-tooltip-delay="0"
-                                //   data-tooltip-duration="0"
-                                //   className="w-6 h-6 cursor-pointer"
-                                //   onClick={() => handleStartScreenShare()}
-                                // />
                                 <div
                                   className="w-6 h-6 cursor-pointer"
                                   onClick={() => handleStartScreenShare()}
@@ -2330,6 +2076,7 @@ const Chat2 = () => {
                           </div>
                         </div>
 
+                     {/* =========Search Box ==========*/}
                         {isSearchBoxOpen && (
                           <div className="absolute top-32 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
                             style={{
@@ -2381,7 +2128,6 @@ const Chat2 = () => {
                           </div>
                         )}
 
-
                         {/*========================== Messages ==============================*/}
                         <div className="relative">
                           {/* {console.log("replyingTo",replyingTo)} */}
@@ -2425,22 +2171,21 @@ const Chat2 = () => {
                             {cameraStream ? <></> :
                               <MessageList
                                 messages={messages}
-                                groupMessagesByDate={groupMessagesByDate}
+                                // groupMessagesByDate={groupMessagesByDate}
                                 userId={userId}
                                 handleMakeCall={handleMakeCall}
                                 handleContextMenu={handleContextMenu}
-                                handleDropdownToggle={handleDropdownToggle}
+                                // handleDropdownToggle={handleDropdownToggle}
                                 handleEditMessage={handleEditMessage}
                                 handleDeleteMessage={handleDeleteMessage}
-                                handleCopyMessage={handleCopyMessage}
                                 handleReplyMessage={handleReplyMessage}
                                 handleForwardMessage={handleForwardMessage}
                                 highlightText={highlightText}
                                 searchInputbox={searchInputbox}
-                                activeMessageId={activeMessageId}
+                                // activeMessageId={activeMessageId}
                                 contextMenu={contextMenu}
                                 setContextMenu={setContextMenu}
-                                setActiveMessageId={setActiveMessageId}
+                                // setActiveMessageId={setActiveMessageId}
                                 allUsers={allUsers}
                                 selectedChat={selectedChat}
                                 IMG_URL={IMG_URL}
@@ -3088,9 +2833,9 @@ const Chat2 = () => {
             {/* ============================== right sidebar =========================================== */}
 
             <div
-              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat.members) ||
+              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                 isGroupCreateModalOpen ||
-                (isUserProfileModalOpen && !selectedChat.members)
+                (isUserProfileModalOpen && !selectedChat?.members)
                 ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
                 : "w-0 opacity-0"
                 }`}
@@ -3100,23 +2845,23 @@ const Chat2 = () => {
             >
               {isGroupModalOpen && (
                 <GroupProfile
-                  selectedChat={selectedChat}
-                  setGroupUsers={setGroupUsers}
-                  allUsers={allUsers}
-                  userId={userId}
+                  // selectedChat={selectedChat}
+                  // setGroupUsers={setGroupUsers}
+                  // allUsers={allUsers}
+                  // userId={userId}
                   socket={socket}
-                  IMG_URL={IMG_URL}
-                  setSelectedChat={setSelectedChat}
+                  // IMG_URL={IMG_URL}
+                  // setSelectedChat={setSelectedChat}
                   handleMakeCall={handleMakeCall}
-                  messages={messages}
+                  // messages={messages}
                   handleImageClick={handleImageClick}
                 />
               )}
               {isModalOpen && (
                 <AddParticipants
-                  selectedChat={selectedChat}
-                  allUsers={allUsers}
-                  userId={userId}
+                  // selectedChat={selectedChat}
+                  // allUsers={allUsers}
+                  // userId={userId}
                   socket={socket}
                   groupUsers={groupUsers}
                   setGroupUsers={setGroupUsers}
@@ -3126,8 +2871,8 @@ const Chat2 = () => {
               {isGroupCreateModalOpen && (
                 <CreatedGroup
                   isOpen={isGroupCreateModalOpen}
-                  allUsers={allUsers}
-                  currentUser={currentUser}
+                  // allUsers={allUsers}
+                  // currentUser={currentUser}
                   socket={socket}
                   creatGroup={creatGroup}
                   setCreatGroup={setCreatGroup}
@@ -3138,11 +2883,11 @@ const Chat2 = () => {
               {isUserProfileModalOpen && !selectedChat.members && (
                 <ProfileUser
                   isOpen={isUserProfileModalOpen}
-                  selectedChat={selectedChat}
-                  messages={messages}
+                  // selectedChat={selectedChat}
+                  // messages={messages}
                   handleImageClick={handleImageClick}
                   handleMakeCall={handleMakeCall}
-                  onlineUsers={onlineUsers}
+                  // onlineUsers={onlineUsers}
                 />
               )}
             </div>
@@ -3257,20 +3002,20 @@ const Chat2 = () => {
           ) : (
             // ===============Video call screen================
             <VideoCallLayout
-              currentUser={currentUser}
+              // currentUser={currentUser}
               localVideoRef={localVideoRef}
-              allUsers={allUsers}
-              cameraStatus={cameraStatus}
-              IMG_URL={IMG_URL}
+              // allUsers={allUsers}
+              // cameraStatus={cameraStatus}
+              // IMG_URL={IMG_URL}
               endCall={endCall}
               toggleMicrophone={toggleMicrophone}
               toggleCamera={toggleCamera}
-              setSelectedChatModule={setSelectedChatModule}
-              selectedChatModule={selectedChatModule}
-              isMicrophoneOn={isMicrophoneOn}
-              isCameraOn={isCameraOn}
-              isVideoCalling={isVideoCalling}
-              isVoiceCalling={isVoiceCalling}
+              // setSelectedChatModule={setSelectedChatModule}
+              // selectedChatModule={selectedChatModule}
+              // isMicrophoneOn={isMicrophoneOn}
+              // isCameraOn={isCameraOn}
+              // isVideoCalling={isVideoCalling}
+              // isVoiceCalling={isVoiceCalling}
               setParticipantOpen={setParticipantOpen}
               cleanupConnection={cleanupConnection}
             />
@@ -3281,8 +3026,8 @@ const Chat2 = () => {
       {
         incomingCall && (
           <IncomingCall
-            incomingCall={incomingCall}
-            allUsers={allUsers}
+            // incomingCall={incomingCall}
+            // allUsers={allUsers}
             groups={groups}
             rejectCall={rejectCall}
             acceptCall={acceptCall}
@@ -3327,19 +3072,19 @@ const Chat2 = () => {
       {/*======================= Call participant modal ==========================*/}
       <CallParticipantModal
         participantOpen={participantOpen}
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        allUsers={allUsers}
-        callParticipants={callParticipants}
-        userId={userId}
-        selectedCallUsers={selectedCallUsers}
-        setSelectedCallUsers={setSelectedCallUsers}
+        // searchInput={searchInput}
+        // setSearchInput={setSearchInput}
+        // allUsers={allUsers}
+        // callParticipants={callParticipants}
+        // userId={userId}
+        // selectedCallUsers={selectedCallUsers}
+        // setSelectedCallUsers={setSelectedCallUsers}
         setParticipantOpen={setParticipantOpen}
-        setInvitedUsers={setInvitedUsers}
+        // setInvitedUsers={setInvitedUsers}
         inviteToCall={inviteToCall}
-        invitedUsers={invitedUsers}
+        // invitedUsers={invitedUsers}
         showBell={showBell}
-        IMG_URL={IMG_URL}
+        // IMG_URL={IMG_URL}
       />
 
       {/* Add a hidden file input for photo upload */}
@@ -3359,13 +3104,12 @@ const Chat2 = () => {
       {isImageModalOpen && selectedImage && (
         <MediaViewer
           isOpen={isImageModalOpen}
-          selectedImage={selectedImage}
-          messages={messages}
-          videoDurations={videoDurations}
-          onClose={() => setIsImageModalOpen(false)}
+          // selectedImage={selectedImage}
+          // messages={messages}
+          // videoDurations={videoDurations}
+          onClose={() => dispatch(setIsImageModalOpen(false))}
           onDeleteMessage={handleDeleteMessage}
-          onVideoMetadataLoad={handleVideoMetadataLoad}
-          setSelectedImage={setSelectedImage}
+          // setSelectedImage={setSelectedImage}
         />
       )}
 
@@ -3387,7 +3131,7 @@ const Chat2 = () => {
                   if (isProfileImageModalOpen) {
                     setIsProfileImageModalOpen(false);
                   } else if (isImageModalOpen) {
-                    setIsImageModalOpen(false);
+                    dispatch(setIsImageModalOpen(false));
                   }
                 }}
                 className="absolute top-4 right-4 text-white hover:text-gray-300"
@@ -3482,7 +3226,7 @@ const Chat2 = () => {
       }
     </div >
   );
-}
+});
 
 
 export default Chat2;

@@ -1,27 +1,24 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { RiUserAddLine } from 'react-icons/ri';
 import { IoIosArrowForward } from 'react-icons/io';
 import { AiOutlineAudioMuted } from 'react-icons/ai';
 import { FaRegBell } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
+import { IMG_URL } from '../utils/baseUrl';
 
-const CallParticipantModal = ({
+const CallParticipantModal = memo(({
   participantOpen,
-  searchInput,
-  setSearchInput,
-  allUsers,
-  callParticipants,
-  userId,
-  selectedCallUsers,
-  setSelectedCallUsers,
   setParticipantOpen,
-  setInvitedUsers,
   inviteToCall,
-  IMG_URL,
 }) => {
+    const [searchInput, setSearchInput] = useState("");
+    const [invitedUsers, setInvitedUsers] = useState([]);
+    const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
-    const {remoteStreams,participants,callParticipantsList} = useSelector(state => state.magageState)
+    const { user,allUsers } = useSelector((state) => state.user);
+    const [userId] = useState(sessionStorage.getItem("userId"));
+    const {remoteStreams,participants,callParticipantsList,callParticipants} = useSelector(state => state.magageState)
   return (
     <>
       {participantOpen && (
@@ -297,6 +294,6 @@ const CallParticipantModal = ({
       )}
     </>
   );
-};
+});
 
 export default CallParticipantModal;

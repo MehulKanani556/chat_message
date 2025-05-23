@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { ImCross } from "react-icons/im";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { IMG_URL } from "../utils/baseUrl"; // Assuming IMG_URL is needed here
 import { createGroup, getAllMessageUsers } from "../redux/slice/user.slice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RiUserAddLine } from "react-icons/ri";
 import { FaChevronRight } from "react-icons/fa";
 import { setIsGroupCreateModalOpen, setIsModalOpen } from "../redux/slice/manageState.slice";
-const CreatedGroup = ({
+const CreatedGroup = memo(({
   isOpen,
-  allUsers,
-  currentUser,
+  // allUsers,
+  // currentUser,
   onCreateGroup,
   socket,
   creatGroup,
@@ -23,6 +23,9 @@ const CreatedGroup = ({
   const [groupBio, setGroupBio] = useState("");
   // const [groupUsers, setGroupUsers] = useState([]);
   const [groupPhoto, setGroupPhoto] = useState(null);
+  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const { allUsers,messages } = useSelector((state) => state.user);
+  const [currentUser] = useState(sessionStorage.getItem("userId"));
 
   console.log(creatGroup, groupUsers);
   // Reset state when modal is closed/opened
@@ -275,6 +278,6 @@ const CreatedGroup = ({
       </div>
     </div>
   );
-};
+});
 
 export default CreatedGroup;

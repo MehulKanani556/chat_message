@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp, FaPaperclip, FaEdit, FaCheck, FaTimes, FaChevronLeft } from 'react-icons/fa';
 import { CgProfile } from "react-icons/cg";
@@ -12,7 +12,7 @@ import { initializePrimaryColor } from "../utils/themeUtils";
 import { ImImages } from 'react-icons/im';
 import { SlPencil } from "react-icons/sl";
 // import styled from 'styled-components';
-const Setting = () => {
+const Setting = memo(() => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId"));
@@ -271,7 +271,7 @@ const Setting = () => {
 
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
-    };
+        };
 
     return (
         <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-[100vh] overflow-hidden  relative"
@@ -697,6 +697,6 @@ const Setting = () => {
             </div>
         </div>
     );
-};
+});
 
 export default Setting; 

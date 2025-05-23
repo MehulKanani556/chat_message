@@ -1,30 +1,29 @@
 import { GoPencil } from "react-icons/go";
 import { PiPencilSimpleBold } from "react-icons/pi";
 import { VscCallIncoming, VscCallOutgoing } from "react-icons/vsc";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
-import { setShowLeftSidebar } from "../redux/slice/manageState.slice";
-const ChatList = ({
-  allMessageUsers,
+import { setSelectedChat, setShowLeftSidebar } from "../redux/slice/manageState.slice";
+const ChatList = memo(({
+  // allMessageUsers,
   item,
-  currentUser,
-  selectedChat,
-  setSelectedChat,
-  allUsers,
+  // currentUser,
+  // setSelectedChat,
+  // allUsers,
   handleMultipleFileUpload,
   typingUsers
 }) => {
+  const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
+  const [currentUser] = useState(sessionStorage.getItem("userId"));
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
-  const { user } =
-    useSelector((state) => state.user);
-    const {onlineUsers} = useSelector(state => state.magageState)
+    const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
 
@@ -215,7 +214,7 @@ const ChatList = ({
                         handleFileDrop(e, item);
                       }}
                       onClick={() => {
-                        setSelectedChat(item);
+                        dispatch(setSelectedChat(item));
                         dispatch(setShowLeftSidebar(false));
                       }}
                     >
@@ -885,7 +884,7 @@ const ChatList = ({
                       : "bg-white dark:bg-primary-dark/50"
                     }`}
                   onClick={() => {
-                    setSelectedChat(item);
+                    dispatch(setSelectedChat(item));
                     setSearchInput("");
                     setFindUser(!findUser);
                     if (window.innerWidth <= 425) {
@@ -945,6 +944,6 @@ const ChatList = ({
       </>
     </div>
   );
-};
+});
 
 export default ChatList;

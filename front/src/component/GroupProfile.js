@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, memo } from "react";
 import { ImCross, ImImages } from "react-icons/im";
 import { MdBlock, MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   updateGroup,
   leaveGroup,
@@ -22,7 +22,8 @@ import { RiDeleteBin6Line, RiUserAddLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
 import { IoCallOutline, IoNotificationsOutline, IoVideocamOutline } from "react-icons/io5";
 import { PiLinkSimpleBold } from "react-icons/pi";
-import { setIsGroupModalOpen, setIsModalOpen } from "../redux/slice/manageState.slice";
+import { setIsGroupModalOpen, setIsModalOpen, setSelectedChat } from "../redux/slice/manageState.slice";
+import { IMG_URL } from "../utils/baseUrl";
 
 const fetchUrlTitle = async (url) => {
   try {
@@ -37,18 +38,12 @@ const fetchUrlTitle = async (url) => {
     return 'Could not fetch title';
   }
 };
-const GroupProfile = ({
-  selectedChat,
+const GroupProfile = memo(({
   setGroupUsers,
-  allUsers,
-  userId,
   socket,
-  IMG_URL,
-  setSelectedChat,
   handleMakeCall,
-  messages,
   handleImageClick
-}) => {
+  }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUserName, setEditedUserName] = useState("");
@@ -61,6 +56,9 @@ const GroupProfile = ({
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
+  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const { allUsers,messages } = useSelector((state) => state.user);
+  const [userId] = useState(sessionStorage.getItem("userId"));
 
   const handlePhotoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -93,7 +91,7 @@ const GroupProfile = ({
     });
     dispatch(getAllMessageUsers());
     dispatch(setIsGroupModalOpen(false));
-    setSelectedChat(null);
+    dispatch(setSelectedChat(null));
   };
 
   const handleRemoveMember = (memberId) => {
@@ -1017,6 +1015,6 @@ const GroupProfile = ({
       )}
     </div>
   );
-};
+});
 
 export default GroupProfile;

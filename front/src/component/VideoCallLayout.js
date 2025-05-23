@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { IMG_URL } from "../utils/baseUrl";
+import { setSelectedChatModule } from "../redux/slice/manageState.slice";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
@@ -16,27 +18,21 @@ const getParticipantWidth = (count) => {
   return 'w-1/4';
 };
 
-const VideoCallLayout = ({
-  currentUser,
+const VideoCallLayout = memo(({
+  // currentUser,
   localVideoRef,
-  allUsers,
-  cameraStatus,
-  IMG_URL,
+  // cameraStatus,
   endCall,
   toggleMicrophone,
   toggleCamera,
-  setSelectedChatModule,
-  selectedChatModule,
-  isMicrophoneOn,
-  isCameraOn,
-  isVideoCalling,
-  isVoiceCalling,
   setParticipantOpen,
   cleanupConnection
 }) => {
+  const {remoteStreams,participants,onlineUsers,selectedChat,selectedChatModule,isMicrophoneOn, isCameraOn,isVideoCalling, isVoiceCalling,cameraStatus} = useSelector(state => state.magageState)
+  const { allUsers,messages } = useSelector((state) => state.user);
+  const [currentUser] = useState(sessionStorage.getItem("userId"));
+  const dispatch = useDispatch();
 
-
-  const {remoteStreams,participants} = useSelector(state => state.magageState)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black">
@@ -110,7 +106,7 @@ const VideoCallLayout = ({
 
         <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
                   <button
-                    onClick={() => setSelectedChatModule(!selectedChatModule)}
+                    onClick={() => dispatch(setSelectedChatModule(!selectedChatModule))}
                     className="w-10 grid place-content-center rounded-full h-10 border text-white"
                   >
                     <BsChatDots className="text-xl" />
@@ -171,6 +167,6 @@ const VideoCallLayout = ({
     </div>
       
   );
-};
+});
 
 export default VideoCallLayout;

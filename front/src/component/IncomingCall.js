@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { IoPersonCircleOutline } from "react-icons/io5";
 import { MdCallEnd } from "react-icons/md";
 import { IMG_URL } from '../utils/baseUrl';
 import { useSelector } from 'react-redux';
 
-const IncomingCall = ({ incomingCall, allUsers, groups, rejectCall, acceptCall }) => {
+const IncomingCall = memo(({ groups, rejectCall, acceptCall }) => {
 
-  const { user } = useSelector((state) => state.user);
+  const { user,allUsers } = useSelector((state) => state.user);
+  const {incomingCall} = useSelector(state => state.magageState)
   
    let userData;
     if(incomingCall.groupId){
@@ -58,6 +59,6 @@ const IncomingCall = ({ incomingCall, allUsers, groups, rejectCall, acceptCall }
       </div>
     </div>
   );
-};
+});
 
 export default IncomingCall;

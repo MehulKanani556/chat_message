@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect , memo} from 'react'
 import { FaChevronUp, FaChevronDown, FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaDownload, FaChevronRight, FaChevronLeft, FaFileVideo, FaFileArchive, FaLink } from 'react-icons/fa';
 import { CgProfile } from 'react-icons/cg';
 import { FaPaperclip } from 'react-icons/fa';
@@ -11,6 +11,7 @@ import { FiLogOut } from 'react-icons/fi';
 import { MdBlock } from 'react-icons/md';
 import { blockUser, getAllMessageUsers, getUser } from '../redux/slice/user.slice';
 import { useDispatch, useSelector } from 'react-redux';
+import { setIsUserProfileModalOpen } from '../redux/slice/manageState.slice';
 
 // Function to fetch URL titles
 const fetchUrlTitle = async (url) => {
@@ -26,8 +27,7 @@ const fetchUrlTitle = async (url) => {
     return 'Could not fetch title';
   }
 };
-
-export default function ProfileUser({ isOpen, onClose, selectedChat, messages, handleImageClick, handleMakeCall }) {
+const ProfileUser = memo(({ isOpen, onClose, handleImageClick, handleMakeCall }) => {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
@@ -37,12 +37,10 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
   const [enabled, setEnabled] = useState(false);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
   const { user} = useSelector((state) => state.user);
-  const {onlineUsers} = useSelector(state => state.magageState)
   const dispatch = useDispatch();
+  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const { allUsers,messages } = useSelector((state) => state.user);
 
-  const toggleAccordion = () => {
-    setUserInfoOpen(!userInfoOpen);
-  };
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -130,7 +128,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
                 </h2>
               </div>
               <button
-                onClick={onClose}
+                onClick={()=>{ dispatch(setIsUserProfileModalOpen(false))}}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <ImCross />
@@ -521,7 +519,7 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
             <div className="flex justify-between items-center p-4 py-6">
               <h2 className="text-lg font-bold"> Profile</h2>
               <button
-                onClick={onClose}
+                onClick={()=>{ dispatch(setIsUserProfileModalOpen(false))}}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <ImCross />
@@ -812,4 +810,6 @@ export default function ProfileUser({ isOpen, onClose, selectedChat, messages, h
       )}
     </div>
   );
-}
+});
+
+export default ProfileUser;

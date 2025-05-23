@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   FaPhone,
   FaRegSmile,
@@ -37,6 +37,7 @@ import usePdfThumbnail from "../hooks/usePdfThumbnail";
 import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
+import { useDispatch, useSelector } from "react-redux";
 
 const DownloadButton = ({ fileUrl, fileName, className = "" }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -125,37 +126,71 @@ const DownloadButton = ({ fileUrl, fileName, className = "" }) => {
   );
 };
 
-const MessageList = ({
-  messages,
-  groupMessagesByDate,
-  userId,
+const MessageList = memo(({
   handleMakeCall,
   handleContextMenu,
-  handleDropdownToggle,
   handleEditMessage,
   handleDeleteMessage,
-  handleCopyMessage,
   handleReplyMessage,
   handleForwardMessage,
   handleImageClick,
   highlightText,
   searchInputbox,
-  activeMessageId,
+  // activeMessageId,
   contextMenu,
   setContextMenu,
-  setActiveMessageId,
-  allUsers,
-  selectedChat,
-  IMG_URL,
+  // setActiveMessageId,
   showEmojiPicker,
   setShowEmojiPicker,
   addMessageReaction,
-  dropdownRef,
+  // dropdownRef,
   sendPrivateMessage,
   typingUsers
 }) => {
 
+  const [userId] = useState(sessionStorage.getItem("userId"));
+  const dispatch = useDispatch();
+  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
+  const {selectedChat} = useSelector(state => state.magageState)
 
+
+  //===========group messages by date===========
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
+    messages.forEach((message) => {
+      if (message.isBlocked && message.sender !== userId) return;
+      const date = new Date(message.createdAt).toLocaleDateString("en-GB");
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    return groups;
+  };
+
+    // Update the handleCopyMessage function to handle both text and images
+    const handleCopyMessage = async (message, callback) => {
+      if (message.type === "file" && message.fileType?.includes("image/")) {
+        try {
+          const response = await fetch(
+            `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
+          );
+          const blob = await response.blob();
+          const item = new ClipboardItem({
+            [blob.type]: blob,
+          });
+  
+          await navigator.clipboard.write([item]);
+          callback();
+        } catch (error) {
+          console.error("Error copying image:", error);
+        }
+      } else {
+        // Handle text and emoji copying
+        const content = message.content || message;
+        navigator.clipboard.writeText(content).then(callback);
+      }
+    };
 
   return (
     <>
@@ -226,7 +261,6 @@ const MessageList = ({
                     currentTime={currentTime}
                     isConsecutive={isConsecutive}
                     handleContextMenu={handleContextMenu}
-                    handleDropdownToggle={handleDropdownToggle}
                     handleEditMessage={handleEditMessage}
                     handleDeleteMessage={handleDeleteMessage}
                     handleCopyMessage={handleCopyMessage}
@@ -235,16 +269,13 @@ const MessageList = ({
                     handleImageClick={handleImageClick}
                     highlightText={highlightText}
                     searchInputbox={searchInputbox}
-                    activeMessageId={activeMessageId}
                     contextMenu={contextMenu}
                     setContextMenu={setContextMenu}
-                    setActiveMessageId={setActiveMessageId}
                     allUsers={allUsers}
                     IMG_URL={IMG_URL}
                     showEmojiPicker={showEmojiPicker}
                     setShowEmojiPicker={setShowEmojiPicker}
                     addMessageReaction={addMessageReaction}
-                    dropdownRef={dropdownRef}
                     selectedChat={selectedChat}
                     messages={messages}
                   />
@@ -270,7 +301,7 @@ const MessageList = ({
       )}
     </>
   );
-};
+});
 
 const DateHeader = ({ date }) => (
   <div
@@ -1732,7 +1763,6 @@ const RegularMessage = ({
   currentTime,
   isConsecutive,
   handleContextMenu,
-  handleDropdownToggle,
   handleEditMessage,
   handleDeleteMessage,
   handleCopyMessage,
@@ -1741,7 +1771,6 @@ const RegularMessage = ({
   handleImageClick,
   highlightText,
   searchInputbox,
-  activeMessageId,
   contextMenu,
   setContextMenu,
   setActiveMessageId,

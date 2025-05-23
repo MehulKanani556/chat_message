@@ -18,7 +18,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     voiceCallData: null,
     cameraStatus: {},
     callParticipants: new Set(),
-
+    selectedImage: false,
+    
+    isImageModalOpen: false,
     selectedChatModule: true,
     showProfile: false,
     showSettings: false,
@@ -28,22 +30,27 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     isModalOpen: false,
     isGroupCreateModalOpen: false,
     isUserProfileModalOpen: false,
-    showLeftSidebar: true
+    showLeftSidebar: true,
+    selectedChat: null
   };
 
   const manageStateSlice = createSlice({
     name: "user",
     initialState,
     reducers: {
-        setRemoteStreams: (state, action) => {
+
+      setSelectedChat:(state, action) => {
+        state.selectedChat = action.payload;
+      },
+      setRemoteStreams: (state, action) => {
         state.remoteStreams = action.payload;
       },
       setParticipants: (state, action) => {
         state.participants = action.payload;
       },
       updateParticipant: (state, action) => { 
-          const { userId, stream } = action.payload;
-         const allStreams = new Map(state.participants);
+        const { userId, stream } = action.payload;
+        const allStreams = new Map(state.participants);
 
          console.log(allStreams);
         allStreams.set(userId, stream);
@@ -58,7 +65,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
       setCallParticipantsList: (state, action) => {
         state.callParticipantsList = action.payload;
       },
-
        // New reducers for socket states
     setIsConnected: (state, action) => {
       state.isConnected =  !state.isConnected;
@@ -99,7 +105,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setCallParticipants: (state, action) => {
       state.callParticipants = action.payload;
     },
-
     setSelectedChatModule: (state, action) => {
       state.selectedChatModule = action.payload;
     },
@@ -130,6 +135,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setShowLeftSidebar: (state, action) => {
       state.showLeftSidebar = action.payload;
     },
+    setIsImageModalOpen: (state, action) => {
+      state.isImageModalOpen = action.payload;
+    },
+    setSelectedImage : (state, action)=>{
+      state.selectedImage = action.payload;
+    }
+    
+
     
 
 
@@ -137,6 +150,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
   });
   
   export const {
+    setSelectedChat,
     setRemoteStreams,
     setParticipants,
     updateParticipant,
@@ -165,5 +179,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setIsGroupCreateModalOpen,
     setIsUserProfileModalOpen,
     setShowLeftSidebar,
+    setIsImageModalOpen,
+    setSelectedImage
   } = manageStateSlice.actions;
   export default manageStateSlice.reducer;
