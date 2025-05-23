@@ -5,7 +5,8 @@ import { GoUnmute } from "react-icons/go";
 import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useSocket } from "../hooks/useSocket";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setCallChatList, setChatMessages, setvideoCallChatList } from "../redux/slice/manageState.slice";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
@@ -35,14 +36,14 @@ const VideoCallLayout = ({
   cleanupConnection
 }) => {
 
-
-  const {remoteStreams,participants} = useSelector(state => state.magageState)
+  const dispatch = useDispatch();
+  const { remoteStreams, participants } = useSelector(state => state.magageState)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black">
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
-       {participants.length > 0 && Array.from(participants)?.map(([participantId, stream]) => {
+        {participants.length > 0 && Array.from(participants)?.map(([participantId, stream]) => {
           const participant = allUsers.find(u => u._id === participantId);
           const isCameraEnabled = cameraStatus?.[participantId] !== false;
           const isLocalUser = participantId === currentUser;
@@ -58,24 +59,27 @@ const VideoCallLayout = ({
               <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
                 {isCameraEnabled ? (
                   <>
-                   <video
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover rounded-xl"
-                    muted={participantId === currentUser}
-                    ref={el => {
-                      if (el && stream instanceof MediaStream) {
-                        el.srcObject = stream;
-                        el.play().catch(err =>
-                          console.error("Remote video error:", err)
-                        );
-                      }
-                      // If you want to keep localVideoRef for the current user:
-                      if (participantId === currentUser && localVideoRef) {
-                        localVideoRef.current = el;
-                      }
-                    }}
-                  />
+                    <video
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover rounded-xl"
+                      muted={participantId === currentUser}
+                      style={{
+                        transform: 'scaleX(-1)'
+                      }}
+                      ref={el => {
+                        if (el && stream instanceof MediaStream) {
+                          el.srcObject = stream;
+                          el.play().catch(err =>
+                            console.error("Remote video error:", err)
+                          );
+                        }
+                        // If you want to keep localVideoRef for the current user:
+                        if (participantId === currentUser && localVideoRef) {
+                          localVideoRef.current = el;
+                        }
+                      }}
+                    />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
@@ -108,68 +112,73 @@ const VideoCallLayout = ({
         })}
       </div>
 
-        <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-                  <button
-                    onClick={() => setSelectedChatModule(!selectedChatModule)}
-                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                  >
-                    <BsChatDots className="text-xl" />
-                  </button>
+      <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
+        <button
+          onClick={() => {
 
-                  <button
-                    onClick={toggleMicrophone}
-                    className="w-10 grid place-content-center border rounded-full h-10 text-white"
-                  >
-                    {isMicrophoneOn ? (
-                      <IoMicOffOutline className="text-xl" />
-                    ) : (
-                      <IoMicOffCircleOutline className="text-xl" />
-                    )}
-                  </button>
+            // dispatch(setvideoCallChatList(true));
+            dispatch(setCallChatList(true));
+            // dispatch(setChatMessages(true));
+          }}
+          className="w-10 grid place-content-center rounded-full h-10 border text-white"
+        >
+          <BsChatDots className="text-xl" />
+        </button>
 
-                  <button
-                    onClick={toggleCamera}
-                    className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-                  >
-                    {isCameraOn ? (
-                      <BsCameraVideo className="text-xl" />
-                    ) : (
-                      <BsCameraVideoOff className="text-xl" />
-                    )}
-                  </button>
+        <button
+          onClick={toggleMicrophone}
+          className="w-10 grid place-content-center border rounded-full h-10 text-white"
+        >
+          {isMicrophoneOn ? (
+            <IoMicOffOutline className="text-xl" />
+          ) : (
+            <IoMicOffCircleOutline className="text-xl" />
+          )}
+        </button>
 
-                  <button
-                    onClick={() => {
-                      endCall();
-                      cleanupConnection();
-                    }}
-                    className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <IoCallOutline className="text-2xl" />
-                  </button>
+        <button
+          onClick={toggleCamera}
+          className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+        >
+          {isCameraOn ? (
+            <BsCameraVideo className="text-xl" />
+          ) : (
+            <BsCameraVideoOff className="text-xl" />
+          )}
+        </button>
 
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <GoUnmute className="text-xl" />
-                  </button>
+        <button
+          onClick={() => {
+            endCall();
+            cleanupConnection();
+          }}
+          className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+        >
+          <IoCallOutline className="text-2xl" />
+        </button>
 
-                  {(isVideoCalling || isVoiceCalling) && (
-                    <button
-                      onClick={() => {
-                        setParticipantOpen(true);
-                      }}
-                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                    >
-                      <MdOutlineGroupAdd className="text-xl" />
-                    </button>
-                  )}
+        <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+          <GoUnmute className="text-xl" />
+        </button>
 
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <AiOutlineVideoCamera className="text-xl" />
-                  </button>       
-        </div>
+        {(isVideoCalling || isVoiceCalling) && (
+          <button
+            onClick={() => {
+              setParticipantOpen(true);
+            }}
+            className="w-10 grid place-content-center rounded-full h-10 border text-white"
+          >
+            <MdOutlineGroupAdd className="text-xl" />
+          </button>
+        )}
+
+        <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+          <AiOutlineVideoCamera className="text-xl" />
+        </button>
+      </div>
 
     </div>
-      
+
   );
 };
 
