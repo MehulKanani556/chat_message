@@ -927,11 +927,8 @@ const Chat2 = () => {
     }
 
     const matches = messages.reduce((count, message) => {
-      const content =
-        typeof message?.content?.content === "string"
-          ? message?.content?.content
-          : "";
-
+      const content = decryptMessage(message?.content?.content || "");
+      // console.log("aaaaa", content);
       return count + countOccurrences(content, searchInputbox);
     }, 0);
 
@@ -2339,6 +2336,7 @@ const Chat2 = () => {
                                   setSearchInputbox(e.target.value);
                                   setCurrentSearchIndex(0); // Reset current search index
                                 }}
+                                autoFocus // Added to focus on input when search box is open
                               />
                               <span className="mx-2 text-gray-500">
                                 {totalMatches > 0

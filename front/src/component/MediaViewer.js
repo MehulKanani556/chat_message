@@ -35,7 +35,7 @@ const MediaViewer = ({
                   src={selectedImage}
                   alt="Selected"
                   style={{ height: 'calc(100vh - 180px)', width: 'calc(100vh - 180px)' }}
-                  className="object-cover mb-2"
+                  className="object-contain mb-2"
                 />
               )}
             </div>
