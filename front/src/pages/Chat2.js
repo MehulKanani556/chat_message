@@ -720,7 +720,9 @@ const Chat2 = () => {
 
   const handleEditMessage = (message) => {
     setEditingMessage(message);
-    setMessageInput(message.content.content);
+    console.log("message", message);
+    
+    setMessageInput(decryptMessage(message.content.content));
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     if (inputRef.current) {
       inputRef.current.focus();
@@ -3235,10 +3237,7 @@ const Chat2 = () => {
                     <button
                       onClick={() => {
                         setParticipantOpen(true);
-<<<<<<< Updated upstream
-=======
                         // setShowFirstSection(true);
->>>>>>> Stashed changes
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >
