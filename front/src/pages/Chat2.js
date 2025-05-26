@@ -1282,7 +1282,12 @@ const Chat2 = () => {
   useEffect(() => {
     // Set showLeftSidebar to true when no chat is selected
     if (!selectedChat) {
-      dispatch(setShowLeftSidebar(false));
+      // setShowLeftSidebar(false);
+      if (window.innerWidth <= 600) {
+        setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
+      } else {
+        setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
+      }
     }
   }, [selectedChat]);
 
@@ -1867,6 +1872,7 @@ const Chat2 = () => {
 
           {/* Right Side */}
           <>
+          {console.log("isGroupModalOpen", isGroupModalOpen)}
 
             {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
