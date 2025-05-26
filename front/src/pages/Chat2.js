@@ -1752,7 +1752,7 @@ const Chat2 = () => {
     };
   }, []);
 
-  console.log(remoteStreams);
+  // console.log(remoteStreams);
 
   // ---------------------Video call screen Layout-------------------
   const [participants, setParticipants] = useState(() => {
@@ -3073,7 +3073,7 @@ const Chat2 = () => {
                 )}
             </div>
 
-            {console.log(isModalOpen, isGroupCreateModalOpen)}
+            {/* {console.log(isModalOpen, isGroupCreateModalOpen)} */}
 
             {/* ============================== right sidebar =========================================== */}
 

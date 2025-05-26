@@ -1793,7 +1793,7 @@ const RegularMessage = ({
         className="flex flex-col relative group"
         onContextMenu={(e) => handleContextMenu(e, message)}
       >
-        <div className="flex justify-between items-center pr-7">
+        <div className="flex justify-between items-center">
           <div>
             {message?.forwardedFrom && (
               <div className="forwarded-label text-gray-500 text-sm mb-1">
@@ -1801,7 +1801,6 @@ const RegularMessage = ({
               </div>
             )}
           </div>
-        </div>{" "}
         {showTime && (
           <div
             className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId
@@ -1818,6 +1817,7 @@ const RegularMessage = ({
             <FaRegClock className="mr-[2px]" /> {currentTime}
           </div>
         )}
+        </div>{" "}
         <div className="flex">
           <div
             className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${isSingleEmoji
