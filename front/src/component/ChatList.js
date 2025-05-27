@@ -10,12 +10,12 @@ import { SlPin } from "react-icons/sl";
 import { setSelectedChat, setShowLeftSidebar } from "../redux/slice/manageState.slice";
 const ChatList = memo(({
   // allMessageUsers,
-  item,
+  // item,
   // currentUser,
   // setSelectedChat,
   // allUsers,
   handleMultipleFileUpload,
-  typingUsers
+  
 }) => {
   const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
@@ -23,7 +23,7 @@ const ChatList = memo(({
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
-    const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+    const {onlineUsers,selectedChat,typingUsers} = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
 

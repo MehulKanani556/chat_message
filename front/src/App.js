@@ -14,6 +14,7 @@ import { initializePrimaryColor } from "./utils/themeUtils";
 import { useEffect } from "react";
 import LoginNew from "./pages/LoginNew";
 import QRLoginPage from "./pages/QRLoginPage";
+import { SocketProvider } from "./context/SocketContext";
 
 function App() {
   const { store, persistor } = configureStore();
@@ -34,6 +35,7 @@ function App() {
 
   return (
     <Provider store={store}>
+       <SocketProvider>
       <Routes>
         {/* <Route path="/login" element={<Login />}></Route> */}
         <Route path="/" element={<Login />}></Route>
@@ -48,6 +50,7 @@ function App() {
         {/* <Route path="/front" element={<Front />}></Route> */}
         {/* <Route path="/chatNew" element={<ChatNew/>}></Route> */}
       </Routes>
+      </SocketProvider>
     </Provider>
   );
 }

@@ -22,8 +22,9 @@ import { RiDeleteBin6Line, RiUserAddLine } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi";
 import { IoCallOutline, IoNotificationsOutline, IoVideocamOutline } from "react-icons/io5";
 import { PiLinkSimpleBold } from "react-icons/pi";
-import { setIsGroupModalOpen, setIsModalOpen, setSelectedChat } from "../redux/slice/manageState.slice";
+import { setIsGroupModalOpen, setIsImageModalOpen, setIsModalOpen, setSelectedChat, setSelectedImage } from "../redux/slice/manageState.slice";
 import { IMG_URL } from "../utils/baseUrl";
+import { useSocket } from "../context/SocketContext";
 
 const fetchUrlTitle = async (url) => {
   try {
@@ -40,9 +41,9 @@ const fetchUrlTitle = async (url) => {
 };
 const GroupProfile = memo(({
   setGroupUsers,
-  socket,
+  // socket,
   handleMakeCall,
-  handleImageClick
+  // handleImageClick
   }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -59,6 +60,7 @@ const GroupProfile = memo(({
   const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
   const { allUsers,messages } = useSelector((state) => state.user);
   const [userId] = useState(sessionStorage.getItem("userId"));
+      const {socket} = useSocket();
 
   const handlePhotoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -267,6 +269,13 @@ const GroupProfile = memo(({
 
     fetchTitles();
   }, [messages]);
+
+
+  const handleImageClick = (imageUrl) => {
+    dispatch(setSelectedImage(imageUrl));
+    dispatch(setIsImageModalOpen(true));
+  };
+
 
   return (
     <div

@@ -3,17 +3,19 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { RxCross2 } from 'react-icons/rx';
 import { GoTrash } from 'react-icons/go';
 import { useDispatch, useSelector } from 'react-redux';
-import { setSelectedImage } from '../redux/slice/manageState.slice';
+import { setIsImageModalOpen, setSelectedImage } from '../redux/slice/manageState.slice';
+import { deleteMessage, getAllMessages } from '../redux/slice/user.slice';
+import { useSocket } from '../context/SocketContext';
 
 const MediaViewer = memo(({
   isOpen,
   onClose,
-  onDeleteMessage,
+  // onDeleteMessage,
 }) => {
-
   const dispatch = useDispatch();
+  const { socket } = useSocket();
   const { messages } = useSelector((state) => state.user);
-  const {selectedImage,isImageModalOpen} = useSelector(state => state.magageState)
+  const {selectedImage,isImageModalOpen,selectedChat} = useSelector(state => state.magageState)
   const [videoDurations, setVideoDurations] = useState({}); 
    // button
    useEffect(() => {
@@ -54,7 +56,20 @@ const MediaViewer = memo(({
     }));
   };
 
-  if (!isOpen || !selectedImage) return null;
+  const onDeleteMessage = async (messageId) => {
+    try {
+      // Emit socket event for real-time deletion
+      await socket.emit("delete-message", messageId);
+      await dispatch(deleteMessage(messageId));
+      if (selectedChat) {
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+      }
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+  };
+
+  if (!isImageModalOpen || !selectedImage) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
@@ -94,7 +109,7 @@ const MediaViewer = memo(({
                         className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" 
                         onClick={() => { 
                           onDeleteMessage(message._id); 
-                          onClose(); 
+                          dispatch(setIsImageModalOpen(false))
                         }}
                       >
                         <GoTrash />
@@ -189,7 +204,7 @@ const MediaViewer = memo(({
         </div>
 
         <button
-          onClick={onClose}
+          onClick={()=>{dispatch(setIsImageModalOpen(false))}}
           className="absolute top-4 right-4 text-white hover:text-gray-300"
         >
           <RxCross2 className="w-6 h-6" />

@@ -3,10 +3,13 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 import { MdCallEnd } from "react-icons/md";
 import { IMG_URL } from '../utils/baseUrl';
 import { useSelector } from 'react-redux';
+import { useSocket } from '../context/SocketContext';
 
-const IncomingCall = memo(({ groups, rejectCall, acceptCall }) => {
+const IncomingCall = memo(() => {
 
-  const { user,allUsers } = useSelector((state) => state.user);
+  const {rejectCall,acceptCall} = useSocket();
+
+  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
   const {incomingCall} = useSelector(state => state.magageState)
   
    let userData;

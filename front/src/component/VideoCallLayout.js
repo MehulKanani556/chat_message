@@ -4,10 +4,10 @@ import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
-import { useSocket } from "../hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
-import { setSelectedChatModule } from "../redux/slice/manageState.slice";
+import { setParticipantOpen, setSelectedChatModule } from "../redux/slice/manageState.slice";
+import { useSocket } from "../context/SocketContext";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
@@ -18,20 +18,34 @@ const getParticipantWidth = (count) => {
   return 'w-1/4';
 };
 
-const VideoCallLayout = memo(({
-  // currentUser,
-  localVideoRef,
-  // cameraStatus,
-  endCall,
-  toggleMicrophone,
-  toggleCamera,
-  setParticipantOpen,
-  cleanupConnection
-}) => {
+const VideoCallLayout = memo(() => {
   const {remoteStreams,participants,onlineUsers,selectedChat,selectedChatModule,isMicrophoneOn, isCameraOn,isVideoCalling, isVoiceCalling,cameraStatus} = useSelector(state => state.magageState)
   const { allUsers,messages } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
   const dispatch = useDispatch();
+
+    //===========Use the custom socket hook===========
+    const {
+      socket,
+      startSharing,
+      endCall,
+      cleanupConnection,
+      toggleCamera,
+      toggleMicrophone,
+      markMessageAsRead,
+      rejectCall,
+      sendPrivateMessage,
+      sendTypingStatus,
+      subscribeToMessages,
+      sendGroupMessage,
+      acceptScreenShare,
+      inviteToCall,
+      forwardMessage,
+      addMessageReaction,
+      startCall,
+      acceptCall,
+    } = useSocket();
+
 
 
   return (
@@ -67,9 +81,9 @@ const VideoCallLayout = memo(({
                         );
                       }
                       // If you want to keep localVideoRef for the current user:
-                      if (participantId === currentUser && localVideoRef) {
-                        localVideoRef.current = el;
-                      }
+                      // if (participantId === currentUser && localVideoRef) {
+                      //   localVideoRef.current = el;
+                      // }
                     }}
                   />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
@@ -151,7 +165,7 @@ const VideoCallLayout = memo(({
                   {(isVideoCalling || isVoiceCalling) && (
                     <button
                       onClick={() => {
-                        setParticipantOpen(true);
+                        dispatch(setParticipantOpen(true));
                       }}
                       className="w-10 grid place-content-center rounded-full h-10 border text-white"
                     >

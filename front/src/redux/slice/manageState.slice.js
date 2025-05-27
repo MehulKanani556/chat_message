@@ -18,7 +18,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     voiceCallData: null,
     cameraStatus: {},
     callParticipants: new Set(),
-    selectedImage: false,
+    selectedImage: null,
+    participantOpen: false,
     
     isImageModalOpen: false,
     selectedChatModule: true,
@@ -31,7 +32,19 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     isGroupCreateModalOpen: false,
     isUserProfileModalOpen: false,
     showLeftSidebar: true,
-    selectedChat: null
+    selectedChat: null,
+    uploadProgress: {},
+    selectedFiles: [],
+    replyingTo: null,
+    typingUsers: [],
+    searchInputbox: "",
+    cameraStream: null,
+    openCameraState: false,
+    backCameraAvailable: false,
+    facingMode: "user",
+    isSearchBoxOpen: false,
+    messageInput: "",
+    editingMessage: null,
   };
 
   const manageStateSlice = createSlice({
@@ -140,12 +153,46 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     },
     setSelectedImage : (state, action)=>{
       state.selectedImage = action.payload;
-    }
-    
-
-    
-
-
+    },
+    setUploadProgress: (state, action) => {
+      state.uploadProgress = action.payload;
+    },
+    setSelectedFiles: (state, action) => {
+      state.selectedFiles = action.payload;
+    },
+    setReplyingTo: (state, action) => {
+      state.replyingTo = action.payload;
+    },
+    setTypingUsers: (state, action) => {
+      state.typingUsers = action.payload;
+    },
+    setParticipantOpen: (state, action) => {
+      state.participantOpen = action.payload;
+    },
+    setSearchInputbox: (state, action) => {
+      state.searchInputbox = action.payload;
+    },
+    setCameraStream: (state, action) => {
+      state.cameraStream = action.payload;
+    },
+    setOpenCameraState: (state, action) => {
+      state.openCameraState = action.payload;
+    },
+    setBackCameraAvailable: (state, action) => {
+      state.backCameraAvailable = action.payload;
+    },
+    setFacingMode: (state, action) => {
+      state.facingMode = action.payload;
+    },
+    setIsSearchBoxOpen: (state, action) => {
+      state.isSearchBoxOpen = action.payload;
+    },
+    setMessageInput: (state, action) => {
+      state.messageInput = action.payload;
+    },
+    setEditingMessage: (state, action) => {
+      state.editingMessage = action.payload;
+    },
     },
   });
   
@@ -180,6 +227,19 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setIsUserProfileModalOpen,
     setShowLeftSidebar,
     setIsImageModalOpen,
-    setSelectedImage
+    setSelectedImage,
+    setUploadProgress,
+    setSelectedFiles,
+    setReplyingTo,
+    setTypingUsers,
+    setParticipantOpen,
+    setSearchInputbox,
+    setCameraStream,
+    setOpenCameraState,
+    setBackCameraAvailable,
+    setFacingMode,
+    setIsSearchBoxOpen,
+    setMessageInput,
+    setEditingMessage,
   } = manageStateSlice.actions;
   export default manageStateSlice.reducer;

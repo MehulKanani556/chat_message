@@ -1,13 +1,45 @@
-import { useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
+import { useDispatch, useSelector } from "react-redux";
 import {
   getAllMessages,
   getAllMessageUsers,
   setOnlineuser,
 } from "../redux/slice/user.slice";
-import { useDispatch, useSelector } from "react-redux";
-import { setRemoteStreams,setParticipants, updateParticipant, removeParticipant,setCallParticipantsList,setIsConnected, setOnlineUsers,setIsReceiving,setIncomingCall,setIsVideoCalling,setIsVoiceCalling,setIncomingShare,setIsSharing,setIsCameraOn,setIsMicrophoneOn,setVoiceCallData,setCameraStatus,setCallParticipants} from "../redux/slice/manageState.slice";
+import {
+  setRemoteStreams,
+  setParticipants,
+  updateParticipant,
+  removeParticipant,
+  setCallParticipantsList,
+  setIsConnected,
+  setOnlineUsers,
+  setIsReceiving,
+  setIncomingCall,
+  setIsVideoCalling,
+  setIsVoiceCalling,
+  setIncomingShare,
+  setIsSharing,
+  setIsCameraOn,
+  setIsMicrophoneOn,
+  setVoiceCallData,
+  setCameraStatus,
+  setCallParticipants,
+  setTypingUsers,
+} from "../redux/slice/manageState.slice";
+
+// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
+const SOCKET_SERVER_URL = "http://localhost:5000";
+
+const SocketContext = createContext();
 
 // Simple encryption/decryption functions
 const encryptMessage = (text) => {
@@ -18,7 +50,7 @@ const encryptMessage = (text) => {
       text.charCodeAt(i) ^ key.charCodeAt(i % key.length)
     );
   }
-  return btoa(result); // Convert to base64 for safe transmission
+  return btoa(result);
 };
 
 const decryptMessage = (encryptedText) => {
@@ -33,42 +65,30 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-// const SOCKET_SERVER_URL = "http://localhost:5000";
-
-export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
-  // const [isConnected, setIsConnected] = useState(false);
-  // const [onlineUsers, setOnlineUsers] = useState([]);
+export const SocketProvider = ({children}) => {
   const socketRef = useRef(null);
   const peerRef = useRef(null);
   const peersRef = useRef({});
   const [peerEmail, setPeerEmail] = useState("");
-  // const [isReceiving, setIsReceiving] = useState(false);
-  // const [incomingCall, setIncomingCall] = useState(null);
-  // const [isVideoCalling, setIsVideoCalling] = useState(false);
-  // const [isVoiceCalling, setIsVoiceCalling] = useState(false);
-  // const [incomingShare, setIncomingShare] = useState(null);
   const [error, setError] = useState(null);
-  // const [isSharing, setIsSharing] = useState(false);
   const [hasWebcam, setHasWebcam] = useState(false);
   const [hasMicrophone, setHasMicrophone] = useState(false);
-  // const [isCameraOn, setIsCameraOn] = useState(false);
-  // const [isMicrophoneOn, setIsMicrophoneOn] = useState(false);
-  // const [voiceCallData, setVoiceCallData] = useState(null);
-  // const [cameraStatus, setCameraStatus] = useState({});
   const streamRef = useRef(null);
   const [callAccept, setCallAccept] = useState(false);
-  // const [callParticipants, setCallParticipants] = useState(new Set());
   const [callStartTime, setCallStartTime] = useState(null);
   const [callDuration, setCallDuration] = useState(null);
   const callTimerRef = useRef(null);
   const [groupCall, setGroupCall] = useState("");
   const [callFrom, setCallFrom] = useState("");
   const [allCallUsers, setAllCallUsers] = useState(new Map());
-
-  // New state variables for call management
   const [callRoom, setCallRoom] = useState(null);
-  const [callStatus, setCallStatus] = useState(null); // 'idle', 'ringing', 'connected', 'ended'
+  const [callStatus, setCallStatus] = useState(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const userId = sessionStorage.getItem("userId");
+
+
+  const dispatch = useDispatch();
   const {
     remoteStreams,
     callParticipantsList,
@@ -84,23 +104,14 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     callParticipants,
     isMicrophoneOn,
     voiceCallData,
-    cameraStatus,} = useSelector(state => state.magageState)
+    cameraStatus,
+    typingUsers
+  } = useSelector((state) => state.magageState);
 
-  const dispatch = useDispatch();
-
-  // Helper functions for call management
+  // Helper functions
   const generateCallRoomId = () => {
     return `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
-
-  useEffect(() => {
-    checkMediaDevices();
-  }, []);
-
-  useEffect(() => {
-    const callusers = Array.from(allCallUsers?.keys()) || [];
-    sessionStorage.setItem("callUser", callusers.length);
-  }, [allCallUsers]);
 
   const checkMediaDevices = async () => {
     try {
@@ -113,17 +124,112 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       );
       setHasWebcam(videoDevices.length > 0);
       setHasMicrophone(audioDevices.length > 0);
-
-      console.log("Available devices:", {
-        webcams: videoDevices.length,
-        microphones: audioDevices.length,
-      });
     } catch (err) {
       console.error("Error checking media devices:", err);
       setError(
         "Unable to detect media devices. Please ensure you have granted necessary permissions."
       );
     }
+  };
+
+  // Socket connection effect
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    if (userId) {
+      socketRef.current = io(SOCKET_SERVER_URL);
+
+      socketRef.current.on("connect", () => {
+        dispatch(setIsConnected());
+        console.log("Socket connected with userId:", userId);
+        socketRef.current.emit("user-login", userId);
+      });
+
+      socketRef.current.on("disconnect", () => {
+        dispatch(setIsConnected());
+        dispatch(setOnlineUsers([]));
+        console.log("Socket disconnected");
+      });
+
+      socketRef.current.on("user-status-changed", (onlineUserIds) => {
+        dispatch(setOnlineUsers(onlineUserIds));
+        if (onlineUserIds.length > 0) {
+          dispatch(setOnlineuser(onlineUserIds));
+        }
+      });
+
+      socketRef.current.on("reconnect", () => {
+        console.log("Socket reconnected, re-emitting user-login");
+        socketRef.current.emit("user-login", userId);
+      });
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = null;
+        }
+      };
+    }
+  }, [userId]);
+
+  // Media devices check effect
+  useEffect(() => {
+    checkMediaDevices();
+  }, []);
+
+  // Call users effect
+  useEffect(() => {
+    const callusers = Array.from(allCallUsers?.keys()) || [];
+    sessionStorage.setItem("callUser", callusers.length);
+  }, [allCallUsers]);
+
+  // All the functions from the original useSocket hook
+  const sendPrivateMessage = (receiverId, message) => {
+    return new Promise((resolve, reject) => {
+      if (!socketRef.current?.connected) {
+        reject(new Error("Socket not connected"));
+        return;
+      }
+
+      try {
+        let content = message.data.content;
+        if (!content.startsWith("data:")) {
+          const key = "chat";
+          let result = "";
+          for (let i = 0; i < content.length; i++) {
+            result += String.fromCharCode(
+              content.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+            );
+          }
+          content = "data:" + btoa(result);
+        }
+
+        console.log("message", message);
+
+        const messageData = {
+          senderId: userId,
+          receiverId,
+          content: {
+            type: message.data.type,
+            content: content,
+            fileType: message.data.fileType,
+            fileUrl: message.data.fileUrl,
+            size: message.data.size,
+          },
+          replyTo: message.data.replyTo,
+          isBlocked: message.isBlocked,
+        };
+        socketRef.current.emit("private-message", messageData);
+
+        socketRef.current.once("message-sent-status", (status) => {
+          resolve(status);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   const toggleCamera = () => {
@@ -154,121 +260,12 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     }
   };
 
-  // ===========================socket connection=============================
-
-  useEffect(() => {
-    // Clear any existing connection
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
-
-    // Only create socket connection if we have a userId
-    if (userId) {
-      socketRef.current = io(SOCKET_SERVER_URL);
-
-      socketRef.current.on("connect", () => {
-        dispatch(setIsConnected());
-        console.log("Socket connected with userId:", userId);
-
-        // Emit user-login after connection
-        socketRef.current.emit("user-login", userId);
-      });
-
-      socketRef.current.on("disconnect", () => {
-        dispatch(setIsConnected());
-        dispatch(setOnlineUsers([])); // Clear online users on disconnect
-        console.log("Socket disconnected");
-      });
-
-      socketRef.current.on("user-status-changed", (onlineUserIds) => {
-        // console.log("Online users updated:", onlineUserIds);
-        dispatch(setOnlineUsers(onlineUserIds));
-        if (onlineUserIds.length > 0) {
-          dispatch(setOnlineuser(onlineUserIds));
-        }
-      });
-
-      // Handle reconnection
-      socketRef.current.on("reconnect", () => {
-        console.log("Socket reconnected, re-emitting user-login");
-        socketRef.current.emit("user-login", userId);
-      });
-
-      socketRef.current.on("connect_error", (error) => {
-        console.error("Socket connection error:", error);
-        dispatch(setIsConnected());
-        dispatch(setOnlineUsers([]));
-      });
-
-      socketRef.current.on("connect_timeout", () => {
-        console.error("Socket connection timeout");
-        dispatch(setIsConnected());
-        dispatch(setOnlineUsers([]));
-      });
-
-      return () => {
-        if (socketRef.current) {
-          socketRef.current.disconnect();
-          socketRef.current = null;
-        }
-      };
-    }
-  }, [userId]); // Only depend on userId
-
-  // ===========================private message=============================
-
-  const sendPrivateMessage = (receiverId, message) => {
-    return new Promise((resolve, reject) => {
-      if (!socketRef.current?.connected) {
-        reject(new Error("Socket not connected"));
-        return;
-      }
-
-      try {
-        // Check if message is already encrypted
-        let content = message.data.content;
-        if (!content.startsWith("data:")) {
-          // Encrypt the message content if it's not already encrypted
-          const key = "chat";
-          let result = "";
-          for (let i = 0; i < content.length; i++) {
-            result += String.fromCharCode(
-              content.charCodeAt(i) ^ key.charCodeAt(i % key.length)
-            );
-          }
-          content = "data:" + btoa(result);
-        }
-        // console.log(message)
-        const messageData = {
-          senderId: userId,
-          receiverId,
-          content: {
-            type: message.data.type,
-            content: content,
-            fileType: message.data.fileType,
-            fileUrl: message.data.fileUrl,
-            size: message.data.size,
-          },
-          replyTo: message.replyTo,
-          isBlocked: message.isBlocked,
-        };
-        socketRef.current.emit("private-message", messageData);
-
-        socketRef.current.once("message-sent-status", (status) => {
-          resolve(status);
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
-  // ===========================typing status=============================
+  // console.log("userId", userId);
 
   const sendTypingStatus = (receiverId, isTyping) => {
     if (!socketRef.current?.connected) return;
 
-    console.log(userId, receiverId, isTyping);
+    // console.log(userId, receiverId, isTyping);
 
     socketRef.current.emit("typing-status", {
       senderId: userId,
@@ -1571,16 +1568,34 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     return peer;
   };
 
-  // ====================================================================================================
 
-  return {
+  // ====================type================
+
+    const handleTypingStatus = (data) => {
+      if (data.isTyping) {
+        dispatch(setTypingUsers( [...new Set([...typingUsers, data.userId])]));
+        setTimeout(() => {
+          dispatch(setTypingUsers( [...new Set(typingUsers.filter(id => id !== data.userId))]));
+        }, 5000);
+      }
+    };
+  useEffect(() => {
+    if (!isConnected) return;
+
+    socketRef.current.on("user-typing", handleTypingStatus);
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("user-typing", handleTypingStatus); // Check if socket is not null
+      }
+    };
+  }, [isConnected]);
+
+
+  const value = {
     socket: socketRef.current,
     isConnected,
     onlineUsers,
     sendPrivateMessage,
-    sendTypingStatus,
-    subscribeToMessages,
-    sendGroupMessage,
     isVideoCalling,
     incomingCall,
     setIncomingCall,
@@ -1617,6 +1632,20 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
     cameraStatus,
     startCall,
     acceptCall,
-    callParticipantsList
+    callParticipantsList,
+    subscribeToMessages,
+    sendTypingStatus
   };
+
+  return (
+    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
+  );
+};
+
+export const useSocket = () => {
+  const context = useContext(SocketContext);
+  if (!context) {
+    throw new Error("useSocket must be used within a SocketProvider");
+  }
+  return context;
 };

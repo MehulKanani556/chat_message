@@ -11,7 +11,7 @@ import { FiLogOut } from 'react-icons/fi';
 import { MdBlock } from 'react-icons/md';
 import { blockUser, getAllMessageUsers, getUser } from '../redux/slice/user.slice';
 import { useDispatch, useSelector } from 'react-redux';
-import { setIsUserProfileModalOpen } from '../redux/slice/manageState.slice';
+import { setIsImageModalOpen, setIsUserProfileModalOpen, setSelectedImage } from '../redux/slice/manageState.slice';
 
 // Function to fetch URL titles
 const fetchUrlTitle = async (url) => {
@@ -27,7 +27,7 @@ const fetchUrlTitle = async (url) => {
     return 'Could not fetch title';
   }
 };
-const ProfileUser = memo(({ isOpen, onClose, handleImageClick, handleMakeCall }) => {
+const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
@@ -101,6 +101,12 @@ const ProfileUser = memo(({ isOpen, onClose, handleImageClick, handleMakeCall })
 
     fetchTitles();
   }, [messages]);
+
+  const handleImageClick = (imageUrl) => {
+    dispatch(setSelectedImage(imageUrl));
+    dispatch(setIsImageModalOpen(true));
+  };
+
 
   return (
     <div

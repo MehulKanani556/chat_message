@@ -4,21 +4,45 @@ import { RiUserAddLine } from 'react-icons/ri';
 import { IoIosArrowForward } from 'react-icons/io';
 import { AiOutlineAudioMuted } from 'react-icons/ai';
 import { FaRegBell } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
+import { setParticipantOpen } from '../redux/slice/manageState.slice';
+import { useSocket } from '../context/SocketContext';
 
 const CallParticipantModal = memo(({
-  participantOpen,
-  setParticipantOpen,
-  inviteToCall,
+  // participantOpen,
+  // setParticipantOpen,
+  // inviteToCall,
 }) => {
+
+  const dispatch = useDispatch();
     const [searchInput, setSearchInput] = useState("");
     const [invitedUsers, setInvitedUsers] = useState([]);
     const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
     const { user,allUsers } = useSelector((state) => state.user);
     const [userId] = useState(sessionStorage.getItem("userId"));
-    const {remoteStreams,participants,callParticipantsList,callParticipants} = useSelector(state => state.magageState)
+    const {remoteStreams,participants,callParticipantsList,callParticipants,participantOpen} = useSelector(state => state.magageState)
+    const {
+      socket,
+      startSharing,
+      endCall,
+      cleanupConnection,
+      toggleCamera,
+      toggleMicrophone,
+      markMessageAsRead,
+      rejectCall,
+      sendPrivateMessage,
+      sendTypingStatus,
+      subscribeToMessages,
+      sendGroupMessage,
+      acceptScreenShare,
+      inviteToCall,
+      forwardMessage,
+      addMessageReaction,
+      startCall,
+      acceptCall,
+    } = useSocket();
   return (
     <>
       {participantOpen && (
@@ -32,7 +56,7 @@ const CallParticipantModal = memo(({
                   <button
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => {
-                      setParticipantOpen(false);
+                      dispatch(setParticipantOpen(false));
                       setSelectedCallUsers(new Set());
                     }}
                   >
@@ -171,7 +195,7 @@ const CallParticipantModal = memo(({
                   <button
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => {
-                      setParticipantOpen(false);
+                      dispatch(setParticipantOpen(false));
                       setSelectedCallUsers(new Set());
                     }}
                   >
