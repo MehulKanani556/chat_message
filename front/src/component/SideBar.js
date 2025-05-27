@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BsChatDots,
@@ -13,7 +13,7 @@ import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import { MdOutlineWbSunny } from 'react-icons/md';
 import { LuPhoneCall } from 'react-icons/lu';
 
-const Sidebar = ({ user, onProfileClick }) => {
+const Sidebar = memo(({ user, onProfileClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -254,6 +254,6 @@ const Sidebar = ({ user, onProfileClick }) => {
       </div>
     </nav>
   );
-};
+});
 
 export default Sidebar;

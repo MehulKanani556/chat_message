@@ -1,19 +1,75 @@
-import React from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { RxCross2 } from 'react-icons/rx';
 import { GoTrash } from 'react-icons/go';
+import { useDispatch, useSelector } from 'react-redux';
+import { setIsImageModalOpen, setSelectedImage } from '../redux/slice/manageState.slice';
+import { deleteMessage, getAllMessages } from '../redux/slice/user.slice';
+import { useSocket } from '../context/SocketContext';
 
-const MediaViewer = ({
+const MediaViewer = memo(({
   isOpen,
-  selectedImage,
-  messages,
-  videoDurations,
   onClose,
-  onDeleteMessage,
-  onVideoMetadataLoad,
-  setSelectedImage
+  // onDeleteMessage,
 }) => {
-  if (!isOpen || !selectedImage) return null;
+  const dispatch = useDispatch();
+  const { socket } = useSocket();
+  const { messages } = useSelector((state) => state.user);
+  const {selectedImage,isImageModalOpen,selectedChat} = useSelector(state => state.magageState)
+  const [videoDurations, setVideoDurations] = useState({}); 
+   // button
+   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isImageModalOpen || !selectedImage) return;
+
+      const mediaMessages = messages.filter(message =>
+        message.content &&
+        message.content.fileType &&
+        (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
+      );
+      const currentIndex = mediaMessages.findIndex(message =>
+        `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
+      );
+
+      if (e.key === 'ArrowLeft') {
+        const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
+        dispatch(setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`));
+      } else if (e.key === 'ArrowRight') {
+        const nextIndex = (currentIndex + 1) % mediaMessages.length;
+        dispatch(setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isImageModalOpen, selectedImage, messages]);
+
+  const getVideoDuration = (videoElement) => {
+    return videoElement.duration; // Return the duration of the video
+  };
+
+  const onVideoMetadataLoad = (messageId, videoElement) => {
+    const duration = getVideoDuration(videoElement); // Get the duration using the utility function
+    setVideoDurations((prev) => ({
+      ...prev,
+      [messageId]: duration, // Store duration by message ID
+    }));
+  };
+
+  const onDeleteMessage = async (messageId) => {
+    try {
+      // Emit socket event for real-time deletion
+      await socket.emit("delete-message", messageId);
+      await dispatch(deleteMessage(messageId));
+      if (selectedChat) {
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+      }
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+  };
+
+  if (!isImageModalOpen || !selectedImage) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
@@ -53,7 +109,7 @@ const MediaViewer = ({
                         className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" 
                         onClick={() => { 
                           onDeleteMessage(message._id); 
-                          onClose(); 
+                          dispatch(setIsImageModalOpen(false))
                         }}
                       >
                         <GoTrash />
@@ -68,7 +124,7 @@ const MediaViewer = ({
                     src={`${message.content.fileUrl.replace(/\\/g, '/')}`}
                     alt={`Image ${index}`}
                     onClick={() => {
-                      setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`);
+                      dispatch(setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`));
                     }}
                   />
                 </div>
@@ -77,7 +133,7 @@ const MediaViewer = ({
                 <div 
                   className="flex flex-col items-center relative cursor-pointer" 
                   onClick={() => {
-                    setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`);
+                    dispatch(setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`));
                   }}
                 >
                   <div className="relative">
@@ -116,7 +172,7 @@ const MediaViewer = ({
                 message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
               );
               const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
-              setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`);
+              dispatch(setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`));
             }}
             className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
           >
@@ -137,7 +193,7 @@ const MediaViewer = ({
                 message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
               );
               const nextIndex = (currentIndex + 1) % mediaMessages.length;
-              setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`);
+              dispatch(setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`));
             }}
             className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
           >
@@ -148,7 +204,7 @@ const MediaViewer = ({
         </div>
 
         <button
-          onClick={onClose}
+          onClick={()=>{dispatch(setIsImageModalOpen(false))}}
           className="absolute top-4 right-4 text-white hover:text-gray-300"
         >
           <RxCross2 className="w-6 h-6" />
@@ -156,6 +212,6 @@ const MediaViewer = ({
       </div>
     </div>
   );
-};
+});
 
 export default MediaViewer;

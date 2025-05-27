@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { ImCross } from 'react-icons/im';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateGroup, getAllMessageUsers, addParticipants } from '../redux/slice/user.slice';
 import { IoIosArrowBack } from "react-icons/io";
 import { IMG_URL } from '../utils/baseUrl';
 import { setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsModalOpen } from '../redux/slice/manageState.slice';
 
-const AddParticipants = ({
-  selectedChat,
+const AddParticipants = memo(({
+  // selectedChat,
   // setIsModalOpen,
-  allUsers,
-  userId,
+  // allUsers,
+  // userId,
   socket,
   groupUsers,
   setGroupUsers,
@@ -20,6 +20,9 @@ const AddParticipants = ({
   const dispatch = useDispatch();
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchInput, setSearchInput] = useState("");
+  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const { allUsers,messages } = useSelector((state) => state.user);
+  const [userId] = useState(sessionStorage.getItem("userId"));
 
   console.log(creatGroup);
   
@@ -67,6 +70,16 @@ const AddParticipants = ({
     }
   };
 
+  const handleBack = () => {
+    if(creatGroup){
+      dispatch(setIsGroupCreateModalOpen(true));
+      dispatch(setIsModalOpen(false));
+    }else{
+      dispatch(setIsGroupModalOpen(true));
+      dispatch(setIsModalOpen(false));
+    }
+  }
+
   return (
     <div
       className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
@@ -75,7 +88,7 @@ const AddParticipants = ({
       }}
     >
      <div className="flex justify-between items-center p-4 py-6">
-        <h2 className="text-lg font-bold flex items-center"><IoIosArrowBack className="mr-2 cursor-pointer hover:text-primary" onClick={() => {dispatch(setIsGroupModalOpen(true)); dispatch(setIsModalOpen(false));}}/>Add Participants</h2>
+        <h2 className="text-lg font-bold flex items-center"><IoIosArrowBack className="mr-2 cursor-pointer hover:text-primary" onClick={() => {handleBack()}}/>Add Participants</h2>
         <button
           onClick={() => dispatch(setIsModalOpen(false))}
           className="text-gray-500 hover:text-gray-700"
@@ -188,6 +201,6 @@ const AddParticipants = ({
       </div>
     </div>
   );
-};
+});
 
 export default AddParticipants;

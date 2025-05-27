@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   FaPhone,
   FaRegSmile,
@@ -8,8 +8,10 @@ import {
   FaFileExcel,
   FaFileAudio,
   FaFile,
+  FaArrowDown,
+  FaSearch,
 } from "react-icons/fa";
-import { MdOutlineCallMade, MdOutlineCallReceived, MdOutlineContentCopy, MdPhoneEnabled } from "react-icons/md";
+import { MdOutlineCallMade, MdOutlineCallReceived, MdOutlineContentCopy, MdOutlineFlipCameraIos, MdPhoneEnabled } from "react-icons/md";
 import { GoDeviceCameraVideo, GoDotFill } from "react-icons/go";
 import { BiShare, BiReply } from "react-icons/bi";
 import { VscCopy, VscEye } from "react-icons/vsc";
@@ -37,242 +39,757 @@ import usePdfThumbnail from "../hooks/usePdfThumbnail";
 import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
+import { useDispatch, useSelector } from "react-redux";
+import { setCameraStream, setEditingMessage, setFacingMode, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage } from "../redux/slice/manageState.slice";
+import { deleteMessage, getAllMessages } from "../redux/slice/user.slice";
+import { useSocket } from "../context/SocketContext";
+import { RxCross2 } from "react-icons/rx";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
-const DownloadButton = ({ fileUrl, fileName, className = "" }) => {
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownload = async (e) => {
-    e.preventDefault();
-    setIsDownloading(true);
-    setDownloadProgress(0);
 
-    try {
-      const response = await fetch(fileUrl);
-      const contentLength = response.headers.get("content-length");
-      const total = parseInt(contentLength, 10);
-      let loaded = 0;
-
-      const reader = response.body.getReader();
-      const chunks = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        chunks.push(value);
-        loaded += value.length;
-        setDownloadProgress((loaded / total) * 100);
-      }
-
-      const blob = new Blob(chunks);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Download failed:", error);
-    } finally {
-      setIsDownloading(false);
-      setDownloadProgress(0);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleDownload}
-      className={`p-2 bg-white rounded-full dark:text-primary-light hover:underline disabled:opacity-50 relative ${className}`}
-    >
-      <span className="text-primary">
-        <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
-        </svg>
-      </span>
-      {isDownloading && (
-        <div className="absolute -inset-4 flex items-center justify-center">
-          <svg className="w-12 h-12" viewBox="0 0 36 36">
-            <circle
-              cx="18"
-              cy="18"
-              r="15.9155"
-              fill="none"
-              stroke="#e2e8f0"
-              strokeWidth="2"
-            />
-            <circle
-              cx="18"
-              cy="18"
-              r="15.9155"
-              fill="none"
-              className="stroke-primary/90"
-              strokeWidth="2"
-              strokeDasharray={`${downloadProgress}, 100`}
-              strokeLinecap="round"
-              style={{
-                transition: "stroke-dasharray 0.3s ease 0s",
-                transform: "rotate(-90deg)",
-                transformOrigin: "50% 50%",
-              }}
-            />
-          </svg>
-        </div>
-      )}
-    </button>
-  );
-};
-
-const MessageList = ({
-  messages,
-  groupMessagesByDate,
-  userId,
+const MessageList = memo(({
   handleMakeCall,
-  handleContextMenu,
-  handleDropdownToggle,
-  handleEditMessage,
-  handleDeleteMessage,
-  handleCopyMessage,
-  handleReplyMessage,
-  handleForwardMessage,
-  handleImageClick,
-  highlightText,
-  searchInputbox,
-  activeMessageId,
-  contextMenu,
-  setContextMenu,
-  setActiveMessageId,
-  allUsers,
-  selectedChat,
-  IMG_URL,
-  showEmojiPicker,
-  setShowEmojiPicker,
-  addMessageReaction,
-  dropdownRef,
-  sendPrivateMessage,
-  typingUsers
+  // handleEditMessage,
+  handleForward,
+  // handleImageClick,
+  // searchInputbox,
+  // activeMessageId,
+  // contextMenu,
+  // setContextMenu,
+  // setActiveMessageId,
+  // showEmojiPicker,
+  // setShowEmojiPicker,
+  // addMessageReaction,
+  // dropdownRef,
+  // sendPrivateMessage,
+  handleMultipleFileUpload,
+  openCamera,
 }) => {
 
+  const [userId] = useState(sessionStorage.getItem("userId"));
+  const dispatch = useDispatch();
+  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
+  const {selectedChat,typingUsers,selectedFiles,uploadProgress,replyingTo,cameraStream,openCameraState,backCameraAvailable,facingMode,searchInputbox,isSearchBoxOpen} = useSelector(state => state.magageState)
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const messagesContainerRef = useRef(null);
+  const handleReplyMessage = (message) => {
+    dispatch(setReplyingTo(message));
+  };
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  const searchBoxRef = useRef(null);
+
+
+    //===========Use the custom socket hook===========
+    const { socket,
+      startSharing,
+      endCall,
+      cleanupConnection,
+      toggleCamera,
+      toggleMicrophone,
+      markMessageAsRead,
+      rejectCall,
+      sendPrivateMessage,
+      sendTypingStatus,
+      subscribeToMessages,
+      sendGroupMessage,
+      acceptScreenShare,
+      inviteToCall,
+      forwardMessage,
+      addMessageReaction,
+      startCall,
+      acceptCall,
+    } = useSocket();
+
+
+  //===========group messages by date===========
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
+    messages.forEach((message) => {
+      if (message.isBlocked && message.sender !== userId) return;
+      const date = new Date(message.createdAt).toLocaleDateString("en-GB");
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    return groups;
+  };
+
+    // Update the handleCopyMessage function to handle both text and images
+    const handleCopyMessage = async (message, callback) => {
+      if (message.type === "file" && message.fileType?.includes("image/")) {
+        try {
+          const response = await fetch(
+            `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
+          );
+          const blob = await response.blob();
+          const item = new ClipboardItem({
+            [blob.type]: blob,
+          });
+  
+          await navigator.clipboard.write([item]);
+          callback();
+        } catch (error) {
+          console.error("Error copying image:", error);
+        }
+      } else {
+        // Handle text and emoji copying
+        const content = message.content || message;
+        navigator.clipboard.writeText(content).then(callback);
+      }
+    };
+    // ===============Menu==================
+  const handleContextMenu = (e, message) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.pageX,
+      y: e.pageY,
+      messageId: message._id,
+      message: message,
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (contextMenu.visible && !event.target.closest('.context-menu')) {
+        setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+      }
+      if (
+        searchBoxRef.current && !searchBoxRef.current.contains(event.target)
+      ) {
+        dispatch(setSearchInputbox(''))
+        dispatch(setIsSearchBoxOpen(false));
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [contextMenu]);
+
+  // ===========================delete message=============================
+  
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      // Emit socket event for real-time deletion
+      await socket.emit("delete-message", messageId);
+      await dispatch(deleteMessage(messageId));
+      if (selectedChat) {
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+      }
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+  // ================== highlight word ==================
+  const highlightText = (text, highlight) => {
+    if (!searchInputbox?.trim() || !highlight?.trim()) {
+      return text;
+    }
+    const regex = new RegExp(`(${highlight})`, "gi");
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="highlight-text">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
+  // ====================scroll to bottom====================
+  const scrollToBottom = useCallback(() => {
+    // console.log("scrollToBottom");
+
+    const isEmojiPickerOpen = document.querySelector('.EmojiPickerReact');
+    if (isEmojiPickerOpen) return; // Don't scroll if emoji picker is open
+    
+    if (messagesContainerRef.current) {
+      const element = messagesContainerRef.current;
+      element.scrollTop = element.scrollHeight;
+      setShowScrollToBottom(false);
+    }
+  }, []);
+
+  // Scroll event listener to show/hide the button with interval
+  useEffect(() => {
+    console.log("useEffect");
+    scrollToBottom();
+    const handleScroll = () => {
+      if (messagesContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+        setShowScrollToBottom(scrollTop + clientHeight < scrollHeight);
+      }
+    };
+
+    const container = messagesContainerRef.current;
+    let interval; // Declare interval variable
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+      // Set interval to check scroll position every 500ms
+      interval = setInterval(handleScroll, 500);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+        clearInterval(interval); // Clear interval on component unmount
+      }
+    };
+  }, [messages]);
+
+
+  // Ensure scroll happens after messages are loaded
+  useEffect(() => {
+    if (messages.length > 0) {
+      const timeoutId = setTimeout(scrollToBottom, 100); // Delay to ensure DOM updates
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length]);
+
+  // Scroll after component updates
+  // useEffect(() => {
+  //   const messageContainer = messagesContainerRef.current;
+  //   if (messageContainer) {
+  //     const config = { childList: true, subtree: true };
+
+  //     const observer = new MutationObserver(() => {
+  //       messageContainer.scrollTop = messageContainer.scrollHeight;
+  //     });
+
+  //     observer.observe(messageContainer, config);
+  //     return () => observer.disconnect();
+  //   }
+  // }, []);
+
+    // ==========================capture photo===================
+
+    // const [cameraStream, setCameraStream] = useState(null);
+    const videoRef = useRef(null);
+    const [photo, setPhoto] = useState(null);
+    // const [openCameraState, setOpenCameraState] = useState(false);
+  
+    // {{ edit_1 }} add state for facingMode & availability
+    // const [facingMode, setFacingMode] = useState('user');
+    // const [backCameraAvailable, setBackCameraAvailable] = useState(false);
+  
+
+  
+    function dataURLtoBlob(dataurl) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    }
+    // const capturePhoto = () => {
+    //   const canvas = document.createElement('canvas');
+    //   const context = canvas.getContext('2d');
+    //   if (videoRef.current) {
+    //     canvas.width = videoRef.current.videoWidth;
+    //     canvas.height = videoRef.current.videoHeight;
+    //     context.drawImage(videoRef.current, 0, 0);
+    //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
+    //     setPhoto(photoData); // Store the photo data
+    //     handleUploadCapturePic(photoData);
+    //     console.log(photoData);
+    //   }
+    // };
+  
+    const capturePhoto = () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (videoRef.current) {
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+  
+        // {{ edit_1 }} only mirror when using front camera
+        if (facingMode === 'user') {
+          context.translate(canvas.width, 0);
+          context.scale(-1, 1);
+        }
+  
+        context.drawImage(
+          videoRef.current,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+  
+        const photoData = canvas.toDataURL('image/jpeg', 0.8);
+        setPhoto(photoData);
+        handleUploadCapturePic(photoData);
+        console.log(photoData);
+      }
+    };
+  
+    const closeCamera = () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        dispatch(setOpenCameraState(false));
+        dispatch(setCameraStream(null));
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
+        }
+      }
+    };
+  
+    const handleUploadCapturePic = (dataUrl) => {
+      const blob = dataURLtoBlob(dataUrl);
+      // Optionally, give it a filename
+      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+      console.log(file);
+  
+      handleMultipleFileUpload([file]);
+      closeCamera();
+  
+    };
+  
+    // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream
+    const switchCamera = async () => {
+      try {
+        const newFacing = facingMode === 'user' ? 'environment' : 'user';
+        dispatch(setFacingMode(newFacing));
+  
+        // stop old tracks
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+        }
+  
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: newFacing }
+        });
+        dispatch(setCameraStream(newStream));
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+        }
+      } catch (err) {
+        console.error("Error switching camera:", err);
+      }
+    }
+
+
+      // ===================search=====================
+
+  // Function to count occurrences of a word in a message
+  const countOccurrences = (text, word) => {
+    if (!word.trim() || !text) return 0;
+    const regex = new RegExp(word, "gi");
+    return (text.match(regex) || []).length;
+  };
+
+  useEffect(() => {
+    if (!searchInputbox.trim()) {
+      setTotalMatches(0);
+      return;
+    }
+
+    const matches = messages.reduce((count, message) => {
+      const content =  typeof message?.content?.content === "string"
+          ? message?.content?.content: "";
+
+          console.log(countOccurrences(content, searchInputbox),content);
+          
+      return count + countOccurrences(content, searchInputbox);
+    }, 0);
+
+    console.log("matches",matches);
+    
+
+    setTotalMatches(matches==0 ? 0 : matches+1);
+  }, [searchInputbox, messages]);
+
+  useEffect(() => {
+    if (selectedChat) {
+      dispatch(setIsSearchBoxOpen(false)); // Close the search box
+      dispatch(setSearchInputbox('')); // Clear the search input
+    }
+  }, [selectedChat]);
+
+
+    // Function to scroll to the current search result
+
+    const scrollToSearchResult = (index) => {
+      if (!searchInputbox.trim()) return;
+  
+      let currentMatchIndex = 0;
+      let targetElement = null;
+      let targetSpan = null;
+  
+      // Find all highlighted spans containing the search text
+      const highlightedSpans = document.querySelectorAll(".highlight-text");
+      // console.log("highlightedSpans", highlightedSpans);
+  
+      if (highlightedSpans.length > 0) {
+        highlightedSpans.forEach((span) => {
+          if (currentMatchIndex === index) {
+            targetSpan = span;
+            targetElement = span.closest(".message-content");
+          }
+          currentMatchIndex++;
+        });
+      }
+      // console.log("targetElement", targetElement, targetSpan);
+  
+      // Scroll to the target element if found
+      if (targetElement && targetSpan) {
+        // Remove previous active highlights
+        document.querySelectorAll(".active-search-result").forEach((el) => {
+          el.classList.remove("active-search-result");
+        });
+  
+        // Scroll the message into view
+        targetElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+  
+        // Highlight the specific occurrence
+        targetElement.classList.add("active-search-result");
+        setTimeout(() => {
+          targetElement.classList.remove("active-search-result");
+        }, 2000);
+      }
+    };
+  
+    // Function to handle search navigation
+    const handleSearchNavigation = (direction) => {
+      if (totalMatches === 0) return;
+  
+      setCurrentSearchIndex((prevIndex) => {
+        let newIndex;
+        if (direction === "up") {
+          newIndex = prevIndex <= 0 ? totalMatches - 1 : prevIndex - 1;
+        } else {
+          newIndex = prevIndex >= totalMatches - 1 ? 0 : prevIndex + 1;
+        }
+        scrollToSearchResult(newIndex);
+        return newIndex;
+      });
+    };
+
+
+      // ===========================Edit message=============================
+
+  const handleEditMessage = (message) => {
+    dispatch(setEditingMessage(message));  
+
+    const content = decryptMessage(message.content.content);
+    dispatch(setMessageInput(content));
+
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+  };
+
+
+  const handleForwardMessage = (message) => {
+    // console.log(message,"message");
+    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+    handleForward(message);
+  }
+
+  // ===============handle image click================
+
+  const handleImageClick = useCallback((imageUrl) => {
+    dispatch(setSelectedImage(imageUrl));
+    dispatch(setIsImageModalOpen(true));
+  }, [dispatch]);
+
+  console.log("contextMenu");
 
 
   return (
-    <>
-      {messages && messages.length > 0 ? (
-        Object.entries(groupMessagesByDate(messages)).map(
-          ([date, dateMessages]) => (
-            <div key={date} className="flex flex-col w-full">
-              <DateHeader date={date} />
-              {dateMessages.map((message, index) => {
-                const prevMessage = index > 0 ? dateMessages[index - 1] : null;
-                const nextMessage =
-                  index < dateMessages.length - 1
-                    ? dateMessages[index + 1]
-                    : null;
-                const isConsecutive =
-                  nextMessage && nextMessage.sender === message.sender;
-                const isSameMinute =
-                  prevMessage &&
-                  new Date(message?.createdAt).getMinutes() ===
-                  new Date(prevMessage?.createdAt).getMinutes();
-                const issameUser = message.sender === prevMessage?.sender;
+    <div className="relative">
+      <div
+        className={`flex-1 overflow-y-auto p-4 modal_scroll border-dashed scrollbar-hide`}
+        style={{
+          height:
+            selectedFiles?.length > 0
+              ? "calc(100vh -  276px)"
+              : Object.keys(uploadProgress).length != 0
+              ? "calc(100vh - 250px)"
+              : replyingTo
+              ? replyingTo?.content?.fileType &&
+                replyingTo?.content?.fileType?.startsWith("image/")
+                ? "calc(100vh - 280px)"
+                : "calc(100vh - 229px)"
+              : window.innerWidth < 768
+              ? "calc(100vh - 179px)"
+              : "calc(100vh - 173px)",
+        }}
+        ref={messagesContainerRef}
+      >
+        {cameraStream ? (
+          <></>
+        ) : (
+          <div className="flex flex-col w-full h-[100%]">
+            {messages && messages.length > 0 ? (
+              Object.entries(groupMessagesByDate(messages)).map(
+                ([date, dateMessages]) => (
+                  <div key={date} className="flex flex-col w-full">
+                    <DateHeader date={date} />
+                    {dateMessages.map((message, index) => {
+                      const prevMessage =
+                        index > 0 ? dateMessages[index - 1] : null;
+                      const nextMessage =
+                        index < dateMessages.length - 1
+                          ? dateMessages[index + 1]
+                          : null;
+                      const isConsecutive =
+                        nextMessage && nextMessage.sender === message.sender;
+                      const isSameMinute =
+                        prevMessage &&
+                        new Date(message?.createdAt).getMinutes() ===
+                          new Date(prevMessage?.createdAt).getMinutes();
+                      const issameUser = message.sender === prevMessage?.sender;
 
-                const showTime =
-                  !prevMessage ||
-                  new Date(message?.createdAt).getMinutes() -
-                  new Date(prevMessage?.createdAt).getMinutes() >
-                  0 ||
-                  !issameUser;
+                      const showTime =
+                        !prevMessage ||
+                        new Date(message?.createdAt).getMinutes() -
+                          new Date(prevMessage?.createdAt).getMinutes() >
+                          0 ||
+                        !issameUser;
 
-                const name = allUsers.find(
-                  (user) => user._id === message.sender
-                )?.userName;
-                const currentTime = new Date(
-                  message.createdAt
-                ).toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: false,
-                });
-                // console.log("message", message);
-                if (message.isBlocked && message.sender !== userId) {
-                  console.log("message.isBlocked", message.isBlocked);
-                  return;
-                }
+                      const name = allUsers.find(
+                        (user) => user._id === message.sender
+                      )?.userName;
+                      const currentTime = new Date(
+                        message.createdAt
+                      ).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: false,
+                      });
+                      // console.log("message", message);
+                      if (message.isBlocked && message.sender !== userId) {
+                        console.log("message.isBlocked", message.isBlocked);
+                        return;
+                      }
 
-                if (message.content?.type === "system") {
-                  return <SystemMessage key={message._id} message={message} />;
-                }
+                      if (message.content?.type === "system") {
+                        return (
+                          <SystemMessage key={message._id} message={message} />
+                        );
+                      }
 
-                if (message.content?.type === "call") {
-                  return (
-                    <CallMessage
-                      key={message._id}
-                      message={message}
-                      userId={userId}
-                      handleMakeCall={handleMakeCall}
-                    />
-                  );
-                }
+                      if (message.content?.type === "call") {
+                        return (
+                          <CallMessage
+                            key={message._id}
+                            message={message}
+                            userId={userId}
+                            handleMakeCall={handleMakeCall}
+                          />
+                        );
+                      }
 
-                return (
-                  <RegularMessage
-                    key={message._id}
-                    message={message}
-                    userId={userId}
-                    showTime={showTime}
-                    name={name}
-                    currentTime={currentTime}
-                    isConsecutive={isConsecutive}
-                    handleContextMenu={handleContextMenu}
-                    handleDropdownToggle={handleDropdownToggle}
-                    handleEditMessage={handleEditMessage}
-                    handleDeleteMessage={handleDeleteMessage}
-                    handleCopyMessage={handleCopyMessage}
-                    handleReplyMessage={handleReplyMessage}
-                    handleForwardMessage={handleForwardMessage}
-                    handleImageClick={handleImageClick}
-                    highlightText={highlightText}
-                    searchInputbox={searchInputbox}
-                    activeMessageId={activeMessageId}
-                    contextMenu={contextMenu}
-                    setContextMenu={setContextMenu}
-                    setActiveMessageId={setActiveMessageId}
-                    allUsers={allUsers}
-                    IMG_URL={IMG_URL}
-                    showEmojiPicker={showEmojiPicker}
-                    setShowEmojiPicker={setShowEmojiPicker}
-                    addMessageReaction={addMessageReaction}
-                    dropdownRef={dropdownRef}
-                    selectedChat={selectedChat}
-                    messages={messages}
-                  />
-                );
-              })}
-            </div>
-          )
-        )
-      ) : (
-        <EmptyMessages selectedChat={selectedChat} sendPrivateMessage={sendPrivateMessage} />
-      )}
-      {(selectedChat && typingUsers.includes(selectedChat._id)) && (
-        <div className="flex">
-          <div className=" flex text-sm p-2 px-3 dark:text-white bg-primary rounded-e-xl rounded-tl-xl">
-            <span>{selectedChat.members ? `${""}` : ""}</span>
-            <div className="flex space-x-1 mt-3 ml-2">
-              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black" style={{ animationDelay: '300ms' }}></div>
-            </div>
+                      return (
+                        <RegularMessage
+                          key={message._id}
+                          message={message}
+                          userId={userId}
+                          showTime={showTime}
+                          name={name}
+                          currentTime={currentTime}
+                          isConsecutive={isConsecutive}
+                          handleContextMenu={handleContextMenu}
+                          handleEditMessage={handleEditMessage}
+                          handleDeleteMessage={handleDeleteMessage}
+                          handleCopyMessage={handleCopyMessage}
+                          handleReplyMessage={handleReplyMessage}
+                          handleForwardMessage={handleForwardMessage}
+                          handleImageClick={handleImageClick}
+                          highlightText={highlightText}
+                          searchInputbox={searchInputbox}
+                          contextMenu={contextMenu}
+                          setContextMenu={setContextMenu}
+                          allUsers={allUsers}
+                          IMG_URL={IMG_URL}
+                          // showEmojiPicker={showEmojiPicker}
+                          // setShowEmojiPicker={setShowEmojiPicker}
+                          addMessageReaction={addMessageReaction}
+                          selectedChat={selectedChat}
+                          messages={messages}
+                        />
+                      );
+                    })}
+                  </div>
+                )
+              )
+            ) : (
+              <EmptyMessages
+                selectedChat={selectedChat}
+                sendPrivateMessage={sendPrivateMessage}
+              />
+            )}
+            {selectedChat && typingUsers.includes(selectedChat._id) && (
+              <div className="flex">
+                <div className=" flex text-sm p-2 px-3 dark:text-white bg-primary rounded-e-xl rounded-tl-xl">
+                  <span>{selectedChat.members ? `${""}` : ""}</span>
+                  <div className="flex space-x-1 mt-3 ml-2">
+                    <div
+                      className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 rounded-full animate-bounce dark:bg-white bg-black"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Show Send to Bottom button only if user has scrolled up */}
           </div>
+        )}
+
+        <div className="relative" style={{ maxHeight: "calc(100vh-300px)" }}>
+          {openCameraState && (
+            <button
+              className="absolute top-2 right-2 text-white z-10 text-xl"
+              onClick={() => {
+                closeCamera();
+              }}
+            >
+              <RxCross2 />
+            </button>
+          )}
+          <video
+            ref={(el) => {
+              if (el && cameraStream instanceof MediaStream) {
+                el.srcObject = cameraStream;
+                el.play().catch((err) =>
+                  console.error("Remote video error:", err)
+                );
+              }
+              // If you want to keep localVideoRef for the current user:
+              if (videoRef) {
+                videoRef.current = el;
+              }
+            }}
+            className="w-full aspect-video max-h-full h-[75vh] object-cover"
+            autoPlay
+            style={{
+              display: cameraStream ? "block" : "none",
+              transform: facingMode === "user" ? "scaleX(-1)" : "none",
+            }}
+          />
+          {openCameraState && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+              <button
+                className="btn  text-white  rounded-full border-4 border-white hover:border-white/75"
+                onClick={capturePhoto}
+              >
+                <div className="bg-white w-10 h-10  rounded-full m-1 hover:bg-white/80 "></div>
+              </button>
+            </div>
+          )}
+
+          {openCameraState && backCameraAvailable && (
+            <button
+              className="btn absolute bottom-3 right-4 text-white rounded-full "
+              onClick={switchCamera}
+            >
+              <div className="bg-white/40 w-10 h-10 flex items-center justify-center text-2xl rounded-full hover:bg-white/80">
+                <MdOutlineFlipCameraIos />
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
+      {showScrollToBottom && (
+        <button
+          type="button"
+          className="absolute bottom-5 right-4 p-2 bg-primary/70 text-white rounded-full shadow-lg z-50"
+          onClick={()=>{
+            // scrollToBottom();
+            setShowScrollToBottom(false);
+          }}
+          aria-label="Send to Bottom"
+        >
+          <FaArrowDown className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* =========Search Box ==========*/}
+      {isSearchBoxOpen && (
+        <div
+          className="absolute top-14 right-0 left-[50%] max-w-[700px] w-full bg-white dark:bg-[#202020] dark:text-gray-400 text-gray-700  rounded-lg shadow-lg p-4 py-5 z-50 flex items-center border-rounded justify-between"
+          style={{
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div
+            className="flex items-center bg-gray-200 dark:bg-white/15 w-[90%] px-4 rounded-md"
+            ref={searchBoxRef}
+          >
+            <FaSearch className="text-gray-500 mr-2" />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="flex-1 p-2 outline-none min-w-[20px] bg-transparent"
+              value={searchInputbox}
+              onChange={(e) => {
+                dispatch(setSearchInputbox(e.target.value));
+                setCurrentSearchIndex(0); // Reset current search index
+              }}
+            />
+            <span className="mx-2 text-gray-500">
+              {totalMatches > 0
+                ? `${currentSearchIndex + 1} / ${totalMatches}`
+                : "0 / 0"}
+            </span>
+            <button
+              className="ms-5 mr-3 hover:text-black hover:dark:text-white text-xl"
+              onClick={() => handleSearchNavigation("up")}
+            >
+              <IoIosArrowUp />
+            </button>
+            <button
+              className="hover:text-black hover:dark:text-white text-xl"
+              onClick={() => handleSearchNavigation("down")}
+            >
+              <IoIosArrowDown />
+            </button>
+          </div>
+          <button
+            className=" ms-5 text-xl font-bold hover:text-black hover:dark:text-white"
+            onClick={() => {
+              dispatch(setSearchInputbox(''));
+              dispatch(setIsSearchBoxOpen(false));
+            }}
+          >
+            <RxCross2 />
+          </button>
         </div>
       )}
-    </>
+    </div>
   );
-};
+});
 
-const DateHeader = ({ date }) => (
+export default MessageList;
+
+// =========================================================== Other Components ====================================================================
+
+const DateHeader = memo(({ date }) => (
   <div
     className="flex justify-center items-center my-4  date-header px-2"
     data-date={date}
@@ -283,9 +800,9 @@ const DateHeader = ({ date }) => (
     </span>
     <div className="sm:block flex-1 h-[1px] bg-gradient-to-l from-gray-200/30 to-gray-300 dark:bg-gradient-to-r dark:from-gray-300/30 dark:to-gray-300/0 max-w-[45%]" />
   </div>
-);
+));
 
-const SystemMessage = ({ message }) => (
+const SystemMessage =  memo(({ message }) => (
   <div className="flex justify-center my-2">
     <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-[12px] md:text-sm px-4 py-1.5 rounded-full min-w-60 md:min-w-80 text-center">
       {message.content.content
@@ -299,7 +816,7 @@ const SystemMessage = ({ message }) => (
         )}
     </span>
   </div>
-);
+));
 
 const CallMessage = ({ message, userId, handleMakeCall }) => {
   const isCompleted = message.content.status === "ended";
@@ -361,7 +878,7 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
   );
 };
 
-const MessageContent = ({
+const MessageContent =  memo(({
   message,
   userId,
   handleImageClick,
@@ -432,9 +949,9 @@ const MessageContent = ({
       />
     );
   }
-};
+});
 
-const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
+const ImageMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => (
   <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
     <img
       src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
@@ -447,8 +964,9 @@ const ImageMessage = ({ message, userId, handleImageClick, IMG_URL }) => (
       }
     />
   </div>
-);
-const VideoMessage = ({ message, userId, handleImageClick, IMG_URL }) => {
+));
+
+const VideoMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => {
 
   let messageContent = message?.content?.content;
 
@@ -525,9 +1043,9 @@ const VideoMessage = ({ message, userId, handleImageClick, IMG_URL }) => {
   );
 
 
-};
+});
 
-const AudioMessage = ({ message, userId, IMG_URL }) => {
+const AudioMessage =  memo(({ message, userId, IMG_URL }) => {
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
@@ -558,9 +1076,9 @@ const AudioMessage = ({ message, userId, IMG_URL }) => {
       </div>
     </div>
   );
-};
+});
 
-const FileMessage = ({
+const FileMessage =  memo(({
   message,
   userId,
   IMG_URL,
@@ -880,7 +1398,7 @@ const FileMessage = ({
       </div>
     </div>
   );
-};
+});
 
 const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   let messageContent = message?.content?.content;
@@ -949,7 +1467,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   );
 };
 
-const MessageStatus = ({ message, userId, last }) => (
+const MessageStatus =  memo(({ message, userId, last }) => (
   <div
     className={`flex items-end mt-1 ${message.showTime ? "bottom-3" : "-bottom-2"
       } right-0`}
@@ -967,9 +1485,9 @@ const MessageStatus = ({ message, userId, last }) => (
       <div className="p-3"> </div>
     ) : null}
   </div>
-);
+));
 
-const ReplyPreview = ({
+const ReplyPreview =  memo(({
   message,
   allUsers,
   IMG_URL,
@@ -1471,16 +1989,19 @@ const ReplyPreview = ({
       {/* </div> */}
     </div>
   );
-};
+});
 
-const MessageReactions = ({
+const MessageReactions = memo(({
   message,
   userId,
-  showEmojiPicker,
-  setShowEmojiPicker,
+  // showEmojiPicker,
+  // setShowEmojiPicker,
   addMessageReaction,
   allUsers,
 }) => {
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState({ messageId: null, position: null });
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -1497,6 +2018,7 @@ const MessageReactions = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showEmojiPicker]);
+
   return (
     <>
       {message.sender !== userId && (
@@ -1506,6 +2028,7 @@ const MessageReactions = ({
               className="hover:scale-125 transition-transform absolute -right-6 -top-0 text-gray-400"
               onClick={(e) => {
                 e.stopPropagation();
+                e.preventDefault(); 
 
                 const messageElement = document.getElementById(
                   `message-${message._id}`
@@ -1532,7 +2055,7 @@ const MessageReactions = ({
                     ? { bottom: "24px" }
                     : { top: "24px" }),
                 }}
-                onMouseLeave={() => setShowEmojiPicker(null)}
+                // onMouseLeave={() => setShowEmojiPicker(null)}
               >
                 <EmojiPicker
                   onEmojiClick={(event) => {
@@ -1559,7 +2082,7 @@ const MessageReactions = ({
         </>
       )}
       {message.reactions && message.reactions.length > 0 && (
-        <div className="absolute -bottom-4 left-1 flex space-x-1">
+        <div className="absolute -bottom-4 left-1 flex space-x-1" onClick={(e) => e.stopPropagation()}>
           {message.reactions.map((reaction, index) => (
             <div
               key={index}
@@ -1583,7 +2106,9 @@ const MessageReactions = ({
       )}
     </>
   );
-};
+});
+
+MessageReactions.displayName = 'MessageReactions';
 
 const MessageContextMenu = ({
   message,
@@ -1626,7 +2151,7 @@ const MessageContextMenu = ({
     return {
       top: `${y}px`,
       left: `${x}px`,
-      transform: "translate(-50%, 0)",
+      transform: "translate(-50%, 0)",  
     };
   };
 
@@ -1651,7 +2176,7 @@ const MessageContextMenu = ({
     <>
       {contextMenu.visible && contextMenu.messageId === message._id && (
         <div
-          className="fixed bg-white dark:bg-[#2C2C2C] dark:text-white  rounded shadow-lg z-[1000]"
+          className="fixed bg-white dark:bg-[#2C2C2C] dark:text-white  rounded shadow-lg z-[1000] context-menu"
           style={getMenuPosition()}
           onClick={(e) => e.stopPropagation()}
         >
@@ -1665,6 +2190,8 @@ const MessageContextMenu = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
+                    console.log("SDFbsdbsdb");
+
                     handleEditMessage(contextMenu.message);
                   }}
                 >
@@ -1740,7 +2267,7 @@ const MessageContextMenu = ({
   );
 };
 
-const RegularMessage = ({
+const RegularMessage = memo(({
   message,
   userId,
   showTime,
@@ -1748,7 +2275,6 @@ const RegularMessage = ({
   currentTime,
   isConsecutive,
   handleContextMenu,
-  handleDropdownToggle,
   handleEditMessage,
   handleDeleteMessage,
   handleCopyMessage,
@@ -1757,14 +2283,13 @@ const RegularMessage = ({
   handleImageClick,
   highlightText,
   searchInputbox,
-  activeMessageId,
   contextMenu,
   setContextMenu,
   setActiveMessageId,
   allUsers,
   IMG_URL,
-  showEmojiPicker,
-  setShowEmojiPicker,
+  // showEmojiPicker,
+  // setShowEmojiPicker,
   addMessageReaction,
   dropdownRef,
   selectedChat,
@@ -1888,8 +2413,8 @@ const RegularMessage = ({
             <MessageReactions
               message={message}
               userId={userId}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
+              // showEmojiPicker={showEmojiPicker}
+              // setShowEmojiPicker={setShowEmojiPicker}
               addMessageReaction={addMessageReaction}
               allUsers={allUsers}
             />
@@ -1912,7 +2437,7 @@ const RegularMessage = ({
       </div>
     </div>
   );
-};
+});
 
 const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
 
@@ -1975,4 +2500,91 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
   )
 };
 
-export default MessageList;
+const DownloadButton =  memo(({ fileUrl, fileName, className = "" }) => {
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    try {
+      const response = await fetch(fileUrl);
+      const contentLength = response.headers.get("content-length");
+      const total = parseInt(contentLength, 10);
+      let loaded = 0;
+
+      const reader = response.body.getReader();
+      const chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        loaded += value.length;
+        setDownloadProgress((loaded / total) * 100);
+      }
+
+      const blob = new Blob(chunks);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleDownload}
+      className={`p-2 bg-white rounded-full dark:text-primary-light hover:underline disabled:opacity-50 relative ${className}`}
+    >
+      <span className="text-primary">
+        <svg width={24} height={24} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.5003 15.8337H2.50033C2.27931 15.8337 2.06735 15.9215 1.91107 16.0777C1.75479 16.234 1.66699 16.446 1.66699 16.667C1.66699 16.888 1.75479 17.1 1.91107 17.2562C2.06735 17.4125 2.27931 17.5003 2.50033 17.5003H17.5003C17.7213 17.5003 17.9333 17.4125 18.0896 17.2562C18.2459 17.1 18.3337 16.888 18.3337 16.667C18.3337 16.446 18.2459 16.234 18.0896 16.0777C17.9333 15.9215 17.7213 15.8337 17.5003 15.8337ZM10.0003 1.66699C9.77931 1.66699 9.56735 1.75479 9.41107 1.91107C9.25479 2.06735 9.16699 2.27931 9.16699 2.50033V11.3253L6.42533 8.57533C6.26841 8.41841 6.05558 8.33025 5.83366 8.33025C5.61174 8.33025 5.39891 8.41841 5.24199 8.57533C5.08507 8.73225 4.99692 8.94507 4.99692 9.16699C4.99692 9.38891 5.08507 9.60174 5.24199 9.75866L9.40866 13.9253C9.48613 14.0034 9.5783 14.0654 9.67984 14.1077C9.78139 14.15 9.89032 14.1718 10.0003 14.1718C10.1103 14.1718 10.2193 14.15 10.3208 14.1077C10.4224 14.0654 10.5145 14.0034 10.592 13.9253L14.7587 9.75866C14.8364 9.68096 14.898 9.58872 14.94 9.4872C14.9821 9.38568 15.0037 9.27688 15.0037 9.16699C15.0037 9.05711 14.9821 8.9483 14.94 8.84678C14.898 8.74527 14.8364 8.65302 14.7587 8.57533C14.681 8.49763 14.5887 8.43599 14.4872 8.39394C14.3857 8.35189 14.2769 8.33025 14.167 8.33025C14.0571 8.33025 13.9483 8.35189 13.8468 8.39394C13.7453 8.43599 13.653 8.49763 13.5753 8.57533L10.8337 11.3253V2.50033C10.8337 2.27931 10.7459 2.06735 10.5896 1.91107C10.4333 1.75479 10.2213 1.66699 10.0003 1.66699Z" fill="currentColor" />
+        </svg>
+      </span>
+      {isDownloading && (
+        <div className="absolute -inset-4 flex items-center justify-center">
+          <svg className="w-12 h-12" viewBox="0 0 36 36">
+            <circle
+              cx="18"
+              cy="18"
+              r="15.9155"
+              fill="none"
+              stroke="#e2e8f0"
+              strokeWidth="2"
+            />
+            <circle
+              cx="18"
+              cy="18"
+              r="15.9155"
+              fill="none"
+              className="stroke-primary/90"
+              strokeWidth="2"
+              strokeDasharray={`${downloadProgress}, 100`}
+              strokeLinecap="round"
+              style={{
+                transition: "stroke-dasharray 0.3s ease 0s",
+                transform: "rotate(-90deg)",
+                transformOrigin: "50% 50%",
+              }}
+            />
+          </svg>
+        </div>
+      )}
+    </button>
+  );
+});
+
+

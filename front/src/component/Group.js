@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllGroups } from '../redux/slice/user.slice';
 import { useNavigate } from 'react-router-dom';
@@ -8,10 +8,10 @@ import { createGroup } from "../redux/slice/user.slice";
 import { useSocket } from "../hooks/useSocket";
 import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
-import { setIsGroupCreateModalOpen, setShowLeftSidebar } from '../redux/slice/manageState.slice';
+import { setIsGroupCreateModalOpen, setSelectedChat, setShowLeftSidebar } from '../redux/slice/manageState.slice';
 
 
-const Groups = ({setSelectedChat, selectedChat}) => {
+const Groups = memo(() => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
@@ -24,11 +24,13 @@ const Groups = ({setSelectedChat, selectedChat}) => {
     const { allUsers } = useSelector((state) => state.user);
     const { socket } = useSocket(currentUser,);
 
-    const { isGroupCreateModalOpen } = useSelector(state => state.magageState);
+    const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
 
     useEffect(() => {
         dispatch(getAllGroups());
     }, [dispatch]);
+
+
 
     const filteredGroups = groups.filter(group =>
         group.userName.toLowerCase().includes(searchInput.toLowerCase()) &&
@@ -40,7 +42,7 @@ const Groups = ({setSelectedChat, selectedChat}) => {
             const event = new CustomEvent('showChatList', {
             });
             window.dispatchEvent(event);
-            setSelectedChat(group);
+            dispatch(setSelectedChat(group));
             dispatch(setShowLeftSidebar(false));
         } else {
             alert("You are not a member of this group");
@@ -260,6 +262,6 @@ const Groups = ({setSelectedChat, selectedChat}) => {
             </div>
         </div>
     );
-};
+});
 
 export default Groups; 
