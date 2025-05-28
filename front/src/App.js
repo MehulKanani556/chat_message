@@ -14,6 +14,7 @@ import { initializePrimaryColor } from "./utils/themeUtils";
 import { useEffect } from "react";
 import LoginNew from "./pages/LoginNew";
 import QRLoginPage from "./pages/QRLoginPage";
+import ScannerPage from "./pages/ScannerPage";
 import { SocketProvider } from "./context/SocketContext";
 
 function App() {
@@ -26,18 +27,10 @@ function App() {
     initializePrimaryColor();
   }, []);
 
-
-  // useEffect(() => {
-  //   if(!token  && !user){
-  //     navigate('/');
-  //   }
-  // },[])
-
   return (
     <Provider store={store}>
        <SocketProvider>
       <Routes>
-        {/* <Route path="/login" element={<Login />}></Route> */}
         <Route path="/" element={<Login />}></Route>
         <Route path="/login" element={<LoginNew />}></Route>
         <Route path="/chat" element={<Chat2 />}></Route>
@@ -46,9 +39,7 @@ function App() {
         <Route path="/profile/:userId" element={<UserProfile />}></Route>
         <Route path="/groups" element={<Groups />}></Route>
         <Route path="/g" element={<QRLoginPage />}></Route>
-        {/* <Route path="/chat2" element={<Chat11 />}></Route> */}
-        {/* <Route path="/front" element={<Front />}></Route> */}
-        {/* <Route path="/chatNew" element={<ChatNew/>}></Route> */}
+        <Route path="/scanner" element={<ScannerPage />}></Route>
       </Routes>
       </SocketProvider>
     </Provider>
