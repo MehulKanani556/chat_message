@@ -8,6 +8,7 @@ const http = require("http");
 
 const indexRoutes = require("./routes/indexRoutes");
 const socketManager = require("./socketManager/SocketManager");
+const router = require("./routes/auth");
 
 const app = express();
 const port = process.env.PORT ;
@@ -24,6 +25,7 @@ app.use(cors({
 // Static and API routes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api", indexRoutes);
+app.use("/api", router);
 
 // Create single HTTP server from Express
 const server = http.createServer(app);
