@@ -1068,6 +1068,20 @@ function initializeSocket(io) {
     socket.on("camera-status-change", (data) =>
       handleCameraStatusChange(socket, data)
     );
+
+    // Handle QR code scanning events
+    socket.on('qr-scan-success', (data) => {
+      console.log('QR scan success:', data);
+      // Broadcast to all clients except sender
+      socket.broadcast.emit('qr-scan-success', data);
+    });
+
+    socket.on('qr-scan-error', (data) => {
+      console.log('QR scan error:', data);
+      // Broadcast to all clients except sender
+      socket.broadcast.emit('qr-scan-error', data);
+    });
+
     // ===========================================================================================================
   });
 }

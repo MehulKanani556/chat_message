@@ -11,7 +11,7 @@ const socketManager = require("./socketManager/SocketManager");
 const router = require("./routes/auth");
 
 const app = express();
-const port = process.env.PORT ;
+const port = process.env.PORT;
 
 // Middlewares
 app.use(express.json());
@@ -37,6 +37,10 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
 });
 
 // Make Socket.IO globally accessible

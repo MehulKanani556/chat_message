@@ -1,129 +1,125 @@
 // QRLoginPage.jsx
 import React, { useEffect, useState, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import QRCode, { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import io from 'socket.io-client';
-// import './QRLoginPage.css';
 
-const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+const SERVER_URL = 'http://localhost:5000';
 
 const QRLoginPage = () => {
-  const [sessionId, setSessionId] = useState('');
+  const [sessionId] = useState(() => uuidv4()); // Generate sessionId only once
   const [status, setStatus] = useState('waiting');
+  const [error, setError] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef(null);
   const navigate = useNavigate();
 
-  // Generate random session ID
-  const generateSessionId = () => {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
-  };
-
-  // Initialize QR code and socket connection
-  const initQRCode = () => {
-    const newSessionId = generateSessionId();
-    setSessionId(newSessionId);
-    setStatus('waiting');
-    
-    // Emit session creation event to server
-    if (socketRef.current) {
-      socketRef.current.emit('create_session', { sessionId: newSessionId });
-    }
-  };
-
-  // Setup socket connection and event listeners
   useEffect(() => {
-    // Check if already logged in
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      navigate('/chat');
-      return;
-    }
-    
-    // Initialize socket connection
-    socketRef.current = io(SERVER_URL);
-    
-    // Listen for authentication success
-    socketRef.current.on('auth_success', (data) => {
+    // Set up Socket.IO connection
+    socketRef.current = io(SERVER_URL, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      forceNew: true
+    });
+
+    const socket = socketRef.current;
+
+    socket.on('connect', () => {
+      console.log('Socket.IO connected');
+      setIsConnected(true);
+      setError(null);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket.IO connection error:', error);
+      setIsConnected(false);
+      setError('Connection error. Please refresh the page.');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket.IO disconnected');
+      setIsConnected(false);
+    });
+
+    socket.on('qr-scan-success', (data) => {
+      console.log('Received QR scan success:', data);
       if (data.sessionId === sessionId) {
-        setStatus('success');
-        
         // Store authentication data
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('userId', data.userId);
-        localStorage.setItem('username', data.username);
+        sessionStorage.setItem('token', data.token);
+        sessionStorage.setItem('userId', data.userId);
+        sessionStorage.setItem('username', data.username);
         
-        // Redirect to chat page after a brief delay
+        setStatus('success');
+        // Navigate to chat page after successful login
         setTimeout(() => {
           navigate('/chat');
         }, 1500);
       }
     });
-    
-    // Listen for session expiration
-    socketRef.current.on('session_expired', (data) => {
+
+    socket.on('qr-scan-error', (data) => {
+      console.log('Received QR scan error:', data);
       if (data.sessionId === sessionId) {
-        setStatus('expired');
-        setTimeout(initQRCode, 1000);
+        setError(data.message);
+        setStatus('error');
       }
     });
-    
-    // Initialize QR code
-    initQRCode();
-    
-    // Refresh QR code every 30 seconds
-    const intervalId = setInterval(initQRCode, 30 * 1000);
-    
-    // Cleanup on unmount
+
     return () => {
-      clearInterval(intervalId);
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, [navigate]);
-  
-  // Get QR code data
-  const getQRData = () => {
+  }, [sessionId, navigate]);
+
+  const getQRCodeData = () => {
     return JSON.stringify({
       action: 'login',
-      sessionId: sessionId
+      sessionId: sessionId,
+      timestamp: new Date().toISOString()
     });
   };
-  
-  // Get status message and class
-  const getStatusInfo = () => {
-    switch (status) {
-      case 'waiting':
-        return { message: 'Waiting for scan...', className: 'status-waiting' };
-      case 'expired':
-        return { message: 'QR code expired. Generating new one...', className: 'status-error' };
-      case 'success':
-        return { message: 'Login successful! Redirecting...', className: 'status-success' };
-      default:
-        return { message: 'Ready to scan', className: 'status-waiting' };
-    }
-  };
-  
-  const statusInfo = getStatusInfo();
-  
+
   return (
-    <div className="login-container">
-     
-      
-      <div className="qr-container">
-        {sessionId && (
-          <QRCodeCanvas 
-            value={getQRData()}
-            size={200}
-            level="H"
-          />
-        )}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div className="p-8 bg-white rounded-lg shadow-md">
+        <h1 className="mb-6 text-2xl font-bold text-center">QR Code Login</h1>
+        
+        <div className="mb-6 flex justify-center">
+          <div className="p-4 bg-white rounded-lg shadow">
+            <QRCodeSVG
+              value={getQRCodeData()}
+              size={256}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+        </div>
+
+        <div className="text-center">
+          {!isConnected && (
+            <p className="text-yellow-600 mb-4">Connecting to server...</p>
+          )}
+          {status === 'waiting' && (
+            <p className="text-gray-600">Waiting for scan...</p>
+          )}
+          {status === 'success' && (
+            <p className="text-green-600">Login successful! Redirecting...</p>
+          )}
+          {status === 'error' && (
+            <p className="text-red-600">{error || 'An error occurred'}</p>
+          )}
+        </div>
+
+        <div className="mt-4 text-sm text-gray-500 text-center">
+          <p>1. Open this page on the device you want to log in to</p>
+          <p>2. Use the scanner on your logged-in device to scan this QR code</p>
+          <p>3. You will be automatically logged in</p>
+        </div>
       </div>
-{/*       
-      <div className={`status ${statusInfo.className}`}>
-        {statusInfo.message}
-      </div> */}
     </div>
   );
 };

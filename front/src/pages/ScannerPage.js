@@ -16,10 +16,10 @@ const ScannerPage = () => {
   useEffect(() => {
     // Check if already logged in
     const token = localStorage.getItem('authToken');
-    if (token) {
-      navigate('/chat');
-      return;
-    }
+    // if (token) {
+    //   navigate('/chat');
+    //   return;
+    // }
   }, [navigate]);
 
   const handleScanSuccess = (data) => {
@@ -29,16 +29,16 @@ const ScannerPage = () => {
       setError(null);
       
       // Store authentication data
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('username', data.username);
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('userId', data.userId);
+      sessionStorage.setItem('username', data.username);
       
       // Show success message
       setScanResult('Login successful! Redirecting...');
       
       // Redirect to chat page after successful login
       setTimeout(() => {
-        navigate('/chat');
+        // navigate('/chat');
       }, 1500);
     } catch (err) {
       console.error('Login error:', err);

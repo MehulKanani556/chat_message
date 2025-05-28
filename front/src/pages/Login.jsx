@@ -121,7 +121,7 @@ const Login = () => {
           </h3>
           <div className="bg-white p-4 rounded-lg mb-6">
             <QRCode
-              value="https://chat-app.com/qr-login"
+              value="http://localhost:3000/qr-login" 
               size={200}
               level="H"
             />

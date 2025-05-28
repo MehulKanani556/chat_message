@@ -7,7 +7,7 @@ const twilio = require('twilio')
 // Initialize Twilio client
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
-exports.userLogin = async (req, res) => {
+const userLogin = async (req, res) => {
     try {
         let { email, password } = req.body
 
@@ -32,9 +32,10 @@ exports.userLogin = async (req, res) => {
         return res.status(500).json({ status: 500, message: error.message })
     }
 }
-exports.googleLogin = async (req, res) => {
+
+const googleLogin = async (req, res) => {
     try {
-        let { uid, userName, email,photo } = req.body;
+        let { uid, userName, email, photo } = req.body;
         let checkUser = await user.findOne({ email });
         if (!checkUser) {
             checkUser = await user.create({
@@ -46,15 +47,13 @@ exports.googleLogin = async (req, res) => {
         }
         checkUser = checkUser.toObject();
         let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
-        // checkUser.token = generateToken(checkUser._id);
         return res.status(200).json({ message: 'login successful', success: true, user: checkUser, token: token });
     } catch (error) {
         throw new Error(error);
     }
 };
 
-
-exports.forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
     try {
         let { email } = req.body;
 
@@ -99,7 +98,7 @@ exports.forgotPassword = async (req, res) => {
     }
 }
 
-exports.verifyOtp = async (req, res) => {
+const verifyOtp = async (req, res) => {
     try {
         let { email, otp } = req.body
 
@@ -125,17 +124,15 @@ exports.verifyOtp = async (req, res) => {
     }
 }
 
-exports.changePassword = async (req, res) => {
+const changePassword = async (req, res) => {
     try {
-       
-        let { newPassword,email } = req.body;
+        let { newPassword, email } = req.body;
 
-        let userId = await user.findOne({ email });;
+        let userId = await user.findOne({ email });
 
         if (!userId) {
             return res.status(404).json({ status: 404, message: "User Not Found" })
         }
-
 
         let salt = await bcrypt.genSalt(10);
         let hashPassword = await bcrypt.hash(newPassword, salt);
@@ -150,7 +147,7 @@ exports.changePassword = async (req, res) => {
     }
 }
 
-exports.sendOtpToMobile = async (req, res) => {
+const sendOtpToMobile = async (req, res) => {
     try {
         let { mobileNumber } = req.body;
 
@@ -160,14 +157,13 @@ exports.sendOtpToMobile = async (req, res) => {
         // Send OTP via SMS
         await twilioClient.messages.create({
             body: `Your OTP is: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+            from: process.env.TWILIO_PHONE_NUMBER,
             to: mobileNumber
         });
 
-        // Optionally, save the OTP to the user's record in the database
+        // Save the OTP to the user's record
         let checkUser = await user.findOne({ mobileNumber });
         if (!checkUser) {
-            // If user not found, create that user
             checkUser = new user({ mobileNumber, otp });
         } else {
             checkUser.otp = otp;
@@ -181,41 +177,48 @@ exports.sendOtpToMobile = async (req, res) => {
     }
 };
 
-exports.verifyMobileOtp = async (req, res) => {
+const verifyMobileOtp = async (req, res) => {
     try {
         const { mobileNumber, otp } = req.body;
 
-        // Find the user by mobile number
         let userRecord = await user.findOne({ mobileNumber });
         if (!userRecord) {
             return res.status(404).json({ status: 404, message: "User not found." });
         }
-        
 
-        // Check if the OTP matches
         if (userRecord.otp != otp) {
             return res.status(400).json({ status: 400, message: "Invalid OTP." });
         }
 
-        // Optionally, you can clear the OTP after successful verification
-        userRecord.otp = null; // Clear OTP after verification
+        // Clear OTP after successful verification
+        userRecord.otp = undefined;
         await userRecord.save();
 
-        // Generate a token for the user
-        // const token = jwt.sign({ id: userRecord._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        let token = await jwt.sign({ _id: userRecord._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
+        // Generate token for the user
+        const token = jwt.sign(
+            { _id: userRecord._id },
+            process.env.SECRET_KEY,
+            { expiresIn: "1D" }
+        );
 
-        // Prepare user information to be sent
-        const userInfo = {
-            id: userRecord._id,
-            userName: userRecord.userName,
-            mobileNumber: userRecord.mobileNumber,
-            photo: userRecord.photo,
-        };
-
-        return res.status(200).json({ status: 200, message: "OTP verified successfully.", token, user: userInfo });
+        return res.status(200).json({
+            status: 200,
+            message: "OTP verified successfully.",
+            user: userRecord,
+            token: token
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ status: 500, message: error.message });
     }
+};
+
+module.exports = {
+    userLogin,
+    googleLogin,
+    forgotPassword,
+    verifyOtp,
+    changePassword,
+    sendOtpToMobile,
+    verifyMobileOtp
 };

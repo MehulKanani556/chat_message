@@ -24,7 +24,7 @@ const {
   sendOtpToMobile,
   verifyMobileOtp,
 } = require("../auth/auth");
-const { auth } = require("../helper/auth");
+const auth  = require("../helper/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
 const {
   getMessageHistory,
@@ -44,24 +44,20 @@ const {
   leaveGroup,
   addParticipants,
 } = require("../controller/groupController");
-
+const { handleQrLogin, getSessionStatus } = require('../controller/authController');
 
 const indexRoutes = express.Router();
 
 // Auth Routes
-
-indexRoutes.post('/mobile-otp',sendOtpToMobile);
+indexRoutes.post('/mobile-otp', sendOtpToMobile);
 indexRoutes.post('/verify-mobile-otp', verifyMobileOtp);
-
 indexRoutes.post("/usrLogin", userLogin);
 indexRoutes.post("/google-login", googleLogin);
 indexRoutes.post("/forgotPassword", forgotPassword);
 indexRoutes.post("/verifyOtp", verifyOtp);
 indexRoutes.post("/changePassword", changePassword);
-indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
-indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
-// User Routes
 
+// User Routes
 indexRoutes.post("/createUser", createUser);
 indexRoutes.get("/allUsers", auth, getAllUsers);
 indexRoutes.get("/allMessageUsers", auth, getAllMessageUsers);
@@ -73,21 +69,18 @@ indexRoutes.post("/blockUser", auth, blockUser);
 indexRoutes.post("/deleteChat", auth, deleteChat);
 indexRoutes.post("/pinChat", auth, pinChat);
 indexRoutes.post("/muteChat", auth, muteUsers);
-
+indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
+indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);
-indexRoutes.put(
-  "/updateGroup/:groupId",
-  auth,
-  upload.single("photo"),
-  updateGroup
-);
+indexRoutes.put("/updateGroup/:groupId", auth, upload.single("photo"), updateGroup);
 indexRoutes.delete("/deleteGroup/:groupId", auth, deleteGroup);
 indexRoutes.get("/allGroups", getAllGroups);
 indexRoutes.get("/getGroupById/:groupId", auth, getGroupById);
 indexRoutes.post("/leaveGroup", auth, leaveGroup);
 indexRoutes.post("/addParticipants", auth, addParticipants);
+
 // Message Routes
 indexRoutes.get("/messages/:userId", auth, getMessageHistory);
 indexRoutes.get("/online-users", getOnlineUsers);
@@ -95,13 +88,16 @@ indexRoutes.post("/allMessages", auth, getAllMessages);
 indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
 indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
 indexRoutes.post("/clearChat", auth, clearChat);
-// AI Chat Routes
+
+
+
+// QR Login endpoint
+indexRoutes.post('/qr-login', auth, handleQrLogin);
+
+// Get session status
+indexRoutes.get('/session/:sessionId', getSessionStatus);
+
 // File upload endpoint
-indexRoutes.post(
-  "/upload",
-  auth,
-  upload.single("file"),
-  uploadController.uploadFile
-);
+indexRoutes.post("/upload", auth, upload.single("file"), uploadController.uploadFile);
 
 module.exports = indexRoutes;
