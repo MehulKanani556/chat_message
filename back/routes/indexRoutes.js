@@ -24,7 +24,6 @@ const {
   sendOtpToMobile,
   verifyMobileOtp,
 } = require("../auth/auth");
-const auth  = require("../helper/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
 const {
   getMessageHistory,
@@ -45,6 +44,7 @@ const {
   addParticipants,
 } = require("../controller/groupController");
 const { handleQrLogin, getSessionStatus } = require('../controller/authController');
+const { auth } = require("../helper/auth");
 
 const indexRoutes = express.Router();
 

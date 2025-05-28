@@ -33,10 +33,10 @@ const handleQrLogin = async (req, res) => {
         }
 
         // Get the logged-in user's data from the auth middleware
-        const { userId } = req.user;
+        const { _id } = req.user;
 
         // Get full user data
-        const user = await User.findById(userId);
+        const user = await User.findById(_id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

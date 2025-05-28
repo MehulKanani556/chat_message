@@ -1,28 +1,34 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/userModels');
-
-const auth = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      throw new Error('No authentication token provided');
+const user = require('../models/userModels')
+const jwt = require('jsonwebtoken')
+ 
+exports.auth = async (req, res, next) => {
+    try {
+        let authorization = req.headers['authorization']
+ 
+        if (authorization) {
+            let token = await authorization.split(' ')[1]
+ 
+            if (!token) {
+                return res.status(404).json({ status: 404, message: "Token Is Required" })
+            }
+ 
+            let checkToken = jwt.verify(token, process.env.SECRET_KEY)
+ 
+            let checkUser = await user.findById(checkToken)
+ 
+            if (!checkUser) {
+                return res.status(404).json({ status: 404, message: "User Not Found" })
+            }
+ 
+            req.user = checkUser
+ 
+            next()
+        }
+        else {
+            return res.status(404).json({ status: 404, message: "Token Is Required" });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: error.message })
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iafdsfusd----Jhjhdjaf+++++999^&^%^ddhdhddhdh');
-    
-    // For demo purposes, we'll use the decoded _id directly
-    // In production, you should verify the user exists in the database
-    console.log('Decoded token:', decoded);
-    req.user = {
-      userId: decoded._id || decoded.userId
-    };
-    
-    next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    res.status(401).json({ message: 'Please authenticate' });
-  }
-};
-
-module.exports = auth;
+}
