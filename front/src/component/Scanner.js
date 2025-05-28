@@ -146,7 +146,7 @@ const Scanner = () => {
       case 'error':
         return 'Login failed. Please try again.';
       default:
-        return 'Ready to scan';
+        return 'Connecting to server...';
     }
   };
 
@@ -161,13 +161,27 @@ const Scanner = () => {
         </div>
       ) : (
         <div className="relative">
-          <div className="w-full max-w-md mx-auto">
+          <div className="w-full max-w-md mx-auto border-4 border-blue-500 rounded-lg overflow-hidden">
             <QrReader
-              constraints={{ facingMode: 'environment' }}
+              constraints={{
+                facingMode: 'environment',
+                aspectRatio: 1,
+                width: { min: 360, ideal: 640, max: 1920 },
+                height: { min: 360, ideal: 640, max: 1920 }
+              }}
               onResult={handleScan}
               onError={handleError}
-              style={{ width: '100%' }}
+              style={{ width: '100%', height: '100%' }}
+              videoStyle={{ objectFit: 'cover' }}
+              videoContainerStyle={{ width: '100%', height: '100%' }}
+              className="w-full h-full"
             />
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-blue-500"></div>
+              <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-blue-500"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-blue-500"></div>
+              <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-blue-500"></div>
+            </div>
           </div>
           <div className="mt-4 text-center text-sm text-gray-600">
             <p>Position the QR code within the frame</p>

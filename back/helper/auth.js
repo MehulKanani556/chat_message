@@ -15,7 +15,7 @@ const auth = async (req, res, next) => {
     // In production, you should verify the user exists in the database
     console.log('Decoded token:', decoded);
     req.user = {
-      userId: decoded._id
+      userId: decoded._id || decoded.userId
     };
     
     next();
