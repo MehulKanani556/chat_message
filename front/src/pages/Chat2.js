@@ -888,7 +888,7 @@ const Chat2 = memo(() => {
         />
       )}
       {/* ==============================Right Sidebar chat list ============================== */}
-      {!(isReceiving || isVideoCalling || isVoiceCalling) && (
+       {(callChatList || showGroups || showProfile || selectedChatModule || showSettings || showCallHistory) && (
         <>
           {/* Left Side */}
           <div
@@ -908,9 +908,12 @@ const Chat2 = memo(() => {
             {showSettings && <Setting />}
             {showCallHistory && ( <CallHistory />)}
           </div>
+         
 
           {/* Right Side */}
           <>
+
+           {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
             <div
               className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
                 (isGroupModalOpen ||
@@ -1069,6 +1072,7 @@ const Chat2 = memo(() => {
                   </>
                 )}
             </div>
+            }
 
             {/* ============================== right sidebar =========================================== */}
 
@@ -1158,7 +1162,7 @@ const Chat2 = memo(() => {
                     </span>
                   </div>
                 )}
-                <p className="absolute bottom-72 text-white text-lg font-medium">
+                <p className="absolute top-36 text-white text-lg font-medium">
                   {selectedChat?.userName || "Unknown User"}
                 </p>
               </div>

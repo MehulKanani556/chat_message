@@ -33,8 +33,8 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
-const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-// const SOCKET_SERVER_URL = "http://localhost:5000";
+// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
+const SOCKET_SERVER_URL = "http://localhost:5000";
 
 export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   // const [isConnected, setIsConnected] = useState(false);
@@ -850,18 +850,18 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
 
         dispatch(updateParticipant({ userId, stream }));
 
-        // if (localVideoRef?.current) {
-        //   console.log("Attaching stream to local video element");
-        //   localVideoRef.current.srcObject = stream;
-        //   try {
-        //     await localVideoRef.current.play();
-        //     console.log("Local video playback started");
-        //   } catch (err) {
-        //     console.error("Error playing local video:", err);
-        //   }
-        // } else {
-        //   console.error("Local video element not found");
-        // }
+        if (localVideoRef?.current) {
+          console.log("Attaching stream to local video element");
+          localVideoRef.current.srcObject = stream;
+          try {
+            await localVideoRef.current.play();
+            console.log("Local video playback started");
+          } catch (err) {
+            console.error("Error playing local video:", err);
+          }
+        } else {
+          console.error("Local video element not found");
+        }
       } catch (err) {
         console.error("Could not get media devices:", err);
         setError("Failed to access camera/microphone. Please check your device permissions.");
@@ -1357,23 +1357,23 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
   // ===========================cleanup Connection=============================
 
   const cleanupConnection = () => {
-    // Safely cleanup stream
-    if (streamRef?.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+    // Stop all tracks in the local stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
       streamRef.current = null;
     }
 
-    // Safely cleanup peer connections
-    if (peerRef?.current) {
-      Object.values(peerRef.current).forEach((peer) => {
-        if (peer && typeof peer.destroy === "function") {
-          peer.destroy();
-        }
-      });
-      peerRef.current = {};
-    }
+    // Clean up peer connections
+    Object.values(peersRef.current).forEach(peer => {
+      if (peer && typeof peer.destroy === 'function') {
+        peer.destroy();
+      }
+    });
+    peersRef.current = {};
 
-    // Safely cleanup video refs
+    // Clean up video elements
     if (localVideoRef?.current) {
       localVideoRef.current.srcObject = null;
     }
@@ -1381,20 +1381,22 @@ export const useSocket = (userId, localVideoRef, remoteVideoRef, allUsers) => {
       remoteVideoRef.current.srcObject = null;
     }
 
-    // Reset states
-    dispatch(setIsSharing(false));
-    dispatch(setIsReceiving(false));
-    setPeerEmail("");
-    setError("");
+    // Reset call states
     dispatch(setIsVideoCalling(false));
     dispatch(setIsVoiceCalling(false));
     dispatch(setIncomingCall(null));
     dispatch(setIsCameraOn(false));
     dispatch(setIsMicrophoneOn(false));
-    dispatch(setIncomingShare(null));
     dispatch(setRemoteStreams(new Map()));
     dispatch(setParticipants([]));
-
+    setCallStartTime(null);
+    setCallDuration(null);
+    setPeerEmail(null);
+    setCallRoom(null);
+    setCallStatus(null);
+    setGroupCall("");
+    setCallFrom("");
+    setAllCallUsers(new Map());
   };
 
   useEffect(() => {

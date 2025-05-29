@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
 import { setParticipantOpen, setSelectedChatModule, setChatMessages, setvideoCallChatList, setCallChatList} from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
+import { setCallChatList, setChatMessages, setvideoCallChatList } from "../redux/slice/manageState.slice";
+import { LuFullscreen } from "react-icons/lu";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return 'w-full';
@@ -19,7 +21,7 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = memo(() => {
-  const {remoteStreams,participants,onlineUsers,selectedChat,selectedChatModule,isMicrophoneOn, isCameraOn,isVideoCalling, isVoiceCalling,cameraStatus} = useSelector(state => state.magageState)
+  const {remoteStreams,participants,onlineUsers,selectedChat,selectedChatModule,isMicrophoneOn, isCameraOn,isVideoCalling, isVoiceCalling,cameraStatus, chatMessages} = useSelector(state => state.magageState)
   const { allUsers,messages } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
   const dispatch = useDispatch();
@@ -48,9 +50,31 @@ const VideoCallLayout = memo(() => {
 
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black">
+    <div
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? 'w-[70%]' : 'w-full'}`}
+      style={(chatMessages) ? {
+        width: '25%',
+        height: '34%',
+        position: 'absolute',
+        top: '75%',
+        left: '82%',
+        transform: 'translate(-50%, -50%)'
+      } : {}}
+    >
+
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
+        {(chatMessages ) && (
+          <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
+            <LuFullscreen
+              className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={() => {
+                dispatch(setChatMessages(!chatMessages))
+                dispatch(setCallChatList(!callChatList))
+              }}
+            />
+          </div>
+        )}
         {participants.length > 0 && Array.from(participants)?.map(([participantId, stream]) => {
           const participant = allUsers.find(u => u._id === participantId);
           const isCameraEnabled = cameraStatus?.[participantId] !== false;
@@ -116,70 +140,75 @@ const VideoCallLayout = memo(() => {
           );
         })}
       </div>
-      
+
+      {!chatMessages && (
         <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-                  <button
-                    onClick={() => {dispatch(setSelectedChatModule(!selectedChatModule))
+          <button
+            onClick={() => {
+             dispatch(setSelectedChatModule(!selectedChatModule))
                     // dispatch(setvideoCallChatList(true));
                     dispatch(setCallChatList(true));
                     // dispatch(setChatMessages(true));
-                  }}
-                  className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                >
-          <BsChatDots className="text-xl" />
-        </button>
-
-        <button
-          onClick={toggleMicrophone}
-          className="w-10 grid place-content-center border rounded-full h-10 text-white"
-        >
-          {isMicrophoneOn ? (
-            <IoMicOffOutline className="text-xl" />
-          ) : (
-            <IoMicOffCircleOutline className="text-xl" />
-          )}
-        </button>
-
-        <button
-          onClick={toggleCamera}
-          className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-        >
-          {isCameraOn ? (
-            <BsCameraVideo className="text-xl" />
-          ) : (
-            <BsCameraVideoOff className="text-xl" />
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            endCall();
-            cleanupConnection();
-          }}
-          className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-        >
-          <IoCallOutline className="text-2xl" />
-        </button>
-
-        <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-          <GoUnmute className="text-xl" />
-        </button>
-
-        {(isVideoCalling || isVoiceCalling) && (
-          <button
-            onClick={() => {
-              dispatch(setParticipantOpen(true));
             }}
             className="w-10 grid place-content-center rounded-full h-10 border text-white"
           >
-            <MdOutlineGroupAdd className="text-xl" />
+            <BsChatDots className="text-xl" />
           </button>
-        )}
 
-        <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-          <AiOutlineVideoCamera className="text-xl" />
-        </button>
-      </div>
+          <button
+            onClick={toggleMicrophone}
+            className="w-10 grid place-content-center border rounded-full h-10 text-white"
+          >
+            {isMicrophoneOn ? (
+              <IoMicOffOutline className="text-xl" />
+            ) : (
+              <IoMicOffCircleOutline className="text-xl" />
+            )}
+          </button>
+
+          <button
+            onClick={toggleCamera}
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
+          >
+            {isCameraOn ? (
+              <BsCameraVideo className="text-xl" />
+            ) : (
+              <BsCameraVideoOff className="text-xl" />
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              endCall();
+              cleanupConnection();
+              dispatch(setCallChatList(false));
+            }}
+            className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+          >
+            <IoCallOutline className="text-2xl" />
+          </button>
+
+          <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            <GoUnmute className="text-xl" />
+          </button>
+
+          {(isVideoCalling || isVoiceCalling) && (
+            <button
+              onClick={() => {
+                setParticipantOpen(true);
+                dispatch(setCallChatList(false));
+              }}
+              className="w-10 grid place-content-center rounded-full h-10 border text-white"
+            >
+              <MdOutlineGroupAdd className="text-xl" />
+            </button>
+          )}
+
+          <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            <AiOutlineVideoCamera className="text-xl" />
+          </button>
+        </div>
+      )}
 
     </div>
 

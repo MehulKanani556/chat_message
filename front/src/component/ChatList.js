@@ -214,7 +214,10 @@ const ChatList = memo(({
                         handleFileDrop(e, item);
                       }}
                       onClick={() => {
-                        dispatch(setSelectedChat(item));
+                        if (isVideoCalling) {
+                          dispatch(setChatMessages(item));
+                        }
+                        setSelectedChat(item);
                         dispatch(setShowLeftSidebar(false));
                       }}
                     >
