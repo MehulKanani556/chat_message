@@ -723,7 +723,7 @@ const Chat2 = () => {
   const handleEditMessage = (message) => {
     setEditingMessage(message);
     console.log("message", message);
-    
+
     setMessageInput(decryptMessage(message.content.content));
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     if (inputRef.current) {
@@ -901,7 +901,9 @@ const Chat2 = () => {
     if (!highlight.trim()) {
       return text;
     }
-    const regex = new RegExp(`(${highlight})`, "gi");
+    // Escape special regex characters in the highlight text
+    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedHighlight})`, "gi");
     const parts = text.split(regex);
 
     return parts.map((part, index) =>
@@ -918,7 +920,9 @@ const Chat2 = () => {
   // Function to count occurrences of a word in a message
   const countOccurrences = (text, word) => {
     if (!word.trim() || !text) return 0;
-    const regex = new RegExp(word, "gi");
+    // Escape special regex characters in the word
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedWord, "gi");
     return (text.match(regex) || []).length;
   };
 
@@ -1584,13 +1588,6 @@ const Chat2 = () => {
 
   const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
 
-  const handleEndCall = () => {
-    setParticipantOpen(false);
-    setSelectedCallUsers(new Set());
-    // ... existing end call logic ...
-  };
-
-
   // ==========================capture photo
 
   const [cameraStream, setCameraStream] = useState(null);
@@ -1856,6 +1853,7 @@ const Chat2 = () => {
                   allUsers={allUsers}
                   handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
                   typingUsers={typingUsers}
+                  isVideoCalling={isVideoCalling}
                 />
               )}
               {showSettings && <Setting />}
@@ -1867,7 +1865,6 @@ const Chat2 = () => {
 
           {/* Right Side */}
           <>
-
             {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
                 className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -3189,7 +3186,7 @@ const Chat2 = () => {
                     </span>
                   </div>
                 )}
-                <p className="absolute bottom-72 text-white text-lg font-medium">
+                <p className="absolute top-36 text-white text-lg font-medium">
                   {selectedChat?.userName || "Unknown User"}
                 </p>
               </div>
@@ -3273,6 +3270,7 @@ const Chat2 = () => {
               isVoiceCalling={isVoiceCalling}
               setParticipantOpen={setParticipantOpen}
               cleanupConnection={cleanupConnection}
+              participantOpen={participantOpen}
             />
           )
         )}

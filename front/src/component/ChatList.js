@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
-import { setShowLeftSidebar } from "../redux/slice/manageState.slice";
+import { setChatMessages, setShowLeftSidebar } from "../redux/slice/manageState.slice";
 const ChatList = ({
   allMessageUsers,
   item,
@@ -16,7 +16,8 @@ const ChatList = ({
   setSelectedChat,
   allUsers,
   handleMultipleFileUpload,
-  typingUsers
+  typingUsers,
+  isVideoCalling
 }) => {
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -215,6 +216,9 @@ const ChatList = ({
                         handleFileDrop(e, item);
                       }}
                       onClick={() => {
+                        if (isVideoCalling) {
+                          dispatch(setChatMessages(item));
+                        }
                         setSelectedChat(item);
                         dispatch(setShowLeftSidebar(false));
                       }}
