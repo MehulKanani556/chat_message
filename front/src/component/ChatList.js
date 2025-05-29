@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
-import { setSelectedChat, setShowLeftSidebar } from "../redux/slice/manageState.slice";
+import { setSelectedChat, setShowLeftSidebar, setIsVideoCalling, setChatMessages } from "../redux/slice/manageState.slice";
 const ChatList = memo(({
   // allMessageUsers,
   // item,
@@ -23,9 +23,10 @@ const ChatList = memo(({
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
-    const {onlineUsers,selectedChat,typingUsers} = useSelector(state => state.magageState)
+    const {onlineUsers,selectedChat,typingUsers, isVideoCalling} = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
+
 
   useEffect(() => {
     let filteredUsers = [];

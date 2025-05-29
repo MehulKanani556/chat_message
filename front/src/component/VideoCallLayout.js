@@ -6,9 +6,8 @@ import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-ico
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
-import { setParticipantOpen, setSelectedChatModule, setChatMessages, setvideoCallChatList, setCallChatList} from "../redux/slice/manageState.slice";
+import { setParticipantOpen, setSelectedChatModule, setChatMessages, setvideoCallChatList, setCallChatList } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
-import { setCallChatList, setChatMessages, setvideoCallChatList } from "../redux/slice/manageState.slice";
 import { LuFullscreen } from "react-icons/lu";
 
 const getParticipantWidth = (count) => {
@@ -21,32 +20,32 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = memo(() => {
-  const {remoteStreams,participants,onlineUsers,selectedChat,selectedChatModule,isMicrophoneOn, isCameraOn,isVideoCalling, isVoiceCalling,cameraStatus, chatMessages} = useSelector(state => state.magageState)
-  const { allUsers,messages } = useSelector((state) => state.user);
+  const { remoteStreams, participants, onlineUsers, selectedChat, callChatList, selectedChatModule, isMicrophoneOn, isCameraOn, isVideoCalling, isVoiceCalling, cameraStatus, chatMessages, participantOpen } = useSelector(state => state.magageState)
+  const { allUsers, messages } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
   const dispatch = useDispatch();
 
-    //===========Use the custom socket hook===========
-    const {
-      socket,
-      startSharing,
-      endCall,
-      cleanupConnection,
-      toggleCamera,
-      toggleMicrophone,
-      markMessageAsRead,
-      rejectCall,
-      sendPrivateMessage,
-      sendTypingStatus,
-      subscribeToMessages,
-      sendGroupMessage,
-      acceptScreenShare,
-      inviteToCall,
-      forwardMessage,
-      addMessageReaction,
-      startCall,
-      acceptCall,
-    } = useSocket();
+  //===========Use the custom socket hook===========
+  const {
+    socket,
+    startSharing,
+    endCall,
+    cleanupConnection,
+    toggleCamera,
+    toggleMicrophone,
+    markMessageAsRead,
+    rejectCall,
+    sendPrivateMessage,
+    sendTypingStatus,
+    subscribeToMessages,
+    sendGroupMessage,
+    acceptScreenShare,
+    inviteToCall,
+    forwardMessage,
+    addMessageReaction,
+    startCall,
+    acceptCall,
+  } = useSocket();
 
 
   return (
@@ -64,7 +63,7 @@ const VideoCallLayout = memo(() => {
 
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
-        {(chatMessages ) && (
+        {(chatMessages) && (
           <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
             <LuFullscreen
               className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
@@ -91,24 +90,24 @@ const VideoCallLayout = memo(() => {
               <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
                 {isCameraEnabled ? (
                   <>
-                   <video
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover rounded-xl"
-                    muted={participantId === currentUser}
-                    ref={el => {
-                      if (el && stream instanceof MediaStream) {
-                        el.srcObject = stream;
-                        el.play().catch(err =>
-                          console.error("Remote video error:", err)
-                        );
-                      }
-                      // If you want to keep localVideoRef for the current user:
-                      // if (participantId === currentUser && localVideoRef) {
-                      //   localVideoRef.current = el;
-                      // }
-                    }}
-                  />
+                    <video
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover rounded-xl"
+                      muted={participantId === currentUser}
+                      ref={el => {
+                        if (el && stream instanceof MediaStream) {
+                          el.srcObject = stream;
+                          el.play().catch(err =>
+                            console.error("Remote video error:", err)
+                          );
+                        }
+                        // If you want to keep localVideoRef for the current user:
+                        // if (participantId === currentUser && localVideoRef) {
+                        //   localVideoRef.current = el;
+                        // }
+                      }}
+                    />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
@@ -145,10 +144,10 @@ const VideoCallLayout = memo(() => {
         <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
           <button
             onClick={() => {
-             dispatch(setSelectedChatModule(!selectedChatModule))
-                    // dispatch(setvideoCallChatList(true));
-                    dispatch(setCallChatList(true));
-                    // dispatch(setChatMessages(true));
+              dispatch(setSelectedChatModule(!selectedChatModule))
+              // dispatch(setvideoCallChatList(true));
+              dispatch(setCallChatList(true));
+              // dispatch(setChatMessages(true));
             }}
             className="w-10 grid place-content-center rounded-full h-10 border text-white"
           >
