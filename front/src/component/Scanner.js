@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QrReader } from 'react-qr-reader';
+// import { QrReader } from 'react-qr-reader';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -162,7 +162,7 @@ const Scanner = () => {
       ) : (
         <div className="relative">
           <div className="w-full max-w-md mx-auto border-4 border-blue-500 rounded-lg overflow-hidden">
-            <QrReader
+            {/* <QrReader
               constraints={{
                 facingMode: 'environment',
                 aspectRatio: 1,
@@ -175,7 +175,7 @@ const Scanner = () => {
               videoStyle={{ objectFit: 'cover' }}
               videoContainerStyle={{ width: '100%', height: '100%' }}
               className="w-full h-full"
-            />
+            /> */}
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-blue-500"></div>
               <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-blue-500"></div>

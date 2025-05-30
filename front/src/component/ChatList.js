@@ -15,7 +15,7 @@ const ChatList = memo(({
   // setSelectedChat,
   // allUsers,
   handleMultipleFileUpload,
-  
+
 }) => {
   const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
@@ -23,7 +23,7 @@ const ChatList = memo(({
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);
   const [filteredMessageUsers, setFilteredMessageUsers] = useState([]);
-    const {onlineUsers,selectedChat,typingUsers, isVideoCalling} = useSelector(state => state.magageState)
+  const { onlineUsers, selectedChat, typingUsers, isVideoCalling } = useSelector(state => state.magageState)
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
 
@@ -218,7 +218,7 @@ const ChatList = memo(({
                         if (isVideoCalling) {
                           dispatch(setChatMessages(item));
                         }
-                        setSelectedChat(item);
+                        dispatch(setSelectedChat(item));
                         dispatch(setShowLeftSidebar(false));
                       }}
                     >
