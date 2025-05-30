@@ -1,27 +1,22 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  BsChatDots,
-  BsPeople,
-  BsPerson,
-  BsGear,
-  BsGlobe,
-  BsMoonStars,
-  BsPeopleFill
-} from 'react-icons/bs';
-import { BASE_URL, IMG_URL } from "../utils/baseUrl";
+import { useNavigate } from 'react-router-dom';
+import {BsChatDots,BsPeople, BsMoonStars} from 'react-icons/bs';
 import { MdOutlineWbSunny } from 'react-icons/md';
 import { LuPhoneCall } from 'react-icons/lu';
+import { useSelector } from 'react-redux';
 
-const Sidebar = memo(({ user, onProfileClick }) => {
-  const location = useLocation();
+const Sidebar = memo(() => {
+
+  console.log("sidebar");
+
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState("chat");
 
+  const {user } = useSelector((state) => state.user);
 
   // Check saved theme on first load
   useEffect(() => {
@@ -60,7 +55,7 @@ const Sidebar = memo(({ user, onProfileClick }) => {
     setShowDropdown(!showDropdown);
   };
 
-  const [activeItem, setActiveItem] = useState("chat");
+
 
   const menuItems = [
     // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },

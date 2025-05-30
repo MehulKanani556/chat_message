@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp, FaPaperclip, FaEdit, FaCheck, FaTimes, FaChevronLeft } from 'react-icons/fa';
 import { CgProfile } from "react-icons/cg";
@@ -13,9 +13,11 @@ import { ImImages } from 'react-icons/im';
 import { SlPencil } from "react-icons/sl";
 // import styled from 'styled-components';
 const Setting = memo(() => {
+
+    console.log("setting");
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId"));
+    const urlUserId = useMemo(() => sessionStorage.getItem("userId"), []);
     const [isEditing, setIsEditing] = useState(false);
     const currentUser = useSelector((state) => state.user.user);
     const [isLoading, setIsLoading] = useState(false);

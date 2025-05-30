@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
@@ -20,37 +20,33 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = memo(() => {
-  const { remoteStreams, participants, onlineUsers, selectedChat, callChatList, selectedChatModule, isMicrophoneOn, isCameraOn, isVideoCalling, isVoiceCalling, cameraStatus, chatMessages, participantOpen } = useSelector(state => state.magageState)
-  const { allUsers, messages } = useSelector((state) => state.user);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
+ 
+  const participants = useSelector(state => state.magageState.participants);
+  const selectedChat = useSelector(state => state.magageState.selectedChat);
+  const selectedChatModule = useSelector(state => state.magageState.selectedChatModule);
+  const isMicrophoneOn = useSelector(state => state.magageState.isMicrophoneOn);
+  const isCameraOn = useSelector(state => state.magageState.isCameraOn);
+  const isVideoCalling = useSelector(state => state.magageState.isVideoCalling);
+  const isVoiceCalling = useSelector(state => state.magageState.isVoiceCalling);
+  const cameraStatus = useSelector(state => state.magageState.cameraStatus);
+  const isReceiving = useSelector(state => state.magageState.isReceiving);
+  const userIncall = useSelector(state => state.magageState.userIncall);
+  const chatMessages = useSelector(state => state.magageState.chatMessages);
+  const participantOpen  = useSelector(state => state.magageState.participantOpen );
+  const callChatList  = useSelector(state => state.magageState.callChatList );
+
+  const { allUsers,messages } = useSelector((state) => state.user);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef(null);
 
-  //===========Use the custom socket hook===========
-  const {
-    socket,
-    startSharing,
-    endCall,
-    cleanupConnection,
-    toggleCamera,
-    toggleMicrophone,
-    markMessageAsRead,
-    rejectCall,
-    sendPrivateMessage,
-    sendTypingStatus,
-    subscribeToMessages,
-    sendGroupMessage,
-    acceptScreenShare,
-    inviteToCall,
-    forwardMessage,
-    addMessageReaction,
-    startCall,
-    acceptCall,
-  } = useSocket();
+    //===========Use the custom socket hook===========
+    const {endCall,cleanupConnection, toggleCamera,toggleMicrophone} = useSocket();
 
+  //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
     if (!chatMessages) return;
 
@@ -95,6 +91,30 @@ const VideoCallLayout = memo(() => {
     };
   }, [isDragging]);
 
+  const [ringtone] = useState(new Audio('/Ring_ring.mp3')); // Add your ringtone file to public folder
+  
+  // Add useEffect to handle ringtone
+  useEffect(() => {
+    if (participants.length == 1 && !isReceiving) {
+      ringtone.loop = true;
+      ringtone.play().catch(err => console.error('Error playing ringtone:', err));
+    } else {
+      ringtone.pause();
+      ringtone.currentTime = 0;
+    }
+
+    return () => {
+      ringtone.pause();
+      ringtone.currentTime = 0;
+    };
+  }, [isReceiving, ringtone,participants]);
+
+
+
+
+    console.log("VideoCallLayout");
+    // console.log(participants.length, isVoiceCalling);
+
   const content = (
     <div
       ref={containerRef}
@@ -111,45 +131,83 @@ const VideoCallLayout = memo(() => {
       } : {}}
       onMouseDown={handleMouseDown}
     >
-
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
-        {(chatMessages) && (
-          <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
-            <LuFullscreen
-              className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              onClick={() => {
-                dispatch(setChatMessages(!chatMessages))
-                dispatch(setCallChatList(!callChatList))
-              }}
-            />
-          </div>
-        )}
-        {participants.length > 0 && Array.from(participants)?.map(([participantId, stream]) => {
-          const participant = allUsers.find(u => u._id === participantId);
-          const isCameraEnabled = cameraStatus?.[participantId] !== false;
-          const isLocalUser = participantId === currentUser;
-          const widthClass = getParticipantWidth(participants?.length);
-          // localVideoRef.current.srcObject = isLocalUser ? stream : null
+        {participants.length == 1 ? (
+          isVoiceCalling ? (
+            <div className="w-full h-full dark:bg-white/10 relative rounded-xl">
+              <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0.5s]" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
+                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
+                {selectedChat &&
+                selectedChat.photo &&
+                selectedChat.photo !== "null" ? (
+                  <img
+                    src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
+                    alt="User profile"
+                    className="object-cover border rounded-full w-24 h-24"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center border rounded-full w-24 h-24 bg-black/50">
+                    <span className="text-white text-4xl text-center">
+                      {selectedChat?.userName?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <p className="mt-20 text-white text-lg font-medium text-center">
+                  {selectedChat?.userName || "Unknown User"}
+                </p>
+                {userIncall &&
+                <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
+                  {selectedChat?.userName + ' ' + userIncall}
+                </p>
+                 }
+              </div>
+            </div>
+          ) : (
+            participants.length > 0 &&
+            Array.from(participants)?.map(([participantId, stream]) => {
+              const participant = allUsers.find((u) => u._id === participantId);
+              const isLocalUser = participantId === currentUser;
+              const widthClass = getParticipantWidth(participants?.length);
 
-          return (
-            <div
-              key={participantId}
-              className={`${participants.length == 2 ? (isLocalUser ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20" : widthClass) : widthClass} p-2 flex items-center justify-center`}
-              style={{ height: `${!(isLocalUser && participants.length == 2) ? `calc(100% / ${participants.length <= 2 ? 1 : participants.length <= 8 && participants.length >= 2 ? 2 : 3})` : ''}` }}
-            >
-              <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
-                {isCameraEnabled ? (
-                  <>
+              return (
+                <div
+                  key={participantId}
+                  className={`${
+                    participants.length == 2
+                      ? isLocalUser
+                        ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
+                        : widthClass
+                      : widthClass
+                  } p-2 flex items-center justify-center`}
+                  style={{
+                    height: `${
+                      !(isLocalUser && participants.length == 2)
+                        ? `calc(100% / ${
+                            participants.length <= 2
+                              ? 1
+                              : participants.length <= 8 &&
+                                participants.length >= 2
+                              ? 2
+                              : 3
+                          })`
+                        : ""
+                    }`,
+                  }}
+                >
+                  <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                      className="w-full h-full object-cover rounded-xl"
                       muted={participantId === currentUser}
-                      ref={el => {
+                      ref={(el) => {
                         if (el && stream instanceof MediaStream) {
                           el.srcObject = stream;
-                          el.play().catch(err =>
+                          el.play().catch((err) =>
                             console.error("Remote video error:", err)
                           );
                         }
@@ -159,36 +217,144 @@ const VideoCallLayout = memo(() => {
                         // }
                       }}
                     />
-                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]" >
+                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
-                      {participant?.photo && participant.photo !== "null" ? (
-                        <img
-                          src={`${IMG_URL}${participant.photo.replace(/\\/g, "/")}`}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-500 flex items-center justify-center rounded-full">
-                          <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
-                            {participant?.userName?.[0]?.toUpperCase() || "?"}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
-                      {participant?.userName || "Pa"} (Camera Off)
-                    </div>
+                    {userIncall &&
+                    <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
+                      {selectedChat?.userName + ' ' + userIncall}
+                    </p>
+                    }
                   </div>
-                )}
-              </div>
+                </div>
+              );
+            })
+          )
+        ) : (
+          <>
+          {(chatMessages) && (
+            <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
+              <LuFullscreen
+                className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                onClick={() => {
+                  dispatch(setChatMessages(!chatMessages))
+                  dispatch(setCallChatList(!callChatList))
+                }}
+              />
             </div>
-          );
-        })}
+          )}
+         { participants.length > 0 &&
+          Array.from(participants)?.map(([participantId, stream]) => {
+            const participant = allUsers.find((u) => u._id === participantId);
+            const isCameraEnabled = isVideoCalling
+              ? cameraStatus?.[participantId] !== false
+              : false;
+            const isLocalUser = participantId === currentUser;
+            const widthClass = getParticipantWidth(participants?.length);
+            // localVideoRef.current.srcObject = isLocalUser ? stream : null
+
+            console.log(cameraStatus, isCameraEnabled, participantId);
+
+            return (
+              <div
+                key={participantId}
+                className={`${
+                  participants.length == 2
+                    ? isLocalUser
+                      ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
+                      : widthClass
+                    : widthClass
+                } p-2 flex items-center justify-center`}
+                style={{
+                  height: `${
+                    !(isLocalUser && participants.length == 2)
+                      ? `calc(100% / ${
+                          participants.length <= 2
+                            ? 1
+                            : participants.length <= 8 &&
+                              participants.length >= 2
+                            ? 2
+                            : 3
+                        })`
+                      : ""
+                  }`,
+                }}
+              >
+                <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
+                  {isCameraEnabled ? (
+                    <>
+                      <video
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover rounded-xl"
+                        muted={participantId === currentUser}
+                        ref={(el) => {
+                          if (el && stream instanceof MediaStream) {
+                            el.srcObject = stream;
+                            el.play().catch((err) =>
+                              console.error("Remote video error:", err)
+                            );
+                          }
+                          // If you want to keep localVideoRef for the current user:
+                          // if (participantId === currentUser && localVideoRef) {
+                          //   localVideoRef.current = el;
+                          // }
+                        }}
+                      />
+                      <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                        {isLocalUser ? "You" : participant?.userName || "Par"}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
+                      <video
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover rounded-xl hidden"
+                        muted={participantId === currentUser}
+                        ref={(el) => {
+                          if (el && stream instanceof MediaStream) {
+                            el.srcObject = stream;
+                            el.play().catch((err) =>
+                              console.error("Remote video error:", err)
+                            );
+                          }
+                          // If you want to keep localVideoRef for the current user:
+                          // if (participantId === currentUser && localVideoRef) {
+                          //   localVideoRef.current = el;
+                          // }
+                        }}
+                      />
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
+                        {participant?.photo && participant.photo !== "null" ? (
+                          <img
+                            src={`${IMG_URL}${participant.photo.replace(
+                              /\\/g,
+                              "/"
+                            )}`}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-500 flex items-center justify-center rounded-full">
+                            <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
+                              {participant?.userName?.[0]?.toUpperCase() || "?"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
+                        {participant?.userName || "Pa"}{" "}
+                        {!isVideoCalling ? "" : " (Camera Off)"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          </>
+        )}
       </div>
 
       {!chatMessages && (

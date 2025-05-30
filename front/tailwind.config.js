@@ -18,7 +18,7 @@ module.exports = {
       keyframes: {
         wave: {
           '0%': { transform: 'scale(1)', opacity: '1' },
-          '100%': { transform: 'scale(3)', opacity: '0' },
+          '100%': { transform: 'scale(2.5)', opacity: '0' },
         },
       },
       animation: {

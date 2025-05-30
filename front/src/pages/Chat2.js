@@ -1,109 +1,17 @@
-import React, { useState, useEffect, useRef, memo, useCallback } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import EmojiPicker from "emoji-picker-react";
-import {
-  FaSearch,
-  FaRegUser,
-  FaCommentDots,
-  FaPhone,
-  FaUsers,
-  FaDownload,
-  FaPaperclip,
-  FaMicrophone,
-  FaRegSmile,
-  FaPlusCircle,
-  FaFilePdf,
-  FaFileExcel,
-  FaFileWord,
-  FaFilePowerpoint,
-  FaFileArchive,
-  FaArrowDown,
-  FaUserPlus,
-  FaFile,
-  FaFileAudio,
-  FaChevronLeft,
-  FaChevronRight,
-  FaRegBell,
-  FaImage,
-  FaVideo,
-  FaMusic,
-} from "react-icons/fa";
-import { PiDotsThreeBold, PiSmiley } from "react-icons/pi";
-import {
-  MdCallEnd,
-  MdOutlineModeEdit,
-  MdGroupAdd,
-  MdReport,
-  MdOutlineBlock,
-  MdOutlineCancel,
-  MdOutlineGroupAdd,
-  MdOutlineFlipCameraIos,
-} from "react-icons/md";
-import { RiDeleteBinFill, RiDeleteBinLine, RiShutDownLine, RiUserAddLine } from "react-icons/ri";
-import {
-  LuScreenShare,
-  LuSendHorizontal,
-  LuScreenShareOff,
-} from "react-icons/lu";
-import { IoIosArrowDown, IoIosArrowForward, IoIosArrowUp, IoMdSearch } from "react-icons/io";
-import { GoDeviceCameraVideo, GoMute, GoPlusCircle, GoTrash, GoUnmute } from "react-icons/go";
+import {FaPaperclip,FaFilePdf, FaFileExcel,FaFileWord,FaFilePowerpoint,FaFileArchive} from "react-icons/fa";
+import {LuScreenShare,LuScreenShareOff} from "react-icons/lu";
 import { ImCross } from "react-icons/im";
-import { FiCamera, FiCameraOff, FiEdit2 } from "react-icons/fi";
-import {
-  BsCameraVideo,
-  BsCameraVideoOff,
-  BsChatDots,
-  BsCrosshair,
-  BsFillMicFill,
-  BsFillMicMuteFill,
-  BsMicMute,
-  BsThreeDotsVertical,
-} from "react-icons/bs";
 import { RxCross2 } from "react-icons/rx";
-import {
-  IoArchiveOutline,
-  IoCallOutline,
-  IoCameraOutline,
-  IoMicOffCircleOutline,
-  IoMicOffOutline,
-  IoMicOutline,
-  IoPersonCircleOutline,
-  IoVideocamOutline,
-  IoVolumeLowOutline,
-  IoVolumeOffOutline,
-} from "react-icons/io5";
-// import { useSocket } from "../hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  createGroup,
-  deleteMessage,
-  getAllGroups,
-  getAllMessages,
-  getAllMessageUsers,
-  getAllUsers,
-  leaveGroup,
-  getUser,
-  updateGroup,
-  updateUser,
-  updateMessage,
-  clearChat,
-  addParticipants,
-  getAllCallUsers,
-  archiveUser,
-  blockUser,
-  deleteChat,
-  pinChat,
-  muteChat,
-} from "../redux/slice/user.slice";
+import {getAllGroups, getAllMessages,getAllMessageUsers,getAllUsers,getUser,updateMessage, clearChat, getAllCallUsers,deleteChat, pinChat} from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
 import Front from "../component/Front";
-import { MdOutlineDeleteSweep } from "react-icons/md";
-import ChatItem from "../component/ChatItem";
 import MessageList from "../component/MessageList";
 import Profile from "../component/Profile";
 import Sidebar from "../component/SideBar";
-import { BiBlock } from "react-icons/bi";
 import ChatList from "../component/ChatList";
 import Groups from "../component/Group";
 import Setting from "../component/Setting";
@@ -113,11 +21,7 @@ import CreatedGroup from "../component/CreatedGroup";
 import ProfileUser from "../component/ProfileUser";
 import CallHistory from "../component/CallHistory";
 import ForwardModal from "../component/ForwardModal";
-import { SlPin } from "react-icons/sl";
-import { AiOutlineAudioMuted, AiOutlineVideoCamera } from "react-icons/ai";
 import IncomingCall from "../component/IncomingCall";
-import { debounce } from 'lodash';
-
 import VideoCallLayout from "../component/VideoCallLayout";
 import CallParticipantModal from "../component/CallParticipantModal";
 import { setBackCameraAvailable, setCameraStatus, setCameraStream, setEditingMessage, setIncomingShare, setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsImageModalOpen, setIsModalOpen, setIsSearchBoxOpen, setIsUserProfileModalOpen, setMessageInput, setOpenCameraState, setParticipantOpen, setReplyingTo, setSearchInputbox, setSelectedChat, setSelectedChatModule, setSelectedFiles, setSelectedImage, setShowCallHistory, setShowGroups, setShowLeftSidebar, setShowProfile, setShowSettings, setUploadProgress } from "../redux/slice/manageState.slice";
@@ -127,113 +31,69 @@ import MessageInput from "../component/MessageInput";
 import ChatHeader from "../component/ChatHeader";
 
 
-const Chat2 = memo(() => {
-  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
-  const {
-    remoteStreams,
-    isConnected,
-    onlineUsers,
-    isVideoCalling,
-    incomingCall,
-    isCameraOn,
-    isSharing,
-    isReceiving,
-    incomingShare,
-    isVoiceCalling,
-    callParticipants,
-    isMicrophoneOn,
-    cameraStatus,
-    selectedChatModule,
-    showProfile,
-    showSettings,
-    showGroups,
-    showCallHistory,
-    isGroupModalOpen,
-    isModalOpen,
-    isGroupCreateModalOpen,
-    isUserProfileModalOpen,
-    showLeftSidebar,
-    selectedChat,
-    selectedImage,
-    isImageModalOpen,
-    uploadProgress,
-    selectedFiles,
-    replyingTo,
-    typingUsers,
-    participantOpen,
-    searchInputbox,
-    backCameraAvailable,
-    facingMode,
-    isSearchBoxOpen,
-    editingMessage,
-    callChatList,
-    chatMessages,
-    videoCallChatList
-  } = useSelector(state => state.magageState)
+const Chat2 = () => {
+  const { allUsers, user } = useSelector((state) => state.user);
+
+  const remoteStreams = useSelector(state => state.magageState.remoteStreams);
+  const isConnected = useSelector(state => state.magageState.isConnected);
+  const isVideoCalling = useSelector(state => state.magageState.isVideoCalling);
+  const incomingCall = useSelector(state => state.magageState.incomingCall);
+  const isReceiving = useSelector(state => state.magageState.isReceiving);
+  const incomingShare = useSelector(state => state.magageState.incomingShare);
+  const isVoiceCalling = useSelector(state => state.magageState.isVoiceCalling);
+  const selectedChatModule = useSelector(state => state.magageState.selectedChatModule);
+  const showProfile = useSelector(state => state.magageState.showProfile);
+  const showSettings = useSelector(state => state.magageState.showSettings);
+  const showGroups = useSelector(state => state.magageState.showGroups);
+  const showCallHistory = useSelector(state => state.magageState.showCallHistory);
+  const isGroupModalOpen = useSelector(state => state.magageState.isGroupModalOpen);
+  const isModalOpen = useSelector(state => state.magageState.isModalOpen);
+  const isGroupCreateModalOpen = useSelector(state => state.magageState.isGroupCreateModalOpen);
+  const isUserProfileModalOpen = useSelector(state => state.magageState.isUserProfileModalOpen);
+  const showLeftSidebar = useSelector(state => state.magageState.showLeftSidebar);
+  const selectedChat = useSelector(state => state.magageState.selectedChat);
+  const selectedImage = useSelector(state => state.magageState.selectedImage);
+  const isImageModalOpen = useSelector(state => state.magageState.isImageModalOpen);
+  const selectedFiles = useSelector(state => state.magageState.selectedFiles);
+  const participantOpen = useSelector(state => state.magageState.participantOpen);
+  const editingMessage = useSelector(state => state.magageState.editingMessage);
+  const callChatList = useSelector(state => state.magageState.callChatList);
+  const chatMessages = useSelector(state => state.magageState.chatMessages);
+  const showForwardModal = useSelector(state => state.magageState.showForwardModal);
+  const onlineUsers = useSelector(state => state.magageState.onlineUsers)
+  // const participants = useSelector(state => state.magageState.participants)
+
+  console.log("onlineUsers",onlineUsers);
+  
 
   const dispatch = useDispatch();
-  // const [selectedChat, setSelectedChat] = useState(false);
-  // const [selectedFiles, setSelectedFiles] = useState([]);
-
-  // const emojiPickerRef = useRef(null);
-  const [currentUser] = useState(sessionStorage.getItem("userId")); // Replace with actual user data
-  // const [typingUsers, setTypingUsers] = useState([]);
-  const localVideoRef = useRef(null);
-  // const remoteVideoRef = useRef(null);
+  // const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const [currentUser] = useState(sessionStorage.getItem("userId"));
+ 
+  // const localVideoRef = useRef(null);
   const navigate = useNavigate();
-  // const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
-  // const [docModel, setDocModel] = useState(false);
-  // const [editingMessage, setEditingMessage] = useState(null);
-  // const [messageInput, setMessageInput] = useState("");
-  // const inputRef = useRef(null);
-  // const [userId] = useState(sessionStorage.getItem("userId"));
   const [groupUsers, setGroupUsers] = useState([]);
-  // const messagesContainerRef = useRef(null);
-
-
-  // const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  // const [selectedImage, setSelectedImage] = useState(null);
-  // const [isSearchBoxOpen, setIsSearchBoxOpen] = useState(false);
-  // const [searchInputbox, setSearchInputbox] = useState("");
 
   const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
   const [selectedProfileImage, setSelectedProfileImage] = useState(null);
   const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
   const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
-  // const [participantOpen, setParticipantOpen] = useState(false);
 
-  // const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
   const [creatGroup, setCreatGroup] = useState(false)
   const [isDragging, setIsDragging] = useState(false);
   // Object to hold durations keyed by message ID
 
   const [userStreams, setUserStreams] = useState({});
-
-  //===========Use the custom socket hook===========
-  const {
-    socket,
-    startSharing,
-    endCall,
-    cleanupConnection,
-    toggleCamera,
-    toggleMicrophone,
-    markMessageAsRead,
-    rejectCall,
-    sendPrivateMessage,
-    sendTypingStatus,
-    subscribeToMessages,
-    sendGroupMessage,
-    acceptScreenShare,
-    inviteToCall,
-    forwardMessage,
-    addMessageReaction,
-    startCall,
-    acceptCall,
-  } = useSocket();
-
   const [showOverlay, setShowOverlay] = useState(false);
 
+  // console.log(remoteStreams);
+  
+
+
+  //===========Use the custom socket hook===========
+  const {socket,cleanupConnection,sendPrivateMessage,subscribeToMessages,acceptScreenShare, startCall} = useSocket();
+  
   useEffect(() => {
     if (window.innerWidth <= 1439) {
       setShowOverlay(true);
@@ -246,6 +106,16 @@ const Chat2 = memo(() => {
       navigate("/");
     }
   }, []);
+
+    //===========get all users===========
+    useEffect(() => {
+      dispatch(getAllUsers());
+      dispatch(getAllMessageUsers());
+      dispatch(getAllGroups());
+      dispatch(getUser(currentUser));
+      dispatch(getAllCallUsers());
+    }, []);
+  // =================Notification=======================
 
   useEffect(() => {
     if (Notification.permission === "default") {
@@ -320,7 +190,7 @@ const Chat2 = memo(() => {
     // Create and show the notification
     const notification = new Notification(notificationTitle, {
       body: notificationBody,
-      icon: "/logo.png", // Use your app's icon
+      icon: "/chat.png", // Use your app's icon
       requireInteraction: true, // Prevents the notification from closing automatically
       silent: false, // Allows the notification to make a sound
       vibrate: [200, 100, 200], // Vibrates the device for the specified duration
@@ -334,7 +204,8 @@ const Chat2 = memo(() => {
       // ], // Adds actions to the notification
       dir: "auto", // Sets the direction of the text
       lang: "en-US", // Sets the language of the notification
-      timestamp: new Date().getTime(), // Sets the timestamp of the notification
+      timestamp: new Date().getTime(), 
+      sound: "/Notifications.mp3", 
     });
 
     // Close notification after 5 seconds
@@ -343,48 +214,35 @@ const Chat2 = memo(() => {
     }, 5000);
   };
 
-  //===========get all users===========
-  useEffect(() => {
-    dispatch(getAllUsers());
-    dispatch(getAllMessageUsers());
-    dispatch(getAllGroups());
-    dispatch(getUser(currentUser));
-    dispatch(getAllCallUsers());
-  }, []);
+  // useEffect(() => {
+  //   if (selectedChat && allMessageUsers) {
+  //     const updatedChat = allMessageUsers.find(
+  //       (chat) => chat._id === selectedChat._id
+  //     );
+  //     // console.log("updatedChat", updatedChat);
+  //     if (updatedChat) {
+  //       dispatch(setSelectedChat(updatedChat));
+  //     }
+  //   }
+  // }, [allMessageUsers]);
 
-
+  const [ringtone] = useState(new Audio('/Ringtone.mp3')); // Add your ringtone file to public folder
+  
+  // Add useEffect to handle ringtone
   useEffect(() => {
-    if (selectedChat && allMessageUsers) {
-      const updatedChat = allMessageUsers.find(
-        (chat) => chat._id === selectedChat._id
-      );
-      // console.log("updatedChat", updatedChat);
-      if (updatedChat) {
-        dispatch(setSelectedChat(updatedChat));
-      }
+    if (incomingCall) {
+      ringtone.loop = true;
+      ringtone.play().catch(err => console.error('Error playing ringtone:', err));
+    } else {
+      ringtone.pause();
+      ringtone.currentTime = 0;
     }
-  }, [allMessageUsers]);
 
-  useEffect(() => {
-    if (messages) {
-      // Get unread messages for this conversation
-      const unreadMessages = messages
-        .filter(
-          (msg) =>
-            msg.sender === selectedChat._id &&
-            (msg.status === "sent" || msg.status === "delivered") &&
-            !msg.isBlocked
-        )
-        .map((msg) => msg._id);
-      // console.log("unreadMessages", unreadMessages, messages);
-      // Mark these messages as read
-      if (unreadMessages.length > 0) {
-        markMessageAsRead(unreadMessages);
-        // dispatch(getAllMessageUsers());
-      }
-    }
-  }, [messages]);
-
+    return () => {
+      ringtone.pause();
+      ringtone.currentTime = 0;
+    };
+  }, [incomingCall]);
 
   //===========get all messages ===========
   useEffect(() => {
@@ -431,7 +289,6 @@ const Chat2 = memo(() => {
       unsubscribeMessages?.();
     };
   }, [isConnected, selectedChat, allUsers]);
-
 
   const handleDragEnter = useCallback((e) => {
     e.preventDefault();
@@ -511,7 +368,7 @@ const Chat2 = memo(() => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload = async (files, userId) => {
+  const handleMultipleFileUpload =  useCallback(async(files, userId) => {
     const filesArray = Array.from(files);
     for (const file of filesArray) {
       const formData = new FormData();
@@ -553,12 +410,12 @@ const Chat2 = memo(() => {
         }));
       }
     }
-  };
+  }, []);
   // =========================== video call=============================
 
   // Add call handling functions
 
-  const handleMakeCall = async (type) => {
+  const handleMakeCall = useCallback(async (type) => {
     if (!selectedChat) return;
     if (selectedChat?.members) {
       const success = await startCall(selectedChat._id, true, selectedChat, type);
@@ -573,14 +430,12 @@ const Chat2 = memo(() => {
         console.error("Failed to start screen sharing");
       }
     }
-  };
+  }, []);
 
   const handleProfileImageClick = useCallback((imageUrl) => {
     setSelectedProfileImage(imageUrl);
     setIsProfileImageModalOpen(true);
   }, []);
-
-
 
   // Add this useEffect to handle paste events
   useEffect(() => {
@@ -616,7 +471,6 @@ const Chat2 = memo(() => {
       if (window.innerWidth <= 600) {
         dispatch(setShowLeftSidebar(true));
       } else {
-
         dispatch(setShowLeftSidebar(false));
       }
     };
@@ -624,7 +478,19 @@ const Chat2 = memo(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // console.log("aaaaaa-------", callUsers);
+  // useEffect(() => {
+  //   // Set showLeftSidebar to true when no chat is selected
+  //   if (!selectedChat) {
+  //     // setShowLeftSidebar(false);
+  //     if (window.innerWidth <= 600) {
+  //       setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
+  //     } else {
+  //       setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
+  //     }
+  //   }
+  // }, [selectedChat]);
+
+
   // clear chat
   const handleClearChat = async () => {
     await dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
@@ -648,67 +514,8 @@ const Chat2 = memo(() => {
     });
   }, [dispatch]);
 
-  // Add useEffect to handle input focus when chat is selected
-  // useEffect(() => {
-  //   if (selectedChat && inputRef.current) {
-  //     inputRef.current.focus();
-  //   }
-  // }, [selectedChat]);
-
-  // const [replyingTo, setReplyingTo] = useState(null);
-  const [forwardingMessage, setForwardingMessage] = useState(null);
-  const [showForwardModal, setShowForwardModal] = useState(false);
 
 
-  const handleForwardMessage = (message) => {
-    setForwardingMessage(message);
-    setShowForwardModal(true);
-    // setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
-  };
-
-  const handleForwardSubmit = async (selectedUsers) => {
-    try {
-      for (const userId of selectedUsers) {
-        await forwardMessage(userId, forwardingMessage);
-      }
-      setShowForwardModal(false);
-      setForwardingMessage(null);
-    } catch (error) {
-      console.error("Error forwarding message:", error);
-    }
-  };
-
-  // ======================Download file =====================
-  const handleDownload = (fileUrl, fileName) => {
-    const durl = `${IMG_URL}${fileUrl}`;
-    fetch(durl)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      })
-      .catch((error) => console.error("Download error:", error));
-  };
-
-
-
-  useEffect(() => {
-    // Set showLeftSidebar to true when no chat is selected
-    if (!selectedChat) {
-      // setShowLeftSidebar(false);
-      if (window.innerWidth <= 600) {
-        setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
-      } else {
-        setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
-      }
-    }
-  }, [selectedChat]);
 
   useEffect(() => {
     // Listen for the resetSelectedChat event
@@ -742,8 +549,6 @@ const Chat2 = memo(() => {
       window.removeEventListener("showChatList", handleShowChatList);
     };
   }, []);
-
-  // const [showGroups, setShowGroups] = useState(false);
 
   useEffect(() => {
     // Listen for the showProfile event
@@ -842,25 +647,6 @@ const Chat2 = memo(() => {
   // const analyser = audioContext.createAnalyser();
   // const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-  // ==============================Camera ==================
-  const openCamera = async () => {
-    try {
-      // {{ edit_2 }} request with current facingMode
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
-      dispatch(setCameraStream(stream));
-      dispatch(setOpenCameraState(true));
-
-      // detect if an environment (back) camera exists
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const backCams = devices.filter(d =>
-        d.kind === 'videoinput' && d.label.toLowerCase().includes('back')
-      );
-      if (backCams.length > 0) dispatch(setBackCameraAvailable(true));
-
-    } catch (error) {
-      console.error("Error accessing the camera: ", error);
-    }
-  };
 
   useEffect(() => {
     // Cleanup function to close the participant section when the component unmounts
@@ -869,23 +655,12 @@ const Chat2 = memo(() => {
     };
   }, []);
 
+  console.log("cHAT2");
+
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
-        <Sidebar
-          user={user}
-          onProfileClick={(userId) => {
-            // Find the ChatList component and set the selected profile
-            const chatListElement = document.querySelector(".ml-16");
-            if (chatListElement) {
-              // Dispatch the custom event to show the profile
-              const event = new CustomEvent("showProfile", {
-                detail: { userId },
-              });
-              window.dispatchEvent(event);
-            }
-          }}
-        />
+        <Sidebar/>
       )}
       {/* ==============================Right Sidebar chat list ============================== */}
       {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
@@ -911,8 +686,6 @@ const Chat2 = memo(() => {
               {showCallHistory && (<CallHistory />)}
             </div>
           }
-
-
           {/* Right Side */}
           <>
 
@@ -967,117 +740,116 @@ const Chat2 = memo(() => {
                               </div>
                             )}
                             {/* {visibleDate && <FloatingDateIndicator />} */}
-                            <MessageList
-                              handleMakeCall={handleMakeCall}
-                              handleForward={handleForwardMessage}
-                              handleMultipleFileUpload={handleMultipleFileUpload}
-                              openCamera={openCamera}
-                            />
-
-                            {selectedFiles && selectedFiles?.length > 0 && (
-                              <div className="flex px-6  dark:bg-primary-dark">
-                                {selectedFiles?.map((file, index) => {
-                                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                                  let fileIcon;
-                                  if (file.type.startsWith("image/")) {
-                                    fileIcon = (
-                                      <img
-                                        src={fileUrl}
-                                        alt={`Selected ${index}`}
-                                        className="w-20 h-[40px] object-cover "
-                                      />
-                                    );
-                                  } else if (file.type === "application/pdf") {
-                                    fileIcon = (
-                                      <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                    ); // PDF file icon
-                                  } else if (
-                                    file.type === "application/vnd.ms-excel" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                    ); // Excel file icon
-                                  } else if (
-                                    file.type === "application/msword" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                    ); // Word file icon
-                                  } else if (
-                                    file.type === "application/vnd.ms-powerpoint" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                    ); // PowerPoint file icon
-                                  } else if (file.type === "application/zip") {
-                                    fileIcon = (
-                                      <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                    ); // ZIP file icon
-                                  } else {
-                                    fileIcon = (
-                                      <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                    ); // Generic file icon
-                                  }
-                                  return (
-                                    <div className=" rounded-t-lg  p-2">
-                                      <div
-                                        key={index}
-                                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                      >
-                                        {fileIcon}
-                                        <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                          {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                        </div>{" "}
-                                        {/* Display file name */}
-                                        <span className="text-xs text-gray-500">
-                                          {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                          MB
-                                        </span>{" "}
-                                        {/* Display file size */}
-                                        <button
-                                          className="absolute top-1 right-1 bg-white rounded-full"
-                                          onClick={() => {
-                                            dispatch(setSelectedFiles(
-                                              selectedFiles?.filter((_, i) => i !== index)
-                                            ));
-                                          }}
-                                        >
-                                          <RxCross2 />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {/*========== Message Input ==========*/}
-                            {selectedChat &&
-                              <MessageInput
+                              <MessageList
+                                handleMakeCall={handleMakeCall}
+                                // handleForward={handleForwardMessage}
                                 handleMultipleFileUpload={handleMultipleFileUpload}
-                                handleSendMessage={handleSendMessage}
-                                openCamera={openCamera}
-                                setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
+                                // openCamera={openCamera}
                               />
-                            }
-                          </div>
 
-                        </>
-                      ) : (
-                        <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
-                      )}
-                    </>
-                  )}
-              </div>
-            }
+                          {selectedFiles && selectedFiles?.length > 0 && (
+                            <div className="flex px-6  dark:bg-primary-dark">
+                              {selectedFiles?.map((file, index) => {
+                                const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                                let fileIcon;
+                                if (file.type.startsWith("image/")) {
+                                  fileIcon = (
+                                    <img
+                                      src={fileUrl}
+                                      alt={`Selected ${index}`}
+                                      className="w-20 h-[40px] object-cover "
+                                    />
+                                  );
+                                } else if (file.type === "application/pdf") {
+                                  fileIcon = (
+                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                  ); // PDF file icon
+                                } else if (
+                                  file.type === "application/vnd.ms-excel" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                ) {
+                                  fileIcon = (
+                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                  ); // Excel file icon
+                                } else if (
+                                  file.type === "application/msword" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                ) {
+                                  fileIcon = (
+                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                  ); // Word file icon
+                                } else if (
+                                  file.type === "application/vnd.ms-powerpoint" ||
+                                  file.type ===
+                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                ) {
+                                  fileIcon = (
+                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                  ); // PowerPoint file icon
+                                } else if (file.type === "application/zip") {
+                                  fileIcon = (
+                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                  ); // ZIP file icon
+                                } else {
+                                  fileIcon = (
+                                    <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                  ); // Generic file icon
+                                }
+                                return (
+                                  <div className=" rounded-t-lg  p-2">
+                                    <div
+                                      key={index}
+                                      className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
+                                    >
+                                      {fileIcon}
+                                      <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                        {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                      </div>{" "}
+                                      {/* Display file name */}
+                                      <span className="text-xs text-gray-500">
+                                        {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                        MB
+                                      </span>{" "}
+                                      {/* Display file size */}
+                                      <button
+                                        className="absolute top-1 right-1 bg-white rounded-full"
+                                        onClick={() => {
+                                          dispatch(setSelectedFiles(
+                                            selectedFiles?.filter((_, i) => i !== index)
+                                          ));
+                                        }}
+                                      >
+                                        <RxCross2 />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
 
-            {/* ============================== right sidebar =========================================== */}
+                          {/*========== Message Input ==========*/}
+    
+                         <MessageInput
+                              handleMultipleFileUpload={handleMultipleFileUpload}
+                              handleSendMessage={handleSendMessage}
+                              // openCamera={openCamera}
+                              setIsDeleteChatModalOpen ={setIsDeleteChatModalOpen }
+                          />
+                        </div>
+                       
+                      </>
+                    ) : (
+                      <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
+                    )}
+                  </>
+                )}
+            </div>
+}
+  {/* // ============================== right sidebar =========================================== */}
+            
             {!(isReceiving || isVideoCalling || isVoiceCalling) &&
             <div
               className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
@@ -1121,7 +893,7 @@ const Chat2 = memo(() => {
                 />
               )}
             </div>
-}
+            }
           </>
         </>
       ) }
@@ -1133,122 +905,22 @@ const Chat2 = memo(() => {
           : "hidden"
           } ${participantOpen ? "mr-96" : ""}`}
       >
-        {isReceiving && Object.keys(remoteStreams).length > 0 ? (
-          Object.keys(remoteStreams).map((userId) => (
-            <div key={userId} className="relative w-full flex items-center justify-center" style={{ minHeight: "120px", maxHeight: "250px", maxWidth: "100%" }}>
-              <video autoPlay playsInline className="w-full h-full object-cover rounded-lg" ref={(el) => { if (el) { el.srcObject = userStreams[userId]; } }} />
-              <div className="absolute bottom-2 left-2 text-white text-xl bg-blue-500 px-3 py-1 rounded-full text-center">
-                {allUsers.find((user) => user._id === userId)?.userName || "Participant"}
-              </div>
-            </div>
-          ))
-        ) : (
-          // ========================screen share section===============
-          isVoiceCalling ? (
-            // Voice call screen
-            <div className="relative flex items-center justify-center w-full h-full">
-              <div className="absolute top-1/2 -translate-y-1/2">
-                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100" />
-                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:0.5s]" />
-                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1s]" />
-                <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/100 [animation-delay:1.5s]" />
-                {selectedChat && selectedChat.photo && selectedChat.photo !== "null" ? (
-                  <img
-                    src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
-                    alt="User profile"
-                    className="object-cover border rounded-full w-24 h-24"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center">
-                    <span className="text-white text-4xl">
-                      {selectedChat?.userName?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <p className="absolute top-36 text-white text-lg font-medium">
-                  {selectedChat?.userName || "Unknown User"}
-                </p>
-              </div>
+           <VideoCallLayout/>
+      </div>
 
-              {/* Always show controls buttons*/}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100%]">
-                <div className="bg-gray-800 p-2 flex justify-center items-center space-x-3 md:space-x-4">
-                  <button
-                    onClick={() => dispatch(setSelectedChatModule(!selectedChatModule))}
-                    className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                  >
-                    <BsChatDots className="text-xl" />
-                  </button>
+{/* =============================================All Modal Section======================================================= */}
 
-                  <button
-                    onClick={toggleMicrophone}
-                    className="w-10 grid place-content-center border rounded-full h-10 text-white"
-                  >
-                    {isMicrophoneOn ? (
-                      <IoMicOffOutline className="text-xl" />
-                    ) : (
-                      <IoMicOffCircleOutline className="text-xl" />
-                    )}
-                  </button>
+      {/* ==== incoming call===== */}
+      {incomingCall && (<IncomingCall/>)}
 
-                  <button
-                    onClick={toggleCamera}
-                    className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-                  >
-                    {isCameraOn ? (
-                      <BsCameraVideo className="text-xl" />
-                    ) : (
-                      <BsCameraVideoOff className="text-xl" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      endCall();
-                      cleanupConnection();
-                    }}
-                    className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <IoCallOutline className="text-2xl" />
-                  </button>
-
-                  <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-                    <GoUnmute className="text-xl" />
-                  </button>
-
-                  {(isVideoCalling || isVoiceCalling) && (
-                    <button
-                      onClick={() => {
-                        dispatch(setParticipantOpen(true));
-                      }}
-                      className="w-10 grid place-content-center rounded-full h-10 border text-white"
-                    >
-                      <MdOutlineGroupAdd className="text-xl" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            // ===============Video call screen================
-            <VideoCallLayout />
-          )
-        )}
-      </div >
-      {/* ========= incoming call ========= */}
-      {incomingCall && (<IncomingCall />)}
-
-      {
-        incomingShare && (
+      {incomingShare && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-black rounded-lg p-6 w-72 text-center">
               <h3 className="text-2xl text-gray-300 mb-2 ">
                 Incoming Screen <br /> Request...
               </h3>
               <p className="text-gray-400 mb-8">
-                {
-                  allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName
-                }
+                {allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName}
               </p>
               <div className="flex justify-center gap-8">
                 <button
@@ -1269,36 +941,17 @@ const Chat2 = memo(() => {
               </div>
             </div>
           </div>
-        )
-      }
+      )}
 
-      {/*======================= Call participant modal ==========================*/}
-      <CallParticipantModal />
+      {/*======= Call participant modal ======*/}
+      <CallParticipantModal/>
 
-      <input
-        type="file"
-        id="file-input"
-        style={{ display: "none" }}
-        accept="image/*"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) {
-            dispatch(updateUser({ id: currentUser, values: { photo: file } }));
-          }
-        }}
-      />
-      {
-        isImageModalOpen && selectedImage && (
-          <MediaViewer />
-        )
-      }
+      {isImageModalOpen && selectedImage && <MediaViewer/>}
 
       {/* profile photo */}
-      {
-        (isProfileImageModalOpen && selectedProfileImage) && (
+      {(isProfileImageModalOpen && selectedProfileImage) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="relative w-full h-full flex items-center justify-center p-8">
-
               <img
                 src={
                   isProfileImageModalOpen ? selectedProfileImage : ''
@@ -1320,24 +973,13 @@ const Chat2 = memo(() => {
               </button>
             </div>
           </div>
-        )
-      }
+        )}
 
       {/* Forward Modal */}
-      {
-        showForwardModal && (
-          <ForwardModal
-            show={showForwardModal}
-            onClose={() => setShowForwardModal(false)}
-            onSubmit={handleForwardSubmit} // Corrected the onSubmit prop
-            users={allUsers}
-          />
-        )
-      }
+      {showForwardModal &&  <ForwardModal/>}
 
       {/* delete message modal */}
-      {
-        isClearChatModalOpen && (
+      {isClearChatModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
               <h3 className=" mb-4 flex justify-between">
@@ -1368,11 +1010,9 @@ const Chat2 = memo(() => {
               </div>
             </div>
           </div>
-        )
-      }
+      )}
 
-      {
-        isDeleteChatModalOpen && (
+      {isDeleteChatModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
               <h3 className=" mb-4 flex justify-between">
@@ -1403,11 +1043,10 @@ const Chat2 = memo(() => {
               </div>
             </div>
           </div>
-        )
-      }
+      )}
     </div >
   );
-});
+};
 
 
 export default Chat2;

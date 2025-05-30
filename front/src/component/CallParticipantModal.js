@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { RxCross2 } from 'react-icons/rx';
 import { RiUserAddLine } from 'react-icons/ri';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -15,34 +15,21 @@ const CallParticipantModal = memo(({
   // inviteToCall,
 }) => {
 
+  console.log("CallParticipantModal");
   const dispatch = useDispatch();
     const [searchInput, setSearchInput] = useState("");
     const [invitedUsers, setInvitedUsers] = useState([]);
     const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
     const { user,allUsers } = useSelector((state) => state.user);
-    const [userId] = useState(sessionStorage.getItem("userId"));
-    const {remoteStreams,participants,callParticipantsList,callParticipants,participantOpen} = useSelector(state => state.magageState)
-    const {
-      socket,
-      startSharing,
-      endCall,
-      cleanupConnection,
-      toggleCamera,
-      toggleMicrophone,
-      markMessageAsRead,
-      rejectCall,
-      sendPrivateMessage,
-      sendTypingStatus,
-      subscribeToMessages,
-      sendGroupMessage,
-      acceptScreenShare,
-      inviteToCall,
-      forwardMessage,
-      addMessageReaction,
-      startCall,
-      acceptCall,
-    } = useSocket();
+    const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+   
+    const remoteStreams = useSelector(state => state.magageState.remoteStreams);
+    const participants = useSelector(state => state.magageState.participants);
+    const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
+    const callParticipants = useSelector(state => state.magageState.callParticipants);
+    const participantOpen = useSelector(state => state.magageState.participantOpen);
+    const {inviteToCall} = useSocket();
   return (
     <>
       {participantOpen && (

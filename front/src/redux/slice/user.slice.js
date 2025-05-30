@@ -13,7 +13,7 @@ const handleErrors = (error, dispatch, rejectWithValue) => {
 const initialState = {
   user: null,
   allCallUsers: [],
-  onlineUser: [],
+  // onlineUser: [],
   allUsers: [],
   allMessageUsers: [],
   messages: [],
@@ -466,22 +466,22 @@ export const leaveGroup = createAsyncThunk(
     }
   }
 );
-export const getOnlineUsers = createAsyncThunk(
-  "user/getOnlineUsers",
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/online-users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      return handleErrors(error, null, rejectWithValue);
-    }
-  }
-);
+// export const getOnlineUsers = createAsyncThunk(
+//   "user/getOnlineUsers",
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const token = await sessionStorage.getItem("token");
+//       const response = await axios.get(`${BASE_URL}/online-users`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+//       return response.data;
+//     } catch (error) {
+//       return handleErrors(error, null, rejectWithValue);
+//     }
+//   }
+// );
 
 export const archiveUser = createAsyncThunk(
   "user/archiveUser",
@@ -644,9 +644,9 @@ const userSlice = createSlice({
       window.localStorage.clear();
       window.sessionStorage.clear();
     },
-    setOnlineuser: (state, action) => {
-      state.onlineUser = action.payload;
-    },
+    // setOnlineuser: (state, action) => {
+    //   state.onlineUser = action.payload;
+    // },
   },
   extraReducers: (builder) => {
     builder
@@ -756,18 +756,18 @@ const userSlice = createSlice({
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to retrieve users";
       })
-      .addCase(getOnlineUsers.fulfilled, (state, action) => {
-        state.onlineUser = action.payload;
-        state.loading = false;
-        state.error = null;
-        state.message = "Online users retrieved successfully";
-      })
-      .addCase(getOnlineUsers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload.message;
-        state.message =
-          action.payload?.message || "Failed to retrieve online users";
-      })
+      // .addCase(getOnlineUsers.fulfilled, (state, action) => {
+      //   state.onlineUser = action.payload;
+      //   state.loading = false;
+      //   state.error = null;
+      //   state.message = "Online users retrieved successfully";
+      // })
+      // .addCase(getOnlineUsers.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload.message;
+      //   state.message =
+      //     action.payload?.message || "Failed to retrieve online users";
+      // })
       .addCase(getAllMessages.fulfilled, (state, action) => {
         state.messages = action.payload;
         state.loading = false;
@@ -951,5 +951,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout, setOnlineuser } = userSlice.actions;
+export const { logout } = userSlice.actions;
 export default userSlice.reducer;

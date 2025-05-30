@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 // import { IoMdSearch, IoVideocamOutline, IoCallOutline, IoArchiveOutline, IoVolumeOffOutline } from "react-icons/io5";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -26,6 +26,8 @@ const ChatHeader = memo(({
     setIsDeleteChatModalOpen,
     setGroupUsers,
 }) => {
+
+  console.log("header");
   const dispatch = useDispatch();
   const { cleanupConnection, startCall,startSharing } = useSocket();
   
@@ -33,15 +35,15 @@ const ChatHeader = memo(({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef(null);
 
-  const { 
-    selectedChat,
-    isSharing,
-    isSearchBoxOpen,
-    onlineUsers
-  } = useSelector(state => state.magageState);
+  const selectedChat = useSelector(state => state.magageState.selectedChat);
+  const isSharing = useSelector(state => state.magageState.isSharing);
+  const isSearchBoxOpen = useSelector(state => state.magageState.isSearchBoxOpen);
+  const onlineUsers = useSelector(state => state.magageState.onlineUsers);
 
-  const { user } = useSelector(state => state.user);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
+  const user = useSelector(state => state.user.user);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+
+  let loginUser = selectedChat._id === currentUser
 
 
    //================screen sharing================
@@ -151,10 +153,12 @@ const ChatHeader = memo(({
         <div
           className="ml-3 cursor-pointer"
           onClick={() => {
-            if (selectedChat?.members) {
-              dispatch(setIsGroupModalOpen(true));
-            } else {
-              dispatch(setIsUserProfileModalOpen(true));
+            if(!loginUser){
+              if (selectedChat?.members) {
+                dispatch(setIsGroupModalOpen(true));
+              } else {
+                dispatch(setIsUserProfileModalOpen(true));
+              }
             }
           }}
         >
@@ -183,7 +187,11 @@ const ChatHeader = memo(({
             title="Find"
           />
           
-          {isSharing ? (
+
+          {!loginUser ? (
+
+          <>
+         { isSharing ? (
             <LuScreenShareOff
               className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 animate-bounce"
               onClick={() => cleanupConnection()}
@@ -212,6 +220,14 @@ const ChatHeader = memo(({
             onClick={() => setMenuOpen(!menuOpen)}
             title="More options"
           />
+          </>
+        ): (     
+          <RiDeleteBinLine
+          className="w-6 h-6 cursor-pointer"
+          onClick={() => { setIsClearChatModalOpen(true)}}
+          title="Clear chat"
+        />   
+        )}
 
           {/* Desktop Dropdown Menu */}
           {menuOpen && (
@@ -416,6 +432,14 @@ const ChatHeader = memo(({
         </div>
       </div>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  return (
+    prevProps.handleProfileImageClick === nextProps.handleProfileImageClick &&
+    prevProps.setIsClearChatModalOpen === nextProps.setIsClearChatModalOpen &&
+    prevProps.setIsDeleteChatModalOpen === nextProps.setIsDeleteChatModalOpen &&
+    prevProps.setGroupUsers === nextProps.setGroupUsers
   );
 });
 

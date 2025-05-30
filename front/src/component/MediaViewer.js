@@ -12,10 +12,13 @@ const MediaViewer = memo(({
   onClose,
   // onDeleteMessage,
 }) => {
+  console.log("MediaViewer");
   const dispatch = useDispatch();
   const { socket } = useSocket();
   const { messages } = useSelector((state) => state.user);
-  const {selectedImage,isImageModalOpen,selectedChat} = useSelector(state => state.magageState)
+  const selectedImage = useSelector(state => state.magageState.selectedImage)
+  const isImageModalOpen = useSelector(state => state.magageState.isImageModalOpen)
+  const selectedChat = useSelector(state => state.magageState.selectedChat)
   const [videoDurations, setVideoDurations] = useState({}); 
    // button
    useEffect(() => {

@@ -2,19 +2,49 @@ import React, { useState } from "react";
 import { ImCross } from "react-icons/im";
 import { FaSearch } from "react-icons/fa";
 import { IMG_URL } from "../utils/baseUrl";
+import { useSocket } from "../context/SocketContext";
+import { useDispatch, useSelector } from "react-redux";
+import { setForwardingMessage, setShowForwardModal } from "../redux/slice/manageState.slice";
 
-const ForwardModal = ({ show, onClose, onSubmit, users }) => {
+const ForwardModal = () => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useDispatch();
 
-  const filteredUsers = users.filter((user) =>
+  const { allUsers } = useSelector((state) => state.user);
+  const {forwardingMessage,showForwardModal} = useSelector(state => state.magageState)
+    //===========Use the custom socket hook===========
+    const {forwardMessage} = useSocket();
+
+  const filteredUsers = allUsers.filter((user) =>
     user.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  
+  const handleForwardSubmit = async (selectedUsers) => {
+    try {
+      for (const userId of selectedUsers) {
+        console.log(forwardingMessage);
+        await forwardMessage(userId, forwardingMessage);
+      }
+
+      
+      dispatch(setShowForwardModal(false));
+      dispatch(setForwardingMessage(null));
+    } catch (error) {
+      console.error("Error forwarding message:", error);
+    }
+  };
+
+  const onClose = () => {
+    dispatch(setShowForwardModal(false));
+    dispatch(setForwardingMessage(null));
+  };
+
   return (
-    show && (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl w-full max-w-md transform transition-all modal_background border border-gray-200 dark:border-gray-700">
+
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-2xl w-full max-w-md transform transition-all modal_background border border-gray-200 dark:border-gray-700">
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-center">
@@ -123,7 +153,7 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => onSubmit(selectedUsers)}
+                  onClick={() => handleForwardSubmit(selectedUsers)}
                   disabled={selectedUsers.length === 0}
                   className={`px-4 py-2 rounded-lg transition-colors
                   ${
@@ -140,7 +170,6 @@ const ForwardModal = ({ show, onClose, onSubmit, users }) => {
         </div>
       </div>
     )
-  );
 };
 
 export default ForwardModal;

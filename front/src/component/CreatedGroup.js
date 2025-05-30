@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useMemo } from "react";
 import { ImCross } from "react-icons/im";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { IMG_URL } from "../utils/baseUrl"; // Assuming IMG_URL is needed here
@@ -18,14 +18,17 @@ const CreatedGroup = memo(({
   groupUsers,
   setGroupUsers
 }) => {
+
+  console.log("CreatedGroup");
+  
   const dispatch = useDispatch();
   const [groupName, setGroupName] = useState("");
   const [groupBio, setGroupBio] = useState("");
   // const [groupUsers, setGroupUsers] = useState([]);
   const [groupPhoto, setGroupPhoto] = useState(null);
-  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
-  const { allUsers,messages } = useSelector((state) => state.user);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
+  // const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  // const { allUsers,messages } = useSelector((state) => state.user);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
 
   console.log(creatGroup, groupUsers);
   // Reset state when modal is closed/opened

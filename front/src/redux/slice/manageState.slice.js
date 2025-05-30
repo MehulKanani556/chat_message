@@ -4,7 +4,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     remoteStreams: new Map(),
     participants: [],
     callParticipantsList: {},
-    // New states from useSocket
+    
     isConnected: false,
     onlineUsers: [],
     isReceiving: false,
@@ -49,6 +49,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     videoCallChatList: false,
     callChatList: false,
     chatMessages: false,
+
+    showForwardModal: false,
+    forwardingMessage: null,
+    userIncall: null,
   };
 
   const manageStateSlice = createSlice({
@@ -87,6 +91,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
       state.isConnected = !state.isConnected;
     },
     setOnlineUsers: (state, action) => {
+      console.log(action.payload);
       state.onlineUsers = action.payload;
     },
     setIsReceiving: (state, action) => {
@@ -209,6 +214,16 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setChatMessages: (state, action) => {
       state.chatMessages = action.payload;
     },
+
+    setShowForwardModal: (state, action) => {
+      state.showForwardModal = action.payload;
+    },
+    setForwardingMessage: (state, action) => {
+      state.forwardingMessage = action.payload;
+    },
+    setUserIncall: (state, action) => {
+      state.userIncall = action.payload;
+    },
     },
   });
   
@@ -259,6 +274,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setEditingMessage,
     setvideoCallChatList,
     setCallChatList,
-    setChatMessages
+    setChatMessages,
+    setShowForwardModal,
+    setForwardingMessage,
+    setUserIncall
   } = manageStateSlice.actions;
   export default manageStateSlice.reducer;

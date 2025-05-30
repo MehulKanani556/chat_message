@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FaPhone,
   FaRegSmile,
@@ -40,7 +40,7 @@ import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
 import { useDispatch, useSelector } from "react-redux";
-import { setCameraStream, setEditingMessage, setFacingMode, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage } from "../redux/slice/manageState.slice";
+import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal } from "../redux/slice/manageState.slice";
 import { deleteMessage, getAllMessages } from "../redux/slice/user.slice";
 import { useSocket } from "../context/SocketContext";
 import { RxCross2 } from "react-icons/rx";
@@ -51,7 +51,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 const MessageList = memo(({
   handleMakeCall,
   // handleEditMessage,
-  handleForward,
+  // handleForward,
   // handleImageClick,
   // searchInputbox,
   // activeMessageId,
@@ -64,19 +64,32 @@ const MessageList = memo(({
   // dropdownRef,
   // sendPrivateMessage,
   handleMultipleFileUpload,
-  openCamera,
 }) => {
 
-  const [userId] = useState(sessionStorage.getItem("userId"));
+  console.log("msglist");
+  
+
+  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
   const dispatch = useDispatch();
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
-  const {selectedChat,typingUsers,selectedFiles,uploadProgress,replyingTo,cameraStream,openCameraState,backCameraAvailable,facingMode,searchInputbox,isSearchBoxOpen} = useSelector(state => state.magageState)
+
+  const selectedChat = useSelector(state => state.magageState.selectedChat);
+  const typingUsers = useSelector(state => state.magageState.typingUsers);
+  const selectedFiles = useSelector(state => state.magageState.selectedFiles);
+  const uploadProgress = useSelector(state => state.magageState.uploadProgress);
+  const replyingTo = useSelector(state => state.magageState.replyingTo);
+  const cameraStream = useSelector(state => state.magageState.cameraStream);
+  const openCameraState = useSelector(state => state.magageState.openCameraState);
+  const backCameraAvailable = useSelector(state => state.magageState.backCameraAvailable);
+  const facingMode = useSelector(state => state.magageState.facingMode);
+  const searchInputbox = useSelector(state => state.magageState.searchInputbox);
+  const isSearchBoxOpen = useSelector(state => state.magageState.isSearchBoxOpen);
+  
+
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const messagesContainerRef = useRef(null);
-  const handleReplyMessage = (message) => {
-    dispatch(setReplyingTo(message));
-  };
+  const handleReplyMessage = (message) => {dispatch(setReplyingTo(message))};
   const [totalMatches, setTotalMatches] = useState(0);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const searchBoxRef = useRef(null);
@@ -390,7 +403,10 @@ const MessageList = memo(({
   const countOccurrences = (text, word) => {
     if (!word.trim() || !text) return 0;
     const regex = new RegExp(word, "gi");
-    return (text.match(regex) || []).length;
+    // console.log(regex,text);
+    const msg = decryptMessage(text);
+    
+    return (msg.match(regex) || []).length;
   };
 
   useEffect(() => {
@@ -403,15 +419,16 @@ const MessageList = memo(({
       const content =  typeof message?.content?.content === "string"
           ? message?.content?.content: "";
 
-          console.log(countOccurrences(content, searchInputbox),content);
+          const msg = decryptMessage(content);
+          // console.log(countOccurrences(content, searchInputbox),content);
           
-      return count + countOccurrences(content, searchInputbox);
+      return count + countOccurrences(msg, searchInputbox);
     }, 0);
 
     console.log("matches",matches);
     
 
-    setTotalMatches(matches==0 ? 0 : matches+1);
+    setTotalMatches(matches==0 ? 0 : matches);
   }, [searchInputbox, messages]);
 
   useEffect(() => {
@@ -497,9 +514,10 @@ const MessageList = memo(({
 
 
   const handleForwardMessage = (message) => {
-    // console.log(message,"message");
+    console.log(message,"message");
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
-    handleForward(message);
+    dispatch(setForwardingMessage(message));
+    dispatch(setShowForwardModal(true));
   }
 
   // ===============handle image click================
@@ -509,7 +527,25 @@ const MessageList = memo(({
     dispatch(setIsImageModalOpen(true));
   }, [dispatch]);
 
-  console.log("contextMenu");
+  // console.log("contextMenu");
+
+    // // ======================Download file =====================
+    // const handleDownload = (fileUrl, fileName) => {
+    //   const durl = `${IMG_URL}${fileUrl}`;
+    //   fetch(durl)
+    //     .then((response) => response.blob())
+    //     .then((blob) => {
+    //       const url = URL.createObjectURL(blob);
+    //       const link = document.createElement("a");
+    //       link.href = url;
+    //       link.download = fileName;
+    //       document.body.appendChild(link);
+    //       link.click();
+    //       document.body.removeChild(link);
+    //       URL.revokeObjectURL(url);
+    //     })
+    //     .catch((error) => console.error("Download error:", error));
+    // };
 
 
   return (
@@ -720,7 +756,7 @@ const MessageList = memo(({
           type="button"
           className="absolute bottom-5 right-4 p-2 bg-primary/70 text-white rounded-full shadow-lg z-50"
           onClick={()=>{
-            // scrollToBottom();
+            scrollToBottom();
             setShowScrollToBottom(false);
           }}
           aria-label="Send to Bottom"

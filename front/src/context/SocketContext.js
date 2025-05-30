@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -34,6 +35,7 @@ import {
   setCameraStatus,
   setCallParticipants,
   setTypingUsers,
+  setUserIncall,
 } from "../redux/slice/manageState.slice";
 
 const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
@@ -105,8 +107,11 @@ export const SocketProvider = ({ children }) => {
     isMicrophoneOn,
     voiceCallData,
     cameraStatus,
-    typingUsers
+    typingUsers,
+    selectedChat,
   } = useSelector((state) => state.magageState);
+
+  const { messages } = useSelector((state) => state.user);
 
   // Helper functions
   const generateCallRoomId = () => {
@@ -155,9 +160,9 @@ export const SocketProvider = ({ children }) => {
 
       socketRef.current.on("user-status-changed", (onlineUserIds) => {
         dispatch(setOnlineUsers(onlineUserIds));
-        if (onlineUserIds.length > 0) {
-          dispatch(setOnlineuser(onlineUserIds));
-        }
+        // if (onlineUserIds.length > 0) {
+        //   dispatch(setOnlineuser(onlineUserIds));
+        // }
       });
 
       socketRef.current.on("reconnect", () => {
@@ -275,6 +280,26 @@ export const SocketProvider = ({ children }) => {
   };
 
   // ===========================messages=============================
+
+  useEffect(() => {
+    if (selectedChat) {
+      // Get unread messages for this conversation
+      const unreadMessages = messages
+        .filter(
+          (msg) =>
+            msg.sender === selectedChat._id &&
+            (msg.status === "sent" || msg.status === "delivered") &&
+            !msg.isBlocked
+        )
+        .map((msg) => msg._id);
+
+      // Mark these messages as read
+      if (unreadMessages.length > 0) {
+        markMessageAsRead(unreadMessages);
+        // dispatch(getAllMessageUsers());
+      }
+    }
+  }, [selectedChat, messages]);
 
   const markMessageAsRead = (messageIds) => {
     if (!socketRef.current?.connected || !messageIds?.length) return;
@@ -492,7 +517,6 @@ export const SocketProvider = ({ children }) => {
       return false;
     }
   };
-
   // Add socket listeners for screen sharing
 
   const acceptScreenShare = () => {
@@ -533,6 +557,12 @@ export const SocketProvider = ({ children }) => {
             .play()
             .catch((e) => console.error("Error playing:", e));
         }
+
+        dispatch(setRemoteStreams(
+          new Map(remoteStreams).set(incomingShare.fromEmail, stream)
+        ));
+        dispatch(updateParticipant({ userId:incomingShare.fromEmail, stream }));
+
       });
 
       peer.on("error", (err) => {
@@ -598,7 +628,7 @@ export const SocketProvider = ({ children }) => {
           dispatch(setIsVoiceCalling(false));
           cleanupConnection();
         }
-      }, 3000000);
+      }, 30000);
     }
 
     // Cleanup timeout on unmount or when dependencies change
@@ -729,6 +759,11 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketRef.current.on("call-ended", ({ to, from, duration, roomId }) => {
+
+      if(!duration){
+        alert("User is Busy so Rejected  call")
+        // return
+      }
       // Reset call-related states
       // Reset call-related states
       setCallStartTime(null);
@@ -789,6 +824,12 @@ export const SocketProvider = ({ children }) => {
     socketRef.current.on("call:update-participant-list", (call) => {
       // console.log("call:update-participant-list", call);
       dispatch(setCallParticipantsList(call));
+    });
+
+    socketRef.current.on("user-in-call", (data) => {
+      if(!selectedChat?.members){
+        dispatch(setUserIncall(data));
+      }
     });
 
     return () => {
@@ -1124,7 +1165,6 @@ export const SocketProvider = ({ children }) => {
     }, 1000);
   };
 
-
   const endCall = () => {
     // Calculate final call duration
     const finalDuration = callStartTime
@@ -1391,7 +1431,7 @@ export const SocketProvider = ({ children }) => {
     dispatch(setIncomingShare(null));
     dispatch(setRemoteStreams(new Map()));
     dispatch(setParticipants([]));
-
+    dispatch(setUserIncall(null));
   };
 
   useEffect(() => {
@@ -1591,51 +1631,121 @@ export const SocketProvider = ({ children }) => {
   }, [isConnected]);
 
 
-  const value = {
-    socket: socketRef.current,
-    isConnected,
-    onlineUsers,
-    sendPrivateMessage,
-    isVideoCalling,
-    incomingCall,
-    setIncomingCall,
-    cleanupConnection,
-    peerEmail,
-    setPeerEmail,
-    hasWebcam,
-    hasMicrophone,
-    isCameraOn,
-    startSharing,
-    startCall,
-    acceptCall,
-    endCall,
-    isSharing,
-    setIsSharing,
-    isReceiving,
-    setIsReceiving,
-    toggleCamera,
-    toggleMicrophone,
-    markMessageAsRead,
-    rejectCall,
-    incomingShare,
-    setIncomingShare,
-    acceptScreenShare,
-    isVoiceCalling,
-    callAccept,
-    remoteStreams,
-    inviteToCall,
-    callParticipants,
-    isMicrophoneOn,
-    voiceCallData,
-    forwardMessage,
-    addMessageReaction,
-    cameraStatus,
-    startCall,
-    acceptCall,
-    callParticipantsList,
-    subscribeToMessages,
-    sendTypingStatus
-  };
+
+const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
+const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
+const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
+const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
+const memoizedAcceptCall = useCallback(acceptCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone, incomingCall]);
+const memoizedEndCall = useCallback(endCall, [userId, socketRef, dispatch, groupCall, callParticipantsList, callStartTime]);
+const memoizedToggleCamera = useCallback(toggleCamera, [streamRef, isCameraOn, userId, socketRef, dispatch]);
+const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch]);
+const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [userId, socketRef, dispatch]);
+const memoizedRejectCall = useCallback(rejectCall, [userId, socketRef, dispatch, incomingCall]);
+const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [incomingShare, dispatch, userId, socketRef]);
+const memoizedInviteToCall = useCallback(inviteToCall, [userId, socketRef, dispatch, callParticipants, isVideoCalling]);
+const memoizedForwardMessage = useCallback(forwardMessage, [userId, socketRef]);
+const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
+const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
+const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
+
+// Use the memoized functions in useMemo
+const value = useMemo(() => ({
+  socket: socketRef.current,
+  sendPrivateMessage: memoizedSendPrivateMessage,
+  cleanupConnection: memoizedCleanupConnection,
+  startSharing: memoizedStartSharing,
+  startCall: memoizedStartCall,
+  acceptCall: memoizedAcceptCall,
+  endCall: memoizedEndCall,
+  toggleCamera: memoizedToggleCamera,
+  toggleMicrophone: memoizedToggleMicrophone,
+  markMessageAsRead: memoizedMarkMessageAsRead,
+  rejectCall: memoizedRejectCall,
+  acceptScreenShare: memoizedAcceptScreenShare,
+  inviteToCall: memoizedInviteToCall,
+  forwardMessage: memoizedForwardMessage,
+  addMessageReaction: memoizedAddMessageReaction,
+  subscribeToMessages: memoizedSubscribeToMessages,
+  sendTypingStatus: memoizedSendTypingStatus
+}), [
+  userId,
+  socketRef,
+  dispatch,
+  hasWebcam,
+  hasMicrophone,
+  incomingCall,
+  groupCall,
+  callParticipantsList,
+  callStartTime,
+  streamRef,
+  isCameraOn,
+  incomingShare,
+  callParticipants,
+  isVideoCalling,
+  memoizedSendPrivateMessage,
+  memoizedCleanupConnection,
+  memoizedStartSharing,
+  memoizedStartCall,
+  memoizedAcceptCall,
+  memoizedEndCall,
+  memoizedToggleCamera,
+  memoizedToggleMicrophone,
+  memoizedMarkMessageAsRead,
+  memoizedRejectCall,
+  memoizedAcceptScreenShare,
+  memoizedInviteToCall,
+  memoizedForwardMessage,
+  memoizedAddMessageReaction,
+  memoizedSubscribeToMessages,
+  memoizedSendTypingStatus
+]);
+
+  // const value = {
+  //   socket: socketRef.current,
+  //   isConnected,
+  //   onlineUsers,
+  //   sendPrivateMessage,
+  //   isVideoCalling,
+  //   incomingCall,
+  //   setIncomingCall,
+  //   cleanupConnection,
+  //   peerEmail,
+  //   setPeerEmail,
+  //   hasWebcam,
+  //   hasMicrophone,
+  //   isCameraOn,
+  //   startSharing,
+  //   startCall,
+  //   acceptCall,
+  //   endCall,
+  //   isSharing,
+  //   setIsSharing,
+  //   isReceiving,
+  //   setIsReceiving,
+  //   toggleCamera,
+  //   toggleMicrophone,
+  //   markMessageAsRead,
+  //   rejectCall,
+  //   incomingShare,
+  //   setIncomingShare,
+  //   acceptScreenShare,
+  //   isVoiceCalling,
+  //   callAccept,
+  //   remoteStreams,
+  //   inviteToCall,
+  //   callParticipants,
+  //   isMicrophoneOn,
+  //   voiceCallData,
+  //   forwardMessage,
+  //   addMessageReaction,
+  //   cameraStatus,
+  //   startCall,
+  //   acceptCall,
+  //   callParticipantsList,
+  //   subscribeToMessages,
+  //   sendTypingStatus
+  // };
 
   return (
     <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
