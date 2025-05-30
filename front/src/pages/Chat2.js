@@ -206,8 +206,8 @@ const Chat2 = memo(() => {
   const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
   const [creatGroup, setCreatGroup] = useState(false)
   const [isDragging, setIsDragging] = useState(false);
-// Object to hold durations keyed by message ID
- 
+  // Object to hold durations keyed by message ID
+
   const [userStreams, setUserStreams] = useState({});
 
   //===========Use the custom socket hook===========
@@ -488,7 +488,7 @@ const Chat2 = memo(() => {
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
         !(selectedChat || userId)
-      )return;
+      ) return;
 
       console.log("data", data);
 
@@ -511,7 +511,7 @@ const Chat2 = memo(() => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload =  async(files, userId) => {
+  const handleMultipleFileUpload = async (files, userId) => {
     const filesArray = Array.from(files);
     for (const file of filesArray) {
       const formData = new FormData();
@@ -841,8 +841,8 @@ const Chat2 = memo(() => {
 
   // const analyser = audioContext.createAnalyser();
   // const dataArray = new Uint8Array(analyser.frequencyBinCount);
- 
-// ==============================Camera ==================
+
+  // ==============================Camera ==================
   const openCamera = async () => {
     try {
       // {{ edit_2 }} request with current facingMode
@@ -888,194 +888,197 @@ const Chat2 = memo(() => {
         />
       )}
       {/* ==============================Right Sidebar chat list ============================== */}
-       {(callChatList || showGroups || showProfile || selectedChatModule || showSettings || showCallHistory) && (
+      {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
+
         <>
           {/* Left Side */}
-          <div
-            className={`${window.innerWidth <= 600
-              ? "ml-0 w-full"
-              : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
-              } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
-          >
-            {showGroups &&  <Groups/> }
-            {showProfile && <Profile />}
+          {(callChatList || showGroups || showProfile || selectedChatModule || showSettings || showCallHistory) &&
+            <div
+              className={`${window.innerWidth <= 600
+                ? "ml-0 w-full"
+                : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+                } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
+            >
+              {showGroups && <Groups />}
+              {showProfile && <Profile />}
 
-            {selectedChatModule && (
-              <ChatList
-                handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
-              />
-            )}
-            {showSettings && <Setting />}
-            {showCallHistory && ( <CallHistory />)}
-          </div>
-         
+              {selectedChatModule && (
+                <ChatList
+                  handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
+                />
+              )}
+              {showSettings && <Setting />}
+              {showCallHistory && (<CallHistory />)}
+            </div>
+          }
+
 
           {/* Right Side */}
           <>
 
-           {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
-            <div
-              className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
-                (isGroupModalOpen ||
+          {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
+              <div
+                className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
+                  (isGroupModalOpen ||
+                    isModalOpen ||
+                    isGroupCreateModalOpen ||
+                    isUserProfileModalOpen)
+                  ? "w-0 opacity-0"
+                  : "w-full opacity-100"
+                  } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                {(!(
+                  isGroupModalOpen ||
                   isModalOpen ||
                   isGroupCreateModalOpen ||
-                  isUserProfileModalOpen)
-                ? "w-0 opacity-0"
-                : "w-full opacity-100"
-                } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              {(!(
-                isGroupModalOpen ||
-                isModalOpen ||
-                isGroupCreateModalOpen ||
-                isUserProfileModalOpen
-              ) ||
-                !showOverlay) && (
-                  <>
-                    {selectedChat ? (
-                      <>
+                  isUserProfileModalOpen
+                ) ||
+                  !showOverlay) && (
+                    <>
+                      {selectedChat ? (
+                        <>
 
-                        <ChatHeader
-                        handleProfileImageClick={handleProfileImageClick}
-                        setIsClearChatModalOpen={setIsClearChatModalOpen}
-                        setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
-                        setGroupUsers={setGroupUsers}
-                        />
+                          <ChatHeader
+                            handleProfileImageClick={handleProfileImageClick}
+                            setIsClearChatModalOpen={setIsClearChatModalOpen}
+                            setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
+                            setGroupUsers={setGroupUsers}
+                          />
 
-                        {/*========================== Messages ==============================*/}
-                        <div className="relative">
-                    
-                          {isDragging && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
-                              <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="mb-4">
-                                    <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
+                          {/*========================== Messages ==============================*/}
+                          <div className="relative">
+
+                            {isDragging && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
+                                <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
+                                  <div className="text-center">
+                                    <div className="mb-4">
+                                      <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                      </svg>
+                                    </div>
+                                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
                                   </div>
-                                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                             {/* {visibleDate && <FloatingDateIndicator />} */}
-                              <MessageList
-                                handleMakeCall={handleMakeCall}
-                                handleForward={handleForwardMessage}
-                                handleMultipleFileUpload={handleMultipleFileUpload}
-                                openCamera={openCamera}
-                              />
-
-                          {selectedFiles && selectedFiles?.length > 0 && (
-                            <div className="flex px-6  dark:bg-primary-dark">
-                              {selectedFiles?.map((file, index) => {
-                                const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                                let fileIcon;
-                                if (file.type.startsWith("image/")) {
-                                  fileIcon = (
-                                    <img
-                                      src={fileUrl}
-                                      alt={`Selected ${index}`}
-                                      className="w-20 h-[40px] object-cover "
-                                    />
-                                  );
-                                } else if (file.type === "application/pdf") {
-                                  fileIcon = (
-                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                  ); // PDF file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-excel" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                  ); // Excel file icon
-                                } else if (
-                                  file.type === "application/msword" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                  ); // Word file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-powerpoint" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                ) {
-                                  fileIcon = (
-                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                  ); // PowerPoint file icon
-                                } else if (file.type === "application/zip") {
-                                  fileIcon = (
-                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                  ); // ZIP file icon
-                                } else {
-                                  fileIcon = (
-                                    <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                  ); // Generic file icon
-                                }
-                                return (
-                                  <div className=" rounded-t-lg  p-2">
-                                    <div
-                                      key={index}
-                                      className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                    >
-                                      {fileIcon}
-                                      <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                        {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                      </div>{" "}
-                                      {/* Display file name */}
-                                      <span className="text-xs text-gray-500">
-                                        {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                        MB
-                                      </span>{" "}
-                                      {/* Display file size */}
-                                      <button
-                                        className="absolute top-1 right-1 bg-white rounded-full"
-                                        onClick={() => {
-                                          dispatch(setSelectedFiles(
-                                            selectedFiles?.filter((_, i) => i !== index)
-                                          ));
-                                        }}
-                                      >
-                                        <RxCross2 />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/*========== Message Input ==========*/}
-                          {selectedChat &&
-                            <MessageInput
+                            <MessageList
+                              handleMakeCall={handleMakeCall}
+                              handleForward={handleForwardMessage}
                               handleMultipleFileUpload={handleMultipleFileUpload}
-                              handleSendMessage={handleSendMessage}
                               openCamera={openCamera}
-                              setIsDeleteChatModalOpen ={setIsDeleteChatModalOpen }
+                            />
+
+                            {selectedFiles && selectedFiles?.length > 0 && (
+                              <div className="flex px-6  dark:bg-primary-dark">
+                                {selectedFiles?.map((file, index) => {
+                                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                                  let fileIcon;
+                                  if (file.type.startsWith("image/")) {
+                                    fileIcon = (
+                                      <img
+                                        src={fileUrl}
+                                        alt={`Selected ${index}`}
+                                        className="w-20 h-[40px] object-cover "
+                                      />
+                                    );
+                                  } else if (file.type === "application/pdf") {
+                                    fileIcon = (
+                                      <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                    ); // PDF file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-excel" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                    ); // Excel file icon
+                                  } else if (
+                                    file.type === "application/msword" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                    ); // Word file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-powerpoint" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                    ); // PowerPoint file icon
+                                  } else if (file.type === "application/zip") {
+                                    fileIcon = (
+                                      <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                    ); // ZIP file icon
+                                  } else {
+                                    fileIcon = (
+                                      <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                    ); // Generic file icon
+                                  }
+                                  return (
+                                    <div className=" rounded-t-lg  p-2">
+                                      <div
+                                        key={index}
+                                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
+                                      >
+                                        {fileIcon}
+                                        <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                          {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                        </div>{" "}
+                                        {/* Display file name */}
+                                        <span className="text-xs text-gray-500">
+                                          {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                          MB
+                                        </span>{" "}
+                                        {/* Display file size */}
+                                        <button
+                                          className="absolute top-1 right-1 bg-white rounded-full"
+                                          onClick={() => {
+                                            dispatch(setSelectedFiles(
+                                              selectedFiles?.filter((_, i) => i !== index)
+                                            ));
+                                          }}
+                                        >
+                                          <RxCross2 />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/*========== Message Input ==========*/}
+                            {selectedChat &&
+                              <MessageInput
+                                handleMultipleFileUpload={handleMultipleFileUpload}
+                                handleSendMessage={handleSendMessage}
+                                openCamera={openCamera}
+                                setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
                               />
-                          }
-                        </div>
-                       
-                      </>
-                    ) : (
-                      <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
-                    )}
-                  </>
-                )}
-            </div>
+                            }
+                          </div>
+
+                        </>
+                      ) : (
+                        <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
+                      )}
+                    </>
+                  )}
+              </div>
             }
 
             {/* ============================== right sidebar =========================================== */}
-
+            {!(isReceiving || isVideoCalling || isVoiceCalling) &&
             <div
               className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                 isGroupCreateModalOpen ||
@@ -1118,13 +1121,13 @@ const Chat2 = memo(() => {
                 />
               )}
             </div>
-
+}
           </>
         </>
-      )}
+      ) }
 
       {/*=========================================== screen share ==================================*/}
-      <div
+      < div
         className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling
           ? ""
           : "hidden"
@@ -1228,14 +1231,15 @@ const Chat2 = memo(() => {
             </div>
           ) : (
             // ===============Video call screen================
-            <VideoCallLayout/>
+            <VideoCallLayout />
           )
         )}
-      </div>
+      </div >
       {/* ========= incoming call ========= */}
-      {incomingCall && (<IncomingCall/>)}
+      {incomingCall && (<IncomingCall />)}
 
-      {incomingShare && (
+      {
+        incomingShare && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-black rounded-lg p-6 w-72 text-center">
               <h3 className="text-2xl text-gray-300 mb-2 ">
@@ -1265,10 +1269,11 @@ const Chat2 = memo(() => {
               </div>
             </div>
           </div>
-      )}
+        )
+      }
 
       {/*======================= Call participant modal ==========================*/}
-      <CallParticipantModal/>
+      <CallParticipantModal />
 
       <input
         type="file"
@@ -1282,12 +1287,15 @@ const Chat2 = memo(() => {
           }
         }}
       />
-      {isImageModalOpen && selectedImage && (
-        <MediaViewer/>
-      )}
+      {
+        isImageModalOpen && selectedImage && (
+          <MediaViewer />
+        )
+      }
 
       {/* profile photo */}
-      {(isProfileImageModalOpen && selectedProfileImage) && (
+      {
+        (isProfileImageModalOpen && selectedProfileImage) && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
             <div className="relative w-full h-full flex items-center justify-center p-8">
 
@@ -1312,8 +1320,9 @@ const Chat2 = memo(() => {
               </button>
             </div>
           </div>
-        )}
-        
+        )
+      }
+
       {/* Forward Modal */}
       {
         showForwardModal && (

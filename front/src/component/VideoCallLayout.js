@@ -24,6 +24,10 @@ const VideoCallLayout = memo(() => {
   const { allUsers, messages } = useSelector((state) => state.user);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
   const dispatch = useDispatch();
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
 
   //===========Use the custom socket hook===========
   const {
@@ -47,18 +51,65 @@ const VideoCallLayout = memo(() => {
     acceptCall,
   } = useSocket();
 
+  const handleMouseDown = (e) => {
+    if (!chatMessages) return;
 
-  return (
+    const rect = containerRef.current.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !chatMessages) return;
+
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
+
+    // Get window dimensions
+    const maxX = window.innerWidth - containerRef.current.offsetWidth;
+    const maxY = window.innerHeight - containerRef.current.offsetHeight;
+
+    // Constrain position within window bounds
+    const constrainedX = Math.max(0, Math.min(newX, maxX));
+    const constrainedY = Math.max(0, Math.min(newY, maxY));
+
+    setPosition({ x: constrainedX, y: constrainedY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const content = (
     <div
+      ref={containerRef}
       className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? 'w-[70%]' : 'w-full'}`}
       style={(chatMessages) ? {
         width: '25%',
         height: '34%',
         position: 'absolute',
-        top: '75%',
-        left: '82%',
-        transform: 'translate(-50%, -50%)'
+        top: position.y,
+        left: position.x,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        transform: 'none'
       } : {}}
+      onMouseDown={handleMouseDown}
     >
 
       {/* Participant Grid */}
@@ -93,7 +144,7 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
                       muted={participantId === currentUser}
                       ref={el => {
                         if (el && stream instanceof MediaStream) {
@@ -108,7 +159,7 @@ const VideoCallLayout = memo(() => {
                         // }
                       }}
                     />
-                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]" >
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
                   </>
@@ -144,7 +195,7 @@ const VideoCallLayout = memo(() => {
         <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
           <button
             onClick={() => {
-              dispatch(setSelectedChatModule(!selectedChatModule))
+              dispatch(setSelectedChatModule(true))
               // dispatch(setvideoCallChatList(true));
               dispatch(setCallChatList(true));
               // dispatch(setChatMessages(true));
@@ -210,8 +261,9 @@ const VideoCallLayout = memo(() => {
       )}
 
     </div>
-
   );
+
+  return content;
 });
 
 export default VideoCallLayout;
