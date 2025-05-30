@@ -1,17 +1,20 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllGroups } from '../redux/slice/user.slice';
 import { useNavigate } from 'react-router-dom';
 import { IMG_URL } from '../utils/baseUrl';
 import { FaUserPlus, FaArrowLeft } from 'react-icons/fa';
 import { createGroup } from "../redux/slice/user.slice";
-import { useSocket } from "../hooks/useSocket";
+import { useSocket } from '../context/SocketContext';
 import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
 import { setIsGroupCreateModalOpen, setSelectedChat, setShowLeftSidebar } from '../redux/slice/manageState.slice';
 
 
+
 const Groups = memo(() => {
+
+  console.log("groups");
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchInput, setSearchInput] = useState('');
@@ -20,11 +23,11 @@ const Groups = memo(() => {
     const [groupName, setGroupName] = useState("");
     const [groupUsers, setGroupUsers] = useState([]);
     const [groupPhoto, setGroupPhoto] = useState(null);
-    const [userId, setUserId] = useState(sessionStorage.getItem("userId"));
+    const userId = useMemo(() => sessionStorage.getItem("userId"), []);
     const { allUsers } = useSelector((state) => state.user);
-    const { socket } = useSocket(currentUser,);
+    const { socket } = useSocket();
 
-    const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
+    // const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
 
     useEffect(() => {
         dispatch(getAllGroups());

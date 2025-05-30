@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSocket } from "../context/SocketContext";
 import { blockUser, getAllMessages, getAllMessageUsers, getUser } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
-import { setEditingMessage, setMessageInput, setReplyingTo, setSelectedFiles, setUploadProgress } from "../redux/slice/manageState.slice";
+import { setBackCameraAvailable, setCameraStream, setEditingMessage, setMessageInput, setOpenCameraState, setReplyingTo, setSelectedFiles, setUploadProgress } from "../redux/slice/manageState.slice";
 import axios from "axios";
 import { decryptMessage } from "../utils/decryptMess";
 
@@ -22,70 +22,24 @@ const MessageInput = memo(
     // setEditingMessage,
     // cameraStream,
     handleSendMessage,
-    openCamera,
+    // openCamera,
     setIsDeleteChatModalOpen,
   }) => {
 
   //===========Use the custom socket hook===========
-  const {
-    socket,
-    startSharing,
-    endCall,
-    cleanupConnection,
-    toggleCamera,
-    toggleMicrophone,
-    markMessageAsRead,
-    rejectCall,
-    sendPrivateMessage,
-    sendTypingStatus,
-    subscribeToMessages,
-    sendGroupMessage,
-    acceptScreenShare,
-    inviteToCall,
-    forwardMessage,
-    addMessageReaction,
-    startCall,
-    acceptCall,
-  } = useSocket();
+  const { sendTypingStatus,sendGroupMessage} = useSocket();
 
     const dispatch = useDispatch();
-    const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
-    const {
-      remoteStreams,
-      isConnected,
-      onlineUsers,
-      isVideoCalling,
-      incomingCall,
-      isCameraOn,
-      isSharing,
-      isReceiving,
-      incomingShare,
-      isVoiceCalling,
-      callParticipants,
-      isMicrophoneOn,
-      cameraStatus,
-      selectedChatModule,
-      showProfile,
-      showSettings,
-      showGroups,
-      showCallHistory,
-      isGroupModalOpen,
-      isModalOpen,
-      isGroupCreateModalOpen,
-      isUserProfileModalOpen,
-      showLeftSidebar,
-      selectedChat,
-      selectedImage,
-      isImageModalOpen,
-      uploadProgress,
-      selectedFiles,
-      replyingTo,
-      typingUsers,
-      openCameraState,
-      cameraStream,
-      messageInput,
-      editingMessage,
-    } = useSelector(state => state.magageState);
+    const { allUsers, user } = useSelector((state) => state.user);
+    
+    const selectedChat = useSelector(state => state.magageState.selectedChat);
+    const uploadProgress = useSelector(state => state.magageState.uploadProgress);
+    const selectedFiles = useSelector(state => state.magageState.selectedFiles);
+    const replyingTo = useSelector(state => state.magageState.replyingTo);
+    const cameraStream = useSelector(state => state.magageState.cameraStream);
+    const messageInput = useSelector(state => state.magageState.messageInput);
+    const editingMessage = useSelector(state => state.magageState.editingMessage);
+    const facingMode = useSelector(state => state.magageState.facingMode);
 
     // const [messageInput, setMessageInput] = useState("");
     const emojiPickerRef = useRef(null);
@@ -131,7 +85,7 @@ useEffect(()=>{
             sendTypingStatus(selectedChat._id, true);
           }, 2000); // Wait 3 seconds after last input
         }
-      };
+  };
 
       //======== Audio recording=========
 
@@ -509,6 +463,26 @@ const barHeights = generateBarHeights();
         </div>
       );
     }
+
+    // ==============================Camera ==================
+  const openCamera = async () => {
+    try {
+      // {{ edit_2 }} request with current facingMode
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+      dispatch(setCameraStream(stream));
+      dispatch(setOpenCameraState(true));
+
+      // detect if an environment (back) camera exists
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const backCams = devices.filter(d =>
+        d.kind === 'videoinput' && d.label.toLowerCase().includes('back')
+      );
+      if (backCams.length > 0) dispatch(setBackCameraAvailable(true));
+
+    } catch (error) {
+      console.error("Error accessing the camera: ", error);
+    }
+  };
 
     return (
         <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">

@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { ImCross } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateGroup, getAllMessageUsers, addParticipants } from '../redux/slice/user.slice';
@@ -17,12 +17,16 @@ const AddParticipants = memo(({
   // setIsGroupModalOpen,
   creatGroup,
 }) => {
+
+  console.log("AddParticipants");
+  
   const dispatch = useDispatch();
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchInput, setSearchInput] = useState("");
-  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const selectedChat = useSelector(state => state.magageState.selectedChat)
   const { allUsers,messages } = useSelector((state) => state.user);
-  const [userId] = useState(sessionStorage.getItem("userId"));
+
+  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
 
   console.log(creatGroup);
   

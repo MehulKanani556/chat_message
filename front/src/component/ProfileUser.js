@@ -1,4 +1,4 @@
-import React, { useState, useEffect , memo} from 'react'
+import React, { useState, useEffect , memo, useMemo} from 'react'
 import { FaChevronUp, FaChevronDown, FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaDownload, FaChevronRight, FaChevronLeft, FaFileVideo, FaFileArchive, FaLink } from 'react-icons/fa';
 import { CgProfile } from 'react-icons/cg';
 import { FaPaperclip } from 'react-icons/fa';
@@ -29,16 +29,19 @@ const fetchUrlTitle = async (url) => {
 };
 const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
+  console.log("ProfileUser");
+  
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
   const [attachFile, setAttachFile] = useState(false)
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
   const { user} = useSelector((state) => state.user);
   const dispatch = useDispatch();
-  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const selectedChat = useSelector(state => state.magageState.selectedChat)
+  const onlineUsers= useSelector(state => state.magageState.onlineUsers)
   const { allUsers,messages } = useSelector((state) => state.user);
 
 

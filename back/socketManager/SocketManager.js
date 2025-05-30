@@ -11,59 +11,11 @@ const Groups = require("../models/groupModel");
 
 const onlineUsers = new Map();
 
-// Store active sessions
 const activeSessions = {};
 
 const activeCalls = {};
 
-// Add call room management
-const callRooms = new Map();
-
-// Add your JWT secret
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production";
-
-// Helper function to manage call rooms
-function createCallRoom(
-  roomId,
-  initiator,
-  type,
-  isGroupCall = false,
-  groupId = null
-) {
-  callRooms.set(roomId, {
-    id: roomId,
-    initiator,
-    type,
-    isGroupCall,
-    groupId,
-    participants: new Set([initiator]),
-    invitedUsers: new Set(),
-    ringingUsers: new Set(),
-    joinedUsers: new Set([initiator]),
-    startTime: new Date(),
-    endTime: null,
-    duration: 0,
-    status: "active",
-  });
-  return callRooms.get(roomId);
-}
-
-function getCallRoom(roomId) {
-  return callRooms.get(roomId);
-}
-
-function updateCallRoom(roomId, updates) {
-  const room = callRooms.get(roomId);
-  if (room) {
-    callRooms.set(roomId, { ...room, ...updates });
-  }
-  return callRooms.get(roomId);
-}
-
-function deleteCallRoom(roomId) {
-  callRooms.delete(roomId);
-}
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production";
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
@@ -267,6 +219,22 @@ function handleScreenShareRequest(socket, data) {
     }
   } else {
     // Original single-user logic
+    
+    let isUserInCall = false;
+    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
+      if (callData.joined.includes(data.toEmail) || callData.ringing.includes(data.toEmail)) {
+        isUserInCall = true;
+        break;
+      }
+    }
+  
+    if (isUserInCall) {
+      socket.emit("user-in-call", {
+        toEmail:data.toEmail,
+        message: "User is currently in another call"
+      });
+      return;
+    }
     const targetSocketId = onlineUsers.get(data.toEmail);
     if (targetSocketId) {
       socket.to(targetSocketId).emit("screen-share-request", {
@@ -319,6 +287,22 @@ async function handleCallRequest(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
+  let isUserInCall = false;
+  for (const [callRoomId, callData] of Object.entries(activeCalls)) {
+    if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
+      isUserInCall = true;
+      break;
+    }
+  }
+
+  if (isUserInCall) {
+    socket.emit("user-in-call", {
+      toEmail,
+      message: "is currently in another call"
+    });
+    return;
+  }
+
   const targetSocketId = onlineUsers.get(toEmail);
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
@@ -328,15 +312,6 @@ async function handleCallRequest(socket, data) {
   }
 
   if (targetSocketId) {
-    // Create or get call room
-    let callRoom = getCallRoom(roomId);
-    if (!callRoom) {
-      callRoom = createCallRoom(roomId, fromEmail, type, isGroupCall, groupId);
-    }
-
-    // Add user to invited list
-    callRoom.invitedUsers.add(toEmail);
-    updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
 
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
@@ -372,20 +347,29 @@ function handleCallInvite(socket, data) {
 
   const targetSocketId = onlineUsers.get(toEmail);
 
+    let isUserInCall = false;
+    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
+      if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
+        isUserInCall = true;
+        break;
+      }
+    }
+  
+    if (isUserInCall) {
+      socket.emit("user-in-call", {
+        toEmail,
+        message: "User is currently in another call"
+      });
+      return;
+    }
+  
+  
+
   activeCalls[roomId].invited.push(toEmail);
   if (targetSocketId) {
     activeCalls[roomId].ringing.push(toEmail);
   }
   if (targetSocketId) {
-    // Create or get call room
-    let callRoom = getCallRoom(roomId);
-    if (!callRoom) {
-      callRoom = createCallRoom(roomId, fromEmail, type, isGroupCall);
-    }
-
-    // Add user to invited list
-    callRoom.invitedUsers.add(toEmail);
-    updateCallRoom(roomId, { invitedUsers: callRoom.invitedUsers });
 
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
@@ -406,18 +390,6 @@ function handleParticipantJoined(socket, data) {
   const targetSocketId = onlineUsers.get(data.to);
 
   if (targetSocketId) {
-    const callRoom = getCallRoom(roomId);
-    if (callRoom) {
-      // Update room state
-      callRoom.participants.add(newParticipantId);
-      callRoom.joinedUsers.add(newParticipantId);
-      callRoom.ringingUsers.delete(newParticipantId);
-      updateCallRoom(roomId, {
-        participants: callRoom.participants,
-        joinedUsers: callRoom.joinedUsers,
-        ringingUsers: callRoom.ringingUsers,
-      });
-    }
 
     socket.to(targetSocketId).emit("participant-joined", {
       newParticipantId,
@@ -433,24 +405,7 @@ function handleParticipantLeft(socket, data) {
   const targetSocketId = onlineUsers.get(to);
 
   if (targetSocketId) {
-    const callRoom = getCallRoom(roomId);
-    if (callRoom) {
-      // Update room state
-      callRoom.participants.delete(leavingUser);
-      callRoom.joinedUsers.delete(leavingUser);
-      callRoom.ringingUsers.delete(leavingUser);
-      updateCallRoom(roomId, {
-        participants: callRoom.participants,
-        joinedUsers: callRoom.joinedUsers,
-        ringingUsers: callRoom.ringingUsers,
-      });
-
-      // If no participants left, delete the room
-      if (callRoom.participants.size === 0) {
-        deleteCallRoom(roomId);
-      }
-    }
-
+   
     const call = activeCalls[roomId];
 
     if (call) {
@@ -496,16 +451,6 @@ function handleCallAccept(socket, data) {
   const toSocketId = onlineUsers.get(toEmail);
 
   if (targetSocketId) {
-    const callRoom = getCallRoom(roomId);
-    if (callRoom) {
-      // Update room state
-      callRoom.ringingUsers.delete(toEmail);
-      callRoom.joinedUsers.add(toEmail);
-      updateCallRoom(roomId, {
-        ringingUsers: callRoom.ringingUsers,
-        joinedUsers: callRoom.joinedUsers,
-      });
-    }
 
     // Send call acceptance to the caller
     socket.to(targetSocketId).emit("call-accepted", {
@@ -538,23 +483,6 @@ function handleCallEnd(socket, data) {
   const targetSocketId = onlineUsers.get(to);
 
   if (targetSocketId) {
-    const callRoom = getCallRoom(roomId);
-    if (callRoom) {
-      // Update room state
-      callRoom.status = "ended";
-      callRoom.endTime = new Date();
-      callRoom.duration = duration;
-      updateCallRoom(roomId, {
-        status: "ended",
-        endTime: callRoom.endTime,
-        duration: callRoom.duration,
-      });
-
-      // Delete room after a delay to allow for cleanup
-      setTimeout(() => {
-        deleteCallRoom(roomId);
-      }, 5000);
-    }
 
     const call = activeCalls[roomId];
     if (call) {
@@ -1090,9 +1018,5 @@ module.exports = {
   getOnlineUsers,
   getSocketByUserId,
   initializeSocket,
-  onlineUsers, // Export if needed elsewhere
-  createCallRoom,
-  getCallRoom,
-  updateCallRoom,
-  deleteCallRoom,
+  onlineUsers,
 };

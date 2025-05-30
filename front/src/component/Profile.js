@@ -10,6 +10,9 @@ import ColorPicker from "./ColorPicker";
 import { initializePrimaryColor } from "../utils/themeUtils";
 
 const Profile = () => {
+
+  console.log("profile");
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId"));

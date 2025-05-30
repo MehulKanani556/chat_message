@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, memo } from "react";
+import React, { useEffect, useRef, useState, memo, useMemo } from "react";
 import { ImCross, ImImages } from "react-icons/im";
 import { MdBlock, MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,9 +45,12 @@ const GroupProfile = memo(({
   handleMakeCall,
   // handleImageClick
   }) => {
+
+    console.log("groupProfile");
+    
   const dispatch = useDispatch();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedUserName, setEditedUserName] = useState("");
+  // const [isEditing, setIsEditing] = useState(false);
+  // const [editedUserName, setEditedUserName] = useState("");
   const [groupPhoto, setGroupPhoto] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -57,9 +60,9 @@ const GroupProfile = memo(({
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
-  const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
+  const selectedChat = useSelector(state => state.magageState.selectedChat)
   const { allUsers,messages } = useSelector((state) => state.user);
-  const [userId] = useState(sessionStorage.getItem("userId"));
+  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
       const {socket} = useSocket();
 
   const handlePhotoChange = async (e) => {

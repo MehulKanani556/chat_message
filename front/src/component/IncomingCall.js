@@ -7,6 +7,8 @@ import { useSocket } from '../context/SocketContext';
 
 const IncomingCall = memo(() => {
 
+  console.log("IncomingCall");
+  
   const {rejectCall,acceptCall} = useSocket();
 
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
