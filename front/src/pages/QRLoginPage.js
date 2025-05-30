@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'http://localhost:5000';
+// const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = 'https://chat-message-0fml.onrender.com';
 
 const QRLoginPage = () => {
   const [sessionId] = useState(() => uuidv4()); // Generate sessionId only once

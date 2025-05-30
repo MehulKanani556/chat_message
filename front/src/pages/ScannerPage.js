@@ -3,7 +3,8 @@ import Scanner from '../component/Scanner';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+// const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+const SERVER_URL = 'http://localhost:5000';
 
 const ScannerPage = () => {
   const [scanResult, setScanResult] = useState(null);
@@ -16,10 +17,10 @@ const ScannerPage = () => {
   useEffect(() => {
     // Check if already logged in
     const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   navigate('/chat');
-    //   return;
-    // }
+    if (token) {
+      navigate('/chat');
+      return;
+    }
   }, [navigate]);
 
   const handleScanSuccess = (data) => {
@@ -29,16 +30,16 @@ const ScannerPage = () => {
       setError(null);
       
       // Store authentication data
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('userId', data.userId);
-      sessionStorage.setItem('username', data.username);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('username', data.username);
       
       // Show success message
       setScanResult('Login successful! Redirecting...');
       
       // Redirect to chat page after successful login
       setTimeout(() => {
-        // navigate('/chat');
+        navigate('/chat');
       }, 1500);
     } catch (err) {
       console.error('Login error:', err);

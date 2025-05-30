@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { QrReader } from 'react-qr-reader';
+import React, { useState, useEffect, useRef } from 'react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'http://localhost:5000';
+// const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = 'https://chat-message-0fml.onrender.com';
 
-const Scanner = () => {
+const ScannerComponent = () => {
   const [cameraError, setCameraError] = useState(null);
-  const [scanStatus, setScanStatus] = useState('ready');
+  const [scanResult, setScanResult] = useState(null);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
@@ -62,7 +63,7 @@ const Scanner = () => {
 
   const handleQRLogin = async (qrData) => {
     try {
-      setScanStatus('processing');
+      setScanResult('Processing login...');
       console.log('Making QR login request with data:', qrData);
       
       // Get current user's credentials
@@ -82,19 +83,19 @@ const Scanner = () => {
         }
       });
 
-      console.log('QR login response:', response.data);
+      console.log('QR login response:', authToken);
       
       if (socket) {
         socket.emit('qr-scan-success', {
           sessionId: qrData.sessionId,
-          token: response.data.token,
+          token: authToken,
           userId: response.data.userId,
           username: response.data.username,
           userData: response.data.userData
         });
       }
 
-      setScanStatus('success');
+      setScanResult('Login successful! Redirecting...');
       
       // Navigate back to chat page after a brief delay
       setTimeout(() => {
@@ -102,7 +103,7 @@ const Scanner = () => {
       }, 1500);
     } catch (error) {
       console.error('QR login error:', error);
-      setScanStatus('error');
+      setScanResult('Login failed. Please try again.');
       
       if (socket) {
         socket.emit('qr-scan-error', {
@@ -114,20 +115,21 @@ const Scanner = () => {
   };
 
   const handleScan = (result) => {
-    if (result) {
-      console.log('Raw QR code scanned:', result.text);
+    if (result && result.length > 0) {
+      const qrData = result[0].rawValue;
+      console.log('Raw QR code scanned:', qrData);
       try {
-        const validation = validateQRData(result.text);
+        const validation = validateQRData(qrData);
         if (validation.valid) {
           console.log('QR data validation passed:', validation.data);
           handleQRLogin(validation.data);
         } else {
           console.log('QR data validation failed:', validation.error);
-          setScanStatus('error');
+          setScanResult('Scan failed: ' + validation.error);
         }
       } catch (parseError) {
         console.error('Failed to parse QR code data:', parseError);
-        setScanStatus('error');
+        setScanResult('Scan failed: Invalid QR code format');
       }
     }
   };
@@ -138,16 +140,7 @@ const Scanner = () => {
   };
 
   const getStatusMessage = () => {
-    switch (scanStatus) {
-      case 'processing':
-        return 'Processing login...';
-      case 'success':
-        return 'Login successful! Redirecting...';
-      case 'error':
-        return 'Login failed. Please try again.';
-      default:
-        return 'Connecting to server...';
-    }
+    return '';
   };
 
   return (
@@ -162,44 +155,31 @@ const Scanner = () => {
       ) : (
         <div className="relative">
           <div className="w-full max-w-md mx-auto border-4 border-blue-500 rounded-lg overflow-hidden">
-            <QrReader
+            <Scanner
               constraints={{
-                facingMode: 'environment',
-                aspectRatio: 1,
-                width: { min: 360, ideal: 640, max: 1920 },
-                height: { min: 360, ideal: 640, max: 1920 }
+                video: {
+                  facingMode: 'environment'
+                }
               }}
-              onResult={handleScan}
+              onScan={handleScan}
               onError={handleError}
-              style={{ width: '100%', height: '100%' }}
-              videoStyle={{ objectFit: 'cover' }}
-              videoContainerStyle={{ width: '100%', height: '100%' }}
-              className="w-full h-full"
             />
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-blue-500"></div>
               <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-blue-500"></div>
-              <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-blue-500"></div>
-              <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-blue-500"></div>
+              <div className="absolute bottom_0 left-0 w-16 h-16 border-b-4 border-l-4 border-blue-500"></div>
+              <div className="absolute bottom_0 right-0 w-16 h-16 border-b-4 border-r-4 border-blue-500"></div>
             </div>
           </div>
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>Position the QR code within the frame</p>
-            <p className="mt-1">Make sure the code is well-lit and clearly visible</p>
-            <p className="mt-1 text-xs">Scan the QR code from the login page</p>
-          </div>
-          <div className={`mt-4 p-4 rounded-lg text-center ${
-            scanStatus === 'processing' ? 'bg-blue-100 text-blue-800' :
-            scanStatus === 'success' ? 'bg-green-100 text-green-800' :
-            scanStatus === 'error' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
-          }`}>
-            {getStatusMessage()}
-          </div>
+          {scanResult && (
+            <div className={`mt-4 p-4 rounded-lg text-center ${scanResult.startsWith('Scan failed') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+              <p>{scanResult}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-export default Scanner;
+export default ScannerComponent;
