@@ -52,20 +52,6 @@
   border: 2px dashed var(--color-primary);
 }
 
-@keyframes wave {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
-
-.animate-wave {
-  animation: wave 2s infinite;
-}
 
 
 

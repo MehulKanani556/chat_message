@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { IMG_URL } from '../utils/baseUrl';
 import { FaUserPlus, FaArrowLeft } from 'react-icons/fa';
 import { createGroup } from "../redux/slice/user.slice";
-import { useSocket } from "../hooks/useSocket";
 import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
 import { setIsGroupCreateModalOpen, setSelectedChat, setShowLeftSidebar } from '../redux/slice/manageState.slice';
@@ -22,7 +21,6 @@ const Groups = memo(() => {
     const [groupPhoto, setGroupPhoto] = useState(null);
     const [userId, setUserId] = useState(sessionStorage.getItem("userId"));
     const { allUsers } = useSelector((state) => state.user);
-    const { socket } = useSocket(currentUser,);
 
     const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
 
