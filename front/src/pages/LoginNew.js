@@ -185,17 +185,17 @@ const LoginNew = () => {
           <h3 className="text-xl text-white font-semibold mb-6">
             Scan to Login with Chat App
           </h3>
-          <div className="bg-white p-4 rounded-lg mb-6 ">
+          <div className="  rounded-lg text-lg">
            <QRLoginPage />
-          </div>
-          <div className="text-center">
-            <a href="#" className="text-white/80 text-sm hover:text-white">
+          <div className="text-start flex mt-4">
+            <a href="#" className="text-white/80 text-sm hover:text-white text-nowrap">
               Terms & Conditions
             </a>
-            <span className="text-white/80 mx-2">&</span>
-            <a href="#" className="text-white/80 text-sm hover:text-white">
+            <div className="text-white/80 mx-2">&</div>
+            <a href="#" className="text-white/80 text-sm hover:text-white text-nowrap">
               Privacy Policy
             </a>
+          </div>
           </div>
         </div>
       </div>

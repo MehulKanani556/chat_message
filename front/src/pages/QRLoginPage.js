@@ -85,12 +85,11 @@ const QRLoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h1 className="mb-6 text-2xl font-bold text-center">QR Code Login</h1>
+    <div className="flex flex-col items-center justify-center  ">
+      <div className="">
         
         <div className="mb-6 flex justify-center">
-          <div className="p-4 bg-white rounded-lg shadow">
+          <div className=" rounded-lg shadow">
             <QRCodeSVG
               value={getQRCodeData()}
               size={256}
@@ -101,11 +100,11 @@ const QRLoginPage = () => {
         </div>
 
         <div className="text-center">
-          {!isConnected && (
+          {/* {!isConnected && (
             <p className="text-yellow-600 mb-4">Connecting to server...</p>
-          )}
+          )} */}
           {status === 'waiting' && (
-            <p className="text-gray-600">Waiting for scan...</p>
+            <p className="text-white/50">Waiting for scan...</p>
           )}
           {status === 'success' && (
             <p className="text-green-600">Login successful! Redirecting...</p>
@@ -115,10 +114,11 @@ const QRLoginPage = () => {
           )}
         </div>
 
-        <div className="mt-4 text-sm text-gray-500 text-center">
-          <p>1. Open this page on the device you want to log in to</p>
-          <p>2. Use the scanner on your logged-in device to scan this QR code</p>
-          <p>3. You will be automatically logged in</p>
+        <div className="mt-4 text-sm text-white/60 ">
+          <p>1. Open App on your device</p>
+          <p>2. Tap on <b>⋮</b> icon</p>
+          <p>3. Tap on <b>Linked Device</b> , then <b>Link Device</b></p>
+          <p>4. Scan the QR Code</p>
         </div>
       </div>
     </div>
