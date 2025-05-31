@@ -268,6 +268,9 @@ async function handleCallRequest(socket, data) {
 
   socket.join(roomId);
 
+
+  
+
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
