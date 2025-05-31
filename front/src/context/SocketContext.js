@@ -38,8 +38,8 @@ import {
   setUserIncall,
 } from "../redux/slice/manageState.slice";
 
-const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-// const SOCKET_SERVER_URL = "http://localhost:5000";
+// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
+const SOCKET_SERVER_URL = "http://localhost:5000";
 
 const SocketContext = createContext();
 

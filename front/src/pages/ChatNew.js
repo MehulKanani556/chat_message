@@ -52,7 +52,6 @@ import {
   IoCheckmarkDoneCircleOutline,
   IoPersonCircleOutline,
 } from "react-icons/io5";
-import { useSocket } from "../hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createGroup,
@@ -79,6 +78,7 @@ import ChatItem from "../component/ChatItem"; // Import the new ChatItem compone
 import { BiReply, BiShare } from "react-icons/bi";
 import { SlActionUndo } from "react-icons/sl";
 import MessageList from "../component/MessageList";
+import { useSocket } from "../context/SocketContext";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {

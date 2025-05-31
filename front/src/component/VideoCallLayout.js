@@ -20,7 +20,7 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = memo(() => {
- 
+
   const participants = useSelector(state => state.magageState.participants);
   const selectedChat = useSelector(state => state.magageState.selectedChat);
   const selectedChatModule = useSelector(state => state.magageState.selectedChatModule);
@@ -32,19 +32,23 @@ const VideoCallLayout = memo(() => {
   const isReceiving = useSelector(state => state.magageState.isReceiving);
   const userIncall = useSelector(state => state.magageState.userIncall);
   const chatMessages = useSelector(state => state.magageState.chatMessages);
-  const participantOpen  = useSelector(state => state.magageState.participantOpen );
-  const callChatList  = useSelector(state => state.magageState.callChatList );
+  const participantOpen = useSelector(state => state.magageState.participantOpen);
+  const callChatList = useSelector(state => state.magageState.callChatList);
 
-  const { allUsers,messages } = useSelector((state) => state.user);
+  const { allUsers, messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef(null);
+  const [localVideoPosition, setLocalVideoPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingLocal, setIsDraggingLocal] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const localVideoRef = useRef(null);
 
-    //===========Use the custom socket hook===========
-    const {endCall,cleanupConnection, toggleCamera,toggleMicrophone} = useSocket();
+  //===========Use the custom socket hook===========
+  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone } = useSocket();
 
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
@@ -58,6 +62,7 @@ const VideoCallLayout = memo(() => {
     setIsDragging(true);
   };
 
+  let LocalX, LocalY, X, Y;
   const handleMouseMove = (e) => {
     if (!isDragging || !chatMessages) return;
 
@@ -72,11 +77,17 @@ const VideoCallLayout = memo(() => {
     const constrainedX = Math.max(0, Math.min(newX, maxX));
     const constrainedY = Math.max(0, Math.min(newY, maxY));
 
-    setPosition({ x: constrainedX, y: constrainedY });
+    localVideoRef.current.style.left = `${constrainedX}px`;
+    localVideoRef.current.style.top = `${constrainedY}px`;
+
+    X = constrainedX;
+    Y = constrainedY;
+
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setPosition({ x: X, y: Y });
   };
 
   useEffect(() => {
@@ -92,7 +103,7 @@ const VideoCallLayout = memo(() => {
   }, [isDragging]);
 
   const [ringtone] = useState(new Audio('/Ring_ring.mp3')); // Add your ringtone file to public folder
-  
+
   // Add useEffect to handle ringtone
   useEffect(() => {
     if (participants.length == 1 && !isReceiving) {
@@ -107,13 +118,62 @@ const VideoCallLayout = memo(() => {
       ringtone.pause();
       ringtone.currentTime = 0;
     };
-  }, [isReceiving, ringtone,participants]);
+  }, [isReceiving, ringtone, participants]);
 
 
 
 
-    console.log("VideoCallLayout");
-    // console.log(participants.length, isVoiceCalling);
+  console.log("VideoCallLayout");
+  // console.log(participants.length, isVoiceCalling);
+
+  const handleLocalVideoMouseDown = (e, participantId) => {
+    if (participants.length !== 2 || participantId !== currentUser) return;
+
+    setIsDraggingLocal(true);
+    setDragStart({
+      x: e.clientX - localVideoPosition.x,
+      y: e.clientY - localVideoPosition.y,
+    });
+  };
+
+  const handleLocalVideoMouseMove = (e) => {
+    if (!isDraggingLocal || participants.length !== 2) return;
+
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+
+    // Get window dimensions
+    const maxX = window.innerWidth - (localVideoRef.current?.offsetWidth || 0);
+    const maxY = window.innerHeight - (localVideoRef.current?.offsetHeight || 0);
+
+    // Constrain position within window bounds
+    const constrainedX = Math.max(0, Math.min(newX, maxX));
+    const constrainedY = Math.max(0, Math.min(newY, maxY));
+
+    localVideoRef.current.style.left = `${constrainedX}px`;
+    localVideoRef.current.style.top = `${constrainedY}px`;
+
+    LocalX = constrainedX;
+    LocalY = constrainedY;
+
+  };
+
+  const handleLocalVideoMouseUp = () => {
+    setIsDraggingLocal(false);
+    setLocalVideoPosition({ x: LocalX, y: LocalY });
+  };
+
+  useEffect(() => {
+    if (isDraggingLocal) {
+      window.addEventListener('mousemove', handleLocalVideoMouseMove);
+      window.addEventListener('mouseup', handleLocalVideoMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleLocalVideoMouseMove);
+      window.removeEventListener('mouseup', handleLocalVideoMouseUp);
+    };
+  }, [isDraggingLocal]);
 
   const content = (
     <div
@@ -142,8 +202,8 @@ const VideoCallLayout = memo(() => {
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                 {selectedChat &&
-                selectedChat.photo &&
-                selectedChat.photo !== "null" ? (
+                  selectedChat.photo &&
+                  selectedChat.photo !== "null" ? (
                   <img
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
@@ -160,10 +220,10 @@ const VideoCallLayout = memo(() => {
                   {selectedChat?.userName || "Unknown User"}
                 </p>
                 {userIncall &&
-                <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
-                  {selectedChat?.userName + ' ' + userIncall}
-                </p>
-                 }
+                  <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
+                    {selectedChat?.userName + ' ' + userIncall}
+                  </p>
+                }
               </div>
             </div>
           ) : (
@@ -176,29 +236,20 @@ const VideoCallLayout = memo(() => {
               return (
                 <div
                   key={participantId}
-                  className={`${
-                    participants.length == 2
-                      ? isLocalUser
-                        ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
-                        : widthClass
-                      : widthClass
-                  } p-2 flex items-center justify-center`}
+                  ref={isLocalUser ? localVideoRef : null}
+                  className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move left-[84%]" : widthClass) : widthClass} p-2 flex items-center justify-center`}
                   style={{
-                    height: `${
-                      !(isLocalUser && participants.length == 2)
-                        ? `calc(100% / ${
-                            participants.length <= 2
-                              ? 1
-                              : participants.length <= 8 &&
-                                participants.length >= 2
-                              ? 2
-                              : 3
-                          })`
-                        : ""
-                    }`,
+                    height: `${!(isLocalUser && participants.length == 2) ? `calc(100% / ${participants.length <= 2 ? 1 : participants.length <= 8 && participants.length >= 2 ? 2 : 3})` : ''}`,
+                    ...(isLocalUser && participants.length == 2 ? {
+                      position: "absolute",
+                      left: `${localVideoPosition.x}px`,
+                      top: `${localVideoPosition.y}px`,
+                      cursor: isDraggingLocal ? 'grabbing' : 'grab'
+                    } : {})
                   }}
+                  onMouseDown={(e) => handleLocalVideoMouseDown(e, participantId)}
                 >
-                  <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
+                  <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
                     <video
                       autoPlay
                       playsInline
@@ -221,9 +272,9 @@ const VideoCallLayout = memo(() => {
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
                     {userIncall &&
-                    <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
-                      {selectedChat?.userName + ' ' + userIncall}
-                    </p>
+                      <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
+                        {selectedChat?.userName + ' ' + userIncall}
+                      </p>
                     }
                   </div>
                 </div>
@@ -232,127 +283,124 @@ const VideoCallLayout = memo(() => {
           )
         ) : (
           <>
-          {(chatMessages) && (
-            <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
-              <LuFullscreen
-                className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                onClick={() => {
-                  dispatch(setChatMessages(!chatMessages))
-                  dispatch(setCallChatList(!callChatList))
-                }}
-              />
-            </div>
-          )}
-         { participants.length > 0 &&
-          Array.from(participants)?.map(([participantId, stream]) => {
-            const participant = allUsers.find((u) => u._id === participantId);
-            const isCameraEnabled = isVideoCalling
-              ? cameraStatus?.[participantId] !== false
-              : false;
-            const isLocalUser = participantId === currentUser;
-            const widthClass = getParticipantWidth(participants?.length);
-            // localVideoRef.current.srcObject = isLocalUser ? stream : null
+            {(chatMessages) && (
+              <div className={`absolute w-full h-full flex justify-center group items-center z-[100] transition-opacity duration-200 hover:backdrop-brightness-50`}>
+                <LuFullscreen
+                  className="text-white cursor-pointer h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  onClick={() => {
+                    dispatch(setChatMessages(!chatMessages))
+                    dispatch(setCallChatList(!callChatList))
+                  }}
+                />
+              </div>
+            )}
+            {participants.length > 0 &&
+              Array.from(participants)?.map(([participantId, stream]) => {
+                const participant = allUsers.find((u) => u._id === participantId);
+                const isCameraEnabled = isVideoCalling
+                  ? cameraStatus?.[participantId] !== false
+                  : false;
+                const isLocalUser = participantId === currentUser;
+                const widthClass = getParticipantWidth(participants?.length);
+                // localVideoRef.current.srcObject = isLocalUser ? stream : null
 
-            console.log(cameraStatus, isCameraEnabled, participantId);
+                console.log(cameraStatus, isCameraEnabled, participantId);
 
-            return (
-              <div
-                key={participantId}
-                className={`${
-                  participants.length == 2
-                    ? isLocalUser
-                      ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
-                      : widthClass
-                    : widthClass
-                } p-2 flex items-center justify-center`}
-                style={{
-                  height: `${
-                    !(isLocalUser && participants.length == 2)
-                      ? `calc(100% / ${
-                          participants.length <= 2
+                return (
+                  <div
+                    key={participantId}
+                    className={`${participants.length == 2
+                        ? isLocalUser
+                          ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
+                          : widthClass
+                        : widthClass
+                      } p-2 flex items-center justify-center`}
+                    style={{
+                      height: `${!(isLocalUser && participants.length == 2)
+                          ? `calc(100% / ${participants.length <= 2
                             ? 1
                             : participants.length <= 8 &&
                               participants.length >= 2
-                            ? 2
-                            : 3
-                        })`
-                      : ""
-                  }`,
-                }}
-              >
-                <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
-                  {isCameraEnabled ? (
-                    <>
-                      <video
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover rounded-xl"
-                        muted={participantId === currentUser}
-                        ref={(el) => {
-                          if (el && stream instanceof MediaStream) {
-                            el.srcObject = stream;
-                            el.play().catch((err) =>
-                              console.error("Remote video error:", err)
-                            );
-                          }
-                          // If you want to keep localVideoRef for the current user:
-                          // if (participantId === currentUser && localVideoRef) {
-                          //   localVideoRef.current = el;
-                          // }
-                        }}
-                      />
-                      <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
-                        {isLocalUser ? "You" : participant?.userName || "Par"}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
-                      <video
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-cover rounded-xl hidden"
-                        muted={participantId === currentUser}
-                        ref={(el) => {
-                          if (el && stream instanceof MediaStream) {
-                            el.srcObject = stream;
-                            el.play().catch((err) =>
-                              console.error("Remote video error:", err)
-                            );
-                          }
-                          // If you want to keep localVideoRef for the current user:
-                          // if (participantId === currentUser && localVideoRef) {
-                          //   localVideoRef.current = el;
-                          // }
-                        }}
-                      />
-                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
-                        {participant?.photo && participant.photo !== "null" ? (
-                          <img
-                            src={`${IMG_URL}${participant.photo.replace(
-                              /\\/g,
-                              "/"
-                            )}`}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
+                              ? 2
+                              : 3
+                          })`
+                          : ""
+                        }`,
+                    }}
+                  >
+                    <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
+                      {isCameraEnabled ? (
+                        <>
+                          <video
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover rounded-xl"
+                            muted={participantId === currentUser}
+                            ref={(el) => {
+                              if (el && stream instanceof MediaStream) {
+                                el.srcObject = stream;
+                                el.play().catch((err) =>
+                                  console.error("Remote video error:", err)
+                                );
+                              }
+                              // If you want to keep localVideoRef for the current user:
+                              // if (participantId === currentUser && localVideoRef) {
+                              //   localVideoRef.current = el;
+                              // }
+                            }}
                           />
-                        ) : (
-                          <div className="w-full h-full bg-gray-500 flex items-center justify-center rounded-full">
-                            <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
-                              {participant?.userName?.[0]?.toUpperCase() || "?"}
-                            </span>
+                          <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                            {isLocalUser ? "You" : participant?.userName || "Par"}
                           </div>
-                        )}
-                      </div>
-                      <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
-                        {participant?.userName || "Pa"}{" "}
-                        {!isVideoCalling ? "" : " (Camera Off)"}
-                      </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
+                          <video
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover rounded-xl hidden"
+                            muted={participantId === currentUser}
+                            ref={(el) => {
+                              if (el && stream instanceof MediaStream) {
+                                el.srcObject = stream;
+                                el.play().catch((err) =>
+                                  console.error("Remote video error:", err)
+                                );
+                              }
+                              // If you want to keep localVideoRef for the current user:
+                              // if (participantId === currentUser && localVideoRef) {
+                              //   localVideoRef.current = el;
+                              // }
+                            }}
+                          />
+                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
+                            {participant?.photo && participant.photo !== "null" ? (
+                              <img
+                                src={`${IMG_URL}${participant.photo.replace(
+                                  /\\/g,
+                                  "/"
+                                )}`}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-500 flex items-center justify-center rounded-full">
+                                <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
+                                  {participant?.userName?.[0]?.toUpperCase() || "?"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
+                            {participant?.userName || "Pa"}{" "}
+                            {!isVideoCalling ? "" : " (Camera Off)"}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
           </>
         )}
       </div>
