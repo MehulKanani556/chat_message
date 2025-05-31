@@ -38,8 +38,8 @@ import {
   setUserIncall,
 } from "../redux/slice/manageState.slice";
 
-const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-// const SOCKET_SERVER_URL = "http://localhost:5000";
+// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
+const SOCKET_SERVER_URL = "http://localhost:5000";
 
 const SocketContext = createContext();
 
@@ -96,13 +96,13 @@ export const SocketProvider = ({ children }) => {
     callParticipantsList,
     isConnected,
     onlineUsers,
-    isVideoCalling,
     incomingCall,
     isCameraOn,
     isSharing,
+    isVideoCalling,
     isReceiving,
-    incomingShare,
     isVoiceCalling,
+    incomingShare,
     callParticipants,
     isMicrophoneOn,
     voiceCallData,
@@ -645,24 +645,39 @@ export const SocketProvider = ({ children }) => {
     // Handle incoming video call request with 30 sec timeout and disconnect function
     socketRef.current.on("call-request", async (data) => {
       console.log("Incoming call from:", data);
-      dispatch(setIncomingCall({
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        type: data.type,
-        participants: data.participants,
-        isGroupCall: data.isGroupCall,
-        groupId: data.groupId || null,
-        roomId: data.roomId,
-      }));
-      setCallRoom(data.roomId);
-      setCallStatus("ringing");
 
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
+        dispatch(setIncomingCall({
+          fromEmail: data.fromEmail,
+          signal: data.signal,
+          type: data.type,
+          participants: data.participants,
+          isGroupCall: data.isGroupCall,
+          groupId: data.groupId || null,
+          roomId: data.roomId,
+        }));
+        setCallRoom(data.roomId);
+        setCallStatus("ringing");
+      }
     });
 
     // console.log("callDuration", callDuration);
 
     socketRef.current.on("call-invite", async (data) => {
       console.log("Incoming call invite from:", data);
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
       dispatch(setIncomingCall({
         fromEmail: data.fromEmail,
         signal: data.signal,
@@ -674,6 +689,7 @@ export const SocketProvider = ({ children }) => {
       setCallRoom(data.roomId);
 
       setCallStatus("ringing");
+    }
     });
 
     socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants, roomId }) => {
@@ -808,7 +824,15 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("screen-share-request", async (data) => {
       console.log("Incoming screen share from:", data.fromEmail);
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
       dispatch(setIncomingShare(data));
+      }
     });
 
     // Handle when share is accepted
@@ -828,7 +852,7 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("user-in-call", (data) => {
       if(!selectedChat?.members){
-        dispatch(setUserIncall(data));
+        dispatch(setUserIncall("is on another Call Running"));
       }
     });
 
@@ -1172,6 +1196,7 @@ export const SocketProvider = ({ children }) => {
       : 0;
     const no_of_callUser = sessionStorage.getItem("callUser");
 
+    if(callAccept){
     if (groupCall) {
       if (callParticipantsList?.joined?.length > 2) {
         callParticipantsList?.joined.forEach((participantId) => {
@@ -1277,6 +1302,7 @@ export const SocketProvider = ({ children }) => {
         });
       }
     }
+  }
 
     // Reset call-related states
     setCallStartTime(null);

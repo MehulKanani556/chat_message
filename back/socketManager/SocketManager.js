@@ -220,21 +220,6 @@ function handleScreenShareRequest(socket, data) {
   } else {
     // Original single-user logic
     
-    let isUserInCall = false;
-    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-      if (callData.joined.includes(data.toEmail) || callData.ringing.includes(data.toEmail)) {
-        isUserInCall = true;
-        break;
-      }
-    }
-  
-    if (isUserInCall) {
-      socket.emit("user-in-call", {
-        toEmail:data.toEmail,
-        message: "User is currently in another call"
-      });
-      return;
-    }
     const targetSocketId = onlineUsers.get(data.toEmail);
     if (targetSocketId) {
       socket.to(targetSocketId).emit("screen-share-request", {
@@ -287,22 +272,6 @@ async function handleCallRequest(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
-  let isUserInCall = false;
-  for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-    if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
-      isUserInCall = true;
-      break;
-    }
-  }
-
-  if (isUserInCall) {
-    socket.emit("user-in-call", {
-      toEmail,
-      message: "is currently in another call"
-    });
-    return;
-  }
-
   const targetSocketId = onlineUsers.get(toEmail);
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
@@ -328,6 +297,38 @@ async function handleCallRequest(socket, data) {
   }
 }
 
+const handleUserIncall = (socket, data) => {
+
+  const {
+    fromEmail,
+    toEmail,
+    signal,
+    type,
+    participants,
+    isGroupCall,
+    groupId,
+    roomId,
+  } = data;
+
+  const targetSocketId = onlineUsers.get(fromEmail);
+  
+  delete activeCalls[roomId];
+
+  if (targetSocketId) {
+    socket.to(targetSocketId).emit("user-in-call", {
+      fromEmail,
+      signal,
+      type,
+      participants,
+      isGroupCall,
+      groupId: groupId || null,
+      roomId,
+    });
+  }
+
+  socket.leave(roomId)
+}
+
 function handleCallInvite(socket, data) {
   const {
     fromEmail,
@@ -344,26 +345,7 @@ function handleCallInvite(socket, data) {
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
-
   const targetSocketId = onlineUsers.get(toEmail);
-
-    let isUserInCall = false;
-    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-      if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
-        isUserInCall = true;
-        break;
-      }
-    }
-  
-    if (isUserInCall) {
-      socket.emit("user-in-call", {
-        toEmail,
-        message: "User is currently in another call"
-      });
-      return;
-    }
-  
-  
 
   activeCalls[roomId].invited.push(toEmail);
   if (targetSocketId) {
@@ -872,6 +854,8 @@ function handleCameraStatusChange(socket, data) {
   });
 }
 
+
+
 function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
@@ -1010,9 +994,11 @@ function initializeSocket(io) {
       socket.broadcast.emit('qr-scan-error', data);
     });
 
+    socket.on("user-in-call", (data)=> handleUserIncall(socket, data));
     // ===========================================================================================================
-  });
+})
 }
+
 
 // Clean expired sessions every minute
 setInterval(() => {
