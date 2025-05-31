@@ -283,28 +283,14 @@ async function handleCallRequest(socket, data) {
 
   socket.join(roomId);
 
-  console.log("kcjvopxc============================");
+
   
 
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
-  let isUserInCall = false;
-  for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-    if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
-      isUserInCall = true;
-      break;
-    }
-  }
-
-  if (isUserInCall) {
-    socket.emit("user-in-call", {
-      toEmail,
-      message: "is currently in another call"
-    });
-    return;
-  }
+ 
 
   const targetSocketId = onlineUsers.get(toEmail);
   activeCalls[roomId].invited.push(toEmail);
@@ -350,21 +336,7 @@ function handleCallInvite(socket, data) {
 
   const targetSocketId = onlineUsers.get(toEmail);
 
-    let isUserInCall = false;
-    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-      if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
-        isUserInCall = true;
-        break;
-      }
-    }
-  
-    if (isUserInCall) {
-      socket.emit("user-in-call", {
-        toEmail,
-        message: "User is currently in another call"
-      });
-      return;
-    }
+   
   
   
 

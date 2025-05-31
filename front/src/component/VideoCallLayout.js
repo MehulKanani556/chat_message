@@ -120,9 +120,6 @@ const VideoCallLayout = memo(() => {
     };
   }, [isReceiving, ringtone, participants]);
 
-
-
-
   console.log("VideoCallLayout");
   // console.log(participants.length, isVoiceCalling);
 
@@ -135,6 +132,8 @@ const VideoCallLayout = memo(() => {
       y: e.clientY - localVideoPosition.y,
     });
   };
+
+
 
   const handleLocalVideoMouseMove = (e) => {
     if (!isDraggingLocal || participants.length !== 2) return;
@@ -309,24 +308,18 @@ const VideoCallLayout = memo(() => {
                 return (
                   <div
                     key={participantId}
-                    className={`${participants.length == 2
-                        ? isLocalUser
-                          ? "absolute bottom-8 right-8 w-40 h-28 md:w-56 md:h-36 z-20"
-                          : widthClass
-                        : widthClass
-                      } p-2 flex items-center justify-center`}
+                    ref={isLocalUser ? localVideoRef : null}
+                    className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move left-[84%]" : widthClass) : widthClass} p-2 flex items-center justify-center`}
                     style={{
-                      height: `${!(isLocalUser && participants.length == 2)
-                          ? `calc(100% / ${participants.length <= 2
-                            ? 1
-                            : participants.length <= 8 &&
-                              participants.length >= 2
-                              ? 2
-                              : 3
-                          })`
-                          : ""
-                        }`,
+                      height: `${!(isLocalUser && participants.length == 2) ? `calc(100% / ${participants.length <= 2 ? 1 : participants.length <= 8 && participants.length >= 2 ? 2 : 3})` : ''}`,
+                      ...(isLocalUser && participants.length == 2 ? {
+                        position: "absolute",
+                        left: `${localVideoPosition.x}px`,
+                        top: `${localVideoPosition.y}px`,
+                        cursor: isDraggingLocal ? 'grabbing' : 'grab'
+                      } : {})
                     }}
+                    onMouseDown={(e) => handleLocalVideoMouseDown(e, participantId)}
                   >
                     <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
                       {isCameraEnabled ? (
