@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import QRLoginPage from "./pages/QRLoginPage";
 import ScannerPage from "./pages/ScannerPage";
 import { SocketProvider } from "./context/SocketContext";
+import LoginNew from "./pages/LoginNew";
 
 function App() {
   const { store, persistor } = configureStore();
@@ -31,8 +32,9 @@ function App() {
     <Provider store={store}>
        <SocketProvider>
       <Routes>
-        <Route path="/" element={<Login />}></Route>
-        {/* <Route path="/" element={<LoginNew />}></Route> */}
+        <Route path="/login" element={<Login />}></Route>
+        {/* <Route path="/login" element={<LoginNew />}></Route> */}
+        <Route path="/" element={<LoginNew />}></Route>
         <Route path="/chat" element={<Chat2 />}></Route>
         <Route path="/profile" element={<Profile />}></Route>
         {/* <Route path="/chatNew" element={<ChatNew />}></Route> */}

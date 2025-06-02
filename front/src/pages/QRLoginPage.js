@@ -4,9 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import io from 'socket.io-client';
+import { BASE_URL } from '../utils/baseUrl';
+import { useSocket } from '../context/SocketContext';
 
-// const SERVER_URL = 'http://localhost:5000';
-const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+const SERVER_URL = BASE_URL.replace('/api', ''); // Remove /api from the URL
 
 const QRLoginPage = () => {
   const [sessionId] = useState(() => uuidv4()); // Generate sessionId only once
@@ -15,6 +16,7 @@ const QRLoginPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef(null);
   const navigate = useNavigate();
+  // const {socket} = useSocket();
 
   useEffect(() => {
     // Set up Socket.IO connection
@@ -75,8 +77,8 @@ const QRLoginPage = () => {
       }
     };
   }, [sessionId, navigate]);
-
   const getQRCodeData = () => {
+   
     return JSON.stringify({
       action: 'login',
       sessionId: sessionId,

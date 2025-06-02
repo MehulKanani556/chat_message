@@ -4,8 +4,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-// const SERVER_URL = 'http://localhost:5000';
-const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+import { BASE_URL } from '../utils/baseUrl';
+
+const SERVER_URL = BASE_URL.replace('/api', '');
+
 
 const ScannerComponent = () => {
   const [cameraError, setCameraError] = useState(null);
@@ -21,6 +23,18 @@ const ScannerComponent = () => {
       reconnectionDelay: 1000,
       timeout: 20000,
       forceNew: true
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Socket.IO connected');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket.IO connection error:', error);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Socket.IO disconnected');
     });
 
     setSocket(newSocket);

@@ -37,9 +37,11 @@ import {
   setTypingUsers,
   setUserIncall,
 } from "../redux/slice/manageState.slice";
+import { BASE_URL } from '../utils/baseUrl';
 
-// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-const SOCKET_SERVER_URL = "http://localhost:5000";
+
+
+const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
 
 const SocketContext = createContext();
 
@@ -144,7 +146,13 @@ export const SocketProvider = ({ children }) => {
     }
 
     if (userId) {
-      socketRef.current = io(SOCKET_SERVER_URL);
+      socketRef.current = io(SOCKET_SERVER_URL, {
+        transports: ['websocket', 'polling'],
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 20000,
+        forceNew: true
+      });
 
       socketRef.current.on("connect", () => {
         dispatch(setIsConnected());
@@ -152,17 +160,20 @@ export const SocketProvider = ({ children }) => {
         socketRef.current.emit("user-login", userId);
       });
 
+      socketRef.current.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        dispatch(setIsConnected(false));
+        dispatch(setOnlineUsers([]));
+      });
+
       socketRef.current.on("disconnect", () => {
-        dispatch(setIsConnected());
+        dispatch(setIsConnected(false));
         dispatch(setOnlineUsers([]));
         console.log("Socket disconnected");
       });
 
       socketRef.current.on("user-status-changed", (onlineUserIds) => {
         dispatch(setOnlineUsers(onlineUserIds));
-        // if (onlineUserIds.length > 0) {
-        //   dispatch(setOnlineuser(onlineUserIds));
-        // }
       });
 
       socketRef.current.on("reconnect", () => {
