@@ -77,12 +77,19 @@ const QRLoginPage = () => {
       }
     };
   }, [sessionId, navigate]);
+
+  const deviceInfo = {
+    deviceId: sessionId,
+    deviceName: navigator.userAgent,
+    deviceType: /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop'
+  };
+
   const getQRCodeData = () => {
-   
     return JSON.stringify({
       action: 'login',
       sessionId: sessionId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      deviceInfo: deviceInfo
     });
   };
 

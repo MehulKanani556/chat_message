@@ -17,8 +17,11 @@ setInterval(() => {
 // QR Login handler
 const handleQrLogin = async (req, res) => {
     try {
-        const { qrData } = req.body;
+        const { qrData, deviceInfo } = req.body;
         const { sessionId, timestamp } = qrData;
+
+        // console.log('QR data:', qrData);
+        console.log('Device info:', deviceInfo);
 
         // Validate QR data
         if (!sessionId || !timestamp) {
@@ -39,6 +42,36 @@ const handleQrLogin = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Store device information
+        if (deviceInfo) {
+            const { deviceId, deviceName, deviceType } = deviceInfo;
+            
+            // Check if device already exists
+            const existingDeviceIndex = user.devices.findIndex(d => d.deviceId === deviceId);
+            
+            if (existingDeviceIndex !== -1) {
+                // Update existing device's last login
+                user.devices[existingDeviceIndex].lastLogin = new Date();
+            } else {
+                // Check if user has reached device limit (5 devices)
+                if (user.devices.length >= 5) {
+                    return res.status(403).json({ 
+                        message: 'Device limit reached. You can only log in from 5 devices. Please log out from another device first.' 
+                    });
+                }
+                
+                // Add new device
+                user.devices.push({
+                    deviceId,
+                    deviceName,
+                    deviceType,
+                    lastLogin: new Date()
+                });
+            }
+            
+            await user.save();
         }
 
         // Store session data

@@ -61,7 +61,16 @@ const userSchema = mongoose.Schema(
     muteUsers:{
       type:Array,
       default:[],
-    }
+    },
+    devices: [{
+      deviceId: String,
+      deviceName: String,
+      deviceType: String,
+      lastLogin: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true,
