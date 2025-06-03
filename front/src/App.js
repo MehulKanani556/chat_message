@@ -17,6 +17,7 @@ import QRLoginPage from "./pages/QRLoginPage";
 import ScannerPage from "./pages/ScannerPage";
 import { SocketProvider } from "./context/SocketContext";
 import LoginNew from "./pages/LoginNew";
+import DeviceListPage from "./pages/DeviceListPage";
 
 function App() {
   const { store, persistor } = configureStore();
@@ -42,6 +43,7 @@ function App() {
         <Route path="/groups" element={<Groups />}></Route>
         <Route path="/g" element={<QRLoginPage />}></Route>
         <Route path="/scanner" element={<ScannerPage />}></Route>
+        <Route path="/devices" element={<DeviceListPage />}></Route>
       </Routes>
       </SocketProvider>
     </Provider>

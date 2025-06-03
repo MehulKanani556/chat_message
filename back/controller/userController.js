@@ -989,3 +989,45 @@ exports.muteUsers = async (req, res) => {
     });
   }
 }
+
+exports.getDevices = async (req, res) => {
+  try {
+      const userId = req.user._id;
+      const userData = await user.findById(userId);
+      
+      if (!userData) {
+          return res.status(404).json({ status: 404, message: "User not found" });
+      }
+
+      return res.status(200).json({
+          status: 200,
+          devices: userData.devices || []
+      });
+  } catch (error) {
+      console.error('Error getting devices:', error);
+      return res.status(500).json({ status: 500, message: error.message });
+  }
+};
+exports.removeDevice = async (req, res) => {
+  try {
+      const userId = req.user._id;
+      const { deviceId } = req.params;
+
+      const userData = await user.findById(userId);
+      if (!userData) {
+          return res.status(404).json({ status: 404, message: "User not found" });
+      }
+
+      // Remove the device from the devices array
+      userData.devices = userData.devices.filter(device => device.deviceId !== deviceId);
+      await userData.save();
+
+      return res.status(200).json({
+          status: 200,
+          message: "Device removed successfully"
+      });
+  } catch (error) {
+      console.error('Error removing device:', error);
+      return res.status(500).json({ status: 500, message: error.message });
+  }
+};
