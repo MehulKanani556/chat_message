@@ -368,9 +368,8 @@ const MessageList = memo(({
       const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
       console.log(file);
   
-      handleMultipleFileUpload([file]);
+      handleMultipleFileUpload([file],selectedChat._id);
       closeCamera();
-  
     };
   
     // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream

@@ -19,15 +19,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
-  for (const [existingUserId, existingSocketId] of onlineUsers.entries()) {
-    if (existingUserId === userId && existingSocketId !== socket.id) {
-      const existingSocket = global.io.sockets.sockets.get(existingSocketId);
-      if (existingSocket) {
-        existingSocket.disconnect();
-      }
-      onlineUsers.delete(existingUserId);
-    }
-  }
+  // for (const [existingUserId, existingSocketId] of onlineUsers.entries()) {
+  //   if (existingUserId === userId && existingSocketId !== socket.id) {
+  //     const existingSocket = global.io.sockets.sockets.get(existingSocketId);
+  //     if (existingSocket) {
+  //       existingSocket.disconnect();
+  //     }
+  //     onlineUsers.delete(existingUserId);
+  //   }
+  // }
 
   // Add new socket connection
   onlineUsers.set(userId, socket.id);
@@ -36,6 +36,9 @@ async function handleUserLogin(socket, userId) {
   // Broadcast updated online users list to all connected clients
   const onlineUsersList = Array.from(onlineUsers.keys());
   global.io.emit("user-status-changed", onlineUsersList);
+  socket.emit("user-status-changed", onlineUsersList);
+
+
 
   try {
     // Find all unread messages for this user
@@ -266,16 +269,38 @@ async function handleCallRequest(socket, data) {
     roomId,
   } = data;
 
-  socket.join(roomId);
-
-
   
+  
+  let isUserInCall = false;
+  for (const [callRoomId, callData] of Object.entries(activeCalls)) {
+    if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
+      isUserInCall = true;
+      break;
+    }
+  }
+
+  console.log(activeCalls, "=======================",isUserInCall);
+ 
+  if (isUserInCall) {
+    socket.emit("user-in-call", {
+      toEmail,
+      message: "is currently in another call"
+    });
+    return;
+  }
+
+  socket.join(roomId);
 
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
+
+
   const targetSocketId = onlineUsers.get(toEmail);
+
+  console.log(toEmail,targetSocketId);
+  
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
 
@@ -288,7 +313,7 @@ async function handleCallRequest(socket, data) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
-    socket.to(targetSocketId).emit("call-request", {
+    socket.to(targetSocketId).emit("call-requested", {
       fromEmail,
       signal,
       type,
@@ -343,11 +368,30 @@ function handleCallInvite(socket, data) {
     roomId,
   } = data;
 
+  
+  let isUserInCall = false;
+  for (const [callRoomId, callData] of Object.entries(activeCalls)) {
+    if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
+      isUserInCall = true;
+      break;
+    }
+  }
+ 
+  if (isUserInCall) {
+    socket.emit("user-in-call", {
+      toEmail,
+      message: "is currently in another call"
+    });
+    return;
+  }
+
   socket.join(roomId);
 
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
+
+
   const targetSocketId = onlineUsers.get(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
@@ -359,7 +403,7 @@ function handleCallInvite(socket, data) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
-    socket.to(targetSocketId).emit("call-invite", {
+    socket.to(targetSocketId).emit("call-invited", {
       fromEmail,
       signal,
       participants,
@@ -755,13 +799,22 @@ function handleDisconnect(socket) {
     const onlineUsersList = Array.from(onlineUsers.keys());
     global.io.emit("user-status-changed", onlineUsersList);
 
+    // Remove userId from activeCalls
+    Object.keys(activeCalls).forEach(roomId => {
+      // activeCalls[roomId].invited = activeCalls[roomId].invited.filter(id => id !== socket.userId);
+      activeCalls[roomId].ringing = activeCalls[roomId].ringing.filter(id => id !== socket.userId);
+      activeCalls[roomId].joined = activeCalls[roomId].joined.filter(id => id !== socket.userId);
+    });
+
     // console.log("User disconnected:", socket.userId);
     // console.log("Current online users:", onlineUsersList);
   }
 }
 
+
+
 async function getOnlineUsers(req, res) {
-  // console.log("onlineUsers", onlineUsers);
+  console.log("onlineUsers", onlineUsers);
   const onlineUsersArray = Array.from(onlineUsers.keys());
   // console.log("onlineUsersArray", onlineUsersArray);
 
@@ -856,8 +909,6 @@ function handleCameraStatusChange(socket, data) {
     }
   });
 }
-
-
 
 function initializeSocket(io) {
   io.on("connection", (socket) => {
@@ -1001,7 +1052,6 @@ function initializeSocket(io) {
     // ===========================================================================================================
 })
 }
-
 
 // Clean expired sessions every minute
 setInterval(() => {

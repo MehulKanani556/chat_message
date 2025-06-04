@@ -900,12 +900,15 @@ const Chat2 = () => {
 
       {/*=========================================== screen share ==================================*/}
       < div
-        className={`h-full w-full flex-1 flex flex-col bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling
+        className={`h-full w-full flex-1 flex bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling
           ? ""
           : "hidden"
-          } ${participantOpen ? "mr-96" : ""}`}
+          } ${participantOpen ? "" : ""}`}
       >
            <VideoCallLayout/>
+
+          {/*======= Call participant modal ======*/}
+          <CallParticipantModal/>
       </div>
 
 {/* =============================================All Modal Section======================================================= */}
@@ -943,8 +946,7 @@ const Chat2 = () => {
           </div>
       )}
 
-      {/*======= Call participant modal ======*/}
-      <CallParticipantModal/>
+    
 
       {isImageModalOpen && selectedImage && <MediaViewer/>}
 
