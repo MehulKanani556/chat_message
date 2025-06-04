@@ -23,9 +23,9 @@ async function handleUserLogin(socket, userId) {
   for (const [existingUserId, existingSocketId] of onlineUsers.entries()) {
     if (existingUserId === userId && existingSocketId !== socket.id) {
       const existingSocket = global.io.sockets.sockets.get(existingSocketId);
-      if (existingSocket) {
-        existingSocket.disconnect();
-      }
+      // if (existingSocket) {
+      //   existingSocket.disconnect();
+      // }
       onlineUsers.delete(existingUserId);
     }
   }
