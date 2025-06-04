@@ -2,7 +2,7 @@ import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
 import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
-import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline } from "react-icons/io5";
+import { IoCallOutline, IoMicOffCircleOutline, IoMicOffOutline, IoMicOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
@@ -55,6 +55,8 @@ const VideoCallLayout = memo(() => {
     if (!chatMessages) return;
 
     const rect = containerRef.current.getBoundingClientRect();
+    console.log(rect, "==========================================");
+
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
@@ -77,8 +79,8 @@ const VideoCallLayout = memo(() => {
     const constrainedX = Math.max(0, Math.min(newX, maxX));
     const constrainedY = Math.max(0, Math.min(newY, maxY));
 
-    localVideoRef.current.style.left = `${constrainedX}px`;
-    localVideoRef.current.style.top = `${constrainedY}px`;
+    containerRef.current.style.left = `${constrainedX}px`;
+    containerRef.current.style.top = `${constrainedY}px`;
 
     X = constrainedX;
     Y = constrainedY;
@@ -87,7 +89,9 @@ const VideoCallLayout = memo(() => {
 
   const handleMouseUp = () => {
     setIsDragging(false);
-    setPosition({ x: X, y: Y });
+    if (X && Y) {
+      setPosition({ x: X, y: Y });
+    }
   };
 
   useEffect(() => {
@@ -192,6 +196,7 @@ const VideoCallLayout = memo(() => {
     >
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
+        {/* Add hidden canvas for recording */}
         {participants.length == 1 ? (
           isVoiceCalling ? (
             <div className="w-full h-full dark:bg-white/10 relative rounded-xl">
@@ -236,13 +241,13 @@ const VideoCallLayout = memo(() => {
                 <div
                   key={participantId}
                   ref={isLocalUser ? localVideoRef : null}
-                  className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move left-[84%]" : widthClass) : widthClass} p-2 flex items-center justify-center`}
+                  className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4" : widthClass) : widthClass} p-2 flex items-center justify-center`}
                   style={{
                     height: `${!(isLocalUser && participants.length == 2) ? `calc(100% / ${participants.length <= 2 ? 1 : participants.length <= 8 && participants.length >= 2 ? 2 : 3})` : ''}`,
                     ...(isLocalUser && participants.length == 2 ? {
                       position: "absolute",
-                      left: `${localVideoPosition.x}px`,
-                      top: `${localVideoPosition.y}px`,
+                      bottom: "1rem",
+                      right: "1rem",
                       cursor: isDraggingLocal ? 'grabbing' : 'grab'
                     } : {})
                   }}
@@ -252,7 +257,7 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
                       muted={participantId === currentUser}
                       ref={(el) => {
                         if (el && stream instanceof MediaStream) {
@@ -309,13 +314,13 @@ const VideoCallLayout = memo(() => {
                   <div
                     key={participantId}
                     ref={isLocalUser ? localVideoRef : null}
-                    className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move left-[84%]" : widthClass) : widthClass} p-2 flex items-center justify-center`}
+                    className={`${participants.length == 2 ? (isLocalUser ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4" : widthClass) : widthClass} p-2 flex items-center justify-center`}
                     style={{
                       height: `${!(isLocalUser && participants.length == 2) ? `calc(100% / ${participants.length <= 2 ? 1 : participants.length <= 8 && participants.length >= 2 ? 2 : 3})` : ''}`,
                       ...(isLocalUser && participants.length == 2 ? {
                         position: "absolute",
-                        left: `${localVideoPosition.x}px`,
-                        top: `${localVideoPosition.y}px`,
+                        bottom: "1rem",
+                        right: "1rem",
                         cursor: isDraggingLocal ? 'grabbing' : 'grab'
                       } : {})
                     }}
@@ -327,7 +332,7 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover rounded-xl"
+                            className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
                             muted={participantId === currentUser}
                             ref={(el) => {
                               if (el && stream instanceof MediaStream) {
@@ -417,9 +422,9 @@ const VideoCallLayout = memo(() => {
             className="w-10 grid place-content-center border rounded-full h-10 text-white"
           >
             {isMicrophoneOn ? (
-              <IoMicOffOutline className="text-xl" />
+              <IoMicOutline className="text-xl" />
             ) : (
-              <IoMicOffCircleOutline className="text-xl" />
+              <IoMicOffOutline className="text-xl" />
             )}
           </button>
 
@@ -452,7 +457,7 @@ const VideoCallLayout = memo(() => {
           {(isVideoCalling || isVoiceCalling) && (
             <button
               onClick={() => {
-                setParticipantOpen(true);
+                dispatch(setParticipantOpen(true));
                 dispatch(setCallChatList(false));
               }}
               className="w-10 grid place-content-center rounded-full h-10 border text-white"
@@ -461,7 +466,10 @@ const VideoCallLayout = memo(() => {
             </button>
           )}
 
-          <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+          <button
+            className={`w-10 grid place-content-center rounded-full h-10 border text-white
+              }`}
+          >
             <AiOutlineVideoCamera className="text-xl" />
           </button>
         </div>

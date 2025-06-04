@@ -67,7 +67,7 @@ const MessageList = memo(({
 }) => {
 
   console.log("msglist");
-  
+
 
   const userId = useMemo(() => sessionStorage.getItem("userId"), []);
   const dispatch = useDispatch();
@@ -84,37 +84,37 @@ const MessageList = memo(({
   const facingMode = useSelector(state => state.magageState.facingMode);
   const searchInputbox = useSelector(state => state.magageState.searchInputbox);
   const isSearchBoxOpen = useSelector(state => state.magageState.isSearchBoxOpen);
-  
+
 
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const messagesContainerRef = useRef(null);
-  const handleReplyMessage = (message) => {dispatch(setReplyingTo(message))};
+  const handleReplyMessage = (message) => { dispatch(setReplyingTo(message)) };
   const [totalMatches, setTotalMatches] = useState(0);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const searchBoxRef = useRef(null);
 
 
-    //===========Use the custom socket hook===========
-    const { socket,
-      startSharing,
-      endCall,
-      cleanupConnection,
-      toggleCamera,
-      toggleMicrophone,
-      markMessageAsRead,
-      rejectCall,
-      sendPrivateMessage,
-      sendTypingStatus,
-      subscribeToMessages,
-      sendGroupMessage,
-      acceptScreenShare,
-      inviteToCall,
-      forwardMessage,
-      addMessageReaction,
-      startCall,
-      acceptCall,
-    } = useSocket();
+  //===========Use the custom socket hook===========
+  const { socket,
+    startSharing,
+    endCall,
+    cleanupConnection,
+    toggleCamera,
+    toggleMicrophone,
+    markMessageAsRead,
+    rejectCall,
+    sendPrivateMessage,
+    sendTypingStatus,
+    subscribeToMessages,
+    sendGroupMessage,
+    acceptScreenShare,
+    inviteToCall,
+    forwardMessage,
+    addMessageReaction,
+    startCall,
+    acceptCall,
+  } = useSocket();
 
 
   //===========group messages by date===========
@@ -131,30 +131,30 @@ const MessageList = memo(({
     return groups;
   };
 
-    // Update the handleCopyMessage function to handle both text and images
-    const handleCopyMessage = async (message, callback) => {
-      if (message.type === "file" && message.fileType?.includes("image/")) {
-        try {
-          const response = await fetch(
-            `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
-          );
-          const blob = await response.blob();
-          const item = new ClipboardItem({
-            [blob.type]: blob,
-          });
-  
-          await navigator.clipboard.write([item]);
-          callback();
-        } catch (error) {
-          console.error("Error copying image:", error);
-        }
-      } else {
-        // Handle text and emoji copying
-        const content = message.content || message;
-        navigator.clipboard.writeText(content).then(callback);
+  // Update the handleCopyMessage function to handle both text and images
+  const handleCopyMessage = async (message, callback) => {
+    if (message.type === "file" && message.fileType?.includes("image/")) {
+      try {
+        const response = await fetch(
+          `${IMG_URL}${message.fileUrl.replace(/\\/g, "/")}`
+        );
+        const blob = await response.blob();
+        const item = new ClipboardItem({
+          [blob.type]: blob,
+        });
+
+        await navigator.clipboard.write([item]);
+        callback();
+      } catch (error) {
+        console.error("Error copying image:", error);
       }
-    };
-    // ===============Menu==================
+    } else {
+      // Handle text and emoji copying
+      const content = message.content || message;
+      navigator.clipboard.writeText(content).then(callback);
+    }
+  };
+  // ===============Menu==================
   const handleContextMenu = (e, message) => {
     e.preventDefault();
     setContextMenu({
@@ -186,7 +186,7 @@ const MessageList = memo(({
   }, [contextMenu]);
 
   // ===========================delete message=============================
-  
+
   const handleDeleteMessage = async (messageId) => {
     try {
       // Emit socket event for real-time deletion
@@ -226,7 +226,7 @@ const MessageList = memo(({
 
     const isEmojiPickerOpen = document.querySelector('.EmojiPickerReact');
     if (isEmojiPickerOpen) return; // Don't scroll if emoji picker is open
-    
+
     if (messagesContainerRef.current) {
       const element = messagesContainerRef.current;
       element.scrollTop = element.scrollHeight;
@@ -285,119 +285,119 @@ const MessageList = memo(({
   //   }
   // }, []);
 
-    // ==========================capture photo===================
+  // ==========================capture photo===================
 
-    // const [cameraStream, setCameraStream] = useState(null);
-    const videoRef = useRef(null);
-    const [photo, setPhoto] = useState(null);
-    // const [openCameraState, setOpenCameraState] = useState(false);
-  
-    // {{ edit_1 }} add state for facingMode & availability
-    // const [facingMode, setFacingMode] = useState('user');
-    // const [backCameraAvailable, setBackCameraAvailable] = useState(false);
-  
+  // const [cameraStream, setCameraStream] = useState(null);
+  const videoRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+  // const [openCameraState, setOpenCameraState] = useState(false);
 
-  
-    function dataURLtoBlob(dataurl) {
-      const arr = dataurl.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new Blob([u8arr], { type: mime });
+  // {{ edit_1 }} add state for facingMode & availability
+  // const [facingMode, setFacingMode] = useState('user');
+  // const [backCameraAvailable, setBackCameraAvailable] = useState(false);
+
+
+
+  function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
     }
-    // const capturePhoto = () => {
-    //   const canvas = document.createElement('canvas');
-    //   const context = canvas.getContext('2d');
-    //   if (videoRef.current) {
-    //     canvas.width = videoRef.current.videoWidth;
-    //     canvas.height = videoRef.current.videoHeight;
-    //     context.drawImage(videoRef.current, 0, 0);
-    //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
-    //     setPhoto(photoData); // Store the photo data
-    //     handleUploadCapturePic(photoData);
-    //     console.log(photoData);
-    //   }
-    // };
-  
-    const capturePhoto = () => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (videoRef.current) {
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-  
-        // {{ edit_1 }} only mirror when using front camera
-        if (facingMode === 'user') {
-          context.translate(canvas.width, 0);
-          context.scale(-1, 1);
-        }
-  
-        context.drawImage(
-          videoRef.current,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-  
-        const photoData = canvas.toDataURL('image/jpeg', 0.8);
-        setPhoto(photoData);
-        handleUploadCapturePic(photoData);
-        console.log(photoData);
+    return new Blob([u8arr], { type: mime });
+  }
+  // const capturePhoto = () => {
+  //   const canvas = document.createElement('canvas');
+  //   const context = canvas.getContext('2d');
+  //   if (videoRef.current) {
+  //     canvas.width = videoRef.current.videoWidth;
+  //     canvas.height = videoRef.current.videoHeight;
+  //     context.drawImage(videoRef.current, 0, 0);
+  //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
+  //     setPhoto(photoData); // Store the photo data
+  //     handleUploadCapturePic(photoData);
+  //     console.log(photoData);
+  //   }
+  // };
+
+  const capturePhoto = () => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (videoRef.current) {
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+
+      // {{ edit_1 }} only mirror when using front camera
+      if (facingMode === 'user') {
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
       }
-    };
-  
-    const closeCamera = () => {
+
+      context.drawImage(
+        videoRef.current,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const photoData = canvas.toDataURL('image/jpeg', 0.8);
+      setPhoto(photoData);
+      handleUploadCapturePic(photoData);
+      console.log(photoData);
+    }
+  };
+
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      dispatch(setOpenCameraState(false));
+      dispatch(setCameraStream(null));
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
+
+  const handleUploadCapturePic = (dataUrl) => {
+    const blob = dataURLtoBlob(dataUrl);
+    // Optionally, give it a filename
+    const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+    console.log(file);
+
+    handleMultipleFileUpload([file], selectedChat._id);
+    closeCamera();
+
+  };
+
+  // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream
+  const switchCamera = async () => {
+    try {
+      const newFacing = facingMode === 'user' ? 'environment' : 'user';
+      dispatch(setFacingMode(newFacing));
+
+      // stop old tracks
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
-        dispatch(setOpenCameraState(false));
-        dispatch(setCameraStream(null));
-        if (videoRef.current) {
-          videoRef.current.srcObject = null;
-        }
       }
-    };
-  
-    const handleUploadCapturePic = (dataUrl) => {
-      const blob = dataURLtoBlob(dataUrl);
-      // Optionally, give it a filename
-      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-      console.log(file);
-  
-      handleMultipleFileUpload([file]);
-      closeCamera();
-  
-    };
-  
-    // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream
-    const switchCamera = async () => {
-      try {
-        const newFacing = facingMode === 'user' ? 'environment' : 'user';
-        dispatch(setFacingMode(newFacing));
-  
-        // stop old tracks
-        if (cameraStream) {
-          cameraStream.getTracks().forEach(track => track.stop());
-        }
-  
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: newFacing }
-        });
-        dispatch(setCameraStream(newStream));
-        if (videoRef.current) {
-          videoRef.current.srcObject = newStream;
-        }
-      } catch (err) {
-        console.error("Error switching camera:", err);
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing }
+      });
+      dispatch(setCameraStream(newStream));
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
       }
+    } catch (err) {
+      console.error("Error switching camera:", err);
     }
+  }
 
 
-      // ===================search=====================
+  // ===================search=====================
 
   // Function to count occurrences of a word in a message
   const countOccurrences = (text, word) => {
@@ -405,7 +405,7 @@ const MessageList = memo(({
     const regex = new RegExp(word, "gi");
     // console.log(regex,text);
     const msg = decryptMessage(text);
-    
+
     return (msg.match(regex) || []).length;
   };
 
@@ -416,19 +416,19 @@ const MessageList = memo(({
     }
 
     const matches = messages.reduce((count, message) => {
-      const content =  typeof message?.content?.content === "string"
-          ? message?.content?.content: "";
+      const content = typeof message?.content?.content === "string"
+        ? message?.content?.content : "";
 
-          const msg = decryptMessage(content);
-          // console.log(countOccurrences(content, searchInputbox),content);
-          
+      const msg = decryptMessage(content);
+      // console.log(countOccurrences(content, searchInputbox),content);
+
       return count + countOccurrences(msg, searchInputbox);
     }, 0);
 
-    console.log("matches",matches);
-    
+    console.log("matches", matches);
 
-    setTotalMatches(matches==0 ? 0 : matches);
+
+    setTotalMatches(matches == 0 ? 0 : matches);
   }, [searchInputbox, messages]);
 
   useEffect(() => {
@@ -439,72 +439,72 @@ const MessageList = memo(({
   }, [selectedChat]);
 
 
-    // Function to scroll to the current search result
+  // Function to scroll to the current search result
 
-    const scrollToSearchResult = (index) => {
-      if (!searchInputbox.trim()) return;
-  
-      let currentMatchIndex = 0;
-      let targetElement = null;
-      let targetSpan = null;
-  
-      // Find all highlighted spans containing the search text
-      const highlightedSpans = document.querySelectorAll(".highlight-text");
-      // console.log("highlightedSpans", highlightedSpans);
-  
-      if (highlightedSpans.length > 0) {
-        highlightedSpans.forEach((span) => {
-          if (currentMatchIndex === index) {
-            targetSpan = span;
-            targetElement = span.closest(".message-content");
-          }
-          currentMatchIndex++;
-        });
-      }
-      // console.log("targetElement", targetElement, targetSpan);
-  
-      // Scroll to the target element if found
-      if (targetElement && targetSpan) {
-        // Remove previous active highlights
-        document.querySelectorAll(".active-search-result").forEach((el) => {
-          el.classList.remove("active-search-result");
-        });
-  
-        // Scroll the message into view
-        targetElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-  
-        // Highlight the specific occurrence
-        targetElement.classList.add("active-search-result");
-        setTimeout(() => {
-          targetElement.classList.remove("active-search-result");
-        }, 2000);
-      }
-    };
-  
-    // Function to handle search navigation
-    const handleSearchNavigation = (direction) => {
-      if (totalMatches === 0) return;
-  
-      setCurrentSearchIndex((prevIndex) => {
-        let newIndex;
-        if (direction === "up") {
-          newIndex = prevIndex <= 0 ? totalMatches - 1 : prevIndex - 1;
-        } else {
-          newIndex = prevIndex >= totalMatches - 1 ? 0 : prevIndex + 1;
+  const scrollToSearchResult = (index) => {
+    if (!searchInputbox.trim()) return;
+
+    let currentMatchIndex = 0;
+    let targetElement = null;
+    let targetSpan = null;
+
+    // Find all highlighted spans containing the search text
+    const highlightedSpans = document.querySelectorAll(".highlight-text");
+    // console.log("highlightedSpans", highlightedSpans);
+
+    if (highlightedSpans.length > 0) {
+      highlightedSpans.forEach((span) => {
+        if (currentMatchIndex === index) {
+          targetSpan = span;
+          targetElement = span.closest(".message-content");
         }
-        scrollToSearchResult(newIndex);
-        return newIndex;
+        currentMatchIndex++;
       });
-    };
+    }
+    // console.log("targetElement", targetElement, targetSpan);
+
+    // Scroll to the target element if found
+    if (targetElement && targetSpan) {
+      // Remove previous active highlights
+      document.querySelectorAll(".active-search-result").forEach((el) => {
+        el.classList.remove("active-search-result");
+      });
+
+      // Scroll the message into view
+      targetElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // Highlight the specific occurrence
+      targetElement.classList.add("active-search-result");
+      setTimeout(() => {
+        targetElement.classList.remove("active-search-result");
+      }, 2000);
+    }
+  };
+
+  // Function to handle search navigation
+  const handleSearchNavigation = (direction) => {
+    if (totalMatches === 0) return;
+
+    setCurrentSearchIndex((prevIndex) => {
+      let newIndex;
+      if (direction === "up") {
+        newIndex = prevIndex <= 0 ? totalMatches - 1 : prevIndex - 1;
+      } else {
+        newIndex = prevIndex >= totalMatches - 1 ? 0 : prevIndex + 1;
+      }
+      scrollToSearchResult(newIndex);
+      return newIndex;
+    });
+  };
 
 
-      // ===========================Edit message=============================
+  // ===========================Edit message=============================
 
   const handleEditMessage = (message) => {
-    dispatch(setEditingMessage(message));  
+    dispatch(setEditingMessage(message));
 
     const content = decryptMessage(message.content.content);
     dispatch(setMessageInput(content));
@@ -514,7 +514,7 @@ const MessageList = memo(({
 
 
   const handleForwardMessage = (message) => {
-    console.log(message,"message");
+    console.log(message, "message");
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     dispatch(setForwardingMessage(message));
     dispatch(setShowForwardModal(true));
@@ -529,23 +529,23 @@ const MessageList = memo(({
 
   // console.log("contextMenu");
 
-    // // ======================Download file =====================
-    // const handleDownload = (fileUrl, fileName) => {
-    //   const durl = `${IMG_URL}${fileUrl}`;
-    //   fetch(durl)
-    //     .then((response) => response.blob())
-    //     .then((blob) => {
-    //       const url = URL.createObjectURL(blob);
-    //       const link = document.createElement("a");
-    //       link.href = url;
-    //       link.download = fileName;
-    //       document.body.appendChild(link);
-    //       link.click();
-    //       document.body.removeChild(link);
-    //       URL.revokeObjectURL(url);
-    //     })
-    //     .catch((error) => console.error("Download error:", error));
-    // };
+  // // ======================Download file =====================
+  // const handleDownload = (fileUrl, fileName) => {
+  //   const durl = `${IMG_URL}${fileUrl}`;
+  //   fetch(durl)
+  //     .then((response) => response.blob())
+  //     .then((blob) => {
+  //       const url = URL.createObjectURL(blob);
+  //       const link = document.createElement("a");
+  //       link.href = url;
+  //       link.download = fileName;
+  //       document.body.appendChild(link);
+  //       link.click();
+  //       document.body.removeChild(link);
+  //       URL.revokeObjectURL(url);
+  //     })
+  //     .catch((error) => console.error("Download error:", error));
+  // };
 
 
   return (
@@ -557,15 +557,15 @@ const MessageList = memo(({
             selectedFiles?.length > 0
               ? "calc(100vh -  276px)"
               : Object.keys(uploadProgress).length != 0
-              ? "calc(100vh - 250px)"
-              : replyingTo
-              ? replyingTo?.content?.fileType &&
-                replyingTo?.content?.fileType?.startsWith("image/")
-                ? "calc(100vh - 280px)"
-                : "calc(100vh - 229px)"
-              : window.innerWidth < 768
-              ? "calc(100vh - 179px)"
-              : "calc(100vh - 173px)",
+                ? "calc(100vh - 250px)"
+                : replyingTo
+                  ? replyingTo?.content?.fileType &&
+                    replyingTo?.content?.fileType?.startsWith("image/")
+                    ? "calc(100vh - 280px)"
+                    : "calc(100vh - 229px)"
+                  : window.innerWidth < 768
+                    ? "calc(100vh - 179px)"
+                    : "calc(100vh - 173px)",
         }}
         ref={messagesContainerRef}
       >
@@ -590,14 +590,14 @@ const MessageList = memo(({
                       const isSameMinute =
                         prevMessage &&
                         new Date(message?.createdAt).getMinutes() ===
-                          new Date(prevMessage?.createdAt).getMinutes();
+                        new Date(prevMessage?.createdAt).getMinutes();
                       const issameUser = message.sender === prevMessage?.sender;
 
                       const showTime =
                         !prevMessage ||
                         new Date(message?.createdAt).getMinutes() -
-                          new Date(prevMessage?.createdAt).getMinutes() >
-                          0 ||
+                        new Date(prevMessage?.createdAt).getMinutes() >
+                        0 ||
                         !issameUser;
 
                       const name = allUsers.find(
@@ -755,7 +755,7 @@ const MessageList = memo(({
         <button
           type="button"
           className="absolute bottom-5 right-4 p-2 bg-primary/70 text-white rounded-full shadow-lg z-50"
-          onClick={()=>{
+          onClick={() => {
             scrollToBottom();
             setShowScrollToBottom(false);
           }}
@@ -838,7 +838,7 @@ const DateHeader = memo(({ date }) => (
   </div>
 ));
 
-const SystemMessage =  memo(({ message }) => (
+const SystemMessage = memo(({ message }) => (
   <div className="flex justify-center my-2">
     <span className="bg-primary-dark/10 dark:bg-primary-light/10  dark:text-white/80 text-gray-700 text-[12px] md:text-sm px-4 py-1.5 rounded-full min-w-60 md:min-w-80 text-center">
       {message.content.content
@@ -914,7 +914,7 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
   );
 };
 
-const MessageContent =  memo(({
+const MessageContent = memo(({
   message,
   userId,
   handleImageClick,
@@ -987,7 +987,7 @@ const MessageContent =  memo(({
   }
 });
 
-const ImageMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => (
+const ImageMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => (
   <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
     <img
       src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
@@ -1002,7 +1002,7 @@ const ImageMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => (
   </div>
 ));
 
-const VideoMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => {
+const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
 
   let messageContent = message?.content?.content;
 
@@ -1081,7 +1081,7 @@ const VideoMessage =  memo(({ message, userId, handleImageClick, IMG_URL }) => {
 
 });
 
-const AudioMessage =  memo(({ message, userId, IMG_URL }) => {
+const AudioMessage = memo(({ message, userId, IMG_URL }) => {
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
@@ -1114,7 +1114,7 @@ const AudioMessage =  memo(({ message, userId, IMG_URL }) => {
   );
 });
 
-const FileMessage =  memo(({
+const FileMessage = memo(({
   message,
   userId,
   IMG_URL,
@@ -1503,7 +1503,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   );
 };
 
-const MessageStatus =  memo(({ message, userId, last }) => (
+const MessageStatus = memo(({ message, userId, last }) => (
   <div
     className={`flex items-end mt-1 ${message.showTime ? "bottom-3" : "-bottom-2"
       } right-0`}
@@ -1523,7 +1523,7 @@ const MessageStatus =  memo(({ message, userId, last }) => (
   </div>
 ));
 
-const ReplyPreview =  memo(({
+const ReplyPreview = memo(({
   message,
   allUsers,
   IMG_URL,
@@ -2064,7 +2064,7 @@ const MessageReactions = memo(({
               className="hover:scale-125 transition-transform absolute -right-6 -top-0 text-gray-400"
               onClick={(e) => {
                 e.stopPropagation();
-                e.preventDefault(); 
+                e.preventDefault();
 
                 const messageElement = document.getElementById(
                   `message-${message._id}`
@@ -2091,7 +2091,7 @@ const MessageReactions = memo(({
                     ? { bottom: "24px" }
                     : { top: "24px" }),
                 }}
-                // onMouseLeave={() => setShowEmojiPicker(null)}
+              // onMouseLeave={() => setShowEmojiPicker(null)}
               >
                 <EmojiPicker
                   onEmojiClick={(event) => {
@@ -2187,7 +2187,7 @@ const MessageContextMenu = ({
     return {
       top: `${y}px`,
       left: `${x}px`,
-      transform: "translate(-50%, 0)",  
+      transform: "translate(-50%, 0)",
     };
   };
 
@@ -2362,22 +2362,22 @@ const RegularMessage = memo(({
               </div>
             )}
           </div>
-        {showTime && (
-          <div
-            className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId
-              ? "pe-7 text-right justify-end"
-              : "text-left"
-              }`}
-            style={{
-              alignItems: "center",
-            }}
-          >
-            {selectedChat?.members && message.sender !== userId
-              ? `${name},`
-              : ""}{" "}
-            <FaRegClock className="mr-[2px]" /> {currentTime}
-          </div>
-        )}
+          {showTime && (
+            <div
+              className={`text-[11px] flex  text-gray-700 dark:text-gray-400  mb-1 w-full mt-1 ${message.sender == userId
+                ? "pe-7 text-right justify-end"
+                : "text-left"
+                }`}
+              style={{
+                alignItems: "center",
+              }}
+            >
+              {selectedChat?.members && message.sender !== userId
+                ? `${name},`
+                : ""}{" "}
+              <FaRegClock className="mr-[2px]" /> {currentTime}
+            </div>
+          )}
         </div>{" "}
         <div className="flex">
           <div
@@ -2536,7 +2536,7 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
   )
 };
 
-const DownloadButton =  memo(({ fileUrl, fileName, className = "" }) => {
+const DownloadButton = memo(({ fileUrl, fileName, className = "" }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
 
