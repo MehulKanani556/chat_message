@@ -178,6 +178,165 @@ const VideoCallLayout = memo(() => {
     };
   }, [isDraggingLocal]);
 
+  // =============================Recording==========================
+
+  const canvasRef = useRef(null);
+  const videoElementsRef = useRef({});
+  const [isRecording , setIsRecording] = useState(false)
+  const mediaRecorderRef = useRef(null);
+  const [recording, setRecording] = useState(false);
+  const recordedChunksRef = useRef([]);
+  // Ref for the animation frame ID to cancel the drawing loop
+  const animationFrameIdRef = useRef(null);
+
+
+ const startRecording = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Stop any existing drawing loop
+    if (animationFrameIdRef.current) {
+      cancelAnimationFrame(animationFrameIdRef.current);
+    }
+
+    const drawFrames = () => {
+      // Clear canvas for the new frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Correctly iterate over participants to get the MediaStream
+      // participantEntries is an array of [participantId, [participantId, MediaStream]]
+      // We need to destructure participantValue to get the actual stream at index 1
+      Array.from(participants).forEach(([participantId, participantValue], index) => {
+     
+        const stream = participantValue; 
+
+        const videoElement = videoElementsRef.current[participantId];
+        
+        const participant = allUsers.find(u => u._id === participantId);
+        const hasActiveVideoTrack = stream && stream instanceof MediaStream && stream.getVideoTracks().some(track => track.readyState === 'live' && !track.muted);
+
+        const { x, y, width, height } = calculateGridLayout(
+          index,
+          participants.size, // Use size for Map
+          canvas.width,
+          canvas.height
+        );
+
+        if (videoElement && hasActiveVideoTrack && videoElement.readyState >= 2) {
+          // Draw the video frame onto the canvas if there's an active track and the video element is ready
+          try {
+             ctx.drawImage(videoElement, x, y, width, height);
+          } catch (e) {
+             // Catch potential errors if drawImage fails unexpectedly
+             console.error(`Error drawing video for ${participantId}:`, e);
+             // Fallback to drawing placeholder if drawImage fails
+             ctx.fillStyle = 'grey';
+             ctx.fillRect(x, y, width, height);
+             // Optionally draw profile picture or initials on the placeholder
+             drawParticipantPlaceholder(ctx, participant, x, y, width, height);
+          }
+        } else {
+           // Draw a placeholder (grey background + profile picture/initials)
+           // if no active video track or video element not ready
+           ctx.fillStyle = 'grey'; // Example placeholder background
+           ctx.fillRect(x, y, width, height);
+           // Draw profile picture or initials on the placeholder
+           drawParticipantPlaceholder(ctx, participant, x, y, width, height);
+
+           // Only log if the video element exists but isn't ready AND has an active track
+           // This helps debug actual stream/video element issues vs. camera off
+           if (videoElement && hasActiveVideoTrack && videoElement.readyState < 2) {
+              console.log(`Video element for ${participantId} not ready (readyState: ${videoElement.readyState}).`);
+           }
+           // Avoid logging when camera is simply off
+        }
+      });
+
+      // Request the next frame
+      animationFrameIdRef.current = requestAnimationFrame(drawFrames);
+    };
+
+    // Define a helper function to draw placeholder (initials or image)
+    const drawParticipantPlaceholder = (ctx, participant, x, y, width, height) => {
+        // ... (Your implementation of drawing initials/photo) ...
+        ctx.fillStyle = 'white';
+        ctx.font = `${Math.min(width, height) / 4}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const textX = x + width / 2;
+        const textY = y + height / 2;
+        const initials = participant?.userName?.[0]?.toUpperCase() || '?';
+        ctx.fillText(initials, textX, textY);
+    };
+
+    // Start the drawing loop
+    drawFrames();
+
+    // Create a stream from the canvas
+    const canvasStream = canvas.captureStream(30); // 30 frames per second
+
+    console.log(canvasStream,"canvasStream");
+    
+
+    // Use the canvas stream for MediaRecorder
+    const mediaRecorder = new MediaRecorder(canvasStream, {
+      mimeType: "video/webm;codecs=vp9,opus", // Or 'video/mp4' if supported by browser
+    });
+
+    mediaRecorder.ondataavailable = (event) => {
+      console.log(event.data);
+      
+      if (event.data.size > 0) {
+        recordedChunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = handleStop;
+
+    mediaRecorder.start();
+    mediaRecorderRef.current = mediaRecorder;
+    setRecording(true);
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+    // Stop the drawing loop when recording stops
+    if (animationFrameIdRef.current) {
+      cancelAnimationFrame(animationFrameIdRef.current);
+      animationFrameIdRef.current = null;
+    }
+  };
+
+  const handleStop = async () => {
+    // ... existing handleStop logic ...
+    const blob = new Blob(recordedChunksRef.current, {
+      type: "video/webm",
+    });
+
+    // Optional: Convert to MP4 using ffmpeg.wasm here
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = "recording.webm"; // change to .mp4 after conversion
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    recordedChunksRef.current = [];
+
+    // Ensure drawing loop is stopped if not already (should be stopped by stopRecording)
+     if (animationFrameIdRef.current) {
+       cancelAnimationFrame(animationFrameIdRef.current);
+       animationFrameIdRef.current = null;
+     }
+  };
+
+  // ====================================================================
+
+
+
   const content = (
     <div
       ref={containerRef}
@@ -236,6 +395,14 @@ const VideoCallLayout = memo(() => {
               const participant = allUsers.find((u) => u._id === participantId);
               const isLocalUser = participantId === currentUser;
               const widthClass = getParticipantWidth(participants?.length);
+              const setVideoRef = (el) => {
+                if (el) {
+                    videoElementsRef.current[participantId] = el;
+                } else {
+                    // Clean up ref when element is unmounted
+                    delete videoElementsRef.current[participantId];
+                }
+              }
 
               return (
                 <div
@@ -260,6 +427,7 @@ const VideoCallLayout = memo(() => {
                       className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
                       muted={participantId === currentUser}
                       ref={(el) => {
+                        setVideoRef(el); 
                         if (el && stream instanceof MediaStream) {
                           el.srcObject = stream;
                           el.play().catch((err) =>
@@ -310,6 +478,15 @@ const VideoCallLayout = memo(() => {
 
                 console.log(cameraStatus, isCameraEnabled, participantId);
 
+                const setVideoRef = (el) => {
+                  if (el) {
+                      videoElementsRef.current[participantId] = el;
+                  } else {
+                      // Clean up ref when element is unmounted
+                      delete videoElementsRef.current[participantId];
+                  }
+                }
+
                 return (
                   <div
                     key={participantId}
@@ -335,6 +512,7 @@ const VideoCallLayout = memo(() => {
                             className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
                             muted={participantId === currentUser}
                             ref={(el) => {
+                              setVideoRef(el); 
                               if (el && stream instanceof MediaStream) {
                                 el.srcObject = stream;
                                 el.play().catch((err) =>
@@ -359,6 +537,7 @@ const VideoCallLayout = memo(() => {
                             className="w-full h-full object-cover rounded-xl hidden"
                             muted={participantId === currentUser}
                             ref={(el) => {
+                              setVideoRef(el); 
                               if (el && stream instanceof MediaStream) {
                                 el.srcObject = stream;
                                 el.play().catch((err) =>
@@ -404,78 +583,106 @@ const VideoCallLayout = memo(() => {
       </div>
 
       {!chatMessages && (
-        <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 bg-[#1A1A1A]">
-          <button
-            onClick={() => {
-              dispatch(setSelectedChatModule(true))
-              // dispatch(setvideoCallChatList(true));
-              dispatch(setCallChatList(true));
-              // dispatch(setChatMessages(true));
-            }}
-            className="w-10 grid place-content-center rounded-full h-10 border text-white"
-          >
-            <BsChatDots className="text-xl" />
-          </button>
-
-          <button
-            onClick={toggleMicrophone}
-            className="w-10 grid place-content-center border rounded-full h-10 text-white"
-          >
-            {isMicrophoneOn ? (
-              <IoMicOutline className="text-xl" />
-            ) : (
-              <IoMicOffOutline className="text-xl" />
-            )}
-          </button>
-
-          <button
-            onClick={toggleCamera}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"}`}
-          >
-            {isCameraOn ? (
-              <BsCameraVideo className="text-xl" />
-            ) : (
-              <BsCameraVideoOff className="text-xl" />
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              if(!isReceiving){
-                endCall();
-              }
-              cleanupConnection();
-              dispatch(setCallChatList(false));
-            }}
-            className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-          >
-            <IoCallOutline className="text-2xl" />
-          </button>
-
-          <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-            <GoUnmute className="text-xl" />
-          </button>
-
-          {(isVideoCalling || isVoiceCalling) && (
+          <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 dark:bg-[#1A1A1A] bg-black/10">
             <button
               onClick={() => {
-                dispatch(setParticipantOpen(true));
+                dispatch(setParticipantOpen(false));
+                // dispatch(setvideoCallChatList(true));
+                dispatch(setSelectedChatModule(true));
+                dispatch(setCallChatList(!callChatList));
+                // dispatch(setChatMessages(true));
+              }}
+              className={`w-10 grid place-content-center rounded-full h-10 border ${
+                callChatList
+                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                  : "dark:text-white text-black"
+              }`}
+            >
+              <BsChatDots className="text-xl" />
+            </button>
+
+            <button
+              onClick={toggleMicrophone}
+              className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+                isMicrophoneOn
+                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                  : "dark:text-white text-black"
+              }`}
+            >
+              {isMicrophoneOn ? (
+                <IoMicOutline className="text-xl" />
+              ) : (
+                <IoMicOffOutline className="text-xl" />
+              )}
+            </button>
+
+            <button
+              onClick={toggleCamera}
+              className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+                isVideoCalling ? "" : "hidden"
+              }  ${
+                isCameraOn
+                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                  : "dark:text-white text-black"
+              }`}
+            >
+              {isCameraOn ? (
+                <BsCameraVideo className="text-xl" />
+              ) : (
+                <BsCameraVideoOff className="text-xl" />
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                if (!isReceiving) {
+                  endCall();
+                }
+                cleanupConnection();
+                dispatch(setSelectedChatModule(true));
+                dispatch(setParticipantOpen(false));
                 dispatch(setCallChatList(false));
               }}
-              className="w-10 grid place-content-center rounded-full h-10 border text-white"
+              className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
             >
-              <MdOutlineGroupAdd className="text-xl" />
+              <IoCallOutline className="text-2xl" />
             </button>
-          )}
 
-          <button
-            className={`w-10 grid place-content-center rounded-full h-10 border text-white
+            <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+              <GoUnmute className="text-xl" />
+            </button>
+
+            {(isVideoCalling || isVoiceCalling) && (
+              <button
+                onClick={() => {
+                  dispatch(setParticipantOpen(!participantOpen));
+                  dispatch(setCallChatList(false));
+                }}
+                className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
+                  participantOpen
+                    ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                    : "dark:text-white text-black"
+                }`}
+              >
+                <MdOutlineGroupAdd className="text-xl" />
+              </button>
+            )}
+            <canvas
+              ref={canvasRef}
+              width={1280}
+              height={720}
+              style={{ display: "none" }}
+            />
+            <button
+               onClick={() => isRecording ? (setIsRecording(false), stopRecording()) : (setIsRecording(true), startRecording())}
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
+                isRecording ? "bg-red-500" : ""
               }`}
-          >
-            <AiOutlineVideoCamera className="text-xl" />
-          </button>
-        </div>
-      )}
+            >
+              <AiOutlineVideoCamera className="text-xl" />
+            </button>
+          </div>
+        )}
 
     </div>
   );
@@ -484,3 +691,35 @@ const VideoCallLayout = memo(() => {
 });
 
 export default VideoCallLayout;
+
+const calculateGridLayout = (index, count, canvasWidth, canvasHeight) => {
+  let cols, rows;
+
+  if (count <= 1) {
+    cols = 1;
+    rows = 1;
+  } else if (count <= 4) {
+    cols = 2;
+    rows = 2;
+  } else if (count <= 6) {
+    cols = 3;
+    rows = 2;
+  } else if (count <= 9) {
+    cols = 3;
+    rows = 3;
+  } else { // For more than 9, you might need a different strategy, let's use 4 cols
+    cols = 4;
+    rows = Math.ceil(count / cols);
+  }
+
+  const cellWidth = canvasWidth / cols;
+  const cellHeight = canvasHeight / rows;
+
+  const col = index % cols;
+  const row = Math.floor(index / cols);
+
+  const x = col * cellWidth;
+  const y = row * cellHeight;
+
+  return { x, y, width: cellWidth, height: cellHeight };
+};

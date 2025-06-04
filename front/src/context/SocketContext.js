@@ -36,6 +36,8 @@ import {
   setCallParticipants,
   setTypingUsers,
   setUserIncall,
+  setSelectedChatModule,
+  setCallChatList,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
@@ -701,16 +703,8 @@ export const SocketProvider = ({ children }) => {
     if (!socketRef.current) return;
 
     // Handle incoming video call request with 30 sec timeout and disconnect function
-    socketRef.current.on("call-request", async (data) => {
+    socketRef.current.on("call-requested", async (data) => {
       console.log("Incoming call from:", data);
-
-      if(isVideoCalling || isReceiving || isVoiceCalling){
-        socketRef.current.emit("user-in-call",{
-          ...data,
-          message: " is currently in another call"
-        });
-        return;
-      }else{
         dispatch(setIncomingCall({
           fromEmail: data.fromEmail,
           signal: data.signal,
@@ -722,20 +716,12 @@ export const SocketProvider = ({ children }) => {
         }));
         setCallRoom(data.roomId);
         setCallStatus("ringing");
-      }
     });
 
     // console.log("callDuration", callDuration);
 
-    socketRef.current.on("call-invite", async (data) => {
+    socketRef.current.on("call-invited", async (data) => {
       console.log("Incoming call invite from:", data);
-      if(isVideoCalling || isReceiving || isVoiceCalling){
-        socketRef.current.emit("user-in-call",{
-          ...data,
-          message: " is currently in another call"
-        });
-        return;
-      }else{
       dispatch(setIncomingCall({
         fromEmail: data.fromEmail,
         signal: data.signal,
@@ -747,7 +733,6 @@ export const SocketProvider = ({ children }) => {
       setCallRoom(data.roomId);
 
       setCallStatus("ringing");
-    }
     });
 
     socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants, roomId }) => {
@@ -882,15 +867,7 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("screen-share-request", async (data) => {
       console.log("Incoming screen share from:", data.fromEmail);
-      if(isVideoCalling || isReceiving || isVoiceCalling){
-        socketRef.current.emit("user-in-call",{
-          ...data,
-          message: " is currently in another call"
-        });
-        return;
-      }else{
       dispatch(setIncomingShare(data));
-      }
     });
 
     // Handle when share is accepted
@@ -904,27 +881,27 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketRef.current.on("call:update-participant-list", (call) => {
-      // console.log("call:update-participant-list", call);
+      console.log("call:update-participant-list", call);
       dispatch(setCallParticipantsList(call));
     });
 
     socketRef.current.on("user-in-call", (data) => {
       if(!selectedChat?.members){
-        dispatch(setUserIncall("is on another Call Running"));
+        dispatch(setUserIncall("is onther Call Runing"));
       }
     });
 
     return () => {
       cleanupConnection();
       if (socketRef.current) {
-        socketRef.current.off("call-request");
+        socketRef.current.off("call-requested");
         socketRef.current.off("call-accepted");
         socketRef.current.off("call-signal");
         socketRef.current.off("screen-share-request");
         socketRef.current.off("share-accepted");
         socketRef.current.off("share-signal");
         socketRef.current.off("call-ended");
-        socketRef.current.off("call-invite");
+        socketRef.current.off("call-invited");
         socketRef.current?.off("participant-joined");
         socketRef.current?.off("participant-left");
         socketRef.current?.off("call:update-participant-list");
@@ -956,9 +933,13 @@ export const SocketProvider = ({ children }) => {
       let stream = null;
       try {
         console.log("Requesting media devices...");
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: calltype == "video" ? hasWebcam : false,
-          audio: hasMicrophone,
+        // stream = await navigator.mediaDevices.getUserMedia({
+        //   video: calltype == "video" ? hasWebcam : false,
+        //   audio: hasMicrophone,
+        // });
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
         });
         console.log("Media stream obtained:", stream);
 
@@ -1059,6 +1040,9 @@ export const SocketProvider = ({ children }) => {
       } else {
         dispatch(setIsVoiceCalling(true));
       }
+
+      dispatch(setSelectedChatModule(false))
+      dispatch(setCallChatList(false));
     } catch (err) {
       console.error("Error starting call:", err);
       endCall();
@@ -1131,13 +1115,14 @@ export const SocketProvider = ({ children }) => {
       let stream = null;
       try {
         // Try to get media stream but don't block if devices aren't available
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: incomingCall.type == "video" ? hasWebcam : false,
-          audio: hasMicrophone,
-        });
-        // stream = await navigator.mediaDevices.getDisplayMedia({
-        //   video: true,
+        // stream = await navigator.mediaDevices.getUserMedia({
+        //   video: incomingCall.type == "video" ? hasWebcam : false,
+        //   audio: hasMicrophone,
         // });
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
       } catch (err) {
         console.warn("Could not get media devices:", err);
         // Continue without media stream
@@ -1359,6 +1344,15 @@ export const SocketProvider = ({ children }) => {
           }
         });
       }
+    }
+    }else{
+    if (socketRef.current) {
+      socketRef.current.emit("end-call", {
+        to: selectedChat._id,
+        from: userId,
+        duration: null,
+        roomId: callRoom,
+      });
     }
   }
 
