@@ -14,6 +14,7 @@ const {
   pinChat,
   muteUsers,
   mute,
+  getDevices, removeDevice 
 } = require("../controller/userController");
 const {
   userLogin,
@@ -43,8 +44,8 @@ const {
   leaveGroup,
   addParticipants,
 } = require("../controller/groupController");
-const { handleQrLogin, getSessionStatus } = require('../controller/authController');
-const { auth } = require("../helper/auth");
+const { handleQrLogin, getSessionStatus, logoutDevice } = require('../controller/authController');
+  const { auth } = require("../helper/auth");
 
 const indexRoutes = express.Router();
 
@@ -99,5 +100,10 @@ indexRoutes.get('/session/:sessionId', getSessionStatus);
 
 // File upload endpoint
 indexRoutes.post("/upload", auth, upload.single("file"), uploadController.uploadFile);
+
+// Device management routes
+indexRoutes.get('/devices', auth, getDevices);
+indexRoutes.delete('/devices/:deviceId', auth, removeDevice);
+indexRoutes.post('/logout-device', auth, logoutDevice);
 
 module.exports = indexRoutes;

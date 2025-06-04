@@ -224,10 +224,10 @@ const VideoCallLayout = memo(() => {
                   {selectedChat?.userName || "Unknown User"}
                 </p>
                 {userIncall &&
-                  <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
-                    {selectedChat?.userName + ' ' + userIncall}
-                  </p>
-                }
+                <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
+                  {selectedChat?.userName} {' '} {userIncall}
+                </p>
+                 }
               </div>
             </div>
           ) : (
@@ -276,9 +276,9 @@ const VideoCallLayout = memo(() => {
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
                     {userIncall &&
-                      <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
-                        {selectedChat?.userName + ' ' + userIncall}
-                      </p>
+                    <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
+                      {selectedChat?.userName} {' '} {userIncall}
+                    </p>
                     }
                   </div>
                 </div>
@@ -441,7 +441,9 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={() => {
-              endCall();
+              if(!isReceiving){
+                endCall();
+              }
               cleanupConnection();
               dispatch(setCallChatList(false));
             }}

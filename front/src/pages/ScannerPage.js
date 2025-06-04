@@ -3,8 +3,10 @@ import Scanner from '../component/Scanner';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-// const SERVER_URL = 'https://chat-message-0fml.onrender.com';
-const SERVER_URL = 'http://localhost:5000';
+import { BASE_URL } from '../utils/baseUrl';
+
+const SERVER_URL = BASE_URL;
+
 
 const ScannerPage = () => {
   const [scanResult, setScanResult] = useState(null);

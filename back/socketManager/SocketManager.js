@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 const Groups = require("../models/groupModel");
 
 const onlineUsers = new Map();
+const deviceRooms = new Map();
 
 const activeSessions = {};
 
@@ -22,9 +23,9 @@ async function handleUserLogin(socket, userId) {
   for (const [existingUserId, existingSocketId] of onlineUsers.entries()) {
     if (existingUserId === userId && existingSocketId !== socket.id) {
       const existingSocket = global.io.sockets.sockets.get(existingSocketId);
-      if (existingSocket) {
-        existingSocket.disconnect();
-      }
+      // if (existingSocket) {
+      //   existingSocket.disconnect();
+      // }
       onlineUsers.delete(existingUserId);
     }
   }
@@ -220,21 +221,6 @@ function handleScreenShareRequest(socket, data) {
   } else {
     // Original single-user logic
     
-    let isUserInCall = false;
-    for (const [callRoomId, callData] of Object.entries(activeCalls)) {
-      if (callData.joined.includes(data.toEmail) || callData.ringing.includes(data.toEmail)) {
-        isUserInCall = true;
-        break;
-      }
-    }
-  
-    if (isUserInCall) {
-      socket.emit("user-in-call", {
-        toEmail:data.toEmail,
-        message: "User is currently in another call"
-      });
-      return;
-    }
     const targetSocketId = onlineUsers.get(data.toEmail);
     if (targetSocketId) {
       socket.to(targetSocketId).emit("screen-share-request", {
@@ -290,8 +276,6 @@ async function handleCallRequest(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
- 
-
   const targetSocketId = onlineUsers.get(toEmail);
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
@@ -317,6 +301,38 @@ async function handleCallRequest(socket, data) {
   }
 }
 
+const handleUserIncall = (socket, data) => {
+
+  const {
+    fromEmail,
+    toEmail,
+    signal,
+    type,
+    participants,
+    isGroupCall,
+    groupId,
+    roomId,
+  } = data;
+
+  const targetSocketId = onlineUsers.get(fromEmail);
+  
+  delete activeCalls[roomId];
+
+  if (targetSocketId) {
+    socket.to(targetSocketId).emit("user-in-call", {
+      fromEmail,
+      signal,
+      type,
+      participants,
+      isGroupCall,
+      groupId: groupId || null,
+      roomId,
+    });
+  }
+
+  socket.leave(roomId)
+}
+
 function handleCallInvite(socket, data) {
   const {
     fromEmail,
@@ -333,12 +349,7 @@ function handleCallInvite(socket, data) {
   if (!activeCalls[roomId]) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
-
   const targetSocketId = onlineUsers.get(toEmail);
-
-   
-  
-  
 
   activeCalls[roomId].invited.push(toEmail);
   if (targetSocketId) {
@@ -755,8 +766,10 @@ async function getOnlineUsers(req, res) {
   const onlineUsersArray = Array.from(onlineUsers.keys());
   // console.log("onlineUsersArray", onlineUsersArray);
 
-  return res.status(200).json(onlineUsersArray);
-  // return onlineUsersArray;
+  if (res) {
+    return res.status(200).json(onlineUsersArray);
+  }
+  return onlineUsersArray;
 }
 
 // Add new function to handle group member retrieval
@@ -847,9 +860,37 @@ function handleCameraStatusChange(socket, data) {
   });
 }
 
+
+
 function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
+
+    // Add device room joining when socket connects
+    socket.on("join-device-room", (deviceId) => {
+      console.log(`Socket ${socket.id} joining device room:`, deviceId);
+      socket.join(deviceId);
+      console.log('Device room set:', deviceId, socket);
+      deviceRooms.set(deviceId, socket.id);
+    });
+
+    // Handle force logout
+    socket.on("force-logout", (data) => {
+      const { deviceId } = data;
+      console.log('Handling force logout for device:', deviceId);
+      
+      // Get all sockets in the device room
+      const deviceRoom = io.sockets.adapter.rooms.get(deviceId);
+      if (deviceRoom) {
+        // Emit force-logout event to all sockets in the device room
+        io.to(deviceId).emit('force-logout', {
+          message: 'You have been logged out from another device'
+        });
+        
+        // Clean up the device room
+        deviceRooms.delete(deviceId);
+      }
+    });
 
     // Handle session creation from website
     socket.on("create_session", (data) => {
@@ -904,7 +945,16 @@ function initializeSocket(io) {
     });
 
     // Handle disconnection
-    socket.on("disconnect", () => handleDisconnect(socket));
+    socket.on("disconnect", () => {
+      // Remove from device room if exists
+      const rooms = Array.from(socket.rooms);
+      rooms.forEach(room => {
+        if (room !== socket.id) {
+          socket.leave(room);
+        }
+      });
+      handleDisconnect(socket);
+    });
 
     // Handle private messages
     socket.on("private-message", (data) => handlePrivateMessage(socket, data));
@@ -985,9 +1035,11 @@ function initializeSocket(io) {
       socket.broadcast.emit('qr-scan-error', data);
     });
 
+    socket.on("user-in-call", (data)=> handleUserIncall(socket, data));
     // ===========================================================================================================
-  });
+})
 }
+
 
 // Clean expired sessions every minute
 setInterval(() => {

@@ -5,7 +5,16 @@ const nodemailer = require('nodemailer')
 const twilio = require('twilio')
 
 // Initialize Twilio client
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+let twilioClient;
+try {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+        console.warn('Twilio credentials not found. SMS functionality will be disabled.');
+    } else {
+        twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    }
+} catch (error) {
+    console.error('Failed to initialize Twilio client:', error);
+}
 
 const userLogin = async (req, res) => {
     try {
@@ -154,6 +163,14 @@ const sendOtpToMobile = async (req, res) => {
         // Generate a random OTP
         let otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
 
+        // Check if Twilio is configured
+        if (!twilioClient) {
+            return res.status(503).json({ 
+                status: 503, 
+                message: "SMS service is not configured. Please contact the administrator." 
+            });
+        }
+
         // Send OTP via SMS
         await twilioClient.messages.create({
             body: `Your OTP is: ${otp}`,
@@ -173,13 +190,16 @@ const sendOtpToMobile = async (req, res) => {
         return res.status(200).json({ status: 200, message: "OTP sent successfully." });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ status: 500, message: error.message });
+        return res.status(500).json({ 
+            status: 500, 
+            message: error.message || "Failed to send OTP. Please try again later." 
+        });
     }
 };
 
 const verifyMobileOtp = async (req, res) => {
     try {
-        const { mobileNumber, otp } = req.body;
+        const { mobileNumber, otp , isMobile } = req.body;
 
         let userRecord = await user.findOne({ mobileNumber });
         if (!userRecord) {

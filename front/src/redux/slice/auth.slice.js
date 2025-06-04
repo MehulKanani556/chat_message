@@ -111,7 +111,7 @@ export const verifyMobileOtp = createAsyncThunk(
             const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp });
             if (response.status === 200) {
                 sessionStorage.setItem('token', response.data.token);
-                sessionStorage.setItem('userId', response.data.user.id);
+                sessionStorage.setItem('userId', response.data.user._id);
                 return response.data; // Assuming the API returns a success message
             }
         } catch (error) {

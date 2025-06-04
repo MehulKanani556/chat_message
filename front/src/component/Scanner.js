@@ -4,8 +4,11 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
-// const SERVER_URL = 'http://localhost:5000';
-const SERVER_URL = 'https://chat-message-0fml.onrender.com';
+import { BASE_URL } from '../utils/baseUrl';
+
+const SERVER_URL = BASE_URL.replace('/api', '');
+
+
 
 const ScannerComponent = () => {
   const [cameraError, setCameraError] = useState(null);
@@ -21,6 +24,18 @@ const ScannerComponent = () => {
       reconnectionDelay: 1000,
       timeout: 20000,
       forceNew: true
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Socket.IO connected');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket.IO connection error:', error);
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Socket.IO disconnected');
     });
 
     setSocket(newSocket);
@@ -72,18 +87,22 @@ const ScannerComponent = () => {
         throw new Error('You must be logged in to scan QR codes');
       }
 
+      // Get device information with fingerprint
+    
+
       const response = await axios.post(`${SERVER_URL}/api/qr-login`, {
         qrData: {
           sessionId: qrData.sessionId,
           timestamp: qrData.timestamp
-        }
+        },
+        deviceInfo:qrData.deviceInfo
       }, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
       });
 
-      console.log('QR login response:', authToken);
+      console.log('QR login response:', response.data);
       
       if (socket) {
         socket.emit('qr-scan-success', {
@@ -103,7 +122,13 @@ const ScannerComponent = () => {
       }, 1500);
     } catch (error) {
       console.error('QR login error:', error);
-      setScanResult('Login failed. Please try again.');
+      
+      // Handle device limit error
+      if (error.response?.status === 403) {
+        setScanResult('Device limit reached. You can only log in from 5 devices. Please log out from another device first.');
+      } else {
+        setScanResult('Login failed. Please try again.');
+      }
       
       if (socket) {
         socket.emit('qr-scan-error', {

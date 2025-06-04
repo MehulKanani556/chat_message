@@ -37,11 +37,29 @@ import {
   setTypingUsers,
   setUserIncall,
 } from "../redux/slice/manageState.slice";
+import { BASE_URL } from '../utils/baseUrl';
+import { useNavigate } from 'react-router-dom';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
-// const SOCKET_SERVER_URL = "https://chat-message-0fml.onrender.com";
-const SOCKET_SERVER_URL = "http://localhost:5000";
+const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
 
 const SocketContext = createContext();
+
+// Initialize FingerprintJS
+const fpPromise = FingerprintJS.load();
+
+// Function to get device ID
+const getDeviceId = async () => {
+  let deviceId = localStorage.getItem('deviceId');
+  
+  if (!deviceId) {
+    const fp = await fpPromise;
+    const result = await fp.get();
+    deviceId = result.visitorId;
+    localStorage.setItem('deviceId', deviceId);
+  }
+  return deviceId;
+};
 
 // Simple encryption/decryption functions
 const encryptMessage = (text) => {
@@ -69,6 +87,7 @@ const decryptMessage = (encryptedText) => {
 
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
+  const [socket, setSocket] = useState(null);
   const peerRef = useRef(null);
   const peersRef = useRef({});
   const [peerEmail, setPeerEmail] = useState("");
@@ -88,7 +107,7 @@ export const SocketProvider = ({ children }) => {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const userId = sessionStorage.getItem("userId");
-
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
   const {
@@ -96,13 +115,13 @@ export const SocketProvider = ({ children }) => {
     callParticipantsList,
     isConnected,
     onlineUsers,
-    isVideoCalling,
     incomingCall,
     isCameraOn,
     isSharing,
+    isVideoCalling,
     isReceiving,
-    incomingShare,
     isVoiceCalling,
+    incomingShare,
     callParticipants,
     isMicrophoneOn,
     voiceCallData,
@@ -143,41 +162,80 @@ export const SocketProvider = ({ children }) => {
       socketRef.current.disconnect();
     }
 
-    if (userId) {
-      socketRef.current = io(SOCKET_SERVER_URL);
+    const token = sessionStorage.getItem('token');
+    
+    const initializeSocket = async () => {
+      const deviceId = await getDeviceId();
+      
+      if (token) {
+        socketRef.current = io(SOCKET_SERVER_URL, {
+          transports: ['websocket', 'polling'],
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+          timeout: 20000,
+          forceNew: true,
+          auth: {
+            token,
+            deviceId
+          }
+        });
 
-      socketRef.current.on("connect", () => {
-        dispatch(setIsConnected());
-        console.log("Socket connected with userId:", userId);
-        socketRef.current.emit("user-login", userId);
-      });
+        socketRef.current.on("connect", () => {
+          dispatch(setIsConnected());
+          console.log("Socket connected with userId:", userId);
+          socketRef.current.emit("user-login", userId);
+          // Join device room
+          socketRef.current.emit("join-device-room", deviceId);
+        });
 
-      socketRef.current.on("disconnect", () => {
-        dispatch(setIsConnected());
-        dispatch(setOnlineUsers([]));
-        console.log("Socket disconnected");
-      });
+        socketRef.current.on("connect_error", (error) => {
+          console.error("Socket connection error:", error);
+          dispatch(setIsConnected(false));
+          dispatch(setOnlineUsers([]));
+        });
 
-      socketRef.current.on("user-status-changed", (onlineUserIds) => {
-        dispatch(setOnlineUsers(onlineUserIds));
-        // if (onlineUserIds.length > 0) {
-        //   dispatch(setOnlineuser(onlineUserIds));
-        // }
-      });
+        socketRef.current.on("disconnect", () => {
+          dispatch(setIsConnected(false));
+          dispatch(setOnlineUsers([]));
+          console.log("Socket disconnected");
+        });
+        // alert("Socket connected");
 
-      socketRef.current.on("reconnect", () => {
-        console.log("Socket reconnected, re-emitting user-login");
-        socketRef.current.emit("user-login", userId);
-      });
+        socketRef.current.on("force-logout", (data) => {
+          console.log('Force logout received:', data);
+          alert("Force logout received");
+          // Clean up socket connection
+          if (socketRef.current) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+          }
+          // Clear all storage
+          sessionStorage.clear();
+          localStorage.removeItem('deviceId');
+          // Redirect to login
+          navigate('/login');
+        });
 
-      return () => {
-        if (socketRef.current) {
-          socketRef.current.disconnect();
-          socketRef.current = null;
-        }
-      };
-    }
-  }, [userId]);
+        socketRef.current.on("user-status-changed", (onlineUserIds) => {
+          dispatch(setOnlineUsers(onlineUserIds));
+        });
+
+        socketRef.current.on("reconnect", () => {
+          console.log("Socket reconnected, re-emitting user-login");
+          socketRef.current.emit("user-login", userId);
+        });
+
+        return () => {
+          if (socketRef.current) {
+            socketRef.current.disconnect();
+            socketRef.current = null;
+          }
+        };
+      }
+    };
+
+    initializeSocket();
+  }, [userId, navigate, dispatch]);
 
   // Media devices check effect
   useEffect(() => {
@@ -645,24 +703,39 @@ export const SocketProvider = ({ children }) => {
     // Handle incoming video call request with 30 sec timeout and disconnect function
     socketRef.current.on("call-request", async (data) => {
       console.log("Incoming call from:", data);
-      dispatch(setIncomingCall({
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        type: data.type,
-        participants: data.participants,
-        isGroupCall: data.isGroupCall,
-        groupId: data.groupId || null,
-        roomId: data.roomId,
-      }));
-      setCallRoom(data.roomId);
-      setCallStatus("ringing");
 
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
+        dispatch(setIncomingCall({
+          fromEmail: data.fromEmail,
+          signal: data.signal,
+          type: data.type,
+          participants: data.participants,
+          isGroupCall: data.isGroupCall,
+          groupId: data.groupId || null,
+          roomId: data.roomId,
+        }));
+        setCallRoom(data.roomId);
+        setCallStatus("ringing");
+      }
     });
 
     // console.log("callDuration", callDuration);
 
     socketRef.current.on("call-invite", async (data) => {
       console.log("Incoming call invite from:", data);
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
       dispatch(setIncomingCall({
         fromEmail: data.fromEmail,
         signal: data.signal,
@@ -674,6 +747,7 @@ export const SocketProvider = ({ children }) => {
       setCallRoom(data.roomId);
 
       setCallStatus("ringing");
+    }
     });
 
     socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants, roomId }) => {
@@ -808,7 +882,15 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("screen-share-request", async (data) => {
       console.log("Incoming screen share from:", data.fromEmail);
+      if(isVideoCalling || isReceiving || isVoiceCalling){
+        socketRef.current.emit("user-in-call",{
+          ...data,
+          message: " is currently in another call"
+        });
+        return;
+      }else{
       dispatch(setIncomingShare(data));
+      }
     });
 
     // Handle when share is accepted
@@ -828,7 +910,7 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("user-in-call", (data) => {
       if(!selectedChat?.members){
-        dispatch(setUserIncall(data));
+        dispatch(setUserIncall("is on another Call Running"));
       }
     });
 
@@ -1172,6 +1254,7 @@ export const SocketProvider = ({ children }) => {
       : 0;
     const no_of_callUser = sessionStorage.getItem("callUser");
 
+    if(callAccept){
     if (groupCall) {
       if (callParticipantsList?.joined?.length > 2) {
         callParticipantsList?.joined.forEach((participantId) => {
@@ -1277,6 +1360,7 @@ export const SocketProvider = ({ children }) => {
         });
       }
     }
+  }
 
     // Reset call-related states
     setCallStartTime(null);

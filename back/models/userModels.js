@@ -34,6 +34,10 @@ const userSchema = mongoose.Schema(
       type: Array,
       default: [],
     },
+    isMobile:{
+      type:Boolean,
+      default:false
+    },
     groupToJoin: {
       type: String,
       default: "Everyone",
@@ -61,7 +65,16 @@ const userSchema = mongoose.Schema(
     muteUsers:{
       type:Array,
       default:[],
-    }
+    },
+    devices: [{
+      deviceId: String,
+      deviceName: String,
+      deviceType: String,
+      lastLogin: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true,
