@@ -34,12 +34,18 @@ const DeviceList = ({ devices, onRemoveDevice }) => {
     }
   };
 
+  // Filter out the current device and sort by lastLogin
+  const currentDeviceId = localStorage.getItem("deviceId");
+  const filteredDevices = devices
+    ?.filter(device => device.deviceId !== currentDeviceId)
+    .sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin)) || [];
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Devices</h3>
-      {devices && devices.length > 0 ? (
+      {filteredDevices.length > 0 ? (
         <div className="space-y-3">
-          {devices.map((device, index) => (
+          {filteredDevices.map((device, index) => (
             <div
               key={index}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -67,7 +73,7 @@ const DeviceList = ({ devices, onRemoveDevice }) => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center py-4">No devices found</p>
+        <p className="text-gray-500 text-center py-4">No other devices found</p>
       )}
     </div>
   );

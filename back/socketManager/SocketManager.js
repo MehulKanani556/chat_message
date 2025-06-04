@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 const Groups = require("../models/groupModel");
 
 const onlineUsers = new Map();
+const deviceRooms = new Map();
 
 const activeSessions = {};
 
@@ -765,8 +766,10 @@ async function getOnlineUsers(req, res) {
   const onlineUsersArray = Array.from(onlineUsers.keys());
   // console.log("onlineUsersArray", onlineUsersArray);
 
-  return res.status(200).json(onlineUsersArray);
-  // return onlineUsersArray;
+  if (res) {
+    return res.status(200).json(onlineUsersArray);
+  }
+  return onlineUsersArray;
 }
 
 // Add new function to handle group member retrieval
@@ -863,6 +866,32 @@ function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
 
+    // Add device room joining when socket connects
+    socket.on("join-device-room", (deviceId) => {
+      console.log(`Socket ${socket.id} joining device room:`, deviceId);
+      socket.join(deviceId);
+      console.log('Device room set:', deviceId, socket);
+      deviceRooms.set(deviceId, socket.id);
+    });
+
+    // Handle force logout
+    socket.on("force-logout", (data) => {
+      const { deviceId } = data;
+      console.log('Handling force logout for device:', deviceId);
+      
+      // Get all sockets in the device room
+      const deviceRoom = io.sockets.adapter.rooms.get(deviceId);
+      if (deviceRoom) {
+        // Emit force-logout event to all sockets in the device room
+        io.to(deviceId).emit('force-logout', {
+          message: 'You have been logged out from another device'
+        });
+        
+        // Clean up the device room
+        deviceRooms.delete(deviceId);
+      }
+    });
+
     // Handle session creation from website
     socket.on("create_session", (data) => {
       const { sessionId } = data;
@@ -916,7 +945,16 @@ function initializeSocket(io) {
     });
 
     // Handle disconnection
-    socket.on("disconnect", () => handleDisconnect(socket));
+    socket.on("disconnect", () => {
+      // Remove from device room if exists
+      const rooms = Array.from(socket.rooms);
+      rooms.forEach(room => {
+        if (room !== socket.id) {
+          socket.leave(room);
+        }
+      });
+      handleDisconnect(socket);
+    });
 
     // Handle private messages
     socket.on("private-message", (data) => handlePrivateMessage(socket, data));

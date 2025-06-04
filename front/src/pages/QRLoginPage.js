@@ -135,10 +135,28 @@ const getDetailedDeviceInfo = async () => {
 const getDeviceName = (deviceInfo) => {
   const { browser, deviceType, hardware } = deviceInfo;
   
-  // Try to extract device model from user agent
+  // Try to extract device model and browser name from user agent
+  console.log(deviceInfo,"deviceInfo")
   const userAgent = browser.userAgent;
   let deviceName = '';
+  let browserName = '';
   
+  // Extract browser name
+  if (userAgent.includes('Chrome')) {
+    browserName = 'Chrome';
+  } else if (userAgent.includes('Firefox')) {
+    browserName = 'Firefox';
+  } else if (userAgent.includes('Safari')) {
+    browserName = 'Safari';
+  } else if (userAgent.includes('Edge')) {
+    browserName = 'Edge';
+  } else if (userAgent.includes('Opera')) {
+    browserName = 'Opera';
+  } else {
+    browserName = 'Unknown Browser';
+  }
+  console.log(browserName,"browserName")
+  // Extract device model
   if (deviceType.isMobile) {
     if (userAgent.includes('iPhone')) {
       deviceName = 'iPhone';
@@ -159,7 +177,8 @@ const getDeviceName = (deviceInfo) => {
     deviceName = `${browser.platform} Desktop (${cpuInfo}${gpuInfo})`;
   }
   
-  return deviceName || 'Unknown Device';
+  // Combine device name and browser name
+  return `${deviceName} with ${browserName}` || 'Unknown Device with Unknown Browser';
 };
 
 const QRLoginPage = () => {

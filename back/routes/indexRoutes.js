@@ -44,8 +44,8 @@ const {
   leaveGroup,
   addParticipants,
 } = require("../controller/groupController");
-const { handleQrLogin, getSessionStatus } = require('../controller/authController');
-const { auth } = require("../helper/auth");
+const { handleQrLogin, getSessionStatus, logoutDevice } = require('../controller/authController');
+  const { auth } = require("../helper/auth");
 
 const indexRoutes = express.Router();
 
@@ -104,5 +104,6 @@ indexRoutes.post("/upload", auth, upload.single("file"), uploadController.upload
 // Device management routes
 indexRoutes.get('/devices', auth, getDevices);
 indexRoutes.delete('/devices/:deviceId', auth, removeDevice);
+indexRoutes.post('/logout-device', auth, logoutDevice);
 
 module.exports = indexRoutes;

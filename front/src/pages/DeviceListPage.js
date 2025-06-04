@@ -45,7 +45,7 @@ const DeviceListPage = () => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem('token');
-      const currentDeviceId = sessionStorage.getItem('deviceId');
+      const currentDeviceId = localStorage.getItem('deviceId');
       
       console.log('Removing device:', {
         deviceId,
@@ -53,23 +53,30 @@ const DeviceListPage = () => {
         allDevices: devices
       });
 
-      // First, remove the specific device
-      const response = await axios.delete(`${BASE_URL}/devices/${deviceId}`, {
+      // Call the logout endpoint to remove the device
+      const response = await axios.post(`${BASE_URL}/logout-device`, {
+        deviceId: deviceId
+      }, {                            
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log('Remove device response:', response.data);
+      console.log('Logout device response:', response.data);
 
       if (response.data.status === 200) {
         // If removing current device
         if (deviceId === currentDeviceId) {
           console.log('Removing current device and logging out');
-          // Clear session and redirect to login
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('userId');
-          sessionStorage.removeItem('deviceId');
+          // Clean up socket connection if it exists
+          if (window.socketRef?.current) {
+            window.socketRef.current.disconnect();
+            window.socketRef.current = null;
+          }
+          // Clear all storage
+          sessionStorage.clear();
+          localStorage.removeItem('deviceId');
+          // Redirect to login
           navigate('/login');
         } else {
           console.log('Removing other device');
