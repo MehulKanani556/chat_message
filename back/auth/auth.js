@@ -199,7 +199,7 @@ const sendOtpToMobile = async (req, res) => {
 
 const verifyMobileOtp = async (req, res) => {
     try {
-        const { mobileNumber, otp } = req.body;
+        const { mobileNumber, otp , isMobile } = req.body;
 
         let userRecord = await user.findOne({ mobileNumber });
         if (!userRecord) {

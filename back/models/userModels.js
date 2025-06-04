@@ -34,6 +34,10 @@ const userSchema = mongoose.Schema(
       type: Array,
       default: [],
     },
+    isMobile:{
+      type:Boolean,
+      default:false
+    },
     groupToJoin: {
       type: String,
       default: "Everyone",
