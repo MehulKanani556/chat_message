@@ -140,22 +140,38 @@ const getDeviceName = (deviceInfo) => {
   const userAgent = browser.userAgent;
   let deviceName = '';
   let browserName = '';
+  let osName = '';
   
-  // Extract browser name
-  if (userAgent.includes('Chrome')) {
-    browserName = 'Chrome';
-  } else if (userAgent.includes('Firefox')) {
-    browserName = 'Firefox';
-  } else if (userAgent.includes('Safari')) {
-    browserName = 'Safari';
-  } else if (userAgent.includes('Edge')) {
-    browserName = 'Edge';
-  } else if (userAgent.includes('Opera')) {
-    browserName = 'Opera';
+  // Detect OS
+  if (userAgent.includes('Windows')) {
+    osName = 'Windows';
+  } else if (userAgent.includes('Mac')) {
+    osName = 'macOS';
+  } else if (userAgent.includes('Linux')) {
+    osName = 'Linux';
+  } else if (userAgent.includes('Android')) {
+    osName = 'Android';
+  } else if (userAgent.includes('iOS')) {
+    osName = 'iOS';
+  } else {
+    osName = 'Unknown OS';
+  }
+  
+  // More accurate browser detection using multiple indicators
+  if (userAgent.includes('Edg/')) {
+    browserName = 'Microsoft Edge';
+  } else if (userAgent.includes('Firefox/')) {
+    browserName = 'Mozilla Firefox';
+  } else if (userAgent.includes('Safari/') && !userAgent.includes('Chrome')) {
+    browserName = 'Apple Safari';
+  } else if (userAgent.includes('OPR/') || userAgent.includes('Opera/')) {
+    browserName = 'Opera Browser';
+  } else if (userAgent.includes('Chrome/')) {
+    browserName = 'Google Chrome';
   } else {
     browserName = 'Unknown Browser';
   }
-  console.log(browserName,"browserName")
+  
   // Extract device model
   if (deviceType.isMobile) {
     if (userAgent.includes('iPhone')) {
@@ -170,15 +186,10 @@ const getDeviceName = (deviceInfo) => {
     } else {
       deviceName = 'Android Tablet';
     }
-  } else {
-    // For desktop, include CPU and GPU information
-    const cpuInfo = `${hardware.cpu.cores} cores, ${hardware.cpu.memory}GB RAM`;
-    const gpuInfo = hardware.webgl?.renderer ? `, ${hardware.webgl.renderer.split('/')[0]}` : '';
-    deviceName = `${browser.platform} Desktop (${cpuInfo}${gpuInfo})`;
-  }
+  } 
   
-  // Combine device name and browser name
-  return `${deviceName} with ${browserName}` || 'Unknown Device with Unknown Browser';
+  // Return both OS and browser name  
+  return `${browserName} (${osName})` || 'Unknown Browser (Unknown OS)';
 };
 
 const QRLoginPage = () => {
