@@ -53,7 +53,7 @@ const fpPromise = FingerprintJS.load();
 // Function to get device ID
 const getDeviceId = async () => {
   let deviceId = localStorage.getItem('deviceId');
-  
+
   if (!deviceId) {
     const fp = await fpPromise;
     const result = await fp.get();
@@ -165,10 +165,10 @@ export const SocketProvider = ({ children }) => {
     }
 
     const token = sessionStorage.getItem('token');
-    
+
     const initializeSocket = async () => {
       const deviceId = await getDeviceId();
-      
+
       if (token) {
         socketRef.current = io(SOCKET_SERVER_URL, {
           transports: ['websocket', 'polling'],
@@ -621,7 +621,7 @@ export const SocketProvider = ({ children }) => {
         dispatch(setRemoteStreams(
           new Map(remoteStreams).set(incomingShare.fromEmail, stream)
         ));
-        dispatch(updateParticipant({ userId:incomingShare.fromEmail, stream }));
+        dispatch(updateParticipant({ userId: incomingShare.fromEmail, stream }));
 
       });
 
@@ -705,17 +705,17 @@ export const SocketProvider = ({ children }) => {
     // Handle incoming video call request with 30 sec timeout and disconnect function
     socketRef.current.on("call-requested", async (data) => {
       console.log("Incoming call from:", data);
-        dispatch(setIncomingCall({
-          fromEmail: data.fromEmail,
-          signal: data.signal,
-          type: data.type,
-          participants: data.participants,
-          isGroupCall: data.isGroupCall,
-          groupId: data.groupId || null,
-          roomId: data.roomId,
-        }));
-        setCallRoom(data.roomId);
-        setCallStatus("ringing");
+      dispatch(setIncomingCall({
+        fromEmail: data.fromEmail,
+        signal: data.signal,
+        type: data.type,
+        participants: data.participants,
+        isGroupCall: data.isGroupCall,
+        groupId: data.groupId || null,
+        roomId: data.roomId,
+      }));
+      setCallRoom(data.roomId);
+      setCallStatus("ringing");
     });
 
     // console.log("callDuration", callDuration);
@@ -819,7 +819,7 @@ export const SocketProvider = ({ children }) => {
 
     socketRef.current.on("call-ended", ({ to, from, duration, roomId }) => {
 
-      if(!duration){
+      if (!duration) {
         alert("User is Busy so Rejected  call")
         // return
       }
@@ -886,7 +886,7 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketRef.current.on("user-in-call", (data) => {
-      if(!selectedChat?.members){
+      if (!selectedChat?.members) {
         dispatch(setUserIncall("is onther Call Runing"));
       }
     });
@@ -1239,122 +1239,122 @@ export const SocketProvider = ({ children }) => {
       : 0;
     const no_of_callUser = sessionStorage.getItem("callUser");
 
-    if(callAccept){
-    if (groupCall) {
-      if (callParticipantsList?.joined?.length > 2) {
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (socketRef.current) {
-              socketRef.current.emit("participant-left", {
-                leavingUser: userId,
-                to: participantId,
-                duration: finalDuration,
-                roomId: callRoom,
-              });
+    if (callAccept) {
+      if (groupCall) {
+        if (callParticipantsList?.joined?.length > 2) {
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (socketRef.current) {
+                socketRef.current.emit("participant-left", {
+                  leavingUser: userId,
+                  to: participantId,
+                  duration: finalDuration,
+                  roomId: callRoom,
+                });
+              }
             }
-          }
-        });
-      } else {
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (socketRef.current) {
-              socketRef.current.emit("end-call", {
-                to: participantId,
-                from: userId,
-                duration: finalDuration,
-                roomId: callRoom,
-              });
+          });
+        } else {
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (socketRef.current) {
+                socketRef.current.emit("end-call", {
+                  to: participantId,
+                  from: userId,
+                  duration: finalDuration,
+                  roomId: callRoom,
+                });
+              }
             }
-          }
-        });
-      }
+          });
+        }
 
-      if (callStartTime && callParticipantsList?.joined.length == 2) {
-        socketRef.current.emit("save-call-message", {
-          senderId: callFrom,
-          receiverId: groupCall,
-          callType: isVideoCalling ? "video" : "voice",
-          status: "ended",
-          duration: finalDuration,
-          timestamp: new Date(),
-          callfrom: callFrom,
-          joined: no_of_callUser,
+        if (callStartTime && callParticipantsList?.joined.length == 2) {
+          socketRef.current.emit("save-call-message", {
+            senderId: callFrom,
+            receiverId: groupCall,
+            callType: isVideoCalling ? "video" : "voice",
+            status: "ended",
+            duration: finalDuration,
+            timestamp: new Date(),
+            callfrom: callFrom,
+            joined: no_of_callUser,
+            roomId: callRoom,
+          });
+        }
+      } else {
+        if (callParticipantsList?.joined?.length > 2) {
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (socketRef.current) {
+                socketRef.current.emit("participant-left", {
+                  leavingUser: userId,
+                  to: participantId,
+                  duration: finalDuration,
+                  roomId: callRoom,
+                });
+              }
+            }
+          });
+
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (callStartTime) {
+                socketRef.current.emit("save-call-message", {
+                  senderId: userId,
+                  receiverId: groupCall ? groupCall : participantId,
+                  callType: isVideoCalling ? "video" : "voice",
+                  status: "ended",
+                  duration: finalDuration,
+                  timestamp: new Date(),
+                  joined: no_of_callUser,
+                  roomId: callRoom,
+                });
+              }
+            }
+          });
+        } else {
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (socketRef.current) {
+                socketRef.current.emit("end-call", {
+                  to: participantId,
+                  from: userId,
+                  duration: finalDuration,
+                  roomId: callRoom,
+                });
+              }
+            }
+          });
+
+          callParticipantsList?.joined.forEach((participantId) => {
+            if (participantId !== userId) {
+              if (callStartTime) {
+                socketRef.current.emit("save-call-message", {
+                  senderId: userId,
+                  receiverId: participantId,
+                  callType: isVideoCalling ? "video" : "voice",
+                  status: "ended",
+                  duration: finalDuration,
+                  timestamp: new Date(),
+                  joined: no_of_callUser,
+                  roomId: callRoom,
+                });
+              }
+            }
+          });
+        }
+      }
+    } else {
+      if (socketRef.current) {
+        socketRef.current.emit("end-call", {
+          to: selectedChat._id,
+          from: userId,
+          duration: null,
           roomId: callRoom,
         });
       }
-    } else {
-      if (callParticipantsList?.joined?.length > 2) {
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (socketRef.current) {
-              socketRef.current.emit("participant-left", {
-                leavingUser: userId,
-                to: participantId,
-                duration: finalDuration,
-                roomId: callRoom,
-              });
-            }
-          }
-        });
-
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (callStartTime) {
-              socketRef.current.emit("save-call-message", {
-                senderId: userId,
-                receiverId: groupCall ? groupCall : participantId,
-                callType: isVideoCalling ? "video" : "voice",
-                status: "ended",
-                duration: finalDuration,
-                timestamp: new Date(),
-                joined: no_of_callUser,
-                roomId: callRoom,
-              });
-            }
-          }
-        });
-      } else {
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (socketRef.current) {
-              socketRef.current.emit("end-call", {
-                to: participantId,
-                from: userId,
-                duration: finalDuration,
-                roomId: callRoom,
-              });
-            }
-          }
-        });
-
-        callParticipantsList?.joined.forEach((participantId) => {
-          if (participantId !== userId) {
-            if (callStartTime) {
-              socketRef.current.emit("save-call-message", {
-                senderId: userId,
-                receiverId: participantId,
-                callType: isVideoCalling ? "video" : "voice",
-                status: "ended",
-                duration: finalDuration,
-                timestamp: new Date(),
-                joined: no_of_callUser,
-                roomId: callRoom,
-              });
-            }
-          }
-        });
-      }
     }
-    }else{
-    if (socketRef.current) {
-      socketRef.current.emit("end-call", {
-        to: selectedChat._id,
-        from: userId,
-        duration: null,
-        roomId: callRoom,
-      });
-    }
-  }
 
     // Reset call-related states
     setCallStartTime(null);
@@ -1710,74 +1710,74 @@ export const SocketProvider = ({ children }) => {
 
 
 
-const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
-const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
-const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
-const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
-const memoizedAcceptCall = useCallback(acceptCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone, incomingCall]);
-const memoizedEndCall = useCallback(endCall, [userId, socketRef, dispatch, groupCall, callParticipantsList, callStartTime]);
-const memoizedToggleCamera = useCallback(toggleCamera, [streamRef, isCameraOn, userId, socketRef, dispatch]);
-const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch]);
-const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [userId, socketRef, dispatch]);
-const memoizedRejectCall = useCallback(rejectCall, [userId, socketRef, dispatch, incomingCall]);
-const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [incomingShare, dispatch, userId, socketRef]);
-const memoizedInviteToCall = useCallback(inviteToCall, [userId, socketRef, dispatch, callParticipants, isVideoCalling]);
-const memoizedForwardMessage = useCallback(forwardMessage, [userId, socketRef]);
-const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
-const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
-const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
+  const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
+  const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
+  const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
+  const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
+  const memoizedAcceptCall = useCallback(acceptCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone, incomingCall]);
+  const memoizedEndCall = useCallback(endCall, [userId, socketRef, dispatch, groupCall, callParticipantsList, callStartTime]);
+  const memoizedToggleCamera = useCallback(toggleCamera, [streamRef, isCameraOn, userId, socketRef, dispatch]);
+  const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch]);
+  const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [userId, socketRef, dispatch]);
+  const memoizedRejectCall = useCallback(rejectCall, [userId, socketRef, dispatch, incomingCall]);
+  const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [incomingShare, dispatch, userId, socketRef]);
+  const memoizedInviteToCall = useCallback(inviteToCall, [userId, socketRef, dispatch, callParticipants, isVideoCalling]);
+  const memoizedForwardMessage = useCallback(forwardMessage, [userId, socketRef]);
+  const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
+  const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
+  const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
 
-// Use the memoized functions in useMemo
-const value = useMemo(() => ({
-  socket: socketRef.current,
-  sendPrivateMessage: memoizedSendPrivateMessage,
-  cleanupConnection: memoizedCleanupConnection,
-  startSharing: memoizedStartSharing,
-  startCall: memoizedStartCall,
-  acceptCall: memoizedAcceptCall,
-  endCall: memoizedEndCall,
-  toggleCamera: memoizedToggleCamera,
-  toggleMicrophone: memoizedToggleMicrophone,
-  markMessageAsRead: memoizedMarkMessageAsRead,
-  rejectCall: memoizedRejectCall,
-  acceptScreenShare: memoizedAcceptScreenShare,
-  inviteToCall: memoizedInviteToCall,
-  forwardMessage: memoizedForwardMessage,
-  addMessageReaction: memoizedAddMessageReaction,
-  subscribeToMessages: memoizedSubscribeToMessages,
-  sendTypingStatus: memoizedSendTypingStatus
-}), [
-  userId,
-  socketRef,
-  dispatch,
-  hasWebcam,
-  hasMicrophone,
-  incomingCall,
-  groupCall,
-  callParticipantsList,
-  callStartTime,
-  streamRef,
-  isCameraOn,
-  incomingShare,
-  callParticipants,
-  isVideoCalling,
-  memoizedSendPrivateMessage,
-  memoizedCleanupConnection,
-  memoizedStartSharing,
-  memoizedStartCall,
-  memoizedAcceptCall,
-  memoizedEndCall,
-  memoizedToggleCamera,
-  memoizedToggleMicrophone,
-  memoizedMarkMessageAsRead,
-  memoizedRejectCall,
-  memoizedAcceptScreenShare,
-  memoizedInviteToCall,
-  memoizedForwardMessage,
-  memoizedAddMessageReaction,
-  memoizedSubscribeToMessages,
-  memoizedSendTypingStatus
-]);
+  // Use the memoized functions in useMemo
+  const value = useMemo(() => ({
+    socket: socketRef.current,
+    sendPrivateMessage: memoizedSendPrivateMessage,
+    cleanupConnection: memoizedCleanupConnection,
+    startSharing: memoizedStartSharing,
+    startCall: memoizedStartCall,
+    acceptCall: memoizedAcceptCall,
+    endCall: memoizedEndCall,
+    toggleCamera: memoizedToggleCamera,
+    toggleMicrophone: memoizedToggleMicrophone,
+    markMessageAsRead: memoizedMarkMessageAsRead,
+    rejectCall: memoizedRejectCall,
+    acceptScreenShare: memoizedAcceptScreenShare,
+    inviteToCall: memoizedInviteToCall,
+    forwardMessage: memoizedForwardMessage,
+    addMessageReaction: memoizedAddMessageReaction,
+    subscribeToMessages: memoizedSubscribeToMessages,
+    sendTypingStatus: memoizedSendTypingStatus
+  }), [
+    userId,
+    socketRef,
+    dispatch,
+    hasWebcam,
+    hasMicrophone,
+    incomingCall,
+    groupCall,
+    callParticipantsList,
+    callStartTime,
+    streamRef,
+    isCameraOn,
+    incomingShare,
+    callParticipants,
+    isVideoCalling,
+    memoizedSendPrivateMessage,
+    memoizedCleanupConnection,
+    memoizedStartSharing,
+    memoizedStartCall,
+    memoizedAcceptCall,
+    memoizedEndCall,
+    memoizedToggleCamera,
+    memoizedToggleMicrophone,
+    memoizedMarkMessageAsRead,
+    memoizedRejectCall,
+    memoizedAcceptScreenShare,
+    memoizedInviteToCall,
+    memoizedForwardMessage,
+    memoizedAddMessageReaction,
+    memoizedSubscribeToMessages,
+    memoizedSendTypingStatus
+  ]);
 
   // const value = {
   //   socket: socketRef.current,

@@ -205,24 +205,24 @@ const VideoCallLayout = memo(() => {
   const [recording, setRecording] = useState(false);
   const recordedChunksRef = useRef([]);
   const animationFrameIdRef = useRef(null);
- 
- 
+
+
   const startRecording = async () => {
     try {
       // Get all video elements
       const videoElements = Object.values(videoElementsRef.current);
 
       console.log(videoElements);
-      
-     
+
+
       // Create a canvas to combine video streams
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-     
+
       // Set canvas size to match video dimensions
       canvas.width = 1920;
       canvas.height = 1080;
- 
+
       // Create a MediaStream from the canvas
       const canvasStream = canvas.captureStream(30); // 30 FPS
 
@@ -236,18 +236,18 @@ const VideoCallLayout = memo(() => {
           source.connect(destination);
         }
       });
-  
+
       // Add mixed audio tracks to the canvas stream
       destination.stream.getAudioTracks().forEach((track) => {
         canvasStream.addTrack(track);
       });
- 
+
       // Start drawing loop
       const drawVideo = () => {
         // Clear canvas
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
- 
+
         // Draw each video element
         videoElements.forEach((videoElement, index) => {
           if (videoElement && videoElement.videoWidth > 0) {
@@ -267,11 +267,11 @@ const VideoCallLayout = memo(() => {
               ctx.quadraticCurveTo(layout.x, layout.y, layout.x + radius, layout.y);
               ctx.closePath();
               ctx.clip();
-            
+
               ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
-            
+
               ctx.restore();
-            
+
               // Draw border
               ctx.save();
               ctx.beginPath();
@@ -295,41 +295,41 @@ const VideoCallLayout = memo(() => {
             // ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
           }
         });
- 
+
         // Continue drawing loop
         animationFrameIdRef.current = requestAnimationFrame(drawVideo);
       };
- 
+
       // Start the drawing loop
       drawVideo();
- 
+
       // Create MediaRecorder with canvas stream
       const mediaRecorder = new MediaRecorder(canvasStream, {
         mimeType: "video/webm;codecs=vp9,opus",
         videoBitsPerSecond: 2500000
       });
- 
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           recordedChunksRef.current.push(event.data);
         }
       };
- 
+
       mediaRecorder.onstop = handleStop;
- 
+
       // Start recording
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
       setRecording(true);
- 
+
       // Stop recording when call ends
       const stopRecordingOnCallEnd = () => {
         stopRecording();
       };
- 
+
       // Add event listener for call end
       window.addEventListener('beforeunload', stopRecordingOnCallEnd);
- 
+
       // Cleanup function
       return () => {
         window.removeEventListener('beforeunload', stopRecordingOnCallEnd);
@@ -341,7 +341,7 @@ const VideoCallLayout = memo(() => {
       console.error("Error starting video recording:", err);
     }
   };
- 
+
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setRecording(false);
@@ -351,22 +351,22 @@ const VideoCallLayout = memo(() => {
       animationFrameIdRef.current = null;
     }
   };
- 
+
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
- 
+
   const handleStop = async () => {
     // ... existing handleStop logic ...
     const blob = new Blob(recordedChunksRef.current, {
       type: "video/webm",
     });
- 
+
     // Optional: Convert to MP4 using ffmpeg.wasm here
- 
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.style.display = "none";
@@ -376,7 +376,7 @@ const VideoCallLayout = memo(() => {
     a.click();
     URL.revokeObjectURL(url);
     recordedChunksRef.current = [];
- 
+
     // Ensure drawing loop is stopped if not already (should be stopped by stopRecording)
     if (animationFrameIdRef.current) {
       cancelAnimationFrame(animationFrameIdRef.current);
@@ -386,7 +386,7 @@ const VideoCallLayout = memo(() => {
 
   const calculateGridLayout = (index, count, canvasWidth, canvasHeight) => {
     const gap = 32; // px gap between videos
-  
+
     // 2 participants: one big, one small overlay
     if (count === 2) {
       if (index === 0) {
@@ -403,12 +403,12 @@ const VideoCallLayout = memo(() => {
         };
       }
     }
-  
+
     // 1 participant: full screen
     if (count === 1) {
       return { x: 0, y: 0, width: canvasWidth, height: canvasHeight, rounded: false };
     }
-  
+
     // 3+ participants: grid with centering and gap
     let cols, rows;
     if (count <= 4) {
@@ -424,12 +424,12 @@ const VideoCallLayout = memo(() => {
       cols = 4;
       rows = Math.ceil(count / cols);
     }
-  
+
     const cellWidth = (canvasWidth - gap * (cols + 1)) / cols;
     const cellHeight = (canvasHeight - gap * (rows + 1)) / rows;
     const row = Math.floor(index / cols);
     const col = index % cols;
-  
+
     // Center last row if not full
     let offsetX = gap;
     if (row === rows - 1) {
@@ -439,7 +439,7 @@ const VideoCallLayout = memo(() => {
         offsetX += ((cellWidth + gap) * emptyCells) / 2;
       }
     }
-  
+
     return {
       x: offsetX + col * (cellWidth + gap),
       y: gap + row * (cellHeight + gap),
@@ -453,31 +453,30 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${
-        participantOpen ? "w-[70%]" : "w-full"
-      }`}
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"
+        }`}
       style={
         chatMessages
           ? {
-              width: "25%",
-              height: "34%",
-              position: "absolute",
-              top: position.y,
-              left: position.x,
-              cursor: isDragging ? "grabbing" : "grab",
-              userSelect: "none",
-              transform: "none",
-            }
+            width: "25%",
+            height: "34%",
+            position: "absolute",
+            top: position.y,
+            left: position.x,
+            cursor: isDragging ? "grabbing" : "grab",
+            userSelect: "none",
+            transform: "none",
+          }
           : {}
       }
       onMouseDown={handleMouseDown}
     >
-       <canvas
-            ref={canvasRef}
-            width={1920}
-            height={1080}
-            style={{ display: "none" }}
-          />
+      <canvas
+        ref={canvasRef}
+        width={1920}
+        height={1080}
+        style={{ display: "none" }}
+      />
       {/* Participant Grid */}
       <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
         {/* Add hidden canvas for recording */}
@@ -490,8 +489,8 @@ const VideoCallLayout = memo(() => {
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                 {selectedChat &&
-                selectedChat.photo &&
-                selectedChat.photo !== "null" ? (
+                  selectedChat.photo &&
+                  selectedChat.photo !== "null" ? (
                   <img
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
@@ -520,10 +519,10 @@ const VideoCallLayout = memo(() => {
               const participant = allUsers.find((u) => u._id === participantId);
               const isLocalUser = participantId === currentUser;
               const widthClass = getParticipantWidth(participants?.length);
-               // console.log(cameraStatus, isCameraEnabled, participantId);
-               const setVideoRef = (el) => {
-                console.log(el,"--------------------");
-                
+              // console.log(cameraStatus, isCameraEnabled, participantId);
+              const setVideoRef = (el) => {
+                console.log(el, "--------------------");
+
                 if (el) {
                   videoElementsRef.current[participantId] = el;
                 } else {
@@ -536,33 +535,30 @@ const VideoCallLayout = memo(() => {
                 <div
                   key={participantId}
                   ref={isLocalUser ? localVideoRef : null}
-                  className={`${
-                    participants.length == 2
-                      ? isLocalUser
-                        ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
-                        : widthClass
+                  className={`${participants.length == 2
+                    ? isLocalUser
+                      ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                       : widthClass
-                  } p-2 flex items-center justify-center`}
+                    : widthClass
+                    } p-2 flex items-center justify-center`}
                   style={{
-                    height: `${
-                      !(isLocalUser && participants.length == 2)
-                        ? `calc(100% / ${
-                            participants.length <= 2
-                              ? 1
-                              : participants.length <= 8 &&
-                                participants.length >= 2
-                              ? 2
-                              : 3
-                          })`
-                        : ""
-                    }`,
+                    height: `${!(isLocalUser && participants.length == 2)
+                      ? `calc(100% / ${participants.length <= 2
+                        ? 1
+                        : participants.length <= 8 &&
+                          participants.length >= 2
+                          ? 2
+                          : 3
+                      })`
+                      : ""
+                      }`,
                     ...(isLocalUser && participants.length == 2
                       ? {
-                          position: "absolute",
-                          bottom: "1rem",
-                          right: "1rem",
-                          cursor: isDraggingLocal ? "grabbing" : "grab",
-                        }
+                        position: "absolute",
+                        bottom: "1rem",
+                        right: "1rem",
+                        cursor: isDraggingLocal ? "grabbing" : "grab",
+                      }
                       : {}),
                   }}
                   onMouseDown={(e) =>
@@ -573,8 +569,8 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
-                      // muted={participantId === currentUser}
+                      className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
+                      muted={participantId === currentUser}
                       ref={(el) => {
                         setVideoRef(el);
                         if (el && stream instanceof MediaStream) {
@@ -643,33 +639,30 @@ const VideoCallLayout = memo(() => {
                   <div
                     key={participantId}
                     ref={isLocalUser ? localVideoRef : null}
-                    className={`${
-                      participants.length == 2
-                        ? isLocalUser
-                          ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
-                          : widthClass
+                    className={`${participants.length == 2
+                      ? isLocalUser
+                        ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                         : widthClass
-                    } p-2 flex items-center justify-center`}
+                      : widthClass
+                      } p-2 flex items-center justify-center`}
                     style={{
-                      height: `${
-                        !(isLocalUser && participants.length == 2)
-                          ? `calc(100% / ${
-                              participants.length <= 2
-                                ? 1
-                                : participants.length <= 8 &&
-                                  participants.length >= 2
-                                ? 2
-                                : 3
-                            })`
-                          : ""
-                      }`,
+                      height: `${!(isLocalUser && participants.length == 2)
+                        ? `calc(100% / ${participants.length <= 2
+                          ? 1
+                          : participants.length <= 8 &&
+                            participants.length >= 2
+                            ? 2
+                            : 3
+                        })`
+                        : ""
+                        }`,
                       ...(isLocalUser && participants.length == 2
                         ? {
-                            position: "absolute",
-                            bottom: "1rem",
-                            right: "1rem",
-                            cursor: isDraggingLocal ? "grabbing" : "grab",
-                          }
+                          position: "absolute",
+                          bottom: "1rem",
+                          right: "1rem",
+                          cursor: isDraggingLocal ? "grabbing" : "grab",
+                        }
                         : {}),
                     }}
                     onMouseDown={(e) =>
@@ -682,7 +675,7 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -691,7 +684,7 @@ const VideoCallLayout = memo(() => {
                                 el.play().catch((err) =>
                                   console.error("Remote video error:", err)
                                 );
-                               
+
                               }
                               // If you want to keep localVideoRef for the current user:
                               // if (participantId === currentUser && localVideoRef) {
@@ -713,6 +706,7 @@ const VideoCallLayout = memo(() => {
                             className="w-full h-full object-cover rounded-xl hidden"
                             muted={participantId === currentUser}
                             ref={(el) => {
+                              setVideoRef(el);
                               if (el && stream instanceof MediaStream) {
                                 el.srcObject = stream;
                                 el.play().catch((err) =>
@@ -727,7 +721,7 @@ const VideoCallLayout = memo(() => {
                           />
                           <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
                             {participant?.photo &&
-                            participant.photo !== "null" ? (
+                              participant.photo !== "null" ? (
                               <img
                                 src={`${IMG_URL}${participant.photo.replace(
                                   /\\/g,
@@ -769,22 +763,20 @@ const VideoCallLayout = memo(() => {
               dispatch(setCallChatList(!callChatList));
               // dispatch(setChatMessages(true));
             }}
-            className={`w-10 grid place-content-center rounded-full h-10 border ${
-              callChatList
-                ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                : "dark:text-white text-black"
-            }`}
+            className={`w-10 grid place-content-center rounded-full h-10 border ${callChatList
+              ? "dark:bg-white dark:text-black bg-black/50 text-white"
+              : "dark:text-white text-black"
+              }`}
           >
             <BsChatDots className="text-xl" />
           </button>
 
           <button
             onClick={toggleMicrophone}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-              isMicrophoneOn
-                ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                : "dark:text-white text-black"
-            }`}
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isMicrophoneOn
+              ? "dark:bg-white dark:text-black bg-black/50 text-white"
+              : "dark:text-white text-black"
+              }`}
           >
             {isMicrophoneOn ? (
               <IoMicOutline className="text-xl" />
@@ -795,13 +787,11 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={toggleCamera}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-              isVideoCalling ? "" : "hidden"
-            }  ${
-              isCameraOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
+              }  ${isCameraOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-            }`}
+              }`}
           >
             {isCameraOn ? (
               <BsCameraVideo className="text-xl" />
@@ -835,29 +825,28 @@ const VideoCallLayout = memo(() => {
                 dispatch(setParticipantOpen(!participantOpen));
                 dispatch(setCallChatList(false));
               }}
-              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
-                participantOpen
-                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                  : "dark:text-white text-black"
-              }`}
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${participantOpen
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
+                }`}
             >
               <MdOutlineGroupAdd className="text-xl" />
             </button>
           )}
-         
+
           <button
             onClick={() => (recording ? stopRecording() : startRecording())}
             className={`w-10 grid place-content-center rounded-full h-10 border text-white 
-             ${ recording
-              ? "dark:bg-white dark:text-black bg-black/50 text-white"
-              : "dark:text-white text-black"}
+             ${recording
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"}
               `}
           >
             <AiOutlineVideoCamera className="text-xl" />
           </button>
-        </div>
+        </div >
       )}
-    </div>
+    </div >
   );
 
   return content;
