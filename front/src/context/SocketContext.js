@@ -933,14 +933,14 @@ export const SocketProvider = ({ children }) => {
       let stream = null;
       try {
         console.log("Requesting media devices...");
-        // stream = await navigator.mediaDevices.getUserMedia({
-        //   video: calltype == "video" ? hasWebcam : false,
-        //   audio: hasMicrophone,
-        // });
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: calltype == "video" ? hasWebcam : false,
+          audio: hasMicrophone,
         });
+        // stream = await navigator.mediaDevices.getDisplayMedia({
+        //   video: true,
+        //   audio: true,
+        // });
         console.log("Media stream obtained:", stream);
 
         if (calltype == "video") {
@@ -1115,14 +1115,14 @@ export const SocketProvider = ({ children }) => {
       let stream = null;
       try {
         // Try to get media stream but don't block if devices aren't available
-        // stream = await navigator.mediaDevices.getUserMedia({
-        //   video: incomingCall.type == "video" ? hasWebcam : false,
-        //   audio: hasMicrophone,
-        // });
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: incomingCall.type == "video" ? hasWebcam : false,
+          audio: hasMicrophone,
         });
+        // stream = await navigator.mediaDevices.getDisplayMedia({
+        //   video: true,
+        //   audio: true,
+        // });
       } catch (err) {
         console.warn("Could not get media devices:", err);
         // Continue without media stream
