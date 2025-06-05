@@ -182,120 +182,97 @@ const VideoCallLayout = memo(() => {
 
   const canvasRef = useRef(null);
   const videoElementsRef = useRef({});
-  const [isRecording , setIsRecording] = useState(false)
+  const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const recordedChunksRef = useRef([]);
-  // Ref for the animation frame ID to cancel the drawing loop
   const animationFrameIdRef = useRef(null);
 
 
- const startRecording = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+  const startRecording = async () => {
+    try {
+      // Get all video elements
+      const videoElements = Object.values(videoElementsRef.current);
 
-    // Stop any existing drawing loop
-    if (animationFrameIdRef.current) {
-      cancelAnimationFrame(animationFrameIdRef.current);
-    }
+      // Create a canvas to combine video streams
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
 
-    const drawFrames = () => {
-      // Clear canvas for the new frame
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Set canvas size to match container dimensions
+      const container = containerRef.current;
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
 
-      // Correctly iterate over participants to get the MediaStream
-      // participantEntries is an array of [participantId, [participantId, MediaStream]]
-      // We need to destructure participantValue to get the actual stream at index 1
-      Array.from(participants).forEach(([participantId, participantValue], index) => {
-     
-        const stream = participantValue; 
+      // Create a MediaStream from the canvas
+      const canvasStream = canvas.captureStream(30); // 30 FPS
 
-        const videoElement = videoElementsRef.current[participantId];
-        
-        const participant = allUsers.find(u => u._id === participantId);
-        const hasActiveVideoTrack = stream && stream instanceof MediaStream && stream.getVideoTracks().some(track => track.readyState === 'live' && !track.muted);
+      // Start drawing loop
+      const drawVideo = () => {
+        // Clear canvas
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const { x, y, width, height } = calculateGridLayout(
-          index,
-          participants.size, // Use size for Map
-          canvas.width,
-          canvas.height
-        );
+        // Draw each video element in its actual position
+        videoElements.forEach((videoElement) => {
+          if (videoElement && videoElement.videoWidth > 0) {
+            const rect = videoElement.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
 
-        if (videoElement && hasActiveVideoTrack && videoElement.readyState >= 2) {
-          // Draw the video frame onto the canvas if there's an active track and the video element is ready
-          try {
-             ctx.drawImage(videoElement, x, y, width, height);
-          } catch (e) {
-             // Catch potential errors if drawImage fails unexpectedly
-             console.error(`Error drawing video for ${participantId}:`, e);
-             // Fallback to drawing placeholder if drawImage fails
-             ctx.fillStyle = 'grey';
-             ctx.fillRect(x, y, width, height);
-             // Optionally draw profile picture or initials on the placeholder
-             drawParticipantPlaceholder(ctx, participant, x, y, width, height);
+            // Calculate relative position within container
+            const x = rect.left - containerRect.left;
+            const y = rect.top - containerRect.top;
+            const width = rect.width;
+            const height = rect.height;
+
+            // Draw video at its actual position
+            ctx.drawImage(videoElement, x, y, width, height);
           }
-        } else {
-           // Draw a placeholder (grey background + profile picture/initials)
-           // if no active video track or video element not ready
-           ctx.fillStyle = 'grey'; // Example placeholder background
-           ctx.fillRect(x, y, width, height);
-           // Draw profile picture or initials on the placeholder
-           drawParticipantPlaceholder(ctx, participant, x, y, width, height);
+        });
 
-           // Only log if the video element exists but isn't ready AND has an active track
-           // This helps debug actual stream/video element issues vs. camera off
-           if (videoElement && hasActiveVideoTrack && videoElement.readyState < 2) {
-              console.log(`Video element for ${participantId} not ready (readyState: ${videoElement.readyState}).`);
-           }
-           // Avoid logging when camera is simply off
-        }
+        // Continue drawing loop
+        animationFrameIdRef.current = requestAnimationFrame(drawVideo);
+      };
+
+      // Start the drawing loop
+      drawVideo();
+
+      // Create MediaRecorder with canvas stream
+      const mediaRecorder = new MediaRecorder(canvasStream, {
+        mimeType: "video/webm;codecs=vp9,opus",
+        videoBitsPerSecond: 2500000
       });
 
-      // Request the next frame
-      animationFrameIdRef.current = requestAnimationFrame(drawFrames);
-    };
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
 
-    // Define a helper function to draw placeholder (initials or image)
-    const drawParticipantPlaceholder = (ctx, participant, x, y, width, height) => {
-        // ... (Your implementation of drawing initials/photo) ...
-        ctx.fillStyle = 'white';
-        ctx.font = `${Math.min(width, height) / 4}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const textX = x + width / 2;
-        const textY = y + height / 2;
-        const initials = participant?.userName?.[0]?.toUpperCase() || '?';
-        ctx.fillText(initials, textX, textY);
-    };
+      mediaRecorder.onstop = handleStop;
 
-    // Start the drawing loop
-    drawFrames();
+      // Start recording
+      mediaRecorder.start(1000);
+      mediaRecorderRef.current = mediaRecorder;
+      setRecording(true);
 
-    // Create a stream from the canvas
-    const canvasStream = canvas.captureStream(30); // 30 frames per second
+      // Stop recording when call ends
+      const stopRecordingOnCallEnd = () => {
+        stopRecording();
+      };
 
-    console.log(canvasStream,"canvasStream");
-    
+      // Add event listener for call end
+      window.addEventListener('beforeunload', stopRecordingOnCallEnd);
 
-    // Use the canvas stream for MediaRecorder
-    const mediaRecorder = new MediaRecorder(canvasStream, {
-      mimeType: "video/webm;codecs=vp9,opus", // Or 'video/mp4' if supported by browser
-    });
-
-    mediaRecorder.ondataavailable = (event) => {
-      console.log(event.data);
-      
-      if (event.data.size > 0) {
-        recordedChunksRef.current.push(event.data);
-      }
-    };
-
-    mediaRecorder.onstop = handleStop;
-
-    mediaRecorder.start();
-    mediaRecorderRef.current = mediaRecorder;
-    setRecording(true);
+      // Cleanup function
+      return () => {
+        window.removeEventListener('beforeunload', stopRecordingOnCallEnd);
+        if (animationFrameIdRef.current) {
+          cancelAnimationFrame(animationFrameIdRef.current);
+        }
+      };
+    } catch (err) {
+      console.error("Error starting video recording:", err);
+    }
   };
 
   const stopRecording = () => {
@@ -306,6 +283,13 @@ const VideoCallLayout = memo(() => {
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
     }
+  };
+
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   const handleStop = async () => {
@@ -320,17 +304,17 @@ const VideoCallLayout = memo(() => {
     const a = document.createElement("a");
     a.style.display = "none";
     a.href = url;
-    a.download = "recording.webm"; // change to .mp4 after conversion
+    a.download = `Videocall-${formatDate(new Date())}.webm`;
     document.body.appendChild(a);
     a.click();
     URL.revokeObjectURL(url);
     recordedChunksRef.current = [];
 
     // Ensure drawing loop is stopped if not already (should be stopped by stopRecording)
-     if (animationFrameIdRef.current) {
-       cancelAnimationFrame(animationFrameIdRef.current);
-       animationFrameIdRef.current = null;
-     }
+    if (animationFrameIdRef.current) {
+      cancelAnimationFrame(animationFrameIdRef.current);
+      animationFrameIdRef.current = null;
+    }
   };
 
   // ====================================================================
@@ -383,10 +367,10 @@ const VideoCallLayout = memo(() => {
                   {selectedChat?.userName || "Unknown User"}
                 </p>
                 {userIncall &&
-                <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
-                  {selectedChat?.userName} {' '} {userIncall}
-                </p>
-                 }
+                  <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
+                    {selectedChat?.userName} {' '} {userIncall}
+                  </p>
+                }
               </div>
             </div>
           ) : (
@@ -397,10 +381,10 @@ const VideoCallLayout = memo(() => {
               const widthClass = getParticipantWidth(participants?.length);
               const setVideoRef = (el) => {
                 if (el) {
-                    videoElementsRef.current[participantId] = el;
+                  videoElementsRef.current[participantId] = el;
                 } else {
-                    // Clean up ref when element is unmounted
-                    delete videoElementsRef.current[participantId];
+                  // Clean up ref when element is unmounted
+                  delete videoElementsRef.current[participantId];
                 }
               }
 
@@ -424,10 +408,10 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                      className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                       muted={participantId === currentUser}
                       ref={(el) => {
-                        setVideoRef(el); 
+                        setVideoRef(el);
                         if (el && stream instanceof MediaStream) {
                           el.srcObject = stream;
                           el.play().catch((err) =>
@@ -444,9 +428,9 @@ const VideoCallLayout = memo(() => {
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
                     {userIncall &&
-                    <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
-                      {selectedChat?.userName} {' '} {userIncall}
-                    </p>
+                      <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
+                        {selectedChat?.userName} {' '} {userIncall}
+                      </p>
                     }
                   </div>
                 </div>
@@ -480,10 +464,10 @@ const VideoCallLayout = memo(() => {
 
                 const setVideoRef = (el) => {
                   if (el) {
-                      videoElementsRef.current[participantId] = el;
+                    videoElementsRef.current[participantId] = el;
                   } else {
-                      // Clean up ref when element is unmounted
-                      delete videoElementsRef.current[participantId];
+                    // Clean up ref when element is unmounted
+                    delete videoElementsRef.current[participantId];
                   }
                 }
 
@@ -509,10 +493,10 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                             muted={participantId === currentUser}
                             ref={(el) => {
-                              setVideoRef(el); 
+                              setVideoRef(el);
                               if (el && stream instanceof MediaStream) {
                                 el.srcObject = stream;
                                 el.play().catch((err) =>
@@ -537,7 +521,7 @@ const VideoCallLayout = memo(() => {
                             className="w-full h-full object-cover rounded-xl hidden"
                             muted={participantId === currentUser}
                             ref={(el) => {
-                              setVideoRef(el); 
+                              setVideoRef(el);
                               if (el && stream instanceof MediaStream) {
                                 el.srcObject = stream;
                                 el.play().catch((err) =>
@@ -583,106 +567,100 @@ const VideoCallLayout = memo(() => {
       </div>
 
       {!chatMessages && (
-          <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 dark:bg-[#1A1A1A] bg-black/10">
+        <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 dark:bg-[#1A1A1A] bg-black/10">
+          <button
+            onClick={() => {
+              dispatch(setParticipantOpen(false));
+              // dispatch(setvideoCallChatList(true));
+              dispatch(setSelectedChatModule(true));
+              dispatch(setCallChatList(!callChatList));
+              // dispatch(setChatMessages(true));
+            }}
+            className={`w-10 grid place-content-center rounded-full h-10 border ${callChatList
+              ? "dark:bg-white dark:text-black bg-black/50 text-white"
+              : "dark:text-white text-black"
+              }`}
+          >
+            <BsChatDots className="text-xl" />
+          </button>
+
+          <button
+            onClick={toggleMicrophone}
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isMicrophoneOn
+              ? "dark:bg-white dark:text-black bg-black/50 text-white"
+              : "dark:text-white text-black"
+              }`}
+          >
+            {isMicrophoneOn ? (
+              <IoMicOutline className="text-xl" />
+            ) : (
+              <IoMicOffOutline className="text-xl" />
+            )}
+          </button>
+
+          <button
+            onClick={toggleCamera}
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
+              }  ${isCameraOn
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
+              }`}
+          >
+            {isCameraOn ? (
+              <BsCameraVideo className="text-xl" />
+            ) : (
+              <BsCameraVideoOff className="text-xl" />
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              if (!isReceiving) {
+                endCall();
+              }
+              cleanupConnection();
+              dispatch(setSelectedChatModule(true));
+              dispatch(setParticipantOpen(false));
+              dispatch(setCallChatList(false));
+            }}
+            className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
+          >
+            <IoCallOutline className="text-2xl" />
+          </button>
+
+          <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
+            <GoUnmute className="text-xl" />
+          </button>
+
+          {(isVideoCalling || isVoiceCalling) && (
             <button
               onClick={() => {
-                dispatch(setParticipantOpen(false));
-                // dispatch(setvideoCallChatList(true));
-                dispatch(setSelectedChatModule(true));
-                dispatch(setCallChatList(!callChatList));
-                // dispatch(setChatMessages(true));
-              }}
-              className={`w-10 grid place-content-center rounded-full h-10 border ${
-                callChatList
-                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                  : "dark:text-white text-black"
-              }`}
-            >
-              <BsChatDots className="text-xl" />
-            </button>
-
-            <button
-              onClick={toggleMicrophone}
-              className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-                isMicrophoneOn
-                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                  : "dark:text-white text-black"
-              }`}
-            >
-              {isMicrophoneOn ? (
-                <IoMicOutline className="text-xl" />
-              ) : (
-                <IoMicOffOutline className="text-xl" />
-              )}
-            </button>
-
-            <button
-              onClick={toggleCamera}
-              className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-                isVideoCalling ? "" : "hidden"
-              }  ${
-                isCameraOn
-                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                  : "dark:text-white text-black"
-              }`}
-            >
-              {isCameraOn ? (
-                <BsCameraVideo className="text-xl" />
-              ) : (
-                <BsCameraVideoOff className="text-xl" />
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                if (!isReceiving) {
-                  endCall();
-                }
-                cleanupConnection();
-                dispatch(setSelectedChatModule(true));
-                dispatch(setParticipantOpen(false));
+                dispatch(setParticipantOpen(!participantOpen));
                 dispatch(setCallChatList(false));
               }}
-              className="bg-red-500 h-12 w-12 text-white grid place-content-center rounded-full hover:bg-red-600 transition-colors"
-            >
-              <IoCallOutline className="text-2xl" />
-            </button>
-
-            <button className="w-10 grid place-content-center rounded-full h-10 border text-white">
-              <GoUnmute className="text-xl" />
-            </button>
-
-            {(isVideoCalling || isVoiceCalling) && (
-              <button
-                onClick={() => {
-                  dispatch(setParticipantOpen(!participantOpen));
-                  dispatch(setCallChatList(false));
-                }}
-                className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
-                  participantOpen
-                    ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                    : "dark:text-white text-black"
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${participantOpen
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
                 }`}
-              >
-                <MdOutlineGroupAdd className="text-xl" />
-              </button>
-            )}
-            <canvas
-              ref={canvasRef}
-              width={1280}
-              height={720}
-              style={{ display: "none" }}
-            />
-            <button
-               onClick={() => isRecording ? (setIsRecording(false), stopRecording()) : (setIsRecording(true), startRecording())}
-              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
-                isRecording ? "bg-red-500" : ""
-              }`}
             >
-              <AiOutlineVideoCamera className="text-xl" />
+              <MdOutlineGroupAdd className="text-xl" />
             </button>
-          </div>
-        )}
+          )}
+          <canvas
+            ref={canvasRef}
+            width={1280}
+            height={720}
+            style={{ display: "none" }}
+          />
+          <button
+            onClick={() => isRecording ? (setIsRecording(false), stopRecording()) : (setIsRecording(true), startRecording())}
+            className={`w-10 grid place-content-center rounded-full h-10 border text-white ${isRecording ? "bg-red-500" : ""
+              }`}
+          >
+            <AiOutlineVideoCamera className="text-xl" />
+          </button>
+        </div>
+      )}
 
     </div>
   );
