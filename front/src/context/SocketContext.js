@@ -468,6 +468,9 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
+    const roomId = generateCallRoomId();
+    setCallRoom(roomId);
+
     try {
       console.log("Requesting screen share...");
       const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -506,6 +509,7 @@ export const SocketProvider = ({ children }) => {
                   signal,
                   groupId: selectedChat._id,
                   isGroup: true,
+                  roomId:roomId
                 });
               });
 
@@ -543,6 +547,7 @@ export const SocketProvider = ({ children }) => {
             toEmail: selectedChat._id,
             signal,
             isGroup: false,
+            roomId:roomId
           });
         });
 
@@ -606,6 +611,7 @@ export const SocketProvider = ({ children }) => {
           toEmail: userId,
           groupId: incomingShare?.groupId,
           isGroup: incomingShare?.isGroup,
+          roomId:incomingShare?.roomId
         });
       });
 
@@ -868,6 +874,7 @@ export const SocketProvider = ({ children }) => {
     socketRef.current.on("screen-share-request", async (data) => {
       console.log("Incoming screen share from:", data.fromEmail);
       dispatch(setIncomingShare(data));
+      setCallRoom(data.roomId);
     });
 
     // Handle when share is accepted
@@ -889,6 +896,11 @@ export const SocketProvider = ({ children }) => {
       if(!selectedChat?.members){
         dispatch(setUserIncall("is onther Call Runing"));
       }
+    });
+
+    socketRef.current.on("control-event", ({ type, payload }) => {
+      console.log("Control received:", type, payload);
+      // TODO: Handle mouse move/click/keyboard
     });
 
     return () => {
@@ -1394,6 +1406,7 @@ export const SocketProvider = ({ children }) => {
     setPeerEmail(null);
     dispatch(setParticipants([]));
     dispatch(setRemoteStreams(new Map()));
+    dispatch(setSelectedChatModule(true));
   };
 
   const rejectCall = (type, userId, groupId) => {
@@ -1427,6 +1440,7 @@ export const SocketProvider = ({ children }) => {
     dispatch(setIsVoiceCalling(false));
     dispatch(setIsVideoCalling(false));
     dispatch(setIncomingCall(null));
+    dispatch(setSelectedChatModule(true));
   };
 
   // ==================group message=============================
@@ -1510,6 +1524,7 @@ export const SocketProvider = ({ children }) => {
     dispatch(setRemoteStreams(new Map()));
     dispatch(setParticipants([]));
     dispatch(setUserIncall(null));
+    dispatch(setSelectedChatModule(true));
   };
 
   useEffect(() => {
@@ -1709,6 +1724,14 @@ export const SocketProvider = ({ children }) => {
   }, [isConnected]);
 
 
+  // ====================================Controle========================
+
+  const sendControl = (type, payload) => {
+    console.log(type, payload,callRoom);
+    socketRef.current.emit("control-event", { roomId:callRoom, type, payload });
+  };
+
+
 
 const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
 const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
@@ -1745,7 +1768,8 @@ const value = useMemo(() => ({
   forwardMessage: memoizedForwardMessage,
   addMessageReaction: memoizedAddMessageReaction,
   subscribeToMessages: memoizedSubscribeToMessages,
-  sendTypingStatus: memoizedSendTypingStatus
+  sendTypingStatus: memoizedSendTypingStatus,
+  sendControl
 }), [
   userId,
   socketRef,
@@ -1776,7 +1800,8 @@ const value = useMemo(() => ({
   memoizedForwardMessage,
   memoizedAddMessageReaction,
   memoizedSubscribeToMessages,
-  memoizedSendTypingStatus
+  memoizedSendTypingStatus,
+  sendControl
 ]);
 
   // const value = {

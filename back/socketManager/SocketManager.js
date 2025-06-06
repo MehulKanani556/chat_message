@@ -17,6 +17,16 @@ const activeSessions = {};
 const activeCalls = {};
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production";
+const {
+  mouse,
+  keyboard,
+  Button,
+  Key,
+  Point,
+  straightTo,
+} = require("@nut-tree-fork/nut-js");
+
+mouse.config.mouseSpeed = 1500;
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
@@ -38,8 +48,6 @@ async function handleUserLogin(socket, userId) {
   const onlineUsersList = Array.from(onlineUsers.keys());
   global.io.emit("user-status-changed", onlineUsersList);
   socket.emit("user-status-changed", onlineUsersList);
-
-
 
   try {
     // Find all unread messages for this user
@@ -210,6 +218,8 @@ async function handleUpdateMessage(socket, data) {
 // ===========================screen share=============================
 
 function handleScreenShareRequest(socket, data) {
+  socket.join(data.roomId)
+  // socket.join(roomId);
   if (data.isGroup) {
     // For group sharing, forward to specific member
     const targetSocketId = onlineUsers.get(data.toEmail);
@@ -219,23 +229,25 @@ function handleScreenShareRequest(socket, data) {
         signal: data.signal,
         groupId: data.groupId,
         isGroup: true,
+        roomId:data.roomId
       });
     }
   } else {
     // Original single-user logic
-    
     const targetSocketId = onlineUsers.get(data.toEmail);
     if (targetSocketId) {
       socket.to(targetSocketId).emit("screen-share-request", {
         fromEmail: data.fromEmail,
         signal: data.signal,
         isGroup: false,
+        roomId:data.roomId
       });
     }
   }
 }
 
 function handleScreenShareAccept(socket, data) {
+  socket.join(data.roomId)
   const targetSocketId = onlineUsers.get(data.fromEmail);
   if (targetSocketId) {
     socket.to(targetSocketId).emit("share-accepted", {
@@ -812,8 +824,6 @@ function handleDisconnect(socket) {
   }
 }
 
-
-
 async function getOnlineUsers(req, res) {
   console.log("onlineUsers", onlineUsers);
   const onlineUsersArray = Array.from(onlineUsers.keys());
@@ -1025,9 +1035,7 @@ function initializeSocket(io) {
     socket.on("update-message", (data) => handleUpdateMessage(socket, data));
 
     // ===========================screen share=============================
-    socket.on("screen-share-request", (data) =>
-      handleScreenShareRequest(socket, data)
-    );
+    socket.on("screen-share-request", (data) =>handleScreenShareRequest(socket, data));
     socket.on("share-accept", (data) => handleScreenShareAccept(socket, data));
     socket.on("share-signal", (data) => handleScreenShareSignal(socket, data));
 
@@ -1085,6 +1093,52 @@ function initializeSocket(io) {
       // Broadcast to all clients except sender
       socket.broadcast.emit('qr-scan-error', data);
     });
+
+    // socket.on("control-event", ({ roomId, type, payload }) => {
+    //   console.log("=====================================",{ roomId, type, payload });
+      
+    //   socket.to(roomId).emit("control-event", { type, payload });
+    // });
+
+    socket.on("control-event", async ({ type, payload }) => {
+      console.log("Received:", type, payload);
+      try {
+        switch (type) {
+          case "mousemove":
+            // This line of code uses the 'mouse' object to simulate a mouse movement to a specific point on the screen.
+            // The 'straightTo' method is used to specify the target point for the mouse movement, and it takes a 'Point' object as an argument.
+            // The 'Point' object is created using the 'x' and 'y' coordinates provided in the 'payload' object.
+            // The 'await' keyword is used to ensure that the mouse movement is completed before proceeding to the next line of code.
+            // Alternatively, you can use the 'moveTo' method instead of 'straightTo' to achieve the same result.
+            // Another option is to use the 'dragTo' method to simulate a mouse drag operation.
+            // You can also use the 'position' method to set the mouse position directly.
+            // Here are some examples of alternative methods:
+            // await mouse.moveTo(payload.x, payload.y);
+            // await mouse.dragTo(payload.x, payload.y);
+            // await mouse.position = new Point(payload.x, payload.y);
+            await mouse.move(straightTo(new Point(payload.x, payload.y)));
+            break;
+  
+          case "click":
+            await mouse.click(Button.LEFT);
+            break;
+  
+          case "keydown":
+            const key = Key[payload.key.toUpperCase()];
+            if (key) {
+              await keyboard.pressKey(key);
+              await keyboard.releaseKey(key);
+            }
+            break;
+  
+          default:
+            console.log("Unknown control type:", type);
+        }
+      } catch (err) {
+        console.error("Control error:", err);
+      }
+    });
+  
 
     socket.on("user-in-call", (data)=> handleUserIncall(socket, data));
     // ===========================================================================================================

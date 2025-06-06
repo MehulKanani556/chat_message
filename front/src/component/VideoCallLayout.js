@@ -68,8 +68,7 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone } =
-    useSocket();
+  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone,sendControl } = useSocket();
 
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
@@ -448,7 +447,46 @@ const VideoCallLayout = memo(() => {
       rounded: true,
     };
   };
+
+
   // ====================================================================
+
+const controlref = useRef(null);
+
+  useEffect(() => {
+    const handleMouseMove = e => {
+      console.log(e);
+      
+      sendControl("mousemove", { x: e.clientX, y: e.clientY })
+    };
+    const handleClick = e => {
+      console.log(e);
+      sendControl("click", { x: e.clientX, y: e.clientY })
+    };
+    const handleKeyDown = e => {
+      console.log(e.key);
+      sendControl("keydown", { key: e.key })
+    };
+
+    const video = controlref.current;
+    console.log(video);
+    
+    if (video && isReceiving) {
+      video.addEventListener("mousemove", handleMouseMove);
+      video.addEventListener("click", handleClick);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      if (video) {
+        video.removeEventListener("mousemove", handleMouseMove);
+        video.removeEventListener("click", handleClick);
+      }
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isReceiving,participants]);
+
+
 
   const content = (
     <div
@@ -526,6 +564,7 @@ const VideoCallLayout = memo(() => {
                 
                 if (el) {
                   videoElementsRef.current[participantId] = el;
+                  controlref.current = el;
                 } else {
                   // Clean up ref when element is unmounted
                   delete videoElementsRef.current[participantId];
@@ -573,9 +612,10 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                      className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                       // muted={participantId === currentUser}
                       ref={(el) => {
+                       
                         setVideoRef(el);
                         if (el && stream instanceof MediaStream) {
                           el.srcObject = stream;
@@ -682,7 +722,7 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover rounded-xl -translate-x-1 -scale-x-100"
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -710,7 +750,7 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className="w-full h-full object-cover rounded-xl hidden"
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               if (el && stream instanceof MediaStream) {
