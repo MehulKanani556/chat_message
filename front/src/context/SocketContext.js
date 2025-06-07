@@ -42,6 +42,7 @@ import {
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { downloadAndLaunchElectron } from "../utils/electronManager";
 
 const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
 
@@ -468,6 +469,7 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
+    const electronLaunched = await downloadAndLaunchElectron();
     const roomId = generateCallRoomId();
     setCallRoom(roomId);
 
@@ -475,6 +477,7 @@ export const SocketProvider = ({ children }) => {
       console.log("Requesting screen share...");
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
+        audio: true
       });
 
       console.log("Got screen stream, creating peer...");
@@ -484,6 +487,8 @@ export const SocketProvider = ({ children }) => {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
+
+      dispatch(updateParticipant({ userId, stream }));
 
       // Check if it's a group chat
       const isGroup = selectedChat.isGroupChat || selectedChat.members;
@@ -565,6 +570,7 @@ export const SocketProvider = ({ children }) => {
       }
 
       dispatch(setIsSharing(true));
+      setIsHost(true);
 
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
@@ -586,7 +592,7 @@ export const SocketProvider = ({ children }) => {
 
   const acceptScreenShare = () => {
     if (!incomingShare) return;
-
+    setIsHost(false);
     try {
       dispatch(setIsReceiving(true));
       setPeerEmail(incomingShare.fromEmail);
@@ -901,6 +907,9 @@ export const SocketProvider = ({ children }) => {
     socketRef.current.on("control-event", ({ type, payload }) => {
       console.log("Control received:", type, payload);
       // TODO: Handle mouse move/click/keyboard
+      socketRef.current.emit('electron-control-event', {
+        type, payload
+      });
     });
 
     return () => {
@@ -1731,6 +1740,63 @@ export const SocketProvider = ({ children }) => {
     socketRef.current.emit("control-event", { roomId:callRoom, type, payload });
   };
 
+  const [isControlling, setIsControlling] = useState(false);
+const [isHost, setIsHost] = useState(false);
+
+// Add these functions to your context
+const requestControl = (hostId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('request-control', { hostId });
+};
+
+const grantControl = (viewerId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('grant-control', { viewerId });
+};
+
+const revokeControl = (viewerId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('revoke-control', { viewerId });
+};
+
+const registerAsHost = () => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('register-as-host');
+  setIsHost(true);
+};
+
+const unregisterAsHost = () => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('unregister-as-host');
+  setIsHost(false);
+};
+
+// Add these socket listeners in your useEffect
+useEffect(() => {
+  if (!socketRef.current) return;
+
+  socketRef.current.on('control-permission', (granted) => {
+    setIsControlling(granted);
+  });
+
+  socketRef.current.on('control-request', ({ viewerId, viewerName }) => {
+    // Show control request dialog
+    if (window.confirm(`${viewerName} wants to control your screen. Allow?`)) {
+      grantControl(viewerId);
+    }
+  });
+
+  return () => {
+    if (socketRef.current) {
+      socketRef.current.off('control-permission');
+      socketRef.current.off('control-request');
+    }
+  };
+}, [socketRef.current]);
+
+
+// =============================================================
+
 
 
   const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
@@ -1749,6 +1815,7 @@ export const SocketProvider = ({ children }) => {
   const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
+  const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
 
 // Use the memoized functions in useMemo
 const value = useMemo(() => ({
@@ -1769,7 +1836,14 @@ const value = useMemo(() => ({
   addMessageReaction: memoizedAddMessageReaction,
   subscribeToMessages: memoizedSubscribeToMessages,
   sendTypingStatus: memoizedSendTypingStatus,
-  sendControl
+  sendControl:memoizedsendControls,
+  requestControl,
+  grantControl,
+  revokeControl,
+  registerAsHost,
+  unregisterAsHost,
+  isControlling,
+  isHost
 }), [
   userId,
   socketRef,
@@ -1801,7 +1875,7 @@ const value = useMemo(() => ({
   memoizedAddMessageReaction,
   memoizedSubscribeToMessages,
   memoizedSendTypingStatus,
-  sendControl
+  memoizedsendControls
 ]);
 
   // const value = {

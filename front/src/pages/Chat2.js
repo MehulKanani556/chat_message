@@ -67,8 +67,8 @@ const Chat2 = () => {
   
 
   const dispatch = useDispatch();
-  // const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  // const [currentUser] = useState(sessionStorage.getItem("userId"));
  
   // const localVideoRef = useRef(null);
   const navigate = useNavigate();

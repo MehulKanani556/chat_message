@@ -20,6 +20,7 @@ import {
 } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
+import ElectronStatus from './ElectronStatus';
 
 const getParticipantWidth = (count) => {
   if (count === 1) return "w-full";
@@ -68,7 +69,7 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone,sendControl } = useSocket();
+  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone,sendControl,requestControl,grantControl,revokeControl,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
 
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
@@ -204,13 +205,19 @@ const VideoCallLayout = memo(() => {
   const [recording, setRecording] = useState(false);
   const recordedChunksRef = useRef([]);
   const animationFrameIdRef = useRef(null);
+  const screenStreamRef = useRef(null);
 
 
   const startRecording = async () => {
     try {
       // Get all video elements
-      const videoElements = Object.values(videoElementsRef.current);
-
+      // let videoElements = [];
+      // if(!isReceiving){
+      //   videoElements = Object.values(videoElementsRef.current);
+      // }else{
+      //   videoElements = [screenStreamRef.current];
+      // }
+      let videoElements  = Object.values(videoElementsRef.current)
       console.log(videoElements);
 
 
@@ -448,43 +455,50 @@ const VideoCallLayout = memo(() => {
     };
   };
 
+  let hostId = useMemo(() => {
+    return participants.find(([id, stream]) => stream instanceof MediaStream)?.[0];
+  }, [participants]);
+
 
   // ====================================================================
 
 const controlref = useRef(null);
 
-  useEffect(() => {
-    const handleMouseMove = e => {
-      console.log(e);
+  // useEffect(() => {
+  //   const handleMouseMove = e => {
+  //     console.log(e);
+        // const rect = e.target.getBoundingClientRect();
+        // const x = e.clientX - rect.left;
+        // const y = e.clientY - rect.top;
       
-      sendControl("mousemove", { x: e.clientX, y: e.clientY })
-    };
-    const handleClick = e => {
-      console.log(e);
-      sendControl("click", { x: e.clientX, y: e.clientY })
-    };
-    const handleKeyDown = e => {
-      console.log(e.key);
-      sendControl("keydown", { key: e.key })
-    };
+  //     sendControl("mousemove", { x, y })
+  //   };
+  //   const handleClick = e => {
+  //     console.log(e);
+  //     sendControl("click", { x: e.clientX, y: e.clientY })
+  //   };
+  //   const handleKeyDown = e => {
+  //     console.log(e.key);
+  //     sendControl("keydown", { key: e.key })
+  //   };
 
-    const video = controlref.current;
-    console.log(video);
+  //   const video = controlref.current;
+  //   console.log(video);
     
-    if (video && isReceiving) {
-      video.addEventListener("mousemove", handleMouseMove);
-      video.addEventListener("click", handleClick);
-      window.addEventListener("keydown", handleKeyDown);
-    }
+  //   if (video && isReceiving) {
+  //     video.addEventListener("mousemove", handleMouseMove);
+  //     video.addEventListener("click", handleClick);
+  //     window.addEventListener("keydown", handleKeyDown);
+  //   }
 
-    return () => {
-      if (video) {
-        video.removeEventListener("mousemove", handleMouseMove);
-        video.removeEventListener("click", handleClick);
-      }
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isReceiving,participants]);
+  //   return () => {
+  //     if (video) {
+  //       video.removeEventListener("mousemove", handleMouseMove);
+  //       video.removeEventListener("click", handleClick);
+  //     }
+  //     window.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [isReceiving,participants]);
 
 
 
@@ -509,6 +523,7 @@ const controlref = useRef(null);
       }
       onMouseDown={handleMouseDown}
     >
+      <ElectronStatus />
       <canvas
         ref={canvasRef}
         width={1920}
@@ -556,14 +571,13 @@ const controlref = useRef(null);
             Array.from(participants)?.map(([participantId, stream]) => {
               const participant = allUsers.find((u) => u._id === participantId);
               const isLocalUser = participantId === currentUser;
+
               const widthClass = getParticipantWidth(participants?.length);
               // console.log(cameraStatus, isCameraEnabled, participantId);
               const setVideoRef = (el) => {
-                console.log(el, "--------------------");
-
+                console.log(el, "-------------------");
                 if (el) {
                   videoElementsRef.current[participantId] = el;
-                  controlref.current = el;
                 } else {
                   // Clean up ref when element is unmounted
                   delete videoElementsRef.current[participantId];
@@ -605,26 +619,26 @@ const controlref = useRef(null);
                   }
                 >
                   <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
-                    <video
-                      autoPlay
-                      playsInline
-                      className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
-                      // muted={participantId === currentUser}
-                      ref={(el) => {
-                       
-                        setVideoRef(el);
-                        if (el && stream instanceof MediaStream) {
-                          el.srcObject = stream;
-                          el.play().catch((err) =>
-                            console.error("Remote video error:", err)
-                          );
-                        }
-                        // If you want to keep localVideoRef for the current user:
-                        // if (participantId === currentUser && localVideoRef) {
-                        //   localVideoRef.current = el;
-                        // }
-                      }}
-                    />
+                  <video
+                            autoPlay
+                            playsInline
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
+                            muted={participantId === currentUser}
+                            ref={(el) => {
+                              setVideoRef(el);
+                              if (el && stream instanceof MediaStream) {
+                                el.srcObject = stream;
+                                el.play().catch((err) =>
+                                  console.error("Remote video error:", err)
+                                );
+
+                              }
+                              // If you want to keep localVideoRef for the current user:
+                              // if (participantId === currentUser && localVideoRef) {
+                              //   localVideoRef.current = el;
+                              // }
+                            }}
+                          />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
@@ -667,6 +681,7 @@ const controlref = useRef(null);
 
                 // console.log(cameraStatus, isCameraEnabled, participantId);
                 const setVideoRef = (el) => {
+                  console.log(el, "--------------------aaaaaaaaaa");
                   if (el) {
                     videoElementsRef.current[participantId] = el;
                   } else {
@@ -884,6 +899,27 @@ const controlref = useRef(null);
           >
             <AiOutlineVideoCamera className="text-xl" />
           </button>
+          {isReceiving &&
+            isHost ? (
+            <>
+              <button onClick={() => unregisterAsHost()}>
+                Stop Hosting
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => registerAsHost()}>
+                Start Hosting
+              </button>
+              <button
+                onClick={() => requestControl(hostId)}
+                disabled={!isHost}
+              >
+                Request Control
+              </button>
+            </>
+          )
+          }
         </div >
       )}
     </div >

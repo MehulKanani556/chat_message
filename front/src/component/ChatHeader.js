@@ -29,7 +29,7 @@ const ChatHeader = memo(({
 
   console.log("header");
   const dispatch = useDispatch();
-  const { cleanupConnection, startCall,startSharing } = useSocket();
+  const { cleanupConnection, startCall,startSharing,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

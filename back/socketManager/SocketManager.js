@@ -923,6 +923,60 @@ function handleCameraStatusChange(socket, data) {
   });
 }
 
+// ===========================host control=============================
+
+function handleControlEvent(socket, data) {
+  const { roomId, type, payload } = data;
+  const hostSocket = getHostSocketByRoomId(roomId);
+  
+  if (hostSocket) {
+    hostSocket.emit('control-event', { type, payload });
+  }
+}
+
+function handleRegisterAsHost(socket) {
+  const userId = socket.userId;
+  socket.join(`host-${userId}`);
+  socket.emit('host-registered');
+}
+
+function handleUnregisterAsHost(socket) {
+  const userId = socket.userId;
+  socket.leave(`host-${userId}`);
+  socket.emit('host-unregistered');
+}
+
+function handleRequestControl(socket, data) {
+  const { hostId } = data;
+  const hostSocket = getSocketByUserId(hostId);
+  
+  if (hostSocket) {
+    hostSocket.emit('control-request', {
+      viewerId: socket.userId,
+      viewerName: socket.userName
+    });
+  }
+}
+
+function handleGrantControl(socket, data) {
+  const { viewerId } = data;
+  const viewerSocket = getSocketByUserId(viewerId);
+  
+  if (viewerSocket) {
+    viewerSocket.emit('control-permission', true);
+  }
+}
+
+function handleRevokeControl(socket, data) {
+  const { viewerId } = data;
+  const viewerSocket = getSocketByUserId(viewerId);
+  
+  if (viewerSocket) {
+    viewerSocket.emit('control-permission', false);
+  }
+}
+// =================================================================================
+
 function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
@@ -1142,7 +1196,14 @@ function initializeSocket(io) {
 
     socket.on("user-in-call", (data)=> handleUserIncall(socket, data));
     // ===========================================================================================================
-})
+
+    socket.on('control-event', (data) => handleControlEvent(socket, data));
+    socket.on('register-as-host', () => handleRegisterAsHost(socket));
+    socket.on('unregister-as-host', () => handleUnregisterAsHost(socket));
+    socket.on('request-control', (data) => handleRequestControl(socket, data));
+    socket.on('grant-control', (data) => handleGrantControl(socket, data));
+    socket.on('revoke-control', (data) => handleRevokeControl(socket, data));
+  })
 }
 
 // Clean expired sessions every minute
