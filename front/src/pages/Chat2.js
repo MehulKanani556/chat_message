@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {FaPaperclip,FaFilePdf, FaFileExcel,FaFileWord,FaFilePowerpoint,FaFileArchive} from "react-icons/fa";
-import {LuScreenShare,LuScreenShareOff} from "react-icons/lu";
+import { FaPaperclip, FaFilePdf, FaFileExcel, FaFileWord, FaFilePowerpoint, FaFileArchive } from "react-icons/fa";
+import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
 import { ImCross } from "react-icons/im";
 import { RxCross2 } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
-import {getAllGroups, getAllMessages,getAllMessageUsers,getAllUsers,getUser,updateMessage, clearChat, getAllCallUsers,deleteChat, pinChat} from "../redux/slice/user.slice";
+import { getAllGroups, getAllMessages, getAllMessageUsers, getAllUsers, getUser, updateMessage, clearChat, getAllCallUsers, deleteChat, pinChat } from "../redux/slice/user.slice";
 import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
 import Front from "../component/Front";
@@ -63,13 +63,13 @@ const Chat2 = () => {
   const onlineUsers = useSelector(state => state.magageState.onlineUsers)
   // const participants = useSelector(state => state.magageState.participants)
 
-  console.log("onlineUsers",onlineUsers);
-  
+  console.log("onlineUsers", onlineUsers);
+
 
   const dispatch = useDispatch();
   // const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
   const [currentUser] = useState(sessionStorage.getItem("userId"));
- 
+
   // const localVideoRef = useRef(null);
   const navigate = useNavigate();
   const [groupUsers, setGroupUsers] = useState([]);
@@ -88,12 +88,12 @@ const Chat2 = () => {
   const [showOverlay, setShowOverlay] = useState(false);
 
   // console.log(remoteStreams);
-  
+
 
 
   //===========Use the custom socket hook===========
-  const {socket,cleanupConnection,sendPrivateMessage,subscribeToMessages,acceptScreenShare, startCall} = useSocket();
-  
+  const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall } = useSocket();
+
   useEffect(() => {
     if (window.innerWidth <= 1439) {
       setShowOverlay(true);
@@ -107,14 +107,14 @@ const Chat2 = () => {
     }
   }, []);
 
-    //===========get all users===========
-    useEffect(() => {
-      dispatch(getAllUsers());
-      dispatch(getAllMessageUsers());
-      dispatch(getAllGroups());
-      dispatch(getUser(currentUser));
-      dispatch(getAllCallUsers());
-    }, []);
+  //===========get all users===========
+  useEffect(() => {
+    dispatch(getAllUsers());
+    dispatch(getAllMessageUsers());
+    dispatch(getAllGroups());
+    dispatch(getUser(currentUser));
+    dispatch(getAllCallUsers());
+  }, []);
   // =================Notification=======================
 
   useEffect(() => {
@@ -204,8 +204,8 @@ const Chat2 = () => {
       // ], // Adds actions to the notification
       dir: "auto", // Sets the direction of the text
       lang: "en-US", // Sets the language of the notification
-      timestamp: new Date().getTime(), 
-      sound: "/Notifications.mp3", 
+      timestamp: new Date().getTime(),
+      sound: "/Notifications.mp3",
     });
 
     // Close notification after 5 seconds
@@ -227,7 +227,7 @@ const Chat2 = () => {
   // }, [allMessageUsers]);
 
   const [ringtone] = useState(new Audio('/Ringtone.mp3')); // Add your ringtone file to public folder
-  
+
   // Add useEffect to handle ringtone
   useEffect(() => {
     if (incomingCall) {
@@ -368,7 +368,7 @@ const Chat2 = () => {
 
   //===========handle multiple file upload===========
 
-  const handleMultipleFileUpload =  useCallback(async(files, userId) => {
+  const handleMultipleFileUpload = useCallback(async (files, userId) => {
     const filesArray = Array.from(files);
     for (const file of filesArray) {
       const formData = new FormData();
@@ -416,21 +416,51 @@ const Chat2 = () => {
   // Add call handling functions
 
   const handleMakeCall = useCallback(async (type) => {
-    if (!selectedChat) return;
-    if (selectedChat?.members) {
-      const success = await startCall(selectedChat._id, true, selectedChat, type);
-      // const success = await startCall(selectedChat, type);
-      if (!success) {
-        console.error("Failed to start screen sharing");
-      }
-    } else {
-      const success = await startCall(selectedChat._id, false, selectedChat, type);
-      // const success = await startCall(selectedChat._id,type);
-      if (!success) {
-        console.error("Failed to start screen sharing");
-      }
+    //   if (!selectedChat) return;
+    //   if (selectedChat?.members) {
+    //     const success = await startCall(selectedChat._id, true, selectedChat, type);
+    //     // const success = await startCall(selectedChat, type);
+    //     if (!success) {
+    //       console.error("Failed to start screen sharing");
+    //     }
+    //   } else {
+    //     const success = await startCall(selectedChat._id, false, selectedChat, type);
+    //     // const success = await startCall(selectedChat._id,type);
+    //     if (!success) {
+    //       console.error("Failed to start screen sharing");
+    //     }
+    //   }
+    // }, []);
+
+    if (!selectedChat) {
+      console.error("No chat selected");
+      return;
     }
-  }, []);
+
+    console.log("Starting call with type:", type);
+    console.log("Selected chat:", selectedChat);
+
+    try {
+      if (selectedChat?.members) {
+        console.log("Starting group call");
+        const success = await startCall(selectedChat._id, true, selectedChat, type);
+        if (!success) {
+          console.error("Failed to start group call");
+          // alert("Failed to start group call. Please check your microphone permissions.");
+        }
+      } else {
+        console.log("Starting individual call");
+        const success = await startCall(selectedChat._id, false, selectedChat, type);
+        if (!success) {
+          console.error("Failed to start individual call");
+          // alert("Failed to start call. Please check your microphone permissions.");
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleMakeCall:", error);
+      // alert("Failed to start call. Please check your microphone permissions and try again.");
+    }
+  }, [selectedChat, startCall]);
 
   const handleProfileImageClick = useCallback((imageUrl) => {
     setSelectedProfileImage(imageUrl);
@@ -660,7 +690,7 @@ const Chat2 = () => {
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
       {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
-        <Sidebar/>
+        <Sidebar />
       )}
       {/* ==============================Right Sidebar chat list ============================== */}
       {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
@@ -689,7 +719,7 @@ const Chat2 = () => {
           {/* Right Side */}
           <>
 
-          {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
+            {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
                 className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
                   (isGroupModalOpen ||
@@ -740,163 +770,163 @@ const Chat2 = () => {
                               </div>
                             )}
                             {/* {visibleDate && <FloatingDateIndicator />} */}
-                              <MessageList
-                                handleMakeCall={handleMakeCall}
-                                // handleForward={handleForwardMessage}
-                                handleMultipleFileUpload={handleMultipleFileUpload}
-                                // openCamera={openCamera}
-                              />
+                            <MessageList
+                              handleMakeCall={handleMakeCall}
+                              // handleForward={handleForwardMessage}
+                              handleMultipleFileUpload={handleMultipleFileUpload}
+                            // openCamera={openCamera}
+                            />
 
-                          {selectedFiles && selectedFiles?.length > 0 && (
-                            <div className="flex px-6  dark:bg-primary-dark">
-                              {selectedFiles?.map((file, index) => {
-                                const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                                let fileIcon;
-                                if (file.type.startsWith("image/")) {
-                                  fileIcon = (
-                                    <img
-                                      src={fileUrl}
-                                      alt={`Selected ${index}`}
-                                      className="w-20 h-[40px] object-cover "
-                                    />
-                                  );
-                                } else if (file.type === "application/pdf") {
-                                  fileIcon = (
-                                    <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                  ); // PDF file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-excel" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                  ); // Excel file icon
-                                } else if (
-                                  file.type === "application/msword" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                ) {
-                                  fileIcon = (
-                                    <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                  ); // Word file icon
-                                } else if (
-                                  file.type === "application/vnd.ms-powerpoint" ||
-                                  file.type ===
-                                  "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                ) {
-                                  fileIcon = (
-                                    <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                  ); // PowerPoint file icon
-                                } else if (file.type === "application/zip") {
-                                  fileIcon = (
-                                    <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                  ); // ZIP file icon
-                                } else {
-                                  fileIcon = (
-                                    <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                  ); // Generic file icon
-                                }
-                                return (
-                                  <div className=" rounded-t-lg  p-2">
-                                    <div
-                                      key={index}
-                                      className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                    >
-                                      {fileIcon}
-                                      <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                        {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                      </div>{" "}
-                                      {/* Display file name */}
-                                      <span className="text-xs text-gray-500">
-                                        {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                        MB
-                                      </span>{" "}
-                                      {/* Display file size */}
-                                      <button
-                                        className="absolute top-1 right-1 bg-white rounded-full"
-                                        onClick={() => {
-                                          dispatch(setSelectedFiles(
-                                            selectedFiles?.filter((_, i) => i !== index)
-                                          ));
-                                        }}
+                            {selectedFiles && selectedFiles?.length > 0 && (
+                              <div className="flex px-6  dark:bg-primary-dark">
+                                {selectedFiles?.map((file, index) => {
+                                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                                  let fileIcon;
+                                  if (file.type.startsWith("image/")) {
+                                    fileIcon = (
+                                      <img
+                                        src={fileUrl}
+                                        alt={`Selected ${index}`}
+                                        className="w-20 h-[40px] object-cover "
+                                      />
+                                    );
+                                  } else if (file.type === "application/pdf") {
+                                    fileIcon = (
+                                      <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                    ); // PDF file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-excel" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                    ); // Excel file icon
+                                  } else if (
+                                    file.type === "application/msword" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                    ); // Word file icon
+                                  } else if (
+                                    file.type === "application/vnd.ms-powerpoint" ||
+                                    file.type ===
+                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                  ) {
+                                    fileIcon = (
+                                      <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                    ); // PowerPoint file icon
+                                  } else if (file.type === "application/zip") {
+                                    fileIcon = (
+                                      <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                    ); // ZIP file icon
+                                  } else {
+                                    fileIcon = (
+                                      <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                    ); // Generic file icon
+                                  }
+                                  return (
+                                    <div className=" rounded-t-lg  p-2">
+                                      <div
+                                        key={index}
+                                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
                                       >
-                                        <RxCross2 />
-                                      </button>
+                                        {fileIcon}
+                                        <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                          {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                        </div>{" "}
+                                        {/* Display file name */}
+                                        <span className="text-xs text-gray-500">
+                                          {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                          MB
+                                        </span>{" "}
+                                        {/* Display file size */}
+                                        <button
+                                          className="absolute top-1 right-1 bg-white rounded-full"
+                                          onClick={() => {
+                                            dispatch(setSelectedFiles(
+                                              selectedFiles?.filter((_, i) => i !== index)
+                                            ));
+                                          }}
+                                        >
+                                          <RxCross2 />
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                                  );
+                                })}
+                              </div>
+                            )}
 
-                          {/*========== Message Input ==========*/}
-    
-                         <MessageInput
+                            {/*========== Message Input ==========*/}
+
+                            <MessageInput
                               handleMultipleFileUpload={handleMultipleFileUpload}
                               handleSendMessage={handleSendMessage}
                               // openCamera={openCamera}
-                              setIsDeleteChatModalOpen ={setIsDeleteChatModalOpen }
-                          />
-                        </div>
-                       
-                      </>
-                    ) : (
-                      <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
-                    )}
-                  </>
-                )}
-            </div>
-}
-  {/* // ============================== right sidebar =========================================== */}
-            
+                              setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
+                            />
+                          </div>
+
+                        </>
+                      ) : (
+                        <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
+                      )}
+                    </>
+                  )}
+              </div>
+            }
+            {/* // ============================== right sidebar =========================================== */}
+
             {!(isReceiving || isVideoCalling || isVoiceCalling) &&
-            <div
-              className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
-                isGroupCreateModalOpen ||
-                (isUserProfileModalOpen && !selectedChat?.members)
-                ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
-                : "w-0 opacity-0"
-                }`}
-              style={{
-                boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
-              }}
-            >
-              {isGroupModalOpen && (
-                <GroupProfile
-                  setGroupUsers={setGroupUsers}
-                  handleMakeCall={handleMakeCall}
-                />
-              )}
-              {isModalOpen && (
-                <AddParticipants
-                  socket={socket}
-                  groupUsers={groupUsers}
-                  setGroupUsers={setGroupUsers}
-                  creatGroup={creatGroup}
-                />
-              )}
-              {isGroupCreateModalOpen && (
-                <CreatedGroup
-                  isOpen={isGroupCreateModalOpen}
-                  socket={socket}
-                  creatGroup={creatGroup}
-                  setCreatGroup={setCreatGroup}
-                  groupUsers={groupUsers}
-                  setGroupUsers={setGroupUsers}
-                />
-              )}
-              {isUserProfileModalOpen && !selectedChat.members && (
-                <ProfileUser
-                  isOpen={isUserProfileModalOpen}
-                  handleMakeCall={handleMakeCall}
-                />
-              )}
-            </div>
+              <div
+                className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
+                  (isGroupCreateModalOpen || isModalOpen) ||
+                  (isUserProfileModalOpen && !selectedChat?.members)
+                  ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
+                  : "w-0 opacity-0"
+                  }`}
+                style={{
+                  boxShadow: showOverlay ? "0px 0px 5px 1px #80808054" : "none",
+                }}
+              >
+                {isGroupModalOpen && (
+                  <GroupProfile
+                    setGroupUsers={setGroupUsers}
+                    handleMakeCall={handleMakeCall}
+                  />
+                )}
+                {isModalOpen && (
+                  <AddParticipants
+                    socket={socket}
+                    groupUsers={groupUsers}
+                    setGroupUsers={setGroupUsers}
+                    creatGroup={creatGroup}
+                  />
+                )}
+                {isGroupCreateModalOpen && (
+                  <CreatedGroup
+                    isOpen={isGroupCreateModalOpen}
+                    socket={socket}
+                    creatGroup={creatGroup}
+                    setCreatGroup={setCreatGroup}
+                    groupUsers={groupUsers}
+                    setGroupUsers={setGroupUsers}
+                  />
+                )}
+                {isUserProfileModalOpen && !selectedChat.members && (
+                  <ProfileUser
+                    isOpen={isUserProfileModalOpen}
+                    handleMakeCall={handleMakeCall}
+                  />
+                )}
+              </div>
             }
           </>
         </>
-      ) }
+      )}
 
       {/*=========================================== screen share ==================================*/}
       < div
@@ -905,146 +935,148 @@ const Chat2 = () => {
           : "hidden"
           } ${participantOpen ? "" : ""}`}
       >
-           <VideoCallLayout/>
+        <VideoCallLayout />
 
-          {/*======= Call participant modal ======*/}
-          <CallParticipantModal/>
+        {/*======= Call participant modal ======*/}
+        <div className="absolute top-0 right-0 md:static h-full z-50">
+          <CallParticipantModal />
+        </div>
       </div>
 
-{/* =============================================All Modal Section======================================================= */}
+      {/* =============================================All Modal Section======================================================= */}
 
       {/* ==== incoming call===== */}
-      {incomingCall && (<IncomingCall/>)}
+      {incomingCall && (<IncomingCall />)}
 
       {incomingShare && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-black rounded-lg p-6 w-72 text-center">
-              <h3 className="text-2xl text-gray-300 mb-2 ">
-                Incoming Screen <br /> Request...
-              </h3>
-              <p className="text-gray-400 mb-8">
-                {allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName}
-              </p>
-              <div className="flex justify-center gap-8">
-                <button
-                  onClick={() => acceptScreenShare()}
-                  className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
-                >
-                  <LuScreenShare className="w-6 h-6 cursor-pointer" />
-                </button>
-                <button
-                  onClick={() => {
-                    dispatch(setIncomingShare(null));
-                    cleanupConnection();
-                  }}
-                  className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                >
-                  <LuScreenShareOff className="text-xl" />
-                </button>
-              </div>
-            </div>
-          </div>
-      )}
-
-    
-
-      {isImageModalOpen && selectedImage && <MediaViewer/>}
-
-      {/* profile photo */}
-      {(isProfileImageModalOpen && selectedProfileImage) && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="relative w-full h-full flex items-center justify-center p-8">
-              <img
-                src={
-                  isProfileImageModalOpen ? selectedProfileImage : ''
-                }
-                alt="Profile"
-                className="max-w-full max-h-full object-contain"
-              />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-black rounded-lg p-6 w-72 text-center">
+            <h3 className="text-2xl text-gray-300 mb-2 ">
+              Incoming Screen <br /> Request...
+            </h3>
+            <p className="text-gray-400 mb-8">
+              {allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName}
+            </p>
+            <div className="flex justify-center gap-8">
+              <button
+                onClick={() => acceptScreenShare()}
+                className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 animate-bounce"
+              >
+                <LuScreenShare className="w-6 h-6 cursor-pointer" />
+              </button>
               <button
                 onClick={() => {
-                  if (isProfileImageModalOpen) {
-                    setIsProfileImageModalOpen(false);
-                  } else if (isImageModalOpen) {
-                    dispatch(setIsImageModalOpen(false));
-                  }
+                  dispatch(setIncomingShare(null));
+                  cleanupConnection();
                 }}
-                className="absolute top-4 right-4 text-white hover:text-gray-300"
+                className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
               >
-                <ImCross className="w-6 h-6" />
+                <LuScreenShareOff className="text-xl" />
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+
+
+      {isImageModalOpen && selectedImage && <MediaViewer />}
+
+      {/* profile photo */}
+      {(isProfileImageModalOpen && selectedProfileImage) && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative w-full h-full flex items-center justify-center p-8">
+            <img
+              src={
+                isProfileImageModalOpen ? selectedProfileImage : ''
+              }
+              alt="Profile"
+              className="max-w-full max-h-full object-contain"
+            />
+            <button
+              onClick={() => {
+                if (isProfileImageModalOpen) {
+                  setIsProfileImageModalOpen(false);
+                } else if (isImageModalOpen) {
+                  dispatch(setIsImageModalOpen(false));
+                }
+              }}
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
+            >
+              <ImCross className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Forward Modal */}
-      {showForwardModal &&  <ForwardModal/>}
+      {showForwardModal && <ForwardModal />}
 
       {/* delete message modal */}
       {isClearChatModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-              <h3 className=" mb-4 flex justify-between">
-                <p className="text-lg font-bold">Clear Chat</p>
-                <button
-                  onClick={() => setIsClearChatModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <ImCross />
-                </button>
-              </h3>
-              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-                Are you sure you want to clear this chat?
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setIsClearChatModalOpen(false)}
-                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleClearChat}
-                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-                >
-                  Clear Chat
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Clear Chat</p>
+              <button
+                onClick={() => setIsClearChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to clear this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsClearChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Clear Chat
+              </button>
             </div>
           </div>
+        </div>
       )}
 
       {isDeleteChatModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
-              <h3 className=" mb-4 flex justify-between">
-                <p className="text-lg font-bold">Delete Chat</p>
-                <button
-                  onClick={() => setIsDeleteChatModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <ImCross />
-                </button>
-              </h3>
-              <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
-                Are you sure you want to delete this chat?
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setIsDeleteChatModalOpen(false)}
-                  className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteChat}
-                  className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
-                >
-                  Delete Chat
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-primary-light/15 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-primary-dark dark:text-white">
+            <h3 className=" mb-4 flex justify-between">
+              <p className="text-lg font-bold">Delete Chat</p>
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ImCross />
+              </button>
+            </h3>
+            <p className="text-gray-600 dark:text-white/50 mb-6 font-semibold text-center">
+              Are you sure you want to delete this chat?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setIsDeleteChatModalOpen(false)}
+                className="py-2 bg-primary text-white hover:bg-primary/50 rounded font-semibold w-32"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteChat}
+                className=" py-2 bg-red-500 text-white rounded hover:bg-red-600 font-semibold w-32"
+              >
+                Delete Chat
+              </button>
             </div>
           </div>
+        </div>
       )}
     </div >
   );

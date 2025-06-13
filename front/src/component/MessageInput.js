@@ -26,12 +26,12 @@ const MessageInput = memo(
     setIsDeleteChatModalOpen,
   }) => {
 
-  //===========Use the custom socket hook===========
-  const { sendTypingStatus,sendGroupMessage} = useSocket();
+    //===========Use the custom socket hook===========
+    const { sendTypingStatus, sendGroupMessage } = useSocket();
 
     const dispatch = useDispatch();
     const { allUsers, user } = useSelector((state) => state.user);
-    
+
     const selectedChat = useSelector(state => state.magageState.selectedChat);
     const uploadProgress = useSelector(state => state.magageState.uploadProgress);
     const selectedFiles = useSelector(state => state.magageState.selectedFiles);
@@ -44,303 +44,303 @@ const MessageInput = memo(
     // const [messageInput, setMessageInput] = useState("");
     const emojiPickerRef = useRef(null);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
-    let typingTimeout; 
+    let typingTimeout;
     const [waveformData, setWaveformData] = useState([]);
-      // Add state to manage recording
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
-  const [recordingTime, setRecordingTime] = useState(0); // State to hold recording time
-  const [docModel,setDocModel] = useState(false);
-  const [currentUser] = useState(sessionStorage.getItem("userId")); 
-  const inputRef = useRef(null);
+    // Add state to manage recording
+    const [isRecording, setIsRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [audioChunks, setAudioChunks] = useState([]);
+    const [recordingTime, setRecordingTime] = useState(0); // State to hold recording time
+    const [docModel, setDocModel] = useState(false);
+    const [currentUser] = useState(sessionStorage.getItem("userId"));
+    const inputRef = useRef(null);
 
 
-  console.log(messageInput,"messageInput");
-  
-
-useEffect(()=>{
-  if(inputRef.current && replyingTo){
-    inputRef.current.focus();
-  }
-},[replyingTo,messageInput,editingMessage])
+    console.log(messageInput, "messageInput");
 
 
- const handleInputChange = (e) => {
-        const files = e.target.files;
-    
-        if (files && files.length > 0) {
-          const filesArray = Array.from(files);
-          dispatch(setSelectedFiles([...selectedFiles, ...filesArray]));
+    useEffect(() => {
+      if (inputRef.current && replyingTo) {
+        inputRef.current.focus();
+      }
+    }, [replyingTo, messageInput, editingMessage])
+
+
+    const handleInputChange = (e) => {
+      const files = e.target.files;
+
+      if (files && files.length > 0) {
+        const filesArray = Array.from(files);
+        dispatch(setSelectedFiles([...selectedFiles, ...filesArray]));
+        return;
+      }
+
+      // console.log("e.target.value", e.target.value);
+      dispatch(setMessageInput(e.target.value));
+
+      if (selectedChat) {
+        if (typingTimeout) clearTimeout(typingTimeout);
+
+        typingTimeout = setTimeout(() => {
+          sendTypingStatus(selectedChat._id, true);
+        }, 2000); // Wait 3 seconds after last input
+      }
+    };
+
+    //======== Audio recording=========
+
+    // Timer effect for recording
+    useEffect(() => {
+      let interval = null;
+      if (isRecording) {
+        interval = setInterval(() => {
+          setRecordingTime((prev) => prev + 1); // Increment recording time every second
+        }, 1000);
+      } else {
+        setRecordingTime(0); // Reset recording time when not recording
+      }
+      return () => clearInterval(interval); // Cleanup on unmount
+    }, [isRecording]);
+
+    const handleVoiceMessage = async () => {
+      if (!isRecording) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              noiseSuppression: true,
+              echoCancellation: true,
+              sampleRate: 44100, // Set sample rate for better quality
+            },
+          });
+          const recorder = new MediaRecorder(stream);
+          const chunks = [];
+
+          recorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              chunks.push(event.data);
+            }
+          };
+
+          recorder.onstop = async () => {
+            stopRecording();
+            const audioBlob = new Blob(chunks, { type: "audio/webm" }); // Change to 'audio/webm' for better quality
+            // console.log("Audio Blob:", audioBlob);
+
+            // Dispatch the audio message
+            if (selectedChat) {
+              const data = {
+                type: "file", // Determine the type based on input
+                content: audioBlob, // The actual content of the message
+              };
+              // console.log("add", audioBlob);
+
+              // Use the same upload logic as for other files
+              const formData = new FormData();
+              formData.append("file", audioBlob);
+
+              try {
+                const response = await axios.post(
+                  `${BASE_URL}/upload`,
+                  formData,
+                  {
+                    headers: {
+                      "Content-Type": "multipart/form-data",
+                      Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+                    },
+                  }
+                );
+
+                if (response.status === 200) {
+                  const { fileUrl, fileType } = response.data;
+
+                  await handleSendMessage({
+                    type: "file",
+                    content: "Audio Message",
+                    fileUrl: fileUrl,
+                    fileType: fileType || "audio/webm", // Update file type accordingly
+                    size: `${(audioBlob.size / (1024 * 1024)).toFixed(2)} MB`,
+                  });
+                }
+              } catch (error) {
+                console.error("Error uploading audio message:", error);
+              }
+            }
+            // Reset audio chunks
+            setAudioChunks([]);
+            // Stop the audio stream to release the microphone
+            stream.getTracks().forEach((track) => track.stop());
+            setRecordingTime(0);
+          };
+
+          recorder.start();
+          setMediaRecorder(recorder);
+          setIsRecording(true);
+        } catch (error) {
+          console.error("Error accessing microphone:", error);
+        }
+      } else {
+        // Stop recording
+        mediaRecorder.stop();
+        setIsRecording(false);
+      }
+    };
+
+
+    //   =============
+
+    const [recording, setRecording] = useState(false);
+    const [audioURL, setAudioURL] = useState('');
+
+    const [animationPhase, setAnimationPhase] = useState(0);
+    const mediaRecorderRef = useRef(null);
+    const audioContextRef = useRef(null);
+    const analyserRef = useRef(null);
+    const animationRef = useRef(null);
+    const chunksRef = useRef([]);
+    // For storing cumulative data
+    const cumulativeDataRef = useRef([]);
+
+    useEffect(() => {
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+      };
+    }, []);
+
+    // Start recording function
+    const startRecording = async () => {
+      try {
+        // Reset cumulative data
+        cumulativeDataRef.current = [];
+        setWaveformData([]);
+
+        // Get user's audio stream
+        console.log(navigator)
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Set up audio context and analyser
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 2048; // Larger FFT for more detailed data
+
+        // Connect audio source to analyser
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        source.connect(analyserRef.current);
+
+        // Start visualization and data collection
+        collectAudioData();
+
+        // Set up media recorder
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        chunksRef.current = [];
+
+        mediaRecorderRef.current.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            chunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorderRef.current.onstop = () => {
+          const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          setAudioURL(audioUrl);
+        };
+
+        // Start recording
+        mediaRecorderRef.current.start(100); // Collect chunks every 100ms
+        setRecording(true);
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+      }
+    };
+
+    const stopRecording = () => {
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        cancelAnimationFrame(animationRef.current);
+        setRecording(false);
+      }
+    };
+    const collectAudioData = () => {
+      if (!analyserRef.current) return;
+
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      let frameCount = 0;
+
+      const updateVisualData = () => {
+        frameCount++;
+        if (frameCount % 2 !== 0) {
+          animationRef.current = requestAnimationFrame(updateVisualData);
           return;
         }
-    
-        // console.log("e.target.value", e.target.value);
-        dispatch(setMessageInput(e.target.value));
-    
-        if (selectedChat) {
-          if (typingTimeout) clearTimeout(typingTimeout);
-    
-          typingTimeout = setTimeout(() => {
-            sendTypingStatus(selectedChat._id, true);
-          }, 2000); // Wait 3 seconds after last input
+        analyserRef.current.getByteTimeDomainData(dataArray);
+
+        // Calculate RMS (root mean square) value to represent volume
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const normalized = (dataArray[i] / 128.0) - 1.0;
+          sum += normalized * normalized;
         }
-  };
+        const rms = Math.sqrt(sum / bufferLength);
 
-      //======== Audio recording=========
+        // Scale RMS with a quadratic function for more dynamic range
+        const scaledRMS = Math.min(100, Math.max(12, rms * rms * 700));
 
-  // Timer effect for recording
-  useEffect(() => {
-    let interval = null;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingTime((prev) => prev + 1); // Increment recording time every second
-      }, 1000);
-    } else {
-      setRecordingTime(0); // Reset recording time when not recording
-    }
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [isRecording]);
+        // Add this data point to our cumulative collection
+        cumulativeDataRef.current.push(scaledRMS);
 
-  const handleVoiceMessage = async () => {
-    if (!isRecording) {
-      // Start recording
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            noiseSuppression: true,
-            echoCancellation: true,
-            sampleRate: 44100, // Set sample rate for better quality
-          },
-        });
-        const recorder = new MediaRecorder(stream);
-        const chunks = [];
+        // Keep a fixed number of data points
+        if (cumulativeDataRef.current.length > 170) {
+          cumulativeDataRef.current = cumulativeDataRef.current.slice(-170);
+        }
 
-        recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunks.push(event.data);
-          }
-        };
+        // Update state with the latest cumulative data
+        setWaveformData([...cumulativeDataRef.current]);
 
-        recorder.onstop = async () => {
-          stopRecording();
-          const audioBlob = new Blob(chunks, { type: "audio/webm" }); // Change to 'audio/webm' for better quality
-          // console.log("Audio Blob:", audioBlob);
+        // Continue collecting data
+        animationRef.current = requestAnimationFrame(updateVisualData);
+      };
 
-          // Dispatch the audio message
-          if (selectedChat) {
-            const data = {
-              type: "file", // Determine the type based on input
-              content: audioBlob, // The actual content of the message
-            };
-            // console.log("add", audioBlob);
-
-            // Use the same upload logic as for other files
-            const formData = new FormData();
-            formData.append("file", audioBlob);
-
-            try {
-              const response = await axios.post(
-                `${BASE_URL}/upload`,
-                formData,
-                {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-                  },
-                }
-              );
-
-              if (response.status === 200) {
-                const { fileUrl, fileType } = response.data;
-
-                await handleSendMessage({
-                  type: "file",
-                  content: "Audio Message",
-                  fileUrl: fileUrl,
-                  fileType: fileType || "audio/webm", // Update file type accordingly
-                  size: `${(audioBlob.size / (1024 * 1024)).toFixed(2)} MB`,
-                });
-              }
-            } catch (error) {
-              console.error("Error uploading audio message:", error);
-            }
-          }
-          // Reset audio chunks
-          setAudioChunks([]);
-          // Stop the audio stream to release the microphone
-          stream.getTracks().forEach((track) => track.stop());
-          setRecordingTime(0);
-        };
-
-        recorder.start();
-        setMediaRecorder(recorder);
-        setIsRecording(true);
-      } catch (error) {
-        console.error("Error accessing microphone:", error);
-      }
-    } else {
-      // Stop recording
-      mediaRecorder.stop();
-      setIsRecording(false);
-    }
-  };
-
-
-//   =============
-
-const [recording, setRecording] = useState(false);
-const [audioURL, setAudioURL] = useState('');
-
-const [animationPhase, setAnimationPhase] = useState(0);
-const mediaRecorderRef = useRef(null);
-const audioContextRef = useRef(null);
-const analyserRef = useRef(null);
-const animationRef = useRef(null);
-const chunksRef = useRef([]);
-// For storing cumulative data
-const cumulativeDataRef = useRef([]);
-
-useEffect(() => {
-  return () => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-  };
-}, []);
-
-// Start recording function
-const startRecording = async () => {
-  try {
-    // Reset cumulative data
-    cumulativeDataRef.current = [];
-    setWaveformData([]);
-
-    // Get user's audio stream
-    console.log(navigator)
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // Set up audio context and analyser
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    analyserRef.current = audioContextRef.current.createAnalyser();
-    analyserRef.current.fftSize = 2048; // Larger FFT for more detailed data
-
-    // Connect audio source to analyser
-    const source = audioContextRef.current.createMediaStreamSource(stream);
-    source.connect(analyserRef.current);
-
-    // Start visualization and data collection
-    collectAudioData();
-
-    // Set up media recorder
-    mediaRecorderRef.current = new MediaRecorder(stream);
-    chunksRef.current = [];
-
-    mediaRecorderRef.current.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        chunksRef.current.push(e.data);
-      }
+      updateVisualData();
     };
+    const generateBarHeights = () => {
+      if (waveformData.length > 0) {
+        return waveformData;
+      }
 
-    mediaRecorderRef.current.onstop = () => {
-      const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setAudioURL(audioUrl);
+      // Generate idle animation that looks more like the reference image
+      const barCount = 200;
+      const idleData = [];
+
+      for (let i = 0; i < barCount; i++) {
+        // Create a pattern that mimics an audio waveform with varying heights
+        const baseHeight = 15;
+        const variation = 30;
+
+        // Multiple sine waves with different frequencies and amplitudes
+        const wave1 = Math.sin((i / 4) + animationPhase) * variation * 0.4;
+        const wave2 = Math.sin((i / 7) + animationPhase * 1.3) * variation * 0.6;
+        const wave3 = Math.sin((i / 3) + animationPhase * 0.7) * variation * 0.3;
+
+        // Combine waves and ensure minimum height
+        const waveHeight = baseHeight + Math.abs(wave1 + wave2 + wave3);
+        idleData.push(waveHeight);
+      }
+
+      return idleData;
     };
-
-    // Start recording
-    mediaRecorderRef.current.start(100); // Collect chunks every 100ms
-    setRecording(true);
-  } catch (error) {
-    console.error('Error accessing microphone:', error);
-  }
-};
-
-const stopRecording = () => {
-  if (mediaRecorderRef.current) {
-    mediaRecorderRef.current.stop();
-    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-    cancelAnimationFrame(animationRef.current);
-    setRecording(false);
-  }
-};
-const collectAudioData = () => {
-  if (!analyserRef.current) return;
-
-  const bufferLength = analyserRef.current.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
-
-  let frameCount = 0;
-
-  const updateVisualData = () => {
-    frameCount++;
-    if (frameCount % 2 !== 0) {
-      animationRef.current = requestAnimationFrame(updateVisualData);
-      return;
-    }
-    analyserRef.current.getByteTimeDomainData(dataArray);
-
-    // Calculate RMS (root mean square) value to represent volume
-    let sum = 0;
-    for (let i = 0; i < bufferLength; i++) {
-      const normalized = (dataArray[i] / 128.0) - 1.0;
-      sum += normalized * normalized;
-    }
-    const rms = Math.sqrt(sum / bufferLength);
-
-    // Scale RMS with a quadratic function for more dynamic range
-    const scaledRMS = Math.min(100, Math.max(12, rms * rms * 700));
-
-    // Add this data point to our cumulative collection
-    cumulativeDataRef.current.push(scaledRMS);
-
-    // Keep a fixed number of data points
-    if (cumulativeDataRef.current.length > 170) {
-      cumulativeDataRef.current = cumulativeDataRef.current.slice(-170);
-    }
-
-    // Update state with the latest cumulative data
-    setWaveformData([...cumulativeDataRef.current]);
-
-    // Continue collecting data
-    animationRef.current = requestAnimationFrame(updateVisualData);
-  };
-
-  updateVisualData();
-};
-const generateBarHeights = () => {
-  if (waveformData.length > 0) {
-    return waveformData;
-  }
-
-  // Generate idle animation that looks more like the reference image
-  const barCount = 200;
-  const idleData = [];
-
-  for (let i = 0; i < barCount; i++) {
-    // Create a pattern that mimics an audio waveform with varying heights
-    const baseHeight = 15;
-    const variation = 30;
-
-    // Multiple sine waves with different frequencies and amplitudes
-    const wave1 = Math.sin((i / 4) + animationPhase) * variation * 0.4;
-    const wave2 = Math.sin((i / 7) + animationPhase * 1.3) * variation * 0.6;
-    const wave3 = Math.sin((i / 3) + animationPhase * 0.7) * variation * 0.3;
-
-    // Combine waves and ensure minimum height
-    const waveHeight = baseHeight + Math.abs(wave1 + wave2 + wave3);
-    idleData.push(waveHeight);
-  }
-
-  return idleData;
-};
-const barHeights = generateBarHeights();
+    const barHeights = generateBarHeights();
 
 
-// ================
+    // ================
 
 
     const handleUnblock = useCallback(async () => {
@@ -350,90 +350,91 @@ const barHeights = generateBarHeights();
     }, [dispatch, selectedChat, currentUser]);
 
     const handleKeyDown = async (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          if (selectedFiles.length > 0) {
-            await handleMultipleFileUpload(selectedFiles);
-            dispatch(setSelectedFiles([]));
-          }
-          await handleSubmit(e);
-        } else if (e.key === "Escape" && editingMessage) {
-            dispatch(setEditingMessage(null));
-            dispatch(setMessageInput(""));
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (selectedFiles.length > 0) {
+          await handleMultipleFileUpload(selectedFiles);
+          dispatch(setSelectedFiles([]));
         }
-      };
+        await handleSubmit(e);
+      } else if (e.key === "Escape" && editingMessage) {
+        dispatch(setEditingMessage(null));
+        dispatch(setMessageInput(""));
+      }
+    };
 
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("messageInput", messageInput);
-        const data = {
-          type: messageInput instanceof FileList ? "file" : "text",
-          content: messageInput,
+      e.preventDefault();
+      console.log("messageInput", messageInput);
+      const data = {
+        type: messageInput instanceof FileList ? "file" : "text",
+        content: messageInput,
 
-        };
-
-        if(replyingTo){
-          data.replyTo = replyingTo
-        }
-    
-        if (selectedChat && selectedChat?.members?.length > 0) {
-          handleSendGroupMessage(data); // Send group message
-        } else if (data.type === "file") {
-          handleMultipleFileUpload(messageInput);
-        } else if (data.type === "text") {
-          handleSendMessage(data);
-        }
-        dispatch(setMessageInput(""));
       };
 
-        //===========handle send group message===========
-  const handleSendGroupMessage = useCallback(async (data) => {
-    if (data.content.trim() === "") return;
+      if (replyingTo) {
+        data.replyTo = replyingTo
+      }
 
-    try {
-      await sendGroupMessage(selectedChat._id, data);
-      dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
-    } catch (error) {
-      console.error("Failed to send group message:", error);
-    }
-  }, []);
+      if (selectedChat && selectedChat?.members?.length > 0) {
+        handleSendGroupMessage(data); // Send group message
+      } else if (data.type === "file") {
+        handleMultipleFileUpload(messageInput);
+      } else if (data.type === "text") {
+        handleSendMessage(data);
+      }
+      dispatch(setMessageInput(""));
+    };
 
-  //===========emoji picker===========
-  const onEmojiClick = (event, emojiObject) => {
-    // console.log("event", event, emojiObject);
-    dispatch(setMessageInput(messageInput + event.emoji));
-  }  ;
+    //===========handle send group message===========
+    const handleSendGroupMessage = useCallback(async (data) => {
+      if (data.content.trim() === "") return;
+
+      try {
+        await sendGroupMessage(selectedChat._id, data);
+        dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
+      } catch (error) {
+        console.error("Failed to send group message:", error);
+      }
+    }, []);
+
+    //=========== emoji picker ===========
+    const onEmojiClick = (event, emojiObject) => {
+      console.log(event.emoji);
       
-  //===========emoji picker===========
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target)
-      ) {
-        setIsEmojiPickerOpen(false);
-      }
+      dispatch(setMessageInput(messageInput + event.emoji));
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+
+    //===========emoji picker===========
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          emojiPickerRef.current &&
+          !emojiPickerRef.current.contains(event.target)
+        ) {
+          setIsEmojiPickerOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if ((docModel) && !event.target.closest(".optionMenu")) {
-        setDocModel(false);
-      }
-    };
- 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [docModel]);
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if ((docModel) && !event.target.closest(".optionMenu")) {
+          setDocModel(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [docModel]);
 
 
 
@@ -465,27 +466,27 @@ const barHeights = generateBarHeights();
     }
 
     // ==============================Camera ==================
-  const openCamera = async () => {
-    try {
-      // {{ edit_2 }} request with current facingMode
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
-      dispatch(setCameraStream(stream));
-      dispatch(setOpenCameraState(true));
+    const openCamera = async () => {
+      try {
+        // {{ edit_2 }} request with current facingMode
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+        dispatch(setCameraStream(stream));
+        dispatch(setOpenCameraState(true));
 
-      // detect if an environment (back) camera exists
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const backCams = devices.filter(d =>
-        d.kind === 'videoinput' && d.label.toLowerCase().includes('back')
-      );
-      if (backCams.length > 0) dispatch(setBackCameraAvailable(true));
+        // detect if an environment (back) camera exists
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const backCams = devices.filter(d =>
+          d.kind === 'videoinput' && d.label.toLowerCase().includes('back')
+        );
+        if (backCams.length > 0) dispatch(setBackCameraAvailable(true));
 
-    } catch (error) {
-      console.error("Error accessing the camera: ", error);
-    }
-  };
+      } catch (error) {
+        console.error("Error accessing the camera: ", error);
+      }
+    };
 
     return (
-        <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
+      <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
 
         <form
           onSubmit={handleSubmit}

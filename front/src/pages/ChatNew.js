@@ -79,6 +79,7 @@ import { BiReply, BiShare } from "react-icons/bi";
 import { SlActionUndo } from "react-icons/sl";
 import MessageList from "../component/MessageList";
 import { useSocket } from "../context/SocketContext";
+import AddParticipants from "../component/AddParticipants";
 
 // Forward Modal Component
 const ForwardModal = ({ show, onClose, onSubmit, users }) => {
@@ -2455,102 +2456,12 @@ const Chat2 = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg w-96 p-4 modal_background">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h2 className="text-lg font-bold">Add to Group</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                {/* &times; */}
-                <ImCross />
-              </button>
-            </div>
-            <div className="mt-4">
-              {/* <input
-                type="text"
-                placeholder="Search"
-                className="w-full p-2 border rounded mb-4"
-              /> */}
-              {/* {console.log(groupUsers)} */}
-              <div className=" flex flex-col cursor-pointer space-y-2 h-80 overflow-y-auto modal_scroll">
-                {allUsers
-                  .filter((user) => !groupUsers.includes(user._id)) // Filter out already selected users
-                  .map((user, index) => {
-                    const isChecked = groupNewUsers.includes(user._id); // Check if user is already selected
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-2 mx-1 hover:bg-gray-100 rounded ${isChecked ? "order-first" : ""
-                          }`}
-                        onClick={() => {
-                          if (!isChecked) {
-                            setGroupNewUsers((prev) => [...prev, user._id]);
-                          } else {
-                            setGroupNewUsers((prev) =>
-                              prev.filter((id) => id !== user._id)
-                            ); // Remove user ID from groupUsers state
-                          }
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full mr-2 bg-gray-300 overflow-hidden flex items-center justify-center ">
-                            {user?.photo && user.photo !== "null" ? (
-                              <img
-                                src={`${IMG_URL}${user.photo.replace(
-                                  /\\/g,
-                                  "/"
-                                )}`}
-                                alt={`${user.userName}`}
-                                className="object-cover h-full w-full"
-                              />
-                            ) : (
-                              <span className="text-gray-900 text-lg font-bold">
-                                {user.userName
-                                  .split(" ")
-                                  .map((n) => n[0].toUpperCase())
-                                  .join("")}
-                              </span>
-                            )}
-                          </div>
-                          <span>{user.userName}</span>
-                        </div>
-                        <input
-                          id={`checkbox-${user._id}`}
-                          type="checkbox"
-                          checked={isChecked} // Set checkbox state based on selection
-                          readOnly // Make checkbox read-only to prevent direct interaction
-                          className="form-checkbox rounded-full"
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            borderRadius: "50%",
-                            border: "2px solid #ccc",
-                            backgroundColor: "#fff",
-                            cursor: "pointer",
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-            <div className="mt-4 flex justify-center">
-              {selectedChat?.members ? (
-                <button
-                  onClick={() => handleAddParticipants()}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
-                >
-                  Add Participants
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleCreateGroup()}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600"
-                >
-                  Done
-                </button>
-              )}
-            </div>
+            <AddParticipants 
+              socket={socket}
+              groupUsers={groupUsers}
+              setGroupUsers={setGroupUsers}
+              creatGroup={isGroupCreateModalOpen}
+            />
           </div>
         </div>
       )}

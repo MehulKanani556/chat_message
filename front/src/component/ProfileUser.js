@@ -1,4 +1,4 @@
-import React, { useState, useEffect , memo, useMemo} from 'react'
+import React, { useState, useEffect, memo, useMemo } from 'react'
 import { FaChevronUp, FaChevronDown, FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaDownload, FaChevronRight, FaChevronLeft, FaFileVideo, FaFileArchive, FaLink } from 'react-icons/fa';
 import { CgProfile } from 'react-icons/cg';
 import { FaPaperclip } from 'react-icons/fa';
@@ -30,7 +30,7 @@ const fetchUrlTitle = async (url) => {
 const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
   console.log("ProfileUser");
-  
+
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
   const [attachFile, setAttachFile] = useState(false)
@@ -38,11 +38,11 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
-  const { user} = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
-  const selectedChat = useSelector(state => state.magageState.selectedChat)
-  const onlineUsers= useSelector(state => state.magageState.onlineUsers)
-  const { allUsers,messages } = useSelector((state) => state.user);
+  const selectedChat = useSelector(state => state.magageState.selectedChat);
+  const onlineUsers = useSelector(state => state.magageState.onlineUsers);
+  const { allUsers, messages } = useSelector((state) => state.user);
 
 
   const formatDate = (dateStr) => {
@@ -137,7 +137,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                 </h2>
               </div>
               <button
-                onClick={()=>{ dispatch(setIsUserProfileModalOpen(false))}}
+                onClick={() => { dispatch(setIsUserProfileModalOpen(false)) }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <ImCross />
@@ -180,344 +180,346 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                 </button>
               </div>
               <div className="p-4">
-                {activeTab === "media" && (
-                  <div className="space-y-6">
-                    {Object.entries(
-                      messages
-                        .filter(
-                          (message) =>
-                            message.content?.type === "file" &&
-                            (message.content?.fileType?.includes("image/") ||
-                              message.content?.fileType?.includes("video/") ||
-                              message.content?.fileType?.includes("png") ||
-                              message.content?.fileType?.includes("gif"))
-                        )
-                        .reduce((acc, message) => {
-                          const date = formatDate(message.createdAt);
-                          if (!acc[date]) acc[date] = [];
-                          acc[date].push(message);
-                          return acc;
-                        }, {})
-                    )
-                      .sort((a, b) => {
-                        if (a[0] === "Today") return -1;
-                        if (b[0] === "Today") return 1;
-                        if (a[0] === "Yesterday") return -1;
-                        if (b[0] === "Yesterday") return 1;
-                        return (
-                          new Date(b[1][0].createdAt) -
-                          new Date(a[1][0].createdAt)
-                        );
-                      })
-                      .map(([date, dateMessages]) => (
-                        <div key={date}>
-                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                            {date}
-                          </h3>
-                          <div className="grid grid-cols-3 gap-3">
-                            {dateMessages.map((message, index) => (
-                              <div
-                                key={index}
-                                className="aspect-square rounded-lg overflow-hidden"
-                              >
-                                {message.content?.fileType?.includes(
-                                  "image/"
-                                ) ||
-                                  message.content?.fileType?.includes("png") ||
-                                  message.content?.fileType?.includes("gif") ? (
-                                  <img
-                                    src={`${IMG_URL}${message.content.fileUrl.replace(
-                                      /\\/g,
-                                      "/"
-                                    )}`}
-                                    alt={message.content.content}
-                                    className="w-full h-full object-cover cursor-pointer"
-                                    onClick={() =>
-                                      handleImageClick(
-                                        `${IMG_URL}${message.content.fileUrl.replace(
-                                          /\\/g,
-                                          "/"
-                                        )}`
-                                      )
-                                    }
-                                  />
-                                ) : (
-                                  <video
-                                    src={`${IMG_URL}${message.content.fileUrl.replace(
-                                      /\\/g,
-                                      "/"
-                                    )}`}
-                                    alt={message.content.content}
-                                    className="w-full h-full object-cover cursor-pointer"
-                                    onClick={() =>
-                                      handleImageClick(
-                                        `${IMG_URL}${message.content.fileUrl.replace(
-                                          /\\/g,
-                                          "/"
-                                        )}`
-                                      )
-                                    }
-                                  />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {activeTab === "docs" && (
-                  <div className="space-y-6">
-                    {Object.entries(
-                      messages
-                        .filter(
-                          (message) =>
-                            message.content?.type === "file" &&
-                            (message.content?.fileType?.includes("pdf") ||
-                              message.content?.fileType?.includes("word") ||
-                              message.content?.fileType?.includes("excel") ||
-                              message.content?.fileType?.includes("audio") ||
-                              message.content?.fileType?.includes("zip"))
-                        )
-                        .reduce((acc, message) => {
-                          const date = formatDate(message.createdAt);
-                          if (!acc[date]) acc[date] = [];
-                          acc[date].push(message);
-                          return acc;
-                        }, {})
-                    )
-                      .sort((a, b) => {
-                        if (a[0] === "Today") return -1;
-                        if (b[0] === "Today") return 1;
-                        if (a[0] === "Yesterday") return -1;
-                        if (b[0] === "Yesterday") return 1;
-                        return (
-                          new Date(b[1][0].createdAt) -
-                          new Date(a[1][0].createdAt)
-                        );
-                      })
-                      .map(([date, dateMessages]) => (
-                        <div key={date}>
-                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                            {date}
-                          </h3>
-                          <div className="space-y-2">
-                            {dateMessages.map((message, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between p-2 bg-white dark:bg-primary-dark/50 rounded-lg cursor-pointer"
-                                onClick={() => {
-                                  const fileUrl = `${IMG_URL}${message.content.fileUrl.replace(
-                                    /\\/g,
-                                    "/"
-                                  )}`;
-                                  const fileName = decryptMessage(
-                                    message.content.content
-                                  );
-
-                                  // Create a fetch request to get the file content
-                                  fetch(fileUrl)
-                                    .then((response) => response.blob())
-                                    .then((blob) => {
-                                      // Create a blob URL for the file
-                                      const blobUrl =
-                                        window.URL.createObjectURL(blob);
-
-                                      // Create download link
-                                      const link = document.createElement("a");
-                                      link.href = blobUrl;
-                                      link.download = fileName;
-
-                                      // Append to body, click and remove
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      document.body.removeChild(link);
-
-                                      // Clean up the blob URL
-                                      window.URL.revokeObjectURL(blobUrl);
-                                    })
-                                    .catch((error) => {
-                                      console.error("Download failed:", error);
-                                      alert(
-                                        "Failed to download the file. Please try again."
-                                      );
-                                    });
-                                }}
-                              >
-                                <div className="flex items-center gap-2 px-2">
-                                  {message.content.fileType?.includes("pdf") ? (
+                <div className="h-[calc(100vh-160px)] overflow-y-auto scrollbar-hide">
+                  {activeTab === "media" && (
+                    <div className="space-y-6">
+                      {Object.entries(
+                        messages
+                          .filter(
+                            (message) =>
+                              message.content?.type === "file" &&
+                              (message.content?.fileType?.includes("image/") ||
+                                message.content?.fileType?.includes("video/") ||
+                                message.content?.fileType?.includes("png") ||
+                                message.content?.fileType?.includes("gif"))
+                          )
+                          .reduce((acc, message) => {
+                            const date = formatDate(message.createdAt);
+                            if (!acc[date]) acc[date] = [];
+                            acc[date].push(message);
+                            return acc;
+                          }, {})
+                      )
+                        .sort((a, b) => {
+                          if (a[0] === "Today") return -1;
+                          if (b[0] === "Today") return 1;
+                          if (a[0] === "Yesterday") return -1;
+                          if (b[0] === "Yesterday") return 1;
+                          return (
+                            new Date(b[1][0].createdAt) -
+                            new Date(a[1][0].createdAt)
+                          );
+                        })
+                        .map(([date, dateMessages]) => (
+                          <div key={date}>
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                              {date}
+                            </h3>
+                            <div className="grid grid-cols-3 gap-3">
+                              {dateMessages.map((message, index) => (
+                                <div
+                                  key={index}
+                                  className="aspect-square rounded-lg overflow-hidden"
+                                >
+                                  {message.content?.fileType?.includes(
+                                    "image/"
+                                  ) ||
+                                    message.content?.fileType?.includes("png") ||
+                                    message.content?.fileType?.includes("gif") ? (
                                     <img
-                                      src={require("../img/pdf.png")}
-                                      alt="PDF Icon"
-                                      className="w-10 h-10 text-red-500"
-                                    />
-                                  ) : message.content.fileType?.includes(
-                                    "word"
-                                  ) ? (
-                                    <img
-                                      src={require("../img/word.png")}
-                                      alt="Word Icon"
-                                      className="w-10 h-10 text-blue-500"
-                                    />
-                                  ) : message.content.fileType?.includes(
-                                    "excel"
-                                  ) ? (
-                                    <img
-                                      src={require("../img/execel.png")}
-                                      alt="Excel Icon"
-                                      className="w-10 h-10 text-green-500"
-                                    />
-                                  ) : message.content.fileType?.includes(
-                                    "audio"
-                                  ) ? (
-                                    <img
-                                      src={require("../img/audio.png")}
-                                      alt="Audio Icon"
-                                      className="w-10 h-10 text-purple-500"
-                                    />
-                                  ) : message.content.fileType?.includes(
-                                    "zip"
-                                  ) ? (
-                                    <img
-                                      src={require("../img/zip.png")}
-                                      alt="Zip Icon"
-                                      className="w-10 h-10 text-orange-500"
+                                      src={`${IMG_URL}${message.content.fileUrl.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`}
+                                      alt={message.content.content}
+                                      className="w-full h-full object-cover cursor-pointer"
+                                      onClick={() =>
+                                        handleImageClick(
+                                          `${IMG_URL}${message.content.fileUrl.replace(
+                                            /\\/g,
+                                            "/"
+                                          )}`
+                                        )
+                                      }
                                     />
                                   ) : (
-                                    <img
-                                      src={require("../img/zip.png")}
-                                      alt="File Icon"
-                                      className="w-10 h-10 text-gray-500"
+                                    <video
+                                      src={`${IMG_URL}${message.content.fileUrl.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`}
+                                      alt={message.content.content}
+                                      className="w-full h-full object-cover cursor-pointer"
+                                      onClick={() =>
+                                        handleImageClick(
+                                          `${IMG_URL}${message.content.fileUrl.replace(
+                                            /\\/g,
+                                            "/"
+                                          )}`
+                                        )
+                                      }
                                     />
                                   )}
-                                  <div>
-                                    <div className="flex-1 text-sm text-primary-dark dark:text-primary-light truncate">
-                                      {decryptMessage(message.content.content)}
-                                    </div>
-                                    <div className="flex gap-3">
-                                      <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
-                                        <span className="text-xl">•</span>
-                                        <span>{message.content.size}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  {activeTab === "docs" && (
+                    <div className="space-y-6">
+                      {Object.entries(
+                        messages
+                          .filter(
+                            (message) =>
+                              message.content?.type === "file" &&
+                              (message.content?.fileType?.includes("pdf") ||
+                                message.content?.fileType?.includes("word") ||
+                                message.content?.fileType?.includes("excel") ||
+                                message.content?.fileType?.includes("audio") ||
+                                message.content?.fileType?.includes("zip"))
+                          )
+                          .reduce((acc, message) => {
+                            const date = formatDate(message.createdAt);
+                            if (!acc[date]) acc[date] = [];
+                            acc[date].push(message);
+                            return acc;
+                          }, {})
+                      )
+                        .sort((a, b) => {
+                          if (a[0] === "Today") return -1;
+                          if (b[0] === "Today") return 1;
+                          if (a[0] === "Yesterday") return -1;
+                          if (b[0] === "Yesterday") return 1;
+                          return (
+                            new Date(b[1][0].createdAt) -
+                            new Date(a[1][0].createdAt)
+                          );
+                        })
+                        .map(([date, dateMessages]) => (
+                          <div key={date}>
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                              {date}
+                            </h3>
+                            <div className="space-y-2">
+                              {dateMessages.map((message, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-2 bg-white dark:bg-primary-dark/50 rounded-lg cursor-pointer"
+                                  onClick={() => {
+                                    const fileUrl = `${IMG_URL}${message.content.fileUrl.replace(
+                                      /\\/g,
+                                      "/"
+                                    )}`;
+                                    const fileName = decryptMessage(
+                                      message.content.content
+                                    );
+
+                                    // Create a fetch request to get the file content
+                                    fetch(fileUrl)
+                                      .then((response) => response.blob())
+                                      .then((blob) => {
+                                        // Create a blob URL for the file
+                                        const blobUrl =
+                                          window.URL.createObjectURL(blob);
+
+                                        // Create download link
+                                        const link = document.createElement("a");
+                                        link.href = blobUrl;
+                                        link.download = fileName;
+
+                                        // Append to body, click and remove
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+
+                                        // Clean up the blob URL
+                                        window.URL.revokeObjectURL(blobUrl);
+                                      })
+                                      .catch((error) => {
+                                        console.error("Download failed:", error);
+                                        alert(
+                                          "Failed to download the file. Please try again."
+                                        );
+                                      });
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 px-2">
+                                    {message.content.fileType?.includes("pdf") ? (
+                                      <img
+                                        src={require("../img/pdf.png")}
+                                        alt="PDF Icon"
+                                        className="w-10 h-10 text-red-500"
+                                      />
+                                    ) : message.content.fileType?.includes(
+                                      "word"
+                                    ) ? (
+                                      <img
+                                        src={require("../img/word.png")}
+                                        alt="Word Icon"
+                                        className="w-10 h-10 text-blue-500"
+                                      />
+                                    ) : message.content.fileType?.includes(
+                                      "excel"
+                                    ) ? (
+                                      <img
+                                        src={require("../img/execel.png")}
+                                        alt="Excel Icon"
+                                        className="w-10 h-10 text-green-500"
+                                      />
+                                    ) : message.content.fileType?.includes(
+                                      "audio"
+                                    ) ? (
+                                      <img
+                                        src={require("../img/audio.png")}
+                                        alt="Audio Icon"
+                                        className="w-10 h-10 text-purple-500"
+                                      />
+                                    ) : message.content.fileType?.includes(
+                                      "zip"
+                                    ) ? (
+                                      <img
+                                        src={require("../img/zip.png")}
+                                        alt="Zip Icon"
+                                        className="w-10 h-10 text-orange-500"
+                                      />
+                                    ) : (
+                                      <img
+                                        src={require("../img/zip.png")}
+                                        alt="File Icon"
+                                        className="w-10 h-10 text-gray-500"
+                                      />
+                                    )}
+                                    <div>
+                                      <div className="flex-1 text-sm text-primary-dark dark:text-primary-light truncate">
+                                        {decryptMessage(message.content.content)}
                                       </div>
-                                      <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
-                                        <span className="text-xl">•</span>
-                                        <span>
-                                          {message.content.fileType
-                                            .split("/")
-                                            .pop()}
-                                        </span>
+                                      <div className="flex gap-3">
+                                        <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
+                                          <span className="text-xl">•</span>
+                                          <span>{message.content.size}</span>
+                                        </div>
+                                        <div className="text-xs text-primary-dark/50 dark:text-primary-light/50 truncate flex items-center gap-1">
+                                          <span className="text-xl">•</span>
+                                          <span>
+                                            {message.content.fileType
+                                              .split("/")
+                                              .pop()}
+                                          </span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {activeTab === "links" && (
-                  <div className="space-y-6">
-                    {Object.entries(
-                      messages
-                        .filter((message) => {
-                          const content = decryptMessage(
-                            message.content.content
-                          );
+                        ))}
+                    </div>
+                  )}
+                  {activeTab === "links" && (
+                    <div className="space-y-6">
+                      {Object.entries(
+                        messages
+                          .filter((message) => {
+                            const content = decryptMessage(
+                              message.content.content
+                            );
+                            return (
+                              typeof content === "string" &&
+                              (content.includes("http://") ||
+                                content.includes("https://"))
+                            );
+                          })
+                          .reduce((acc, message) => {
+                            const date = formatDate(message.createdAt);
+                            if (!acc[date]) acc[date] = [];
+                            acc[date].push(message);
+                            return acc;
+                          }, {})
+                      )
+                        .sort((a, b) => {
+                          if (a[0] === "Today") return -1;
+                          if (b[0] === "Today") return 1;
+                          if (a[0] === "Yesterday") return -1;
+                          if (b[0] === "Yesterday") return 1;
                           return (
-                            typeof content === "string" &&
-                            (content.includes("http://") ||
-                              content.includes("https://"))
+                            new Date(b[1][0].createdAt) -
+                            new Date(a[1][0].createdAt)
                           );
                         })
-                        .reduce((acc, message) => {
-                          const date = formatDate(message.createdAt);
-                          if (!acc[date]) acc[date] = [];
-                          acc[date].push(message);
-                          return acc;
-                        }, {})
-                    )
-                      .sort((a, b) => {
-                        if (a[0] === "Today") return -1;
-                        if (b[0] === "Today") return 1;
-                        if (a[0] === "Yesterday") return -1;
-                        if (b[0] === "Yesterday") return 1;
-                        return (
-                          new Date(b[1][0].createdAt) -
-                          new Date(a[1][0].createdAt)
-                        );
-                      })
-                      .map(([date, dateMessages]) => (
-                        <div key={date}>
-                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                            {date}
-                          </h3>
-                          <div className="space-y-2">
-                            {dateMessages.map((message, index) => {
-                              const content = decryptMessage(
-                                message.content.content
-                              );
-                              const urls = content.match(/https?:\/\/[^\s]+/g);
-                              if (!urls) return null;
+                        .map(([date, dateMessages]) => (
+                          <div key={date}>
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                              {date}
+                            </h3>
+                            <div className="space-y-2">
+                              {dateMessages.map((message, index) => {
+                                const content = decryptMessage(
+                                  message.content.content
+                                );
+                                const urls = content.match(/https?:\/\/[^\s]+/g);
+                                if (!urls) return null;
 
-                              // Group duplicate URLs
-                              const uniqueUrls = [...new Set(urls)];
-                              return uniqueUrls.map((url, urlIndex) => {
-                                const domain = new URL(url).hostname;
+                                // Group duplicate URLs
+                                const uniqueUrls = [...new Set(urls)];
+                                return uniqueUrls.map((url, urlIndex) => {
+                                  const domain = new URL(url).hostname;
 
-                                return (
-                                  <div
-                                    key={`${index}-${urlIndex}`}
-                                    className="flex flex-col bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50 p-3"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <div className="min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
-                                        <PiLinkSimpleBold className="w-[16px] h-[16px] absolute" />
-                                        <img
-                                          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
-                                          alt=""
-                                          className="w-[24px] h-[24px] relative z-10"
-                                          onLoad={(e) => {
-                                            if (
-                                              e.target.width > 0 &&
-                                              e.target.height > 0
-                                            ) {
-                                              e.target.style.display = "block";
-                                            } else {
+                                  return (
+                                    <div
+                                      key={`${index}-${urlIndex}`}
+                                      className="flex flex-col bg-white dark:bg-primary-dark/50 rounded-lg text-primary-dark/50 dark:text-primary-light/50 p-3"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className="min-w-[40px] h-[40px] rounded-full bg-primary-dark/20 dark:bg-primary-light/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                                          <PiLinkSimpleBold className="w-[16px] h-[16px] absolute" />
+                                          <img
+                                            src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+                                            alt=""
+                                            className="w-[24px] h-[24px] relative z-10"
+                                            onLoad={(e) => {
+                                              if (
+                                                e.target.width > 0 &&
+                                                e.target.height > 0
+                                              ) {
+                                                e.target.style.display = "block";
+                                              } else {
+                                                e.target.style.display = "none";
+                                              }
+                                            }}
+                                            onError={(e) => {
                                               e.target.style.display = "none";
-                                            }
-                                          }}
-                                          onError={(e) => {
-                                            e.target.style.display = "none";
-                                          }}
-                                        />
-                                      </div>
-                                      <div className="flex-grow">
-                                        {/* Display the title */}
-                                        <div className=" text-primary-dark dark:text-white ">
-                                          {urlTitles[url] || "Loading title..."}
+                                            }}
+                                          />
                                         </div>
-                                        <a
-                                          href={url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-sm break-all  flex gap-2 items-center text-primary-dark/50 dark:text-primary-light/50 hover:underline"
-                                        >
-                                          <span className="text-xl">•</span>
-                                          <span>{url}</span>
-                                        </a>
+                                        <div className="flex-grow">
+                                          {/* Display the title */}
+                                          <div className=" text-primary-dark dark:text-white ">
+                                            {urlTitles[url] || "Loading title..."}
+                                          </div>
+                                          <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm break-all  flex gap-2 items-center text-primary-dark/50 dark:text-primary-light/50 hover:underline"
+                                          >
+                                            <span className="text-xl">•</span>
+                                            <span>{url}</span>
+                                          </a>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                );
-                              });
-                            })}
+                                  );
+                                });
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -528,7 +530,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
             <div className="flex justify-between items-center p-4 py-6">
               <h2 className="text-lg font-bold"> Profile</h2>
               <button
-                onClick={()=>{ dispatch(setIsUserProfileModalOpen(false))}}
+                onClick={() => { dispatch(setIsUserProfileModalOpen(false)) }}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <ImCross />
@@ -794,7 +796,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                 </button>
               </div>
 
-              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3">
+              <div className="max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
                 <button
                   className="w-full flex justify-between items-center text-[#FF0000]"
                   onClick={async () => {

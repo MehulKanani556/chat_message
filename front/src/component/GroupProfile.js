@@ -44,10 +44,10 @@ const GroupProfile = memo(({
   // socket,
   handleMakeCall,
   // handleImageClick
-  }) => {
+}) => {
 
-    console.log("groupProfile");
-    
+  console.log("groupProfile");
+
   const dispatch = useDispatch();
   // const [isEditing, setIsEditing] = useState(false);
   // const [editedUserName, setEditedUserName] = useState("");
@@ -61,9 +61,9 @@ const GroupProfile = memo(({
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
   const selectedChat = useSelector(state => state.magageState.selectedChat)
-  const { allUsers,messages } = useSelector((state) => state.user);
+  const { allUsers, messages } = useSelector((state) => state.user);
   const userId = useMemo(() => sessionStorage.getItem("userId"), []);
-      const {socket} = useSocket();
+  const { socket } = useSocket();
 
   const handlePhotoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -1010,7 +1010,7 @@ const GroupProfile = memo(({
                 </button>
               </div>
 
-              <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3 mx-auto">
+              <div className="max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3 mx-auto">
                 <button
                   className="w-full flex justify-between items-center text-red-600"
                   onClick={() => handleLeaveGroup(userId)}

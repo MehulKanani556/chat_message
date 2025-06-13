@@ -229,7 +229,7 @@ function handleScreenShareRequest(socket, data) {
         signal: data.signal,
         groupId: data.groupId,
         isGroup: true,
-        roomId:data.roomId
+        roomId: data.roomId
       });
     }
   } else {
@@ -240,7 +240,7 @@ function handleScreenShareRequest(socket, data) {
         fromEmail: data.fromEmail,
         signal: data.signal,
         isGroup: false,
-        roomId:data.roomId
+        roomId: data.roomId
       });
     }
   }
@@ -282,8 +282,8 @@ async function handleCallRequest(socket, data) {
     roomId,
   } = data;
 
-  
-  
+
+
   let isUserInCall = false;
   for (const [callRoomId, callData] of Object.entries(activeCalls)) {
     if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
@@ -292,8 +292,8 @@ async function handleCallRequest(socket, data) {
     }
   }
 
-  console.log(activeCalls, "=======================",isUserInCall);
- 
+  console.log(activeCalls, "=======================", isUserInCall);
+
   if (isUserInCall) {
     socket.emit("user-in-call", {
       toEmail,
@@ -312,8 +312,8 @@ async function handleCallRequest(socket, data) {
 
   const targetSocketId = onlineUsers.get(toEmail);
 
-  console.log(toEmail,targetSocketId);
-  
+  console.log(toEmail, targetSocketId);
+
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
 
@@ -352,7 +352,7 @@ const handleUserIncall = (socket, data) => {
   } = data;
 
   const targetSocketId = onlineUsers.get(fromEmail);
-  
+
   delete activeCalls[roomId];
 
   if (targetSocketId) {
@@ -381,7 +381,7 @@ function handleCallInvite(socket, data) {
     roomId,
   } = data;
 
-  
+
   let isUserInCall = false;
   for (const [callRoomId, callData] of Object.entries(activeCalls)) {
     if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
@@ -389,7 +389,7 @@ function handleCallInvite(socket, data) {
       break;
     }
   }
- 
+
   if (isUserInCall) {
     socket.emit("user-in-call", {
       toEmail,
@@ -447,18 +447,18 @@ function handleParticipantLeft(socket, data) {
   const targetSocketId = onlineUsers.get(to);
 
   if (targetSocketId) {
-   
+
     const call = activeCalls[roomId];
 
     if (call) {
-      if (call?.joined.includes(leavingUser)) {
+      if (call?.joined && call?.joined.includes(leavingUser)) {
         call.joined = call?.joined.filter((id) => id !== leavingUser);
       }
-      if (!call?.invited.includes(leavingUser)) {
+      if (call?.invited && !call?.invited.includes(leavingUser)) {
         call.invited = call?.invited.push(leavingUser)
       }
     }
-    
+
     socket.to(targetSocketId).emit("participant-lefted", {
       leavingUser,
       duration,
@@ -939,7 +939,7 @@ function initializeSocket(io) {
     socket.on("force-logout", (data) => {
       const { deviceId } = data;
       console.log('Handling force logout for device:', deviceId);
-      
+
       // Get all sockets in the device room
       const deviceRoom = io.sockets.adapter.rooms.get(deviceId);
       if (deviceRoom) {
@@ -947,7 +947,7 @@ function initializeSocket(io) {
         io.to(deviceId).emit('force-logout', {
           message: 'You have been logged out from another device'
         });
-        
+
         // Clean up the device room
         deviceRooms.delete(deviceId);
       }
@@ -1035,7 +1035,7 @@ function initializeSocket(io) {
     socket.on("update-message", (data) => handleUpdateMessage(socket, data));
 
     // ===========================screen share=============================
-    socket.on("screen-share-request", (data) =>handleScreenShareRequest(socket, data));
+    socket.on("screen-share-request", (data) => handleScreenShareRequest(socket, data));
     socket.on("share-accept", (data) => handleScreenShareAccept(socket, data));
     socket.on("share-signal", (data) => handleScreenShareSignal(socket, data));
 
@@ -1096,53 +1096,53 @@ function initializeSocket(io) {
 
     // socket.on("control-event", ({ roomId, type, payload }) => {
     //   console.log("=====================================",{ roomId, type, payload });
-      
+
     //   socket.to(roomId).emit("control-event", { type, payload });
     // });
 
     socket.on("control-event", async ({ type, payload }) => {
       console.log("Received:", type, payload);
-      try {
-        switch (type) {
-          case "mousemove":
-            // This line of code uses the 'mouse' object to simulate a mouse movement to a specific point on the screen.
-            // The 'straightTo' method is used to specify the target point for the mouse movement, and it takes a 'Point' object as an argument.
-            // The 'Point' object is created using the 'x' and 'y' coordinates provided in the 'payload' object.
-            // The 'await' keyword is used to ensure that the mouse movement is completed before proceeding to the next line of code.
-            // Alternatively, you can use the 'moveTo' method instead of 'straightTo' to achieve the same result.
-            // Another option is to use the 'dragTo' method to simulate a mouse drag operation.
-            // You can also use the 'position' method to set the mouse position directly.
-            // Here are some examples of alternative methods:
-            // await mouse.moveTo(payload.x, payload.y);
-            // await mouse.dragTo(payload.x, payload.y);
-            // await mouse.position = new Point(payload.x, payload.y);
-            await mouse.move(straightTo(new Point(payload.x, payload.y)));
-            break;
-  
-          case "click":
-            await mouse.click(Button.LEFT);
-            break;
-  
-          case "keydown":
-            const key = Key[payload.key.toUpperCase()];
-            if (key) {
-              await keyboard.pressKey(key);
-              await keyboard.releaseKey(key);
-            }
-            break;
-  
-          default:
-            console.log("Unknown control type:", type);
-        }
-      } catch (err) {
-        console.error("Control error:", err);
-      }
-    });
-  
+      // try {
+      //   switch (type) {
+      //     case "mousemove":
+      //       // This line of code uses the 'mouse' object to simulate a mouse movement to a specific point on the screen.
+      //       // The 'straightTo' method is used to specify the target point for the mouse movement, and it takes a 'Point' object as an argument.
+      //       // The 'Point' object is created using the 'x' and 'y' coordinates provided in the 'payload' object.
+      //       // The 'await' keyword is used to ensure that the mouse movement is completed before proceeding to the next line of code.
+      //       // Alternatively, you can use the 'moveTo' method instead of 'straightTo' to achieve the same result.
+      //       // Another option is to use the 'dragTo' method to simulate a mouse drag operation.
+      //       // You can also use the 'position' method to set the mouse position directly.
+      //       // Here are some examples of alternative methods:
+      //       // await mouse.moveTo(payload.x, payload.y);
+      //       // await mouse.dragTo(payload.x, payload.y);
+      //       // await mouse.position = new Point(payload.x, payload.y);
+      //       await mouse.move(straightTo(new Point(payload.x, payload.y)));
+      //       break;
 
-    socket.on("user-in-call", (data)=> handleUserIncall(socket, data));
+      //     case "click":
+      //       await mouse.click(Button.LEFT);
+      //       break;
+
+      //     case "keydown":
+      //       const key = Key[payload.key.toUpperCase()];
+      //       if (key) {
+      //         await keyboard.pressKey(key);
+      //         await keyboard.releaseKey(key);
+      //       }
+      //       break;
+
+      //     default:
+      //       console.log("Unknown control type:", type);
+      //   }
+      // } catch (err) {
+      //   console.error("Control error:", err);
+      // }
+    });
+
+
+    socket.on("user-in-call", (data) => handleUserIncall(socket, data));
     // ===========================================================================================================
-})
+  })
 }
 
 // Clean expired sessions every minute

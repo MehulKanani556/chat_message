@@ -68,7 +68,7 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone,sendControl } = useSocket();
+  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone, sendControl } = useSocket();
 
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
@@ -229,17 +229,19 @@ const VideoCallLayout = memo(() => {
       const audioContext = new AudioContext();
       const destination = audioContext.createMediaStreamDestination();
 
-      audioStreams.forEach((stream) => {
-        if (stream && stream.getAudioTracks().length > 0) {
-          const source = audioContext.createMediaStreamSource(stream);
-          source.connect(destination);
-        }
-      });
+      if (!isReceiving) {
+        audioStreams.forEach((stream) => {
+          if (stream && stream.getAudioTracks().length > 0) {
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(destination);
+          }
+        });
+        // Add mixed audio tracks to the canvas stream
+        destination.stream.getAudioTracks().forEach((track) => {
+          canvasStream.addTrack(track);
+        });
+      }
 
-      // Add mixed audio tracks to the canvas stream
-      destination.stream.getAudioTracks().forEach((track) => {
-        canvasStream.addTrack(track);
-      });
 
       // Start drawing loop
       const drawVideo = () => {
@@ -349,6 +351,11 @@ const VideoCallLayout = memo(() => {
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
     }
+
+    // if (screenShareStreamRef.current) {
+    // screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+    //   screenShareStreamRef.current = null;
+    // }
   };
 
   const formatDate = (date) => {
@@ -451,12 +458,12 @@ const VideoCallLayout = memo(() => {
 
   // ====================================================================
 
-const controlref = useRef(null);
+  const controlref = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = e => {
       console.log(e);
-      
+
       sendControl("mousemove", { x: e.clientX, y: e.clientY })
     };
     const handleClick = e => {
@@ -470,7 +477,7 @@ const controlref = useRef(null);
 
     const video = controlref.current;
     console.log(video);
-    
+
     if (video && isReceiving) {
       video.addEventListener("mousemove", handleMouseMove);
       video.addEventListener("click", handleClick);
@@ -484,7 +491,7 @@ const controlref = useRef(null);
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isReceiving,participants]);
+  }, [isReceiving, participants]);
 
 
 
@@ -611,7 +618,7 @@ const controlref = useRef(null);
                       className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                       // muted={participantId === currentUser}
                       ref={(el) => {
-                       
+
                         setVideoRef(el);
                         if (el && stream instanceof MediaStream) {
                           el.srcObject = stream;
@@ -753,35 +760,34 @@ const controlref = useRef(null);
                                   console.error("Remote video error:", err)
                                 );
                               }
-                              // If you want to keep localVideoRef for the current user:
-                              // if (participantId === currentUser && localVideoRef) {
-                              //   localVideoRef.current = el;
-                              // }
                             }}
                           />
-                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden">
-                            {participant?.photo &&
-                              participant.photo !== "null" ? (
-                              <img
-                                src={`${IMG_URL}${participant.photo.replace(
-                                  /\\/g,
-                                  "/"
-                                )}`}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-500 flex items-center justify-center rounded-full">
-                                <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
-                                  {participant?.userName?.[0]?.toUpperCase() ||
-                                    "?"}
-                                </span>
-                              </div>
-                            )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-500 flex items-center justify-center">
+                              {participant?.photo &&
+                                participant.photo !== "null" ? (
+                                <img
+                                  src={`${IMG_URL}${participant.photo.replace(
+                                    /\\/g,
+                                    "/"
+                                  )}`}
+                                  alt="Profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
+                                    {participant?.userName?.[0]?.toUpperCase() || "?"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
+                          {/* <div className="absolute inset-0 flex items-center justify-center"> */}
+                          <div className="absolute bottom-[40%] mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
                             {participant?.userName || "Pa"}{" "}
                             {!isVideoCalling ? "" : " (Camera Off)"}
+                            {/* </div> */}
                           </div>
                         </div>
                       )}
@@ -803,7 +809,7 @@ const controlref = useRef(null);
               dispatch(setCallChatList(!callChatList));
               // dispatch(setChatMessages(true));
             }}
-            className={`w-10 grid place-content-center rounded-full h-10 border ${callChatList
+            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${callChatList
               ? "dark:bg-white dark:text-black bg-black/50 text-white"
               : "dark:text-white text-black"
               }`}

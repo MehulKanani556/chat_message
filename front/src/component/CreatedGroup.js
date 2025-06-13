@@ -198,7 +198,7 @@ const CreatedGroup = memo(({
           >
             <div className="flex items-center space-x-2">
               <RiUserAddLine size={18} />
-              <span className="font-medium">Add Memebers</span>
+              <span className="font-medium">Add Members</span>
             </div>
             <FaChevronRight size={12} />
           </button>

@@ -260,7 +260,17 @@ export const SocketProvider = ({ children }) => {
 
       try {
         let content = message.data.content;
-        if (!content.startsWith("data:")) {
+        console.log(content, "//////////////////////////////////////////////////////////");
+        const hasEmoji = (str) => {
+          const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
+          return emojiRegex.test(str);
+        };
+
+        if (typeof content === 'string' && hasEmoji(content)) {
+          content = content; // Keep emoji as is without encryption
+        }
+
+        if (!content.startsWith("data:") && !hasEmoji(content)) {
           const key = "chat";
           let result = "";
           for (let i = 0; i < content.length; i++) {
@@ -509,7 +519,7 @@ export const SocketProvider = ({ children }) => {
                   signal,
                   groupId: selectedChat._id,
                   isGroup: true,
-                  roomId:roomId
+                  roomId: roomId
                 });
               });
 
@@ -547,7 +557,7 @@ export const SocketProvider = ({ children }) => {
             toEmail: selectedChat._id,
             signal,
             isGroup: false,
-            roomId:roomId
+            roomId: roomId
           });
         });
 
@@ -611,7 +621,7 @@ export const SocketProvider = ({ children }) => {
           toEmail: userId,
           groupId: incomingShare?.groupId,
           isGroup: incomingShare?.isGroup,
-          roomId:incomingShare?.roomId
+          roomId: incomingShare?.roomId
         });
       });
 
@@ -1358,7 +1368,7 @@ export const SocketProvider = ({ children }) => {
         }
       }
     } else {
-      if (socketRef.current) {
+      if (socketRef.current && selectedChat) {
         socketRef.current.emit("end-call", {
           to: selectedChat._id,
           from: userId,
@@ -1727,8 +1737,8 @@ export const SocketProvider = ({ children }) => {
   // ====================================Controle========================
 
   const sendControl = (type, payload) => {
-    console.log(type, payload,callRoom);
-    socketRef.current.emit("control-event", { roomId:callRoom, type, payload });
+    console.log(type, payload, callRoom);
+    socketRef.current.emit("control-event", { roomId: callRoom, type, payload });
   };
 
 
@@ -1750,59 +1760,59 @@ export const SocketProvider = ({ children }) => {
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
 
-// Use the memoized functions in useMemo
-const value = useMemo(() => ({
-  socket: socketRef.current,
-  sendPrivateMessage: memoizedSendPrivateMessage,
-  cleanupConnection: memoizedCleanupConnection,
-  startSharing: memoizedStartSharing,
-  startCall: memoizedStartCall,
-  acceptCall: memoizedAcceptCall,
-  endCall: memoizedEndCall,
-  toggleCamera: memoizedToggleCamera,
-  toggleMicrophone: memoizedToggleMicrophone,
-  markMessageAsRead: memoizedMarkMessageAsRead,
-  rejectCall: memoizedRejectCall,
-  acceptScreenShare: memoizedAcceptScreenShare,
-  inviteToCall: memoizedInviteToCall,
-  forwardMessage: memoizedForwardMessage,
-  addMessageReaction: memoizedAddMessageReaction,
-  subscribeToMessages: memoizedSubscribeToMessages,
-  sendTypingStatus: memoizedSendTypingStatus,
-  sendControl
-}), [
-  userId,
-  socketRef,
-  dispatch,
-  hasWebcam,
-  hasMicrophone,
-  incomingCall,
-  groupCall,
-  callParticipantsList,
-  callStartTime,
-  streamRef,
-  isCameraOn,
-  incomingShare,
-  callParticipants,
-  isVideoCalling,
-  memoizedSendPrivateMessage,
-  memoizedCleanupConnection,
-  memoizedStartSharing,
-  memoizedStartCall,
-  memoizedAcceptCall,
-  memoizedEndCall,
-  memoizedToggleCamera,
-  memoizedToggleMicrophone,
-  memoizedMarkMessageAsRead,
-  memoizedRejectCall,
-  memoizedAcceptScreenShare,
-  memoizedInviteToCall,
-  memoizedForwardMessage,
-  memoizedAddMessageReaction,
-  memoizedSubscribeToMessages,
-  memoizedSendTypingStatus,
-  sendControl
-]);
+  // Use the memoized functions in useMemo
+  const value = useMemo(() => ({
+    socket: socketRef.current,
+    sendPrivateMessage: memoizedSendPrivateMessage,
+    cleanupConnection: memoizedCleanupConnection,
+    startSharing: memoizedStartSharing,
+    startCall: memoizedStartCall,
+    acceptCall: memoizedAcceptCall,
+    endCall: memoizedEndCall,
+    toggleCamera: memoizedToggleCamera,
+    toggleMicrophone: memoizedToggleMicrophone,
+    markMessageAsRead: memoizedMarkMessageAsRead,
+    rejectCall: memoizedRejectCall,
+    acceptScreenShare: memoizedAcceptScreenShare,
+    inviteToCall: memoizedInviteToCall,
+    forwardMessage: memoizedForwardMessage,
+    addMessageReaction: memoizedAddMessageReaction,
+    subscribeToMessages: memoizedSubscribeToMessages,
+    sendTypingStatus: memoizedSendTypingStatus,
+    sendControl
+  }), [
+    userId,
+    socketRef,
+    dispatch,
+    hasWebcam,
+    hasMicrophone,
+    incomingCall,
+    groupCall,
+    callParticipantsList,
+    callStartTime,
+    streamRef,
+    isCameraOn,
+    incomingShare,
+    callParticipants,
+    isVideoCalling,
+    memoizedSendPrivateMessage,
+    memoizedCleanupConnection,
+    memoizedStartSharing,
+    memoizedStartCall,
+    memoizedAcceptCall,
+    memoizedEndCall,
+    memoizedToggleCamera,
+    memoizedToggleMicrophone,
+    memoizedMarkMessageAsRead,
+    memoizedRejectCall,
+    memoizedAcceptScreenShare,
+    memoizedInviteToCall,
+    memoizedForwardMessage,
+    memoizedAddMessageReaction,
+    memoizedSubscribeToMessages,
+    memoizedSendTypingStatus,
+    sendControl
+  ]);
 
   // const value = {
   //   socket: socketRef.current,

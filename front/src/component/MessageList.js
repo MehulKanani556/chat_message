@@ -40,7 +40,7 @@ import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
 import { useDispatch, useSelector } from "react-redux";
-import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal } from "../redux/slice/manageState.slice";
+import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal, setActiveMessageId } from "../redux/slice/manageState.slice";
 import { deleteMessage, getAllMessages } from "../redux/slice/user.slice";
 import { useSocket } from "../context/SocketContext";
 import { RxCross2 } from "react-icons/rx";
@@ -150,7 +150,7 @@ const MessageList = memo(({
       }
     } else {
       // Handle text and emoji copying
-      const content = message.content || message;
+      const content = decryptMessage(message.content.content || message);
       navigator.clipboard.writeText(content).then(callback);
     }
   };
@@ -1446,8 +1446,6 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
   ) {
     try {
       const key = "chat";
-      // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
-      // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
       const encodedText = messageContent.split("data:")[1];
       const decodedText = atob(encodedText);
       let result = "";
@@ -1457,22 +1455,73 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
         );
       }
       messageContent = result;
-      // console.log(messageContent)
     } catch (error) {
       console.error("Decryption error:", error);
     }
   }
 
   // Check if message contains only a single emoji
-  const isSingleEmoji = messageContent?.match(/^\p{Emoji}$/gu);
+  const isSingleEmoji = messageContent?.match(/^\p{Emoji}$/u);
+
+  // Function to detect URLs in text
+  const detectUrls = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g;
+
+    // First split by URLs
+    let parts = text.split(urlRegex);
+
+    // Then process each part for email addresses
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={`url-${index}`}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-dark dark:text-primary-light hover:text-blue-500 underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(part, '_blank');
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+
+      // Split the part by email addresses
+      const emailParts = part.split(emailRegex);
+      return emailParts.map((emailPart, emailIndex) => {
+        if (emailPart.match(emailRegex)) {
+          return (
+            <a
+              key={`email-${index}-${emailIndex}`}
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailPart)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-dark dark:text-primary-light hover:text-blue-500 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailPart)}`, '_blank');
+              }}
+            >
+              {emailPart}
+            </a>
+          );
+        }
+        return emailPart;
+      });
+    }).flat();
+  };
 
   return (
-    <div
-      className={`group flex-1 flex justify-between items-center relative rounded-lg`}
-    >
+    <div className={`group flex-1 flex justify-between items-center relative rounded-lg`}>
       <div className="flex-1 flex flex-col">
+
         <p className="flex-1">
-          {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
+          {!(messageContent?.match(/(https?:\/\/[^\s]+)/g) || messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)) ? messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
             // Check if the part is an emoji
             if (part.match(/\p{Emoji}/gu)) {
               return (
@@ -1496,8 +1545,36 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
             return (
               <span key={index}>{highlightText(part, searchInputbox)}</span>
             );
-          })}
+          }) : <span>{detectUrls(highlightText(messageContent, searchInputbox))}</span>}
         </p>
+        {/* <p className="flex-1">
+          {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
+            // Check if the part is an emoji
+            if (part.match(/\p{Emoji}/gu)) {
+              return (
+                <span key={index} className="inline-block align-middle">
+                  <img
+                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                      .codePointAt(0)
+                      .toString(16)}.png`}
+                    alt={part}
+                    className={`inline ${isSingleEmoji ? "h-14 w-14" : "h-5 w-5"}`}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.replaceWith(document.createTextNode(part));
+                    }}
+                  />
+                </span>
+              );
+            }
+            // If not an emoji, detect URLs and apply highlight text function
+            return (
+              <span key={index}>
+                {detectUrls(highlightText(part, searchInputbox))}
+              </span>
+            );
+          })}
+        </p> */}
       </div>
     </div>
   );
@@ -2265,10 +2342,9 @@ const MessageContextMenu = ({
               <button
                 className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
                 onClick={() => {
-                  handleCopyMessage(message.content, () =>
-                    setActiveMessageId(null)
-                  );
-                  setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+                  handleCopyMessage(message, () => {
+                    setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
+                  });
                 }}
               >
                 <MdOutlineContentCopy className="mr-2 " /> Copy
@@ -2385,11 +2461,11 @@ const RegularMessage = memo(({
               ? "bg-transparent"
               : message.sender === userId
                 ? "bg-primary/50 rounded-s-xl"
-                : "bg-primary rounded-e-xl "
+                : "bg-primary rounded-e-xl"
               }
-          ${showTime ? " rounded-tr-xl rounded-tl-xl" : ""}
-          ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
-          `}
+            ${showTime ? "rounded-tr-xl rounded-tl-xl" : ""}
+            ${message.reactions && message.reactions.length > 0 ? "pb-4" : ""}
+            `}
           >
             <MessageContent
               message={message}
