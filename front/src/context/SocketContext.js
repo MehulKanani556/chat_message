@@ -38,10 +38,14 @@ import {
   setUserIncall,
   setSelectedChatModule,
   setCallChatList,
+  setshareRoomId,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { downloadAndLaunchElectron } from "../utils/electronManager";
+import ScreenSourceSelector from "../component/ScreenSourceSelector";
+
 
 const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
 
@@ -471,6 +475,9 @@ export const SocketProvider = ({ children }) => {
   };
 
   // ===========================screen share=============================
+  const [showSourceSelector, setShowSourceSelector] = useState(false);
+const [pendingShare, setPendingShare] = useState(null);
+const [selectedSource, setSelectedSource] = useState(null);
 
   const startSharing = async (selectedChat) => {
     if (!selectedChat) {
@@ -478,15 +485,42 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
+    // const electronLaunched = await downloadAndLaunchElectron();
     const roomId = generateCallRoomId();
+    dispatch(setshareRoomId(roomId));
     setCallRoom(roomId);
 
     try {
       console.log("Requesting screen share...");
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
+      let stream;
 
+      // Check if running in Electron
+    if (window.electron && !selectedSource) {
+      setPendingShare(selectedChat);
+      setShowSourceSelector(true);
+      return;
+    }
+      // Check if running in Electron
+      if (window.electron) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: selectedSource.id,
+              minWidth: 1280,
+              maxWidth: 1920,
+              minHeight: 720,
+              maxHeight: 1080
+            }
+          }
+        });
+      } else {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+      }
       console.log("Got screen stream, creating peer...");
       streamRef.current = stream;
 
@@ -494,6 +528,9 @@ export const SocketProvider = ({ children }) => {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
+
+      dispatch(setIsReceiving(true));
+      dispatch(updateParticipant({ userId, stream }));
 
       // Check if it's a group chat
       const isGroup = selectedChat.isGroupChat || selectedChat.members;
@@ -575,6 +612,46 @@ export const SocketProvider = ({ children }) => {
       }
 
       dispatch(setIsSharing(true));
+      setIsHost(true);
+
+      // Add remote control event listeners if in Electron
+    if (window.electron) {
+      const videoElement = localVideoRef.current;
+      if (videoElement) {
+        videoElement.addEventListener('mousemove', async (e) => {
+          const rect = videoElement.getBoundingClientRect();
+          const x = Math.round((e.clientX - rect.left) * (videoElement.videoWidth / rect.width));
+          const y = Math.round((e.clientY - rect.top) * (videoElement.videoHeight / rect.height));
+          
+          await window.electron.remoteControl('mouse-move', { x, y });
+        });
+
+        videoElement.addEventListener('click', async () => {
+          await window.electron.remoteControl('mouse-click');
+        });
+
+        videoElement.addEventListener('contextmenu', async (e) => {
+          e.preventDefault();
+          await window.electron.remoteControl('mouse-right-click');
+        });
+
+        videoElement.addEventListener('dblclick', async () => {
+          await window.electron.remoteControl('mouse-double-click');
+        });
+
+        window.addEventListener('keydown', async (e) => {
+          await window.electron.remoteControl('key-press', { key: e.key });
+        });
+
+        window.addEventListener('keyup', async (e) => {
+          await window.electron.remoteControl('key-release', { key: e.key });
+        });
+
+        videoElement.addEventListener('wheel', async (e) => {
+          await window.electron.remoteControl('scroll', { amount: e.deltaY });
+        });
+      }
+    }
 
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
@@ -596,7 +673,7 @@ export const SocketProvider = ({ children }) => {
 
   const acceptScreenShare = () => {
     if (!incomingShare) return;
-
+    setIsHost(false);
     try {
       dispatch(setIsReceiving(true));
       setPeerEmail(incomingShare.fromEmail);
@@ -882,9 +959,10 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketRef.current.on("screen-share-request", async (data) => {
-      console.log("Incoming screen share from:", data.fromEmail);
+      console.log("Incoming screen share from:", data);
       dispatch(setIncomingShare(data));
       setCallRoom(data.roomId);
+      dispatch(setshareRoomId(data.roomId))
     });
 
     // Handle when share is accepted
@@ -908,10 +986,46 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
-    socketRef.current.on("control-event", ({ type, payload }) => {
-      console.log("Control received:", type, payload);
-      // TODO: Handle mouse move/click/keyboard
-    });
+   // In your control-event handler
+socketRef.current.on("control-event", async ({ type, payload }) => {
+  console.log("Control received:", type, payload,window.electron);
+  try {
+    if (window.electron) {
+      switch (type) {
+        case "mousemove":
+          console.log("Fbgfbffgfgfgfgfffgfgfgfg");
+          
+          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+          break;
+
+        case "click":
+          await window.electron.remoteControl.click();
+          break;
+
+        case "rightClick":
+          await window.electron.remoteControl.rightClick();
+          break;
+
+        case "doubleClick":
+          await window.electron.remoteControl.doubleClick();
+          break;
+
+        case "keydown":
+          await window.electron.remoteControl.pressKey(payload.key);
+          break;
+
+        case "scroll":
+          await window.electron.remoteControl.scroll(payload.amount);
+          break;
+
+        default:
+          console.log("Unknown control type:", type);
+      }
+    }
+  } catch (err) {
+    console.error("Control error:", err);
+  }
+});
 
     return () => {
       cleanupConnection();
@@ -1735,11 +1849,69 @@ export const SocketProvider = ({ children }) => {
 
 
   // ====================================Controle========================
+console.log(callRoom);
 
-  const sendControl = (type, payload) => {
-    console.log(type, payload, callRoom);
-    socketRef.current.emit("control-event", { roomId: callRoom, type, payload });
+  const sendControl = (type, payload,roomId) => {
+    console.log(type, payload,roomId);
+    socketRef.current.emit("control-event", { roomId, type, payload });
   };
+
+  const [isControlling, setIsControlling] = useState(false);
+const [isHost, setIsHost] = useState(false);
+
+// Add these functions to your context
+const requestControl = (hostId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('request-control', { hostId });
+};
+
+const grantControl = (viewerId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('grant-control', { viewerId });
+};
+
+const revokeControl = (viewerId) => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('revoke-control', { viewerId });
+};
+
+const registerAsHost = () => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('register-as-host');
+  setIsHost(true);
+};
+
+const unregisterAsHost = () => {
+  if (!socketRef.current?.connected) return;
+  socketRef.current.emit('unregister-as-host');
+  setIsHost(false);
+};
+
+// Add these socket listeners in your useEffect
+useEffect(() => {
+  if (!socketRef.current) return;
+
+  socketRef.current.on('control-permission', (granted) => {
+    setIsControlling(granted);
+  });
+
+  socketRef.current.on('control-request', ({ viewerId, viewerName }) => {
+    // Show control request dialog
+    if (window.confirm(`${viewerName} wants to control your screen. Allow?`)) {
+      grantControl(viewerId);
+    }
+  });
+
+  return () => {
+    if (socketRef.current) {
+      socketRef.current.off('control-permission');
+      socketRef.current.off('control-request');
+    }
+  };
+}, [socketRef.current]);
+
+
+// =============================================================
 
 
 
@@ -1759,60 +1931,68 @@ export const SocketProvider = ({ children }) => {
   const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
+  const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
 
-  // Use the memoized functions in useMemo
-  const value = useMemo(() => ({
-    socket: socketRef.current,
-    sendPrivateMessage: memoizedSendPrivateMessage,
-    cleanupConnection: memoizedCleanupConnection,
-    startSharing: memoizedStartSharing,
-    startCall: memoizedStartCall,
-    acceptCall: memoizedAcceptCall,
-    endCall: memoizedEndCall,
-    toggleCamera: memoizedToggleCamera,
-    toggleMicrophone: memoizedToggleMicrophone,
-    markMessageAsRead: memoizedMarkMessageAsRead,
-    rejectCall: memoizedRejectCall,
-    acceptScreenShare: memoizedAcceptScreenShare,
-    inviteToCall: memoizedInviteToCall,
-    forwardMessage: memoizedForwardMessage,
-    addMessageReaction: memoizedAddMessageReaction,
-    subscribeToMessages: memoizedSubscribeToMessages,
-    sendTypingStatus: memoizedSendTypingStatus,
-    sendControl
-  }), [
-    userId,
-    socketRef,
-    dispatch,
-    hasWebcam,
-    hasMicrophone,
-    incomingCall,
-    groupCall,
-    callParticipantsList,
-    callStartTime,
-    streamRef,
-    isCameraOn,
-    incomingShare,
-    callParticipants,
-    isVideoCalling,
-    memoizedSendPrivateMessage,
-    memoizedCleanupConnection,
-    memoizedStartSharing,
-    memoizedStartCall,
-    memoizedAcceptCall,
-    memoizedEndCall,
-    memoizedToggleCamera,
-    memoizedToggleMicrophone,
-    memoizedMarkMessageAsRead,
-    memoizedRejectCall,
-    memoizedAcceptScreenShare,
-    memoizedInviteToCall,
-    memoizedForwardMessage,
-    memoizedAddMessageReaction,
-    memoizedSubscribeToMessages,
-    memoizedSendTypingStatus,
-    sendControl
-  ]);
+// Use the memoized functions in useMemo
+const value = useMemo(() => ({
+  socket: socketRef.current,
+  sendPrivateMessage: memoizedSendPrivateMessage,
+  cleanupConnection: memoizedCleanupConnection,
+  startSharing: memoizedStartSharing,
+  startCall: memoizedStartCall,
+  acceptCall: memoizedAcceptCall,
+  endCall: memoizedEndCall,
+  toggleCamera: memoizedToggleCamera,
+  toggleMicrophone: memoizedToggleMicrophone,
+  markMessageAsRead: memoizedMarkMessageAsRead,
+  rejectCall: memoizedRejectCall,
+  acceptScreenShare: memoizedAcceptScreenShare,
+  inviteToCall: memoizedInviteToCall,
+  forwardMessage: memoizedForwardMessage,
+  addMessageReaction: memoizedAddMessageReaction,
+  subscribeToMessages: memoizedSubscribeToMessages,
+  sendTypingStatus: memoizedSendTypingStatus,
+  sendControl:memoizedsendControls,
+  requestControl,
+  grantControl,
+  revokeControl,
+  registerAsHost,
+  unregisterAsHost,
+  isControlling,
+  isHost
+}), [
+  userId,
+  socketRef,
+  dispatch,
+  hasWebcam,
+  hasMicrophone,
+  incomingCall,
+  groupCall,
+  callParticipantsList,
+  callStartTime,
+  streamRef,
+  isCameraOn,
+  incomingShare,
+  callParticipants,
+  isVideoCalling,
+  memoizedSendPrivateMessage,
+  memoizedCleanupConnection,
+  memoizedStartSharing,
+  memoizedStartCall,
+  memoizedAcceptCall,
+  memoizedEndCall,
+  memoizedToggleCamera,
+  memoizedToggleMicrophone,
+  memoizedMarkMessageAsRead,
+  memoizedRejectCall,
+  memoizedAcceptScreenShare,
+  memoizedInviteToCall,
+  memoizedForwardMessage,
+  memoizedAddMessageReaction,
+  memoizedSubscribeToMessages,
+  memoizedSendTypingStatus,
+  memoizedsendControls
+]);
 
   // const value = {
   //   socket: socketRef.current,
@@ -1859,9 +2039,27 @@ export const SocketProvider = ({ children }) => {
   //   subscribeToMessages,
   //   sendTypingStatus
   // };
-
+// Add this function to handle source selection
+const handleSourceSelected = async (source) => {
+  setShowSourceSelector(false);
+  if (pendingShare) {
+    await startSharing(pendingShare, source);
+    setPendingShare(null);
+  }
+};
   return (
-    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
+    <SocketContext.Provider value={value}>{children} 
+    {showSourceSelector && (
+      <ScreenSourceSelector
+        onSelect={handleSourceSelected}
+        onClose={() => {
+          setShowSourceSelector(false);
+          setPendingShare(null);
+        }}
+        setSelectedSource={setSelectedSource}
+        selectedSource={selectedSource}
+      />
+    )} </SocketContext.Provider>
   );
 };
 
@@ -1872,3 +2070,5 @@ export const useSocket = () => {
   }
   return context;
 };
+
+

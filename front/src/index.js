@@ -3,16 +3,24 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter as Router, HashRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./polyfills";
+
+console.log( window, process);
+
+const isElectron = typeof window === 'undefined' || typeof process !== 'undefined' && process.versions && process.versions.electron;
+const isWeb = typeof window !== 'undefined';
+
+
+const RouterToUse = isElectron ? HashRouter : Router;
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <GoogleOAuthProvider clientId="740597259200-767dkgoh1htbm0njb2r6nk9soai53c85.apps.googleusercontent.com">
-    <BrowserRouter>
+    <HashRouter>
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </GoogleOAuthProvider>
 );
 

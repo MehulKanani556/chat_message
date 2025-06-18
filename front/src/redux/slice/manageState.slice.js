@@ -53,6 +53,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     showForwardModal: false,
     forwardingMessage: null,
     userIncall: null,
+    shareRoomId:null,
   };
 
   const manageStateSlice = createSlice({
@@ -224,8 +225,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setUserIncall: (state, action) => {
       state.userIncall = action.payload;
     },
+    setshareRoomId: (state, action) => {
+      state.shareRoomId = action.payload;
     },
-  });
+  }
+  })
   
   export const {
     setSelectedChat,
@@ -277,6 +281,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setChatMessages,
     setShowForwardModal,
     setForwardingMessage,
-    setUserIncall
+    setUserIncall,
+    setshareRoomId
   } = manageStateSlice.actions;
   export default manageStateSlice.reducer;
