@@ -22,6 +22,7 @@ import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
 import ElectronStatus from './ElectronStatus';
 
+
 const getParticipantWidth = (count) => {
   if (count === 1) return "w-full";
   if (count === 2) return "w-full";
@@ -55,6 +56,7 @@ const VideoCallLayout = memo(() => {
     (state) => state.magageState.participantOpen
   );
   const callChatList = useSelector((state) => state.magageState.callChatList);
+  const roomId = useSelector((state) => state.magageState.shareRoomId);
 
   const { allUsers, messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
@@ -211,13 +213,13 @@ const VideoCallLayout = memo(() => {
   const startRecording = async () => {
     try {
       // Get all video elements
-      // let videoElements = [];
-      // if(!isReceiving){
-      //   videoElements = Object.values(videoElementsRef.current);
-      // }else{
-      //   videoElements = [screenStreamRef.current];
-      // }
-      let videoElements  = Object.values(videoElementsRef.current)
+      let videoElements = [];
+      if(!isReceiving){
+        videoElements = Object.values(videoElementsRef.current);
+      }else{
+        videoElements = [screenStreamRef.current];
+      }
+      // let videoElements  = Object.values(videoElementsRef.current)
       console.log(videoElements);
 
 
@@ -236,17 +238,17 @@ const VideoCallLayout = memo(() => {
       const audioContext = new AudioContext();
       const destination = audioContext.createMediaStreamDestination();
 
-      audioStreams.forEach((stream) => {
-        if (stream && stream.getAudioTracks().length > 0) {
-          const source = audioContext.createMediaStreamSource(stream);
-          source.connect(destination);
-        }
-      });
+      // audioStreams.forEach((stream) => {
+      //   if (stream && stream.getAudioTracks().length > 0) {
+      //     const source = audioContext.createMediaStreamSource(stream);
+      //     source.connect(destination);
+      //   }
+      // });
 
       // Add mixed audio tracks to the canvas stream
-      destination.stream.getAudioTracks().forEach((track) => {
-        canvasStream.addTrack(track);
-      });
+      // destination.stream.getAudioTracks().forEach((track) => {
+      //   canvasStream.addTrack(track);
+      // });
 
       // Start drawing loop
       const drawVideo = () => {
@@ -464,41 +466,41 @@ const VideoCallLayout = memo(() => {
 
 const controlref = useRef(null);
 
-  // useEffect(() => {
-  //   const handleMouseMove = e => {
-  //     console.log(e);
-        // const rect = e.target.getBoundingClientRect();
-        // const x = e.clientX - rect.left;
-        // const y = e.clientY - rect.top;
+  useEffect(() => {
+    const handleMouseMove = e => {
+      // console.log(e);
+        const rect = e.target.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
       
-  //     sendControl("mousemove", { x, y })
-  //   };
-  //   const handleClick = e => {
-  //     console.log(e);
-  //     sendControl("click", { x: e.clientX, y: e.clientY })
-  //   };
-  //   const handleKeyDown = e => {
-  //     console.log(e.key);
-  //     sendControl("keydown", { key: e.key })
-  //   };
+      sendControl("mousemove", { x, y },roomId)
+    };
+    const handleClick = e => {
+      // console.log(e);
+      sendControl("click", { x: e.clientX, y: e.clientY },roomId)
+    };
+    const handleKeyDown = e => {
+      // console.log(e.key);
+      sendControl("keydown", { key: e.key },roomId)
+    };
 
-  //   const video = controlref.current;
-  //   console.log(video);
+    const video = controlref.current;
+    // console.log(video);
     
-  //   if (video && isReceiving) {
-  //     video.addEventListener("mousemove", handleMouseMove);
-  //     video.addEventListener("click", handleClick);
-  //     window.addEventListener("keydown", handleKeyDown);
-  //   }
+    if (video && isReceiving) {
+      video.addEventListener("mousemove", handleMouseMove);
+      video.addEventListener("click", handleClick);
+      window.addEventListener("keydown", handleKeyDown);
+    }
 
-  //   return () => {
-  //     if (video) {
-  //       video.removeEventListener("mousemove", handleMouseMove);
-  //       video.removeEventListener("click", handleClick);
-  //     }
-  //     window.removeEventListener("keydown", handleKeyDown);
-  //   };
-  // }, [isReceiving,participants]);
+    return () => {
+      if (video) {
+        video.removeEventListener("mousemove", handleMouseMove);
+        video.removeEventListener("click", handleClick);
+      }
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isReceiving,participants]);
 
 
 
@@ -578,6 +580,7 @@ const controlref = useRef(null);
                 console.log(el, "-------------------");
                 if (el) {
                   videoElementsRef.current[participantId] = el;
+                  controlref.current = el;
                 } else {
                   // Clean up ref when element is unmounted
                   delete videoElementsRef.current[participantId];
@@ -623,7 +626,7 @@ const controlref = useRef(null);
                             autoPlay
                             playsInline
                             className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
-                            muted={participantId === currentUser}
+                            // muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
                               if (el && stream instanceof MediaStream) {
@@ -631,12 +634,11 @@ const controlref = useRef(null);
                                 el.play().catch((err) =>
                                   console.error("Remote video error:", err)
                                 );
-
+                                // Add screenStreamRef when video is loaded
+                                el.addEventListener('loadeddata', () => {
+                                  screenStreamRef.current = el;
+                                });
                               }
-                              // If you want to keep localVideoRef for the current user:
-                              // if (participantId === currentUser && localVideoRef) {
-                              //   localVideoRef.current = el;
-                              // }
                             }}
                           />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
@@ -918,9 +920,8 @@ const controlref = useRef(null);
                 Request Control
               </button>
             </>
-          )
-          }
-        </div >
+          )}
+        </div>
       )}
     </div >
   );

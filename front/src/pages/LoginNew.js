@@ -105,7 +105,7 @@ const LoginNew = () => {
         {/* Left side - Phone Login */}
         <div className="p-4 md:p-8 rounded-sm">
           <div className="mb-8 ">
-            <img src="/logo.png" alt="Logo" className="h-8 mx-auto md:mx-0" />
+            <img src={require('../img/chat.png')} alt="Logo" className="h-8 mx-auto md:mx-0" />
           </div>
           <h2 className="text-2xl text-white font-semibold mb-2">
             Welcome Back to Chat App!
