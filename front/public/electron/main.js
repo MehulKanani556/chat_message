@@ -1,25 +1,23 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer } = require("electron");
+const { app, BrowserWindow, ipcMain ,desktopCapturer} = require("electron");
 const path = require("path");
 const isDev = require('electron-is-dev');
 const {
-  mouse,
-  keyboard,
   screen,
   getActiveWindow,
 } = require("@nut-tree-fork/nut-js");
 const { handleControlEvent } = require("./remoteControl");
-const { dialog } = require('electron');
 
-// Configure nut.js
-mouse.config.autoDelayMs = 100;
-keyboard.config.autoDelayMs = 100;
+
+app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('allow-http-screen-capture');
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,  
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
     },
@@ -31,7 +29,8 @@ function createWindow() {
       : `file://${path.join(__dirname, '..', 'index.html')}`
   );
 
-  // Open the DevTools in development.
+
+  // Open the DevTools in development.123
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
@@ -39,41 +38,30 @@ function createWindow() {
   // Handle screen sharing
   ipcMain.handle("get-sources", async () => {
     const sources = await desktopCapturer.getSources({
-      types: ["window", "screen"],
+      types: ['screen', 'window'],
       thumbnailSize: { width: 150, height: 150 },
     });
-    return sources;
+   const data = sources.map(source => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL(), // Convert here!
+    }));
+
+    // console.log(data);
+    return data
   });
 
   // Handle remote control events
   ipcMain.handle('remote-control', async (event, data) => {
-    // Force log to both console and a file for debugging
-    console.log("5. Main: Received remote control event:", data);
-    // dialog.showMessageBox({
-    //   type: 'info',
-    //   message: `5. Main: Received remote control event: ${JSON.stringify(data)}`
-    // });
-    
     try {
       await handleControlEvent(data);
-      console.log("5.1. Main: Control event executed successfully");
-      // dialog.showMessageBox({
-      //   type: 'info',
-      //   message: "5.1. Main: Control event executed successfully"
-      // });
     } catch (error) {
-      console.error("5.2. Main: Error executing control event:", error);
-      // dialog.showMessageBox({
-      //   type: 'error',
-      //   message: `5.2. Main: Error executing control event: ${error.message}`
-      // });
       throw error;
     }
   });
 
   // Get screen dimensions
   ipcMain.handle("get-screen-dimensions", async () => {
-   
     const dimensions = (await screen.width()) + "x" + (await screen.height());
     return dimensions;
   });
