@@ -932,7 +932,7 @@ const VideoCallLayout = memo(() => {
           >
             <AiOutlineVideoCamera className="text-xl" />
           </button>
-          {console.log("aaaaaaaaaaacurrentUser",currentUser,selectedChat)}
+          {/* {console.log("aaaaaaaaaaacurrentUser",currentUser,selectedChat)} */}
           {/* {!isReceiving && isHost ? (
             <>
               <button 
