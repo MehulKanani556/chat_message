@@ -1954,6 +1954,7 @@ console.log(callRoom);
   }, [socketRef.current, grantControl]);
 
   const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
+  const memoizedsendGroupMessage = useCallback(sendGroupMessage, [userId, socketRef]);
   const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
   const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
   const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
@@ -1970,7 +1971,7 @@ console.log(callRoom);
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
   const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
-
+ 
 // Use the memoized functions in useMemo
 const value = useMemo(() => ({
   socket: socketRef.current,
@@ -1996,11 +1997,9 @@ const value = useMemo(() => ({
   revokeControl,
   registerAsHost,
   unregisterAsHost,
-  isHost,
-  isReceiving,
   isControlling,
   isHost,
-  viewerControlling
+  sendGroupMessage:memoizedsendGroupMessage
 }), [
   userId,
   socketRef,
@@ -2016,10 +2015,6 @@ const value = useMemo(() => ({
   incomingShare,
   callParticipants,
   isVideoCalling,
-  isControlling,
-  isHost,
-  isReceiving,
-  viewerControlling,
   memoizedSendPrivateMessage,
   memoizedCleanupConnection,
   memoizedStartSharing,
@@ -2036,8 +2031,10 @@ const value = useMemo(() => ({
   memoizedAddMessageReaction,
   memoizedSubscribeToMessages,
   memoizedSendTypingStatus,
-  memoizedsendControls
+  memoizedsendControls,
+  memoizedsendGroupMessage
 ]);
+ 
 
   // const value = {
   //   socket: socketRef.current,

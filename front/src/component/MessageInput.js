@@ -148,6 +148,7 @@ const MessageInput = memo(
                       "Content-Type": "multipart/form-data",
                       Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                     },
+                    
                   }
                 );
 
@@ -362,11 +363,11 @@ const MessageInput = memo(
         dispatch(setMessageInput(""));
       }
     };
-
+    // console.log("messageInput", messageInput);
 
     const handleSubmit = (e) => {
-      e.preventDefault();
       console.log("messageInput", messageInput);
+      e.preventDefault();
       const data = {
         type: messageInput instanceof FileList ? "file" : "text",
         content: messageInput,
@@ -378,6 +379,7 @@ const MessageInput = memo(
       }
 
       if (selectedChat && selectedChat?.members?.length > 0) {
+        // console.log("data",data);
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);
