@@ -2024,8 +2024,8 @@ const ReplyPreview = memo(({
             </span>
           </>
         ) : (
-          <span>
-            {highlightText(message?.replyTo?.content?.content, searchInputbox)}
+          <span className="text-gray-600">
+            {highlightText(decryptMessage(message?.replyTo?.content?.content), searchInputbox)}
           </span>
         )}
       </p>
@@ -2096,8 +2096,8 @@ const ReplyPreview = memo(({
         </div>
         {getReplyContent()}
       </div>
-      <p className="p-2">
-        {highlightText(message.content.content, searchInputbox)}
+      <p className="p-2 ">
+        {highlightText(decryptMessage(message.content.content), searchInputbox)}
       </p>
       {/* </div> */}
     </div>

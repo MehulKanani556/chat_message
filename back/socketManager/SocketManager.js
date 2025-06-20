@@ -723,14 +723,16 @@ async function handleDeleteGroup(socket, groupId) {
 
 async function handleGroupMessage(socket, data) {
   const { groupId, senderId, content } = data;
-  // console.log("Handling group message:", data, socket.id);
+  console.log("Handling group message:", data, socket.id);
 
   try {
-    // Save message to database (you may need to adjust this part)
+    // Save message to database (content should not include replyTo, only other data)
+    const { replyTo, ...contentWithoutReplyTo } = content || {};
     await saveMessage({
       senderId,
       receiverId: groupId,
-      content,
+      content: contentWithoutReplyTo,
+      replyTo: replyTo,
     });
 
     async function getGroupMembers(groupId) {
@@ -1127,7 +1129,10 @@ function initializeSocket(io) {
     socket.on("delete-group", (groupId) => handleDeleteGroup(socket, groupId));
 
     // Handle group messages
-    socket.on("group-message", (data) => handleGroupMessage(socket, data));
+    socket.on("group-message", (data) => {
+      console.log("group-message", data);
+      handleGroupMessage(socket, data);
+    });
 
     // Add new handler for getting group members
     socket.on("get-group-members", (groupId) =>

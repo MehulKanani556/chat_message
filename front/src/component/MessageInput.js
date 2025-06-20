@@ -366,7 +366,7 @@ const MessageInput = memo(
     // console.log("messageInput", messageInput);
 
     const handleSubmit = (e) => {
-      console.log("messageInput", messageInput);
+      // console.log("messageInput", messageInput);
       e.preventDefault();
       const data = {
         type: messageInput instanceof FileList ? "file" : "text",
@@ -376,11 +376,14 @@ const MessageInput = memo(
       if (replyingTo) {
         data.replyTo = replyingTo;
       }
-
+      
       if (editingMessage) {
         // If editing, always call handleSendMessage with selectedChat?._id
         handleSendMessage(data, selectedChat?._id);
+        alert("editingMessage");
       } else if (selectedChat && selectedChat?.members?.length > 0) {
+        alert("replyingTo");
+        console.log("dt",data);
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);
@@ -395,6 +398,7 @@ const MessageInput = memo(
     const handleSendGroupMessage = useCallback(async (data) => {
       if (data.content.trim() === "") return;
 
+      console.log("data",data,selectedChat._id);
       try {
         await sendGroupMessage(selectedChat._id, data);
         dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed

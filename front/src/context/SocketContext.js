@@ -1584,6 +1584,7 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
         reject(new Error("Socket not connected"));
         return;
       }
+      console.log("groupId",groupId,message);
 
       const messageData = {
         senderId: userId,
