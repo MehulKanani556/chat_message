@@ -14,7 +14,8 @@ const {
   pinChat,
   muteUsers,
   mute,
-  getDevices, removeDevice 
+  getDevices, removeDevice, 
+  addContactList
 } = require("../controller/userController");
 const {
   userLogin,
@@ -73,6 +74,7 @@ indexRoutes.post("/pinChat", auth, pinChat);
 indexRoutes.post("/muteChat", auth, muteUsers);
 indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
 indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
+indexRoutes.post("/addContactList", auth, addContactList);
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);

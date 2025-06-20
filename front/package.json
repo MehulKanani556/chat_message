@@ -19,6 +19,7 @@
     "axios": "^1.7.9",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
+    "electron-is-dev": "^2.0.0",
     "emoji-picker-react": "^4.12.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.7.2",
@@ -33,6 +34,7 @@
     "react-country-region-selector": "^4.0.2",
     "react-dom": "^19.0.0",
     "react-draggable": "^4.4.6",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.4.0",
     "react-phone-input-2": "^2.15.1",
     "react-qr-barcode-scanner": "^2.1.4",
@@ -47,8 +49,7 @@
     "wavesurfer.js": "^7.9.1",
     "web-vitals": "^4.2.4",
     "xlsx": "^0.18.5",
-    "yup": "^1.6.1",
-    "electron-is-dev": "^2.0.0"
+    "yup": "^1.6.1"
   },
   "scripts": {
     "start": "concurrently \"npm run react-start\" \"npm run electron-start\"",

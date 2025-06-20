@@ -346,7 +346,7 @@ export const createGroup = createAsyncThunk(
       console.log("response", response.data);
       // Emit socket event for group creation
       if (socket) {
-        console.log("socket", socket);
+        // console.log("socket", socket);
         socket.emit("create-group", response.data.group);
       }
       return response.data;

@@ -30,6 +30,10 @@ const userSchema = mongoose.Schema(
     bio: {
       type: String,
     },
+    contactList:{
+      type:Array,
+      default:[]
+    },
     archiveUsers: {
       type: Array,
       default: [],

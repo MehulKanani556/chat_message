@@ -83,7 +83,7 @@ function getSocketByUserId(userId) {
   // console.log("userId", userId, onlineUsers);
   const socketId = onlineUsers.get(userId);
   if (socketId && global.io && global.io.sockets) {
-    return global.io.sockets.get(socketId);
+    return global.io.sockets.sockets.get(socketId) || global.io.sockets.get(socketId);
   }
   return null;
 }
@@ -927,55 +927,66 @@ function handleCameraStatusChange(socket, data) {
 
 // ===========================host control=============================
 
-function handleControlEvent(socket, data) {
-  const { roomId, type, payload } = data;
-  console.log(roomId, type, payload,'control-event');
-  
-  // const hostSocket = getHostSocketByRoomId(roomId);
-  socket.to(roomId).emit('control-event', { type, payload }); 
-}
-
 function handleRegisterAsHost(socket) {
-  const userId = socket.userId;
-  socket.join(`host-${userId}`);
-  socket.emit('host-registered');
+  console.log(`User ${socket.userId} registered as host`);
+  socket.isHost = true;
 }
 
 function handleUnregisterAsHost(socket) {
-  const userId = socket.userId;
-  socket.leave(`host-${userId}`);
-  socket.emit('host-unregistered');
+  console.log(`User ${socket.userId} unregistered as host`);
+  socket.isHost = false;
+  // Notify any viewers that control has been revoked
+  socket.broadcast.emit('control-revoked');
 }
 
 function handleRequestControl(socket, data) {
   const { hostId } = data;
-  const hostSocket = getSocketByUserId(hostId);
+  console.log(`User ${socket.userId} requesting control from host ${hostId}`);
   
+  const hostSocket = getSocketByUserId(hostId);
   if (hostSocket) {
+    console.log("Sending control request to host:", hostId);
     hostSocket.emit('control-request', {
-      viewerId: socket.userId,
-      viewerName: socket.userName
+      viewerId: socket.userId
     });
+  } else {
+    console.log("Host not found:", hostId);
+    socket.emit('control-permission', false);
   }
 }
 
 function handleGrantControl(socket, data) {
   const { viewerId } = data;
-  const viewerSocket = getSocketByUserId(viewerId);
+  console.log(`Host ${socket.userId} granting control to viewer ${viewerId}`);
   
+  const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
     viewerSocket.emit('control-permission', true);
+    // Notify host that control is granted
+    socket.emit('control-granted', { viewerId });
   }
 }
 
 function handleRevokeControl(socket, data) {
   const { viewerId } = data;
-  const viewerSocket = getSocketByUserId(viewerId);
+  console.log(`Host ${socket.userId} revoking control from viewer ${viewerId}`);
   
+  const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
     viewerSocket.emit('control-permission', false);
+     // Notify host that control is revoked
+     socket.emit('control-revoked-for-host', { viewerId });
   }
 }
+
+function handleControlEvent(socket, data) {
+  const { roomId, type, payload } = data;
+  console.log(`Control event from ${socket.userId}:`, type, payload);
+  
+  // Broadcast the control event to all sockets in the room
+  socket.to(roomId).emit('control-event', { type, payload });
+}
+
 // =================================================================================
 
 function initializeSocket(io) {
@@ -986,7 +997,7 @@ function initializeSocket(io) {
     socket.on("join-device-room", (deviceId) => {
       console.log(`Socket ${socket.id} joining device room:`, deviceId);
       socket.join(deviceId);
-      console.log('Device room set:', deviceId, socket);
+      // console.log('Device room set:', deviceId, socket);
       deviceRooms.set(deviceId, socket.id);
     });
 
@@ -1219,12 +1230,12 @@ function initializeSocket(io) {
     socket.on("user-in-call", (data) => handleUserIncall(socket, data));
     // ===========================================================================================================
 
-    socket.on('control-event', (data) => handleControlEvent(socket, data));
     socket.on('register-as-host', () => handleRegisterAsHost(socket));
     socket.on('unregister-as-host', () => handleUnregisterAsHost(socket));
     socket.on('request-control', (data) => handleRequestControl(socket, data));
     socket.on('grant-control', (data) => handleGrantControl(socket, data));
     socket.on('revoke-control', (data) => handleRevokeControl(socket, data));
+    socket.on('control-event', (data) => handleControlEvent(socket, data));
   })
 }
 

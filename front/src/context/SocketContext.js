@@ -124,8 +124,7 @@ export const SocketProvider = ({ children }) => {
     incomingCall,
     isCameraOn,
     isSharing,
-    isVideoCalling,
-    isReceiving,
+    isVideoCalling, 
     isVoiceCalling,
     incomingShare,
     callParticipants,
@@ -134,9 +133,19 @@ export const SocketProvider = ({ children }) => {
     cameraStatus,
     typingUsers,
     selectedChat,
+    isReceiving
   } = useSelector((state) => state.magageState);
 
   const { messages } = useSelector((state) => state.user);
+
+  const [isHost, setIsHost] = useState(false);
+  const [isControlling, setIsControlling] = useState(false);
+  const [viewerControlling, setViewerControlling] = useState(null);
+
+  // Add state change logging
+  useEffect(() => {
+    console.log("Socket state changed:", { isHost, isControlling, isReceiving });
+  }, [isHost, isControlling, isReceiving]);
 
   // Helper functions
   const generateCallRoomId = () => {
@@ -953,9 +962,9 @@ const [selectedSource, setSelectedSource] = useState(null);
       setCallDuration(null);
       setCallStartTime(null);
       setPeerEmail(null);
-      dispatch(setRemoteStreams(new Map()));
       dispatch(setParticipants([]));
-      cleanupConnection()
+      dispatch(setRemoteStreams(new Map()));
+      dispatch(setSelectedChatModule(true));
     });
 
     socketRef.current.on("screen-share-request", async (data) => {
@@ -1856,64 +1865,93 @@ console.log(callRoom);
     socketRef.current.emit("control-event", { roomId, type, payload });
   };
 
-  const [isControlling, setIsControlling] = useState(false);
-const [isHost, setIsHost] = useState(false);
+  const registerAsHost = useCallback(() => {
+    if (!socketRef.current?.connected) return;
+    console.log("Registering as host");
+    socketRef.current.emit('register-as-host');
+    setIsHost(true);
+    setIsControlling(false);
+  }, [socketRef]);
 
-// Add these functions to your context
-const requestControl = (hostId) => {
-  if (!socketRef.current?.connected) return;
-  socketRef.current.emit('request-control', { hostId });
-};
+  const unregisterAsHost = useCallback(() => {
+    if (!socketRef.current?.connected) return;
+    console.log("Unregistering as host");
+    socketRef.current.emit('unregister-as-host');
+    setIsHost(false);
+    setIsControlling(false);
+  }, [socketRef]);
 
-const grantControl = (viewerId) => {
-  if (!socketRef.current?.connected) return;
-  socketRef.current.emit('grant-control', { viewerId });
-};
+  const requestControl = useCallback((hostId) => {
+    if (!socketRef.current?.connected) return;
+    console.log("Requesting control from host:", hostId);
+    socketRef.current.emit('request-control', { hostId });
+  }, [socketRef]);
 
-const revokeControl = (viewerId) => {
-  if (!socketRef.current?.connected) return;
-  socketRef.current.emit('revoke-control', { viewerId });
-};
+  const grantControl = useCallback((viewerId) => {
+    if (!socketRef.current?.connected) return;
+    console.log("Granting control to viewer:", viewerId);
+    socketRef.current.emit('grant-control', { viewerId });
+  }, [socketRef]);
 
-const registerAsHost = () => {
-  if (!socketRef.current?.connected) return;
-  socketRef.current.emit('register-as-host');
-  setIsHost(true);
-};
+  const revokeControl = useCallback((viewerId) => {
+    if (!socketRef.current?.connected) return;
+    console.log("Revoking control from viewer:", viewerId);
+    socketRef.current.emit('revoke-control', { viewerId });
+  }, [socketRef]);
 
-const unregisterAsHost = () => {
-  if (!socketRef.current?.connected) return;
-  socketRef.current.emit('unregister-as-host');
-  setIsHost(false);
-};
+  // Update socket event listeners
+  useEffect(() => {
+    if (!socketRef.current) return;
 
-// Add these socket listeners in your useEffect
-useEffect(() => {
-  if (!socketRef.current) return;
+    const handleControlPermission = (granted) => {
+      console.log("Control permission received:", granted);
+      setIsControlling(granted);
+      if (granted) {
+        alert("You have been granted control");
+      } else {
+        alert("Control has been revoked");
+      }
+    };
 
-  socketRef.current.on('control-permission', (granted) => {
-    setIsControlling(granted);
-  });
+    const handleControlRequest = ({ viewerId }) => {
+      console.log("Control request received from:", viewerId);
+      if (window.confirm(`${viewerId} wants to control your screen. Allow?`)) {
+        grantControl(viewerId);
+      }
+    };
 
-  socketRef.current.on('control-request', ({ viewerId, viewerName }) => {
-    // Show control request dialog
-    if (window.confirm(`${viewerName} wants to control your screen. Allow?`)) {
-      grantControl(viewerId);
-    }
-  });
+    const handleControlRevoked = () => {
+      console.log("Control has been revoked");
+      setIsControlling(false);
+      alert("Control has been revoked by the host");
+    };
 
-  return () => {
-    if (socketRef.current) {
-      socketRef.current.off('control-permission');
-      socketRef.current.off('control-request');
-    }
-  };
-}, [socketRef.current]);
+    const handleControlGranted = ({ viewerId }) => {
+      console.log("Control granted to:", viewerId);
+      setViewerControlling(viewerId);
+    };
 
+    const handleControlRevokedForHost = ({ viewerId }) => {
+      console.log("Control revoked from:", viewerId);
+      setViewerControlling(null);
+    };
 
-// =============================================================
+    socketRef.current.on('control-permission', handleControlPermission);
+    socketRef.current.on('control-request', handleControlRequest);
+    socketRef.current.on('control-revoked', handleControlRevoked);
+    socketRef.current.on('control-granted', handleControlGranted);
+    socketRef.current.on('control-revoked-for-host', handleControlRevokedForHost);
 
-
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('control-permission', handleControlPermission);
+        socketRef.current.off('control-request', handleControlRequest);
+        socketRef.current.off('control-revoked', handleControlRevoked);
+        socketRef.current.off('control-granted', handleControlGranted);
+        socketRef.current.off('control-revoked-for-host', handleControlRevokedForHost);
+      }
+    };
+  }, [socketRef.current, grantControl]);
 
   const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
   const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
@@ -1958,8 +1996,11 @@ const value = useMemo(() => ({
   revokeControl,
   registerAsHost,
   unregisterAsHost,
+  isHost,
+  isReceiving,
   isControlling,
-  isHost
+  isHost,
+  viewerControlling
 }), [
   userId,
   socketRef,
@@ -1975,6 +2016,10 @@ const value = useMemo(() => ({
   incomingShare,
   callParticipants,
   isVideoCalling,
+  isControlling,
+  isHost,
+  isReceiving,
+  viewerControlling,
   memoizedSendPrivateMessage,
   memoizedCleanupConnection,
   memoizedStartSharing,

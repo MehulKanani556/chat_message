@@ -71,7 +71,21 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone,sendControl,requestControl,grantControl,revokeControl,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
+  const { 
+    endCall, 
+    cleanupConnection, 
+    toggleCamera, 
+    toggleMicrophone,
+    sendControl,
+    requestControl,
+    grantControl,
+    revokeControl,
+    registerAsHost,
+    unregisterAsHost,
+    isControlling,
+    isHost,
+    viewerControlling
+  } = useSocket();
 
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
@@ -465,7 +479,8 @@ const VideoCallLayout = memo(() => {
   };
 
   let hostId = useMemo(() => {
-    return participants.find(([id, stream]) => stream instanceof MediaStream)?.[0];
+    const participantEntry = Array.from(participants).find(([id, stream]) => stream instanceof MediaStream);
+    return participantEntry ? participantEntry[0] : null;
   }, [participants]);
 
 
@@ -475,26 +490,23 @@ const VideoCallLayout = memo(() => {
 
   useEffect(() => {
     const handleMouseMove = e => {
-      // console.log(e);
-        const rect = e.target.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-      
-      sendControl("mousemove", { x, y },roomId)
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+    
+      sendControl("mousemove", { x, y }, roomId)
     };
     const handleClick = e => {
-      // console.log(e);
-      sendControl("click", { x: e.clientX, y: e.clientY },roomId)
+      sendControl("click", { x: e.clientX, y: e.clientY }, roomId)
     };
     const handleKeyDown = e => {
-      // console.log(e.key);
-      sendControl("keydown", { key: e.key },roomId)
+      sendControl("keydown", { key: e.key }, roomId)
     };
 
     const video = controlref.current;
-    // console.log(video);
     
-    if (video && isReceiving) {
+    // Add event listeners when user is the host and control is granted
+    if (video && isHost && isControlling) {
       video.addEventListener("mousemove", handleMouseMove);
       video.addEventListener("click", handleClick);
       window.addEventListener("keydown", handleKeyDown);
@@ -507,9 +519,22 @@ const VideoCallLayout = memo(() => {
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isReceiving, participants]);
+  }, [isHost, isControlling, participants, roomId]);
 
-
+  // Add effect to handle control state changes
+  useEffect(() => {
+    console.log("Control state changed:", { isHost, isControlling });
+    // Force re-render when control state changes
+    if (isControlling) {
+      // Re-initialize video elements or other necessary updates
+      const videoElements = Object.values(videoElementsRef.current);
+      videoElements.forEach(video => {
+        if (video && video.srcObject) {
+          video.play().catch(err => console.error("Error playing video:", err));
+        }
+      });
+    }
+  }, [isHost, isControlling]);
 
   const content = (
     <div
@@ -907,25 +932,107 @@ const VideoCallLayout = memo(() => {
           >
             <AiOutlineVideoCamera className="text-xl" />
           </button>
-          {isReceiving &&
-            isHost ? (
+          {console.log("aaaaaaaaaaacurrentUser",currentUser,selectedChat)}
+          {/* {!isReceiving && isHost ? (
             <>
-              <button onClick={() => unregisterAsHost()}>
+              <button 
+                onClick={() => unregisterAsHost()}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              >
                 Stop Hosting
               </button>
+              {selectedChat?._id && isHost && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (isControlling) {
+                        revokeControl(selectedChat?._id);
+                      } else {
+                        requestControl(selectedChat?._id);
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-md transition-colors ${
+                      isControlling 
+                        ? 'bg-red-500 text-white hover:bg-red-600' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    {isControlling ? 'Revoke Control' : 'Request Control'}
+                  </button>
+                  {isControlling && (
+                    <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
+                      <span className="text-white text-sm">Control Active</span>
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <>
-              <button onClick={() => registerAsHost()}>
+              <button 
+                onClick={() => registerAsHost()}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+              >
                 Start Hosting
               </button>
-              <button
-                onClick={() => requestControl(hostId)}
-                disabled={!isHost}
-              >
-                Request Control
-              </button>
+              {selectedChat?._id && isHost && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => requestControl(selectedChat?._id)}
+                    className={`px-4 py-2 rounded-md transition-colors ${
+                      isControlling 
+                        ? 'bg-green-500 text-white hover:bg-green-600' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                  >
+                    {isControlling ? 'Control Granted' : 'Request Control'}
+                  </button>
+                  {isControlling && (
+                    <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
+                      <span className="text-white text-sm">Control Active</span>
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
+          )} */}
+          {isHost ? (
+            // HOST's view
+            viewerControlling ? (
+                <button 
+                    onClick={() => revokeControl(viewerControlling)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                >
+                    Revoke Control
+                </button>
+            ) : (
+                <button 
+                    onClick={() => grantControl(selectedChat?._id)}
+                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                >
+                    Grant Control
+                </button>
+            )
+          ) : (
+              // VIEWER's view
+              isReceiving && (
+                  isControlling ? (
+                      <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
+                          <span className="text-white text-sm">You have control</span>
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      </div>
+                  ) : (
+                      <button
+                          onClick={() => requestControl(hostId)}
+                          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                          disabled={!hostId}
+                      >
+                          Request Control
+                      </button>
+                  )
+              )
           )}
         </div>
       )}
@@ -934,6 +1041,9 @@ const VideoCallLayout = memo(() => {
 
   return content;
 });
+
+// Add display name for better debugging
+VideoCallLayout.displayName = 'VideoCallLayout';
 
 export default VideoCallLayout;
 
