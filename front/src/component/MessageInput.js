@@ -56,7 +56,7 @@ const MessageInput = memo(
     const inputRef = useRef(null);
 
 
-    console.log(messageInput, "messageInput");
+    // console.log(messageInput, "messageInput");
 
 
     useEffect(() => {
@@ -371,21 +371,23 @@ const MessageInput = memo(
       const data = {
         type: messageInput instanceof FileList ? "file" : "text",
         content: messageInput,
-
       };
 
       if (replyingTo) {
-        data.replyTo = replyingTo
+        data.replyTo = replyingTo;
       }
 
-      if (selectedChat && selectedChat?.members?.length > 0) {
-        // console.log("data",data);
+      if (editingMessage) {
+        // If editing, always call handleSendMessage with selectedChat?._id
+        handleSendMessage(data, selectedChat?._id);
+      } else if (selectedChat && selectedChat?.members?.length > 0) {
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);
       } else if (data.type === "text") {
-        handleSendMessage(data);
+        handleSendMessage(data, selectedChat?._id);
       }
+      
       dispatch(setMessageInput(""));
     };
 
@@ -512,9 +514,7 @@ const MessageInput = memo(
                       }`}
                   />
                 </button>
-
               </div>
-
               <div className="flex-1">
                 <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
                   <div className="flex items-center justify-start h-full w-full relative">
@@ -863,6 +863,7 @@ const MessageInput = memo(
                 if (isRecording) {
                   handleVoiceMessage();
                 }
+               
               }}
             >
               <svg

@@ -323,9 +323,9 @@ const Chat2 = () => {
   //===========handle send message ===========
 
   const handleSendMessage = async (data, userId) => {
-    // console.log("data",data,userId,editingMessage);
-
+    
     if (editingMessage) {
+      console.log("data",data,userId,editingMessage);
       try {
         await dispatch(
           updateMessage({
