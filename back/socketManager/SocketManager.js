@@ -17,16 +17,16 @@ const activeSessions = {};
 const activeCalls = {};
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production";
-const {
-  mouse,
-  keyboard,
-  Button,
-  Key,
-  Point,
-  straightTo,
-} = require("@nut-tree-fork/nut-js");
+// const {
+//   mouse,
+//   keyboard,
+//   Button,
+//   Key,
+//   Point,
+//   straightTo,
+// } = require("@nut-tree-fork/nut-js");
 
-mouse.config.mouseSpeed = 1500;
+// mouse.config.mouseSpeed = 1500;
 
 async function handleUserLogin(socket, userId) {
   // Remove any existing socket connection for this user
@@ -83,7 +83,7 @@ function getSocketByUserId(userId) {
   // console.log("userId", userId, onlineUsers);
   const socketId = onlineUsers.get(userId);
   if (socketId && global.io && global.io.sockets) {
-    return global.io.sockets.get(socketId);
+    return global.io.sockets.sockets.get(socketId) || global.io.sockets.get(socketId);
   }
   return null;
 }
@@ -218,6 +218,8 @@ async function handleUpdateMessage(socket, data) {
 // ===========================screen share=============================
 
 function handleScreenShareRequest(socket, data) {
+  console.log(data.roomId,"-----------");
+  
   socket.join(data.roomId)
   // socket.join(roomId);
   if (data.isGroup) {
@@ -721,14 +723,16 @@ async function handleDeleteGroup(socket, groupId) {
 
 async function handleGroupMessage(socket, data) {
   const { groupId, senderId, content } = data;
-  // console.log("Handling group message:", data, socket.id);
+  console.log("Handling group message:", data, socket.id);
 
   try {
-    // Save message to database (you may need to adjust this part)
+    // Save message to database (content should not include replyTo, only other data)
+    const { replyTo, ...contentWithoutReplyTo } = content || {};
     await saveMessage({
       senderId,
       receiverId: groupId,
-      content,
+      content: contentWithoutReplyTo,
+      replyTo: replyTo,
     });
 
     async function getGroupMembers(groupId) {
@@ -923,6 +927,70 @@ function handleCameraStatusChange(socket, data) {
   });
 }
 
+// ===========================host control=============================
+
+function handleRegisterAsHost(socket) {
+  console.log(`User ${socket.userId} registered as host`);
+  socket.isHost = true;
+}
+
+function handleUnregisterAsHost(socket) {
+  console.log(`User ${socket.userId} unregistered as host`);
+  socket.isHost = false;
+  // Notify any viewers that control has been revoked
+  socket.broadcast.emit('control-revoked');
+}
+
+function handleRequestControl(socket, data) {
+  const { hostId } = data;
+  console.log(`User ${socket.userId} requesting control from host ${hostId}`);
+  
+  const hostSocket = getSocketByUserId(hostId);
+  if (hostSocket) {
+    console.log("Sending control request to host:", hostId);
+    hostSocket.emit('control-request', {
+      viewerId: socket.userId
+    });
+  } else {
+    console.log("Host not found:", hostId);
+    socket.emit('control-permission', false);
+  }
+}
+
+function handleGrantControl(socket, data) {
+  const { viewerId } = data;
+  console.log(`Host ${socket.userId} granting control to viewer ${viewerId}`);
+  
+  const viewerSocket = getSocketByUserId(viewerId);
+  if (viewerSocket) {
+    viewerSocket.emit('control-permission', true);
+    // Notify host that control is granted
+    socket.emit('control-granted', { viewerId });
+  }
+}
+
+function handleRevokeControl(socket, data) {
+  const { viewerId } = data;
+  console.log(`Host ${socket.userId} revoking control from viewer ${viewerId}`);
+  
+  const viewerSocket = getSocketByUserId(viewerId);
+  if (viewerSocket) {
+    viewerSocket.emit('control-permission', false);
+     // Notify host that control is revoked
+     socket.emit('control-revoked-for-host', { viewerId });
+  }
+}
+
+function handleControlEvent(socket, data) {
+  const { roomId, type, payload } = data;
+  console.log(`Control event from ${socket.userId}:`, type, payload);
+  
+  // Broadcast the control event to all sockets in the room
+  socket.to(roomId).emit('control-event', { type, payload });
+}
+
+// =================================================================================
+
 function initializeSocket(io) {
   io.on("connection", (socket) => {
     console.log("New socket connection:", socket.id);
@@ -931,7 +999,7 @@ function initializeSocket(io) {
     socket.on("join-device-room", (deviceId) => {
       console.log(`Socket ${socket.id} joining device room:`, deviceId);
       socket.join(deviceId);
-      console.log('Device room set:', deviceId, socket);
+      // console.log('Device room set:', deviceId, socket);
       deviceRooms.set(deviceId, socket.id);
     });
 
@@ -1061,7 +1129,10 @@ function initializeSocket(io) {
     socket.on("delete-group", (groupId) => handleDeleteGroup(socket, groupId));
 
     // Handle group messages
-    socket.on("group-message", (data) => handleGroupMessage(socket, data));
+    socket.on("group-message", (data) => {
+      console.log("group-message", data);
+      handleGroupMessage(socket, data);
+    });
 
     // Add new handler for getting group members
     socket.on("get-group-members", (groupId) =>
@@ -1100,24 +1171,45 @@ function initializeSocket(io) {
     //   socket.to(roomId).emit("control-event", { type, payload });
     // });
 
-    socket.on("control-event", async ({ type, payload }) => {
-      console.log("Received:", type, payload);
-      // try {
-      //   switch (type) {
-      //     case "mousemove":
-      //       // This line of code uses the 'mouse' object to simulate a mouse movement to a specific point on the screen.
-      //       // The 'straightTo' method is used to specify the target point for the mouse movement, and it takes a 'Point' object as an argument.
-      //       // The 'Point' object is created using the 'x' and 'y' coordinates provided in the 'payload' object.
-      //       // The 'await' keyword is used to ensure that the mouse movement is completed before proceeding to the next line of code.
-      //       // Alternatively, you can use the 'moveTo' method instead of 'straightTo' to achieve the same result.
-      //       // Another option is to use the 'dragTo' method to simulate a mouse drag operation.
-      //       // You can also use the 'position' method to set the mouse position directly.
-      //       // Here are some examples of alternative methods:
-      //       // await mouse.moveTo(payload.x, payload.y);
-      //       // await mouse.dragTo(payload.x, payload.y);
-      //       // await mouse.position = new Point(payload.x, payload.y);
-      //       await mouse.move(straightTo(new Point(payload.x, payload.y)));
-      //       break;
+    // socket.on("control-event", async ({ type, payload }) => {
+    //   console.log("Received:", type, payload);
+    //   try {
+    //     switch (type) {
+    //       case "mousemove":
+    //         // This line of code uses the 'mouse' object to simulate a mouse movement to a specific point on the screen.
+    //         // The 'straightTo' method is used to specify the target point for the mouse movement, and it takes a 'Point' object as an argument.
+    //         // The 'Point' object is created using the 'x' and 'y' coordinates provided in the 'payload' object.
+    //         // The 'await' keyword is used to ensure that the mouse movement is completed before proceeding to the next line of code.
+    //         // Alternatively, you can use the 'moveTo' method instead of 'straightTo' to achieve the same result.
+    //         // Another option is to use the 'dragTo' method to simulate a mouse drag operation.
+    //         // You can also use the 'position' method to set the mouse position directly.
+    //         // Here are some examples of alternative methods:
+    //         // await mouse.moveTo(payload.x, payload.y);
+    //         // await mouse.dragTo(payload.x, payload.y);
+    //         // await mouse.position = new Point(payload.x, payload.y);
+    //         await mouse.move(straightTo(new Point(payload.x, payload.y)));
+    //         break;
+  
+    //       case "click":
+    //         await mouse.click(Button.LEFT);
+    //         break;
+  
+    //       case "keydown":
+    //         const key = Key[payload.key.toUpperCase()];
+    //         if (key) {
+    //           await keyboard.pressKey(key);
+    //           await keyboard.releaseKey(key);
+    //         }
+    //         break;
+  
+    //       default:
+    //         console.log("Unknown control type:", type);
+    //     }
+    //   } catch (err) {
+    //     console.error("Control error:", err);
+    //   }
+    // });
+  
 
       //     case "click":
       //       await mouse.click(Button.LEFT);
@@ -1137,11 +1229,18 @@ function initializeSocket(io) {
       // } catch (err) {
       //   console.error("Control error:", err);
       // }
-    });
+    // });
 
 
     socket.on("user-in-call", (data) => handleUserIncall(socket, data));
     // ===========================================================================================================
+
+    socket.on('register-as-host', () => handleRegisterAsHost(socket));
+    socket.on('unregister-as-host', () => handleUnregisterAsHost(socket));
+    socket.on('request-control', (data) => handleRequestControl(socket, data));
+    socket.on('grant-control', (data) => handleGrantControl(socket, data));
+    socket.on('revoke-control', (data) => handleRevokeControl(socket, data));
+    socket.on('control-event', (data) => handleControlEvent(socket, data));
   })
 }
 

@@ -2024,8 +2024,8 @@ const ReplyPreview = memo(({
             </span>
           </>
         ) : (
-          <span>
-            {highlightText(message?.replyTo?.content?.content, searchInputbox)}
+          <span className="text-gray-600">
+            {highlightText(decryptMessage(message?.replyTo?.content?.content), searchInputbox)}
           </span>
         )}
       </p>
@@ -2096,8 +2096,8 @@ const ReplyPreview = memo(({
         </div>
         {getReplyContent()}
       </div>
-      <p className="p-2">
-        {highlightText(message.content.content, searchInputbox)}
+      <p className="p-2 ">
+        {highlightText(decryptMessage(message.content.content), searchInputbox)}
       </p>
       {/* </div> */}
     </div>
@@ -2296,15 +2296,13 @@ const MessageContextMenu = ({
           {!message.content?.fileType?.includes("image/") &&
             !message.content?.fileType?.includes("audio/") &&
             !message.content?.type?.includes("file") &&
-            message.receiver !== userId && (
+            message.sender === userId && (
               <>
                 <button
                   className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
-                    console.log("SDFbsdbsdb");
-
                     handleEditMessage(contextMenu.message);
                   }}
                 >

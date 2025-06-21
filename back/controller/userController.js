@@ -1031,3 +1031,69 @@ exports.removeDevice = async (req, res) => {
       return res.status(500).json({ status: 500, message: error.message });
   }
 };
+
+exports.addContactList = async (req, res) => {
+  try {
+    // Handle nested contacts structure
+    const contactsData = Array.isArray(req.body) ? req.body : [req.body];
+    const contacts = contactsData[0]?.contacts || [];
+    
+    const currentUser = req.user._id;
+    const userData = await user.findById(currentUser);
+
+    if (!userData) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found"
+      });
+    }
+
+    // Initialize contacts array if it doesn't exist
+    if (!userData.contactList) {
+      userData.contactList = [];
+    }
+
+    // Process each contact in the array
+    for (const contact of contacts) {
+      // Validate required fields
+      if (!contact.id || !contact.name || !contact.phone) {
+        continue; // Skip invalid contacts
+      }
+
+      // Check if contact already exists in user's contact list
+      const existingContact = userData.contactList.find(c => c.phone === contact.phone);
+      
+      if (!existingContact) {
+        // Check if the phone number exists in the database
+        const userWithPhone = await user.findOne({ mobileNumber: contact.phone });
+        
+        if (userWithPhone) {
+          // Add new contact to the contacts array
+          userData.contactList.push({
+            id: contact.id,
+            name: contact.name,
+            phone: contact.phone,
+            photoUri: contact.photoUri || null,
+            addedAt: new Date(),
+            status: 'active',
+            userId: userWithPhone._id // Store the user's ID if they exist in the system
+          });
+        }
+      }
+    }
+
+    await userData.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Contacts added successfully",
+      contacts: userData.contactList
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: error.message,
+    });
+  }
+}

@@ -14,7 +14,8 @@ const {
   pinChat,
   muteUsers,
   mute,
-  getDevices, removeDevice 
+  getDevices, removeDevice, 
+  addContactList
 } = require("../controller/userController");
 const {
   userLogin,
@@ -46,6 +47,7 @@ const {
 } = require("../controller/groupController");
 const { handleQrLogin, getSessionStatus, logoutDevice } = require('../controller/authController');
   const { auth } = require("../helper/auth");
+  const { checkElectronInstalled, downloadElectronApp } = require("../controller/electronController");
 
 const indexRoutes = express.Router();
 
@@ -72,6 +74,7 @@ indexRoutes.post("/pinChat", auth, pinChat);
 indexRoutes.post("/muteChat", auth, muteUsers);
 indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
 indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
+indexRoutes.post("/addContactList", auth, addContactList);
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);
@@ -105,5 +108,11 @@ indexRoutes.post("/upload", auth, upload.single("file"), uploadController.upload
 indexRoutes.get('/devices', auth, getDevices);
 indexRoutes.delete('/devices/:deviceId', auth, removeDevice);
 indexRoutes.post('/logout-device', auth, logoutDevice);
+
+
+
+// Electron Routes
+indexRoutes.get("/check-electron-installed", auth, checkElectronInstalled);
+indexRoutes.get("/download/host-control-:platform", auth, downloadElectronApp);
 
 module.exports = indexRoutes;

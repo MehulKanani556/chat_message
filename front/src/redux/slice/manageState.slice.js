@@ -168,6 +168,7 @@ const manageStateSlice = createSlice({
       state.selectedImage = action.payload;
     },
     setUploadProgress: (state, action) => {
+      console.log("zzzzzzzzzzzzzzzzzz",action.payload);
       state.uploadProgress = action.payload;
     },
     setSelectedFiles: (state, action) => {

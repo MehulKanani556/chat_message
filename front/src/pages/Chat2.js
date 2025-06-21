@@ -61,6 +61,7 @@ const Chat2 = () => {
   const chatMessages = useSelector(state => state.magageState.chatMessages);
   const showForwardModal = useSelector(state => state.magageState.showForwardModal);
   const onlineUsers = useSelector(state => state.magageState.onlineUsers)
+  const uploadProgress = useSelector(state => state.magageState.uploadProgress);
   // const participants = useSelector(state => state.magageState.participants)
 
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -75,9 +76,9 @@ const Chat2 = () => {
 
 
   const dispatch = useDispatch();
-  // const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
-  const [currentUser] = useState(sessionStorage.getItem("userId"));
-
+  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  // const [currentUser] = useState(sessionStorage.getItem("userId"));
+ 
   // const localVideoRef = useRef(null);
   const navigate = useNavigate();
   const [groupUsers, setGroupUsers] = useState([]);
@@ -330,7 +331,9 @@ const Chat2 = () => {
   //===========handle send message ===========
 
   const handleSendMessage = async (data, userId) => {
+    
     if (editingMessage) {
+      console.log("data",data,userId,editingMessage);
       try {
         await dispatch(
           updateMessage({
@@ -378,6 +381,8 @@ const Chat2 = () => {
 
   const handleMultipleFileUpload = useCallback(async (files, userId) => {
     const filesArray = Array.from(files);
+    // Use userId if provided, otherwise fallback to selectedChat._id
+    const targetUserId = userId || (selectedChat && selectedChat._id);
     for (const file of filesArray) {
       const formData = new FormData();
       formData.append("file", file);
@@ -390,15 +395,15 @@ const Chat2 = () => {
           },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            dispatch(setUploadProgress(prev => ({
-              ...prev,
+            dispatch(setUploadProgress({
+              ...uploadProgress,
               [file.name]: { percentCompleted, size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`, fileType: file.type },
-            })));
+            }));
           },
         });
-
-        if (response.status === 200) {
+        if (response.status == 200) {
           const { fileUrl, fileType } = response.data;
+  
 
           await handleSendMessage({
             type: "file",
@@ -406,19 +411,21 @@ const Chat2 = () => {
             fileUrl: fileUrl,
             fileType: fileType || file.type,
             size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          }, userId);
+          }, targetUserId);
         }
       } catch (error) {
         console.error(`Error uploading file ${file.name}:`, error);
       } finally {
-        dispatch(setUploadProgress(prev => {
-          const updated = { ...prev };
-          delete updated[file.name];
-          return updated;
+        dispatch(setUploadProgress({
+          ...uploadProgress,
+          ...Object.keys(uploadProgress).reduce((acc, key) => {
+            if (key !== file.name) acc[key] = uploadProgress[key];
+            return acc;
+          }, {}),
         }));
       }
     }
-  }, []);
+  }, [selectedChat]);
   // =========================== video call=============================
 
   // Add call handling functions

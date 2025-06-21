@@ -57,7 +57,7 @@ const MessageInput = memo(
     const inputRef = useRef(null);
     const caretPositionRef = useRef(null);
 
-    console.log(messageInput, "messageInput");
+    // console.log(messageInput, "messageInput");
 
 
     useEffect(() => {
@@ -149,6 +149,7 @@ const MessageInput = memo(
                       "Content-Type": "multipart/form-data",
                       Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                     },
+                    
                   }
                 );
 
@@ -363,28 +364,34 @@ const MessageInput = memo(
         dispatch(setMessageInput(""));
       }
     };
-
+    // console.log("messageInput", messageInput);
 
     const handleSubmit = (e) => {
+      // console.log("messageInput", messageInput);
       e.preventDefault();
-      console.log("messageInput", messageInput);
       const data = {
         type: messageInput instanceof FileList ? "file" : "text",
         content: messageInput,
-
       };
 
       if (replyingTo) {
-        data.replyTo = replyingTo
+        data.replyTo = replyingTo;
       }
-
-      if (selectedChat && selectedChat?.members?.length > 0) {
+      
+      if (editingMessage) {
+        // If editing, always call handleSendMessage with selectedChat?._id
+        handleSendMessage(data, selectedChat?._id);
+        alert("editingMessage");
+      } else if (selectedChat && selectedChat?.members?.length > 0) {
+        alert("replyingTo");
+        console.log("dt",data);
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);
       } else if (data.type === "text") {
-        handleSendMessage(data);
+        handleSendMessage(data, selectedChat?._id);
       }
+      
       dispatch(setMessageInput(""));
     };
 
@@ -392,6 +399,7 @@ const MessageInput = memo(
     const handleSendGroupMessage = useCallback(async (data) => {
       if (data.content.trim() === "") return;
 
+      console.log("data",data,selectedChat._id);
       try {
         await sendGroupMessage(selectedChat._id, data);
         dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
@@ -532,9 +540,7 @@ const MessageInput = memo(
                       }`}
                   />
                 </button>
-
               </div>
-
               <div className="flex-1">
                 <div className=" w-full h-9 rounded-lg px-4  overflow-hidden">
                   <div className="flex items-center justify-start h-full w-full relative">
@@ -900,6 +906,7 @@ const MessageInput = memo(
                 if (isRecording) {
                   handleVoiceMessage();
                 }
+               
               }}
             >
               <svg
