@@ -29,6 +29,7 @@ import MediaViewer from "../component/MediaViewer";
 import { useSocket } from "../context/SocketContext";
 import MessageInput from "../component/MessageInput";
 import ChatHeader from "../component/ChatHeader";
+import ScreenSourceSelector from "../component/ScreenSourceSelector";
 
 
 const Chat2 = () => {
@@ -62,6 +63,7 @@ const Chat2 = () => {
   const showForwardModal = useSelector(state => state.magageState.showForwardModal);
   const onlineUsers = useSelector(state => state.magageState.onlineUsers)
   const uploadProgress = useSelector(state => state.magageState.uploadProgress);
+  const showScreenSource = useSelector(state => state.magageState.showScreenSource)
   // const participants = useSelector(state => state.magageState.participants)
 
   console.log("onlineUsers", onlineUsers);
@@ -89,8 +91,6 @@ const Chat2 = () => {
   const [showOverlay, setShowOverlay] = useState(false);
 
   // console.log(remoteStreams);
-
-
 
   //===========Use the custom socket hook===========
   const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall } = useSocket();
@@ -206,7 +206,7 @@ const Chat2 = () => {
       dir: "auto", // Sets the direction of the text
       lang: "en-US", // Sets the language of the notification
       timestamp: new Date().getTime(),
-      sound: "/Notifications.mp3",
+      sound: "/src/assets/Notifications.mp3",
     });
 
     // Close notification after 5 seconds
@@ -227,7 +227,7 @@ const Chat2 = () => {
   //   }
   // }, [allMessageUsers]);
 
-  const [ringtone] = useState(new Audio('/Ringtone.mp3')); // Add your ringtone file to public folder
+  const [ringtone] = useState(new Audio('/src/assets/Ringtone.mp3')); // Specify the path of the ringtone file in src/assets
 
   // Add useEffect to handle ringtone
   useEffect(() => {
@@ -568,24 +568,24 @@ const Chat2 = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // Listen for the showChatList event
-    const handleShowChatList = (event) => {
-      dispatch(setShowGroups(false));
-      if (event.detail?.selectedChat) {
-        dispatch(setSelectedChat(event.detail.selectedChat));
-      }
-      if (event.detail?.openGroupCreateModal) {
-        dispatch(setIsGroupCreateModalOpen(true));
-      }
-    };
+  // useEffect(() => {
+  //   // Listen for the showChatList event
+  //   const handleShowChatList = (event) => {
+  //     dispatch(setShowGroups(false));
+  //     if (event.detail?.selectedChat) {
+  //       dispatch(setSelectedChat(event.detail.selectedChat));
+  //     }
+  //     if (event.detail?.openGroupCreateModal) {
+  //       dispatch(setIsGroupCreateModalOpen(true));
+  //     }
+  //   };
 
-    window.addEventListener("showChatList", handleShowChatList);
+  //   window.addEventListener("showChatList", handleShowChatList);
 
-    return () => {
-      window.removeEventListener("showChatList", handleShowChatList);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("showChatList", handleShowChatList);
+  //   };
+  // }, []);
 
   useEffect(() => {
     // Listen for the showProfile event
@@ -1085,6 +1085,9 @@ const Chat2 = () => {
           </div>
         </div>
       )}
+
+      {showScreenSource && <ScreenSourceSelector/>}
+
     </div >
   );
 };

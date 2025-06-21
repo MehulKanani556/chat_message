@@ -20,8 +20,7 @@ import {
 } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
-import ElectronStatus from './ElectronStatus';
-
+import ElectronStatus from "./ElectronStatus";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return "w-full";
@@ -92,7 +91,7 @@ const VideoCallLayout = memo(() => {
     if (!chatMessages) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    console.log(rect, "==========================================");
+    // console.log(rect, "==========================================");
 
     setDragOffset({
       x: e.clientX - rect.left,
@@ -223,23 +222,21 @@ const VideoCallLayout = memo(() => {
   const animationFrameIdRef = useRef(null);
   const screenStreamRef = useRef(null);
 
-
   const startRecording = async () => {
     try {
       // Get all video elements
       let videoElements = [];
-      if(!isReceiving){
+      if (!isReceiving) {
         videoElements = Object.values(videoElementsRef.current);
-      }else{
+      } else {
         videoElements = [screenStreamRef.current];
       }
       // let videoElements  = Object.values(videoElementsRef.current)
       console.log(videoElements);
 
-
       // Create a canvas to combine video streams
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
 
       // Set canvas size to match video dimensions
       canvas.width = 1920;
@@ -248,7 +245,9 @@ const VideoCallLayout = memo(() => {
       // Create a MediaStream from the canvas
       const canvasStream = canvas.captureStream(30); // 30 FPS
 
-      const audioStreams = Array.from(participants).map(([id, stream]) => stream);
+      const audioStreams = Array.from(participants).map(
+        ([id, stream]) => stream
+      );
       const audioContext = new AudioContext();
       const destination = audioContext.createMediaStreamDestination();
 
@@ -265,34 +264,67 @@ const VideoCallLayout = memo(() => {
         });
       }
 
-
       // Start drawing loop
       const drawVideo = () => {
         // Clear canvas
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Draw each video element
         videoElements.forEach((videoElement, index) => {
           if (videoElement && videoElement.videoWidth > 0) {
-            const layout = calculateGridLayout(index, videoElements.length, canvas.width, canvas.height);
+            const layout = calculateGridLayout(
+              index,
+              videoElements.length,
+              canvas.width,
+              canvas.height
+            );
             if (layout.rounded) {
               const radius = Math.min(layout.width, layout.height) * 0.03;
               ctx.save();
               ctx.beginPath();
               ctx.moveTo(layout.x + radius, layout.y);
               ctx.lineTo(layout.x + layout.width - radius, layout.y);
-              ctx.quadraticCurveTo(layout.x + layout.width, layout.y, layout.x + layout.width, layout.y + radius);
-              ctx.lineTo(layout.x + layout.width, layout.y + layout.height - radius);
-              ctx.quadraticCurveTo(layout.x + layout.width, layout.y + layout.height, layout.x + layout.width - radius, layout.y + layout.height);
+              ctx.quadraticCurveTo(
+                layout.x + layout.width,
+                layout.y,
+                layout.x + layout.width,
+                layout.y + radius
+              );
+              ctx.lineTo(
+                layout.x + layout.width,
+                layout.y + layout.height - radius
+              );
+              ctx.quadraticCurveTo(
+                layout.x + layout.width,
+                layout.y + layout.height,
+                layout.x + layout.width - radius,
+                layout.y + layout.height
+              );
               ctx.lineTo(layout.x + radius, layout.y + layout.height);
-              ctx.quadraticCurveTo(layout.x, layout.y + layout.height, layout.x, layout.y + layout.height - radius);
+              ctx.quadraticCurveTo(
+                layout.x,
+                layout.y + layout.height,
+                layout.x,
+                layout.y + layout.height - radius
+              );
               ctx.lineTo(layout.x, layout.y + radius);
-              ctx.quadraticCurveTo(layout.x, layout.y, layout.x + radius, layout.y);
+              ctx.quadraticCurveTo(
+                layout.x,
+                layout.y,
+                layout.x + radius,
+                layout.y
+              );
               ctx.closePath();
               ctx.clip();
 
-              ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
+              ctx.drawImage(
+                videoElement,
+                layout.x,
+                layout.y,
+                layout.width,
+                layout.height
+              );
 
               ctx.restore();
 
@@ -301,20 +333,49 @@ const VideoCallLayout = memo(() => {
               ctx.beginPath();
               ctx.moveTo(layout.x + radius, layout.y);
               ctx.lineTo(layout.x + layout.width - radius, layout.y);
-              ctx.quadraticCurveTo(layout.x + layout.width, layout.y, layout.x + layout.width, layout.y + radius);
-              ctx.lineTo(layout.x + layout.width, layout.y + layout.height - radius);
-              ctx.quadraticCurveTo(layout.x + layout.width, layout.y + layout.height, layout.x + layout.width - radius, layout.y + layout.height);
+              ctx.quadraticCurveTo(
+                layout.x + layout.width,
+                layout.y,
+                layout.x + layout.width,
+                layout.y + radius
+              );
+              ctx.lineTo(
+                layout.x + layout.width,
+                layout.y + layout.height - radius
+              );
+              ctx.quadraticCurveTo(
+                layout.x + layout.width,
+                layout.y + layout.height,
+                layout.x + layout.width - radius,
+                layout.y + layout.height
+              );
               ctx.lineTo(layout.x + radius, layout.y + layout.height);
-              ctx.quadraticCurveTo(layout.x, layout.y + layout.height, layout.x, layout.y + layout.height - radius);
+              ctx.quadraticCurveTo(
+                layout.x,
+                layout.y + layout.height,
+                layout.x,
+                layout.y + layout.height - radius
+              );
               ctx.lineTo(layout.x, layout.y + radius);
-              ctx.quadraticCurveTo(layout.x, layout.y, layout.x + radius, layout.y);
+              ctx.quadraticCurveTo(
+                layout.x,
+                layout.y,
+                layout.x + radius,
+                layout.y
+              );
               ctx.closePath();
               ctx.lineWidth = 1;
               ctx.strokeStyle = "gray";
               ctx.stroke();
               ctx.restore();
             } else {
-              ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
+              ctx.drawImage(
+                videoElement,
+                layout.x,
+                layout.y,
+                layout.width,
+                layout.height
+              );
             }
             // ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
           }
@@ -330,7 +391,7 @@ const VideoCallLayout = memo(() => {
       // Create MediaRecorder with canvas stream
       const mediaRecorder = new MediaRecorder(canvasStream, {
         mimeType: "video/webm;codecs=vp9,opus",
-        videoBitsPerSecond: 2500000
+        videoBitsPerSecond: 2500000,
       });
 
       mediaRecorder.ondataavailable = (event) => {
@@ -352,11 +413,11 @@ const VideoCallLayout = memo(() => {
       };
 
       // Add event listener for call end
-      window.addEventListener('beforeunload', stopRecordingOnCallEnd);
+      window.addEventListener("beforeunload", stopRecordingOnCallEnd);
 
       // Cleanup function
       return () => {
-        window.removeEventListener('beforeunload', stopRecordingOnCallEnd);
+        window.removeEventListener("beforeunload", stopRecordingOnCallEnd);
         if (animationFrameIdRef.current) {
           cancelAnimationFrame(animationFrameIdRef.current);
         }
@@ -382,8 +443,8 @@ const VideoCallLayout = memo(() => {
   };
 
   const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
@@ -419,7 +480,13 @@ const VideoCallLayout = memo(() => {
     // 2 participants: one big, one small overlay
     if (count === 2) {
       if (index === 0) {
-        return { x: 0, y: 0, width: canvasWidth, height: canvasHeight, rounded: false };
+        return {
+          x: 0,
+          y: 0,
+          width: canvasWidth,
+          height: canvasHeight,
+          rounded: false,
+        };
       } else {
         const smallWidth = canvasWidth * 0.25;
         const smallHeight = canvasHeight * 0.25;
@@ -435,7 +502,13 @@ const VideoCallLayout = memo(() => {
 
     // 1 participant: full screen
     if (count === 1) {
-      return { x: 0, y: 0, width: canvasWidth, height: canvasHeight, rounded: false };
+      return {
+        x: 0,
+        y: 0,
+        width: canvasWidth,
+        height: canvasHeight,
+        rounded: false,
+      };
     }
 
     // 3+ participants: grid with centering and gap
@@ -483,32 +556,161 @@ const VideoCallLayout = memo(() => {
     return participantEntry ? participantEntry[0] : null;
   }, [participants]);
 
-
   // ====================================================================
 
   const controlref = useRef(null);
+  let isDragging_El= false;
+  let dragStart_El = null;
 
   useEffect(() => {
-    const handleMouseMove = e => {
-      const rect = e.target.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+
+    const handleMouseDown = (e) => {
+      if (!isControlling) return;
     
-      sendControl("mousemove", { x, y }, roomId)
+      const video = e.currentTarget;
+      const rect = video.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+    
+      dragStart_El = { x, y };
+      isDragging_El = true;
+      sendControl("dragStart", { x, y }, roomId);
     };
-    const handleClick = e => {
-      sendControl("click", { x: e.clientX, y: e.clientY }, roomId)
+
+    const handleMouseUp = (e) => {
+      if (!isControlling || !isDragging) return;
+    
+      const video = e.currentTarget;
+      const rect = video.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+    
+      sendControl("dragEnd", { x, y }, roomId);
+      isDragging_El = false;
+      dragStart_El = null;
     };
-    const handleKeyDown = e => {
-      sendControl("keydown", { key: e.key }, roomId)
+
+
+    const handleMouseMove = (e) => {
+      if (!isControlling) return;
+      // const rect = e.target.getBoundingClientRect();
+      // const x = e.clientX - rect.left;
+      // const y = e.clientY - rect.top;
+
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+      
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+      
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+      
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+
+      if (isDragging) {
+        sendControl("dragMove", { x, y }, roomId);
+      } else {
+        sendControl("mousemove", { x, y }, roomId);
+      }
+    };
+
+    const handleClick = (e) => {
+      if (!isControlling) return;
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+      
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+      
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+      
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+
+      if( !isDragging_El){
+        sendControl("click", { x, y }, roomId);
+      }
+   
+    };
+
+    const handleRightClick = (e) => {
+      if (!isControlling) return;
+      e.preventDefault();
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+      
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+      
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+      
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+      sendControl("rightClick", { x, y }, roomId);
+    };
+    const handleDoubleClick = (e) => {
+      if (!isControlling) return;
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+      
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+      
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+      
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+      sendControl("doubleClick", { x, y }, roomId);
+    };
+
+    const handleKeyDown = (e) => {
+      if (!isControlling) return;
+      
+      // Prevent default browser behavior for some keys
+      e.preventDefault();
+      
+      sendControl('keydown', {
+        key: e.key,
+        shiftKey: e.shiftKey,
+        ctrlKey: e.ctrlKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey
+      }, roomId);
+    };
+
+    const handleScroll = (e) => {
+      if (!isControlling) return;
+      sendControl("scroll", { amount: e.deltaY }, roomId);
     };
 
     const video = controlref.current;
-    
-    // Add event listeners when user is the host and control is granted
-    if (video && isHost && isControlling) {
+    // console.log(video);
+
+    if (video && isReceiving) {
       video.addEventListener("mousemove", handleMouseMove);
       video.addEventListener("click", handleClick);
+      video.addEventListener("contextmenu", handleRightClick);
+      video.addEventListener("dblclick", handleDoubleClick);
+      video.addEventListener("scroll", handleScroll);
+      video.addEventListener("mousedown", handleMouseDown);
+      video.addEventListener("mouseup", handleMouseUp);
       window.addEventListener("keydown", handleKeyDown);
     }
 
@@ -516,6 +718,11 @@ const VideoCallLayout = memo(() => {
       if (video) {
         video.removeEventListener("mousemove", handleMouseMove);
         video.removeEventListener("click", handleClick);
+        video.removeEventListener("contextmenu", handleRightClick);
+        video.removeEventListener("dblclick", handleDoubleClick);
+        video.removeEventListener("scroll", handleScroll);
+        video.removeEventListener("mousedown", handleMouseDown);
+        video.removeEventListener("mouseup", handleMouseUp);
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
@@ -539,20 +746,21 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"
-        }`}
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${
+        participantOpen ? "w-[70%]" : "w-full"
+      }`}
       style={
         chatMessages
           ? {
-            width: "25%",
-            height: "34%",
-            position: "absolute",
-            top: position.y,
-            left: position.x,
-            cursor: isDragging ? "grabbing" : "grab",
-            userSelect: "none",
-            transform: "none",
-          }
+              width: "25%",
+              height: "34%",
+              position: "absolute",
+              top: position.y,
+              left: position.x,
+              cursor: isDragging ? "grabbing" : "grab",
+              userSelect: "none",
+              transform: "none",
+            }
           : {}
       }
       onMouseDown={handleMouseDown}
@@ -576,8 +784,8 @@ const VideoCallLayout = memo(() => {
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                 {selectedChat &&
-                  selectedChat.photo &&
-                  selectedChat.photo !== "null" ? (
+                selectedChat.photo &&
+                selectedChat.photo !== "null" ? (
                   <img
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
@@ -617,62 +825,69 @@ const VideoCallLayout = memo(() => {
                   // Clean up ref when element is unmounted
                   delete videoElementsRef.current[participantId];
                 }
-              }
+              };
 
               return (
                 <div
                   key={participantId}
                   ref={isLocalUser ? localVideoRef : null}
-                  className={`${participants.length == 2
-                    ? isLocalUser
-                      ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                  className={`${
+                    participants.length == 2
+                      ? isLocalUser
+                        ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                        : widthClass
                       : widthClass
-                    : widthClass
-                    } p-2 flex items-center justify-center`}
+                  } p-2 flex items-center justify-center`}
                   style={{
-                    height: `${!(isLocalUser && participants.length == 2)
-                      ? `calc(100% / ${participants.length <= 2
-                        ? 1
-                        : participants.length <= 8 &&
-                          participants.length >= 2
-                          ? 2
-                          : 3
-                      })`
-                      : ""
-                      }`,
+                    height: `${
+                      !(isLocalUser && participants.length == 2)
+                        ? `calc(100% / ${
+                            participants.length <= 2
+                              ? 1
+                              : participants.length <= 8 &&
+                                participants.length >= 2
+                              ? 2
+                              : 3
+                          })`
+                        : ""
+                    }`,
                     ...(isLocalUser && participants.length == 2
                       ? {
-                        position: "absolute",
-                        bottom: "1rem",
-                        right: "1rem",
-                        cursor: isDraggingLocal ? "grabbing" : "grab",
-                      }
+                          position: "absolute",
+                          bottom: "1rem",
+                          right: "1rem",
+                          cursor: isDraggingLocal ? "grabbing" : "grab",
+                        }
                       : {}),
                   }}
                   onMouseDown={(e) =>
                     handleLocalVideoMouseDown(e, participantId)
                   }
                 >
-                  <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
-                  <video
-                            autoPlay
-                            playsInline
-                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
-                            // muted={participantId === currentUser}
-                            ref={(el) => {
-                              setVideoRef(el);
-                              if (el && stream instanceof MediaStream) {
-                                el.srcObject = stream;
-                                el.play().catch((err) =>
-                                  console.error("Remote video error:", err)
-                                );
-                                // Add screenStreamRef when video is loaded
-                                el.addEventListener('loadeddata', () => {
-                                  screenStreamRef.current = el;
-                                });
-                              }
-                            }}
-                          />
+                  <div className="aspect-video relative w-full h-full bg-primary-dark overflow-hidden shadow-lg">
+                    <video
+                      autoPlay
+                      playsInline
+                      className={`w-full${
+                        !isReceiving
+                          ? "transform -translate-x-1 -scale-x-100 h-full object-cover rounded-xl"
+                          : "object-contain"
+                      }`}
+                      // muted={participantId === currentUser}
+                      ref={(el) => {
+                        setVideoRef(el);
+                        if (el && stream instanceof MediaStream) {
+                          el.srcObject = stream;
+                          el.play().catch((err) =>
+                            console.error("Remote video error:", err)
+                          );
+                          // Add screenStreamRef when video is loaded
+                          el.addEventListener("loadeddata", () => {
+                            screenStreamRef.current = el;
+                          });
+                        }
+                      }}
+                    />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
@@ -722,36 +937,39 @@ const VideoCallLayout = memo(() => {
                     // Clean up ref when element is unmounted
                     delete videoElementsRef.current[participantId];
                   }
-                }
+                };
 
                 return (
                   <div
                     key={participantId}
                     ref={isLocalUser ? localVideoRef : null}
-                    className={`${participants.length == 2
-                      ? isLocalUser
-                        ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                    className={`${
+                      participants.length == 2
+                        ? isLocalUser
+                          ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                          : widthClass
                         : widthClass
-                      : widthClass
-                      } p-2 flex items-center justify-center`}
+                    } p-2 flex items-center justify-center`}
                     style={{
-                      height: `${!(isLocalUser && participants.length == 2)
-                        ? `calc(100% / ${participants.length <= 2
-                          ? 1
-                          : participants.length <= 8 &&
-                            participants.length >= 2
-                            ? 2
-                            : 3
-                        })`
-                        : ""
-                        }`,
+                      height: `${
+                        !(isLocalUser && participants.length == 2)
+                          ? `calc(100% / ${
+                              participants.length <= 2
+                                ? 1
+                                : participants.length <= 8 &&
+                                  participants.length >= 2
+                                ? 2
+                                : 3
+                            })`
+                          : ""
+                      }`,
                       ...(isLocalUser && participants.length == 2
                         ? {
-                          position: "absolute",
-                          bottom: "1rem",
-                          right: "1rem",
-                          cursor: isDraggingLocal ? "grabbing" : "grab",
-                        }
+                            position: "absolute",
+                            bottom: "1rem",
+                            right: "1rem",
+                            cursor: isDraggingLocal ? "grabbing" : "grab",
+                          }
                         : {}),
                     }}
                     onMouseDown={(e) =>
@@ -764,7 +982,11 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
+                            className={`w-full h-full object-cover rounded-xl ${
+                              !isReceiving
+                                ? "transform -translate-x-1 -scale-x-100"
+                                : ""
+                            }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -773,7 +995,6 @@ const VideoCallLayout = memo(() => {
                                 el.play().catch((err) =>
                                   console.error("Remote video error:", err)
                                 );
-
                               }
                               // If you want to keep localVideoRef for the current user:
                               // if (participantId === currentUser && localVideoRef) {
@@ -792,7 +1013,11 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
+                            className={`w-full h-full object-cover rounded-xl ${
+                              !isReceiving
+                                ? "transform -translate-x-1 -scale-x-100"
+                                : ""
+                            }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -807,7 +1032,7 @@ const VideoCallLayout = memo(() => {
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-500 flex items-center justify-center">
                               {participant?.photo &&
-                                participant.photo !== "null" ? (
+                              participant.photo !== "null" ? (
                                 <img
                                   src={`${IMG_URL}${participant.photo.replace(
                                     /\\/g,
@@ -819,7 +1044,8 @@ const VideoCallLayout = memo(() => {
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
-                                    {participant?.userName?.[0]?.toUpperCase() || "?"}
+                                    {participant?.userName?.[0]?.toUpperCase() ||
+                                      "?"}
                                   </span>
                                 </div>
                               )}
@@ -851,20 +1077,22 @@ const VideoCallLayout = memo(() => {
               dispatch(setCallChatList(!callChatList));
               // dispatch(setChatMessages(true));
             }}
-            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${callChatList
-              ? "dark:bg-white dark:text-black bg-black/50 text-white"
-              : "dark:text-white text-black"
-              }`}
+            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${
+              callChatList
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
+            }`}
           >
             <BsChatDots className="text-xl" />
           </button>
 
           <button
             onClick={toggleMicrophone}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isMicrophoneOn
-              ? "dark:bg-white dark:text-black bg-black/50 text-white"
-              : "dark:text-white text-black"
-              }`}
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+              isMicrophoneOn
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
+            }`}
           >
             {isMicrophoneOn ? (
               <IoMicOutline className="text-xl" />
@@ -875,11 +1103,13 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={toggleCamera}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
-              }  ${isCameraOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+              isVideoCalling ? "" : "hidden"
+            }  ${
+              isCameraOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-              }`}
+            }`}
           >
             {isCameraOn ? (
               <BsCameraVideo className="text-xl" />
@@ -913,10 +1143,11 @@ const VideoCallLayout = memo(() => {
                 dispatch(setParticipantOpen(!participantOpen));
                 dispatch(setCallChatList(false));
               }}
-              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${participantOpen
-                ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                : "dark:text-white text-black"
-                }`}
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
+                participantOpen
+                  ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                  : "dark:text-white text-black"
+              }`}
             >
               <MdOutlineGroupAdd className="text-xl" />
             </button>
@@ -925,9 +1156,11 @@ const VideoCallLayout = memo(() => {
           <button
             onClick={() => (recording ? stopRecording() : startRecording())}
             className={`w-10 grid place-content-center rounded-full h-10 border text-white 
-             ${recording
-                ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                : "dark:text-white text-black"}
+             ${
+               recording
+                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                 : "dark:text-white text-black"
+             }
               `}
           >
             <AiOutlineVideoCamera className="text-xl" />
@@ -1036,7 +1269,7 @@ const VideoCallLayout = memo(() => {
           )}
         </div>
       )}
-    </div >
+    </div>
   );
 
   return content;
@@ -1046,5 +1279,3 @@ const VideoCallLayout = memo(() => {
 VideoCallLayout.displayName = 'VideoCallLayout';
 
 export default VideoCallLayout;
-
-

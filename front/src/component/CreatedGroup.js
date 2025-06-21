@@ -30,17 +30,6 @@ const CreatedGroup = memo(({
   // const { allUsers,messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
 
-  console.log(creatGroup, groupUsers);
-  // Reset state when modal is closed/opened
-  useEffect(() => {
-    if (!isOpen) {
-      setGroupName("");
-      setGroupBio("");
-      setGroupUsers([]);
-      setGroupPhoto(null);
-    }
-  }, [isOpen]);
-
   const handleCreateClick = () => {
     // Pass the data up to the parent component
     onCreateGroup({
@@ -77,7 +66,8 @@ const CreatedGroup = memo(({
 
   return (
     <div
-      className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
+      // className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
+      className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
       }}

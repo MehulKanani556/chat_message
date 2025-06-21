@@ -39,13 +39,13 @@ import {
   setSelectedChatModule,
   setCallChatList,
   setshareRoomId,
+  setShowScreenSource,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { downloadAndLaunchElectron } from "../utils/electronManager";
-import ScreenSourceSelector from "../component/ScreenSourceSelector";
-
+import { configureStore } from '../redux/Store';
 
 const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
 
@@ -133,7 +133,9 @@ export const SocketProvider = ({ children }) => {
     cameraStatus,
     typingUsers,
     selectedChat,
-    isReceiving
+    isReceiving,
+    screenSource,
+    showScreenSource
   } = useSelector((state) => state.magageState);
 
   const { messages } = useSelector((state) => state.user);
@@ -482,18 +484,35 @@ export const SocketProvider = ({ children }) => {
       }
     };
   };
+  
+  // Add this inside your SocketContext.js
+  const waitForScreenSource = () => {
+    const { store, persistor } = configureStore();
+    const state = store.getState();
+    console.log(store.getState().magageState);
+    
+    return new Promise((resolve) => {
+        const source = state.magageState.screenSource;
+        console.log(source);
+        if (source) {
+          resolve(source);
+        }
+      });
+  };
 
   // ===========================screen share=============================
-  const [showSourceSelector, setShowSourceSelector] = useState(false);
-const [pendingShare, setPendingShare] = useState(null);
-const [selectedSource, setSelectedSource] = useState(null);
+// console.log(screenSource);
+useEffect(() => {
+  if (screenSource) {
+    startSharing(selectedChat);
+  }
+}, [screenSource]);
 
   const startSharing = async (selectedChat) => {
     if (!selectedChat) {
       setError("No chat selected");
       return;
     }
-
     // const electronLaunched = await downloadAndLaunchElectron();
     const roomId = generateCallRoomId();
     dispatch(setshareRoomId(roomId));
@@ -502,32 +521,37 @@ const [selectedSource, setSelectedSource] = useState(null);
     try {
       console.log("Requesting screen share...");
       let stream;
-
-      // Check if running in Electron
-    if (window.electron && !selectedSource) {
-      setPendingShare(selectedChat);
-      setShowSourceSelector(true);
-      return;
-    }
       // Check if running in Electron
       if (window.electron) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            mandatory: {
-              chromeMediaSource: 'desktop',
-              chromeMediaSourceId: selectedSource.id,
-              minWidth: 1280,
-              maxWidth: 1920,
-              minHeight: 720,
-              maxHeight: 1080
-            }
+        if(!showScreenSource){
+          await dispatch(setShowScreenSource(true));
+        }
+
+        console.log(screenSource);
+
+        if(screenSource){
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                mandatory: {
+                  chromeMediaSource: "desktop",
+                  chromeMediaSourceId: screenSource.id,
+                },
+              },
+            });
+          } catch (err) {
+            alert("Error: " + err.message);
           }
-        });
+        }else{
+          return;
+        }
+        
+        
       } else {
         stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          audio: true
+          audio: true,
         });
       }
       console.log("Got screen stream, creating peer...");
@@ -622,51 +646,13 @@ const [selectedSource, setSelectedSource] = useState(null);
 
       dispatch(setIsSharing(true));
       setIsHost(true);
-
-      // Add remote control event listeners if in Electron
-    if (window.electron) {
-      const videoElement = localVideoRef.current;
-      if (videoElement) {
-        videoElement.addEventListener('mousemove', async (e) => {
-          const rect = videoElement.getBoundingClientRect();
-          const x = Math.round((e.clientX - rect.left) * (videoElement.videoWidth / rect.width));
-          const y = Math.round((e.clientY - rect.top) * (videoElement.videoHeight / rect.height));
-          
-          await window.electron.remoteControl('mouse-move', { x, y });
-        });
-
-        videoElement.addEventListener('click', async () => {
-          await window.electron.remoteControl('mouse-click');
-        });
-
-        videoElement.addEventListener('contextmenu', async (e) => {
-          e.preventDefault();
-          await window.electron.remoteControl('mouse-right-click');
-        });
-
-        videoElement.addEventListener('dblclick', async () => {
-          await window.electron.remoteControl('mouse-double-click');
-        });
-
-        window.addEventListener('keydown', async (e) => {
-          await window.electron.remoteControl('key-press', { key: e.key });
-        });
-
-        window.addEventListener('keyup', async (e) => {
-          await window.electron.remoteControl('key-release', { key: e.key });
-        });
-
-        videoElement.addEventListener('wheel', async (e) => {
-          await window.electron.remoteControl('scroll', { amount: e.deltaY });
-        });
-      }
-    }
-
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
         console.log("Stream ended by user");
         cleanupConnection();
       };
+
+      dispatch(setShowScreenSource(false))
 
       return true;
     } catch (err) {
@@ -677,6 +663,7 @@ const [selectedSource, setSelectedSource] = useState(null);
       cleanupConnection();
       return false;
     }
+    // dispatch(setShowScreenSource(true))
   };
   // Add socket listeners for screen sharing
 
@@ -994,37 +981,74 @@ const [selectedSource, setSelectedSource] = useState(null);
         dispatch(setUserIncall("is onther Call Runing"));
       }
     });
-
    // In your control-event handler
+
+   let isDragging = false;
+
 socketRef.current.on("control-event", async ({ type, payload }) => {
-  console.log("Control received:", type, payload,window.electron);
+  // console.log("Control received:", type, payload,window.electron);
   try {
     if (window.electron) {
       switch (type) {
         case "mousemove":
-          console.log("Fbgfbffgfgfgfgfffgfgfgfg");
-          
+          // console.log("Fbgfbffgfgfgfgfffgfgfgfg");
           await window.electron.remoteControl.moveMouse(payload.x, payload.y);
           break;
 
         case "click":
-          await window.electron.remoteControl.click();
+          await window.electron.remoteControl.click(payload.x, payload.y);
           break;
 
         case "rightClick":
+          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
           await window.electron.remoteControl.rightClick();
           break;
 
         case "doubleClick":
+          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
           await window.electron.remoteControl.doubleClick();
           break;
 
         case "keydown":
-          await window.electron.remoteControl.pressKey(payload.key);
+          await window.electron.remoteControl.pressKey(payload.key,payload.ctrlKey);
           break;
 
         case "scroll":
+          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
           await window.electron.remoteControl.scroll(payload.amount);
+          break;
+
+        case "dragStart":
+          try {
+            const { x, y } = payload;
+            isDragging = true;
+            await window.electron.remoteControl.moveMouse(x,y);
+            await window.electron.remoteControl.pressButton();
+          } catch (err) {
+            console.error("Drag start failed:", err);
+          }
+          break;
+
+        case "dragMove":
+          if (!isDragging) break;
+          try {
+            const { x, y } = payload;
+            await window.electron.remoteControl.moveMouse(x,y);
+          } catch (err) {
+            console.error("Drag move failed:", err);
+          }
+          break;
+
+        case "dragEnd":
+          if (!isDragging) break;
+          try {
+            const { x, y } = payload;
+            await window.electron.remoteControl.moveMouse(x,y);
+            await window.electron.remoteControl.releaseButton();
+            isDragging = false;
+          } catch (err) {
+            console.error("Drag end failed:", err);
+          }
           break;
 
         default:
@@ -1586,6 +1610,8 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
       }
       console.log("groupId",groupId,message);
 
+      
+
       const messageData = {
         senderId: userId,
         groupId,
@@ -1800,8 +1826,6 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
       ));
 
       dispatch(removeParticipant(peerId))
-
-
       // Remove from call participants
       const newParticipants = new Set(callParticipants);
       newParticipants.delete(peerId);
@@ -1873,6 +1897,7 @@ console.log(callRoom);
     setIsHost(true);
     setIsControlling(false);
   }, [socketRef]);
+
 
   const unregisterAsHost = useCallback(() => {
     if (!socketRef.current?.connected) return;
@@ -2083,26 +2108,9 @@ const value = useMemo(() => ({
   //   sendTypingStatus
   // };
 // Add this function to handle source selection
-const handleSourceSelected = async (source) => {
-  setShowSourceSelector(false);
-  if (pendingShare) {
-    await startSharing(pendingShare, source);
-    setPendingShare(null);
-  }
-};
   return (
     <SocketContext.Provider value={value}>{children} 
-    {showSourceSelector && (
-      <ScreenSourceSelector
-        onSelect={handleSourceSelected}
-        onClose={() => {
-          setShowSourceSelector(false);
-          setPendingShare(null);
-        }}
-        setSelectedSource={setSelectedSource}
-        selectedSource={selectedSource}
-      />
-    )} </SocketContext.Provider>
+    </SocketContext.Provider>
   );
 };
 

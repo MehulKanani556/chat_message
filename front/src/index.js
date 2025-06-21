@@ -7,7 +7,7 @@ import { BrowserRouter as Router, HashRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./polyfills";
 
-console.log( window, process);
+// console.log( window, process);
 
 const isElectron = typeof window === 'undefined' || typeof process !== 'undefined' && process.versions && process.versions.electron;
 const isWeb = typeof window !== 'undefined';

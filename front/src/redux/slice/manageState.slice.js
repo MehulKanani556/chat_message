@@ -54,6 +54,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     forwardingMessage: null,
     userIncall: null,
     shareRoomId:null,
+
+    showScreenSource: false,
+    screenSource:null,
   };
 
   const manageStateSlice = createSlice({
@@ -229,6 +232,12 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setshareRoomId: (state, action) => {
       state.shareRoomId = action.payload;
     },
+    setShowScreenSource: (state, action) => {
+      state.showScreenSource = action.payload;
+    },
+    setScreenSource: (state, action) => {
+      state.screenSource = action.payload;
+    },
   }
   })
   
@@ -283,6 +292,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setShowForwardModal,
     setForwardingMessage,
     setUserIncall,
-    setshareRoomId
+    setshareRoomId,
+    setShowScreenSource,
+    setScreenSource
   } = manageStateSlice.actions;
   export default manageStateSlice.reducer;
