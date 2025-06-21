@@ -12,6 +12,7 @@ import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import { setBackCameraAvailable, setCameraStream, setEditingMessage, setMessageInput, setOpenCameraState, setReplyingTo, setSelectedFiles, setUploadProgress } from "../redux/slice/manageState.slice";
 import axios from "axios";
 import { decryptMessage } from "../utils/decryptMess";
+import emojiRegex from 'emoji-regex';
 
 const MessageInput = memo(
   ({
@@ -54,7 +55,7 @@ const MessageInput = memo(
     const [docModel, setDocModel] = useState(false);
     const [currentUser] = useState(sessionStorage.getItem("userId"));
     const inputRef = useRef(null);
-
+    const caretPositionRef = useRef(null);
 
     // console.log(messageInput, "messageInput");
 
@@ -410,7 +411,7 @@ const MessageInput = memo(
     //=========== emoji picker ===========
     const onEmojiClick = (event, emojiObject) => {
       console.log(event.emoji);
-      
+
       dispatch(setMessageInput(messageInput + event.emoji));
     };
 
@@ -444,9 +445,24 @@ const MessageInput = memo(
       };
     }, [docModel]);
 
+    const setCaretToEnd = (el) => {
+      if (!el) return;
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(el);
+      range.collapse(false); // false = to end
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
 
+    useEffect(() => {
+      // Restore caret position after messageInput changes
+      if (inputRef.current && document.activeElement === inputRef.current) {
+        setCaretToEnd(inputRef.current);
+      }
+    }, [messageInput]);
 
-    // ====================================return======================================  
+    // ====================================return======================================
     if (!selectedChat) return null;
 
     if (user.blockedUsers?.includes(selectedChat._id)) {
@@ -492,6 +508,12 @@ const MessageInput = memo(
         console.error("Error accessing the camera: ", error);
       }
     };
+
+    const regex = emojiRegex();
+
+    const html = messageInput.replace(regex, (match) => {
+      return `<span class='inline-block align-middle'><img src='https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${match.codePointAt(0).toString(16)}.png' alt='${match}' class='inline h-5 w-5' onerror='this.onerror=null;this.replaceWith(document.createTextNode("${match}"));' /></span>`;
+    });
 
     return (
       <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
@@ -684,37 +706,62 @@ const MessageInput = memo(
                   </div>
                 )}
                 <div className={`flex-1 min-w-0 p-1 md:p-2 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative`}>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={messageInput}
-                    onChange={handleInputChange}
-                    placeholder={
-                      editingMessage
-                        ? "Edit message..."
-                        : "Type a message..."
-                    }
-                    className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent"
-                    onKeyDown={async (e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
+                  <div style={{ position: "relative" }}>
+                    {/* Placeholder */}
+                    {(!messageInput || messageInput.length === 0) && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 30, // adjust as needed for padding
+                          top: 4,   // adjust as needed for vertical alignment
+                          color: "#aaa",
+                          pointerEvents: "none",
+                          fontSize: "1rem",
+                          zIndex: 1,
+                        }}
+                      >
+                        {editingMessage ? "Edit message..." : "Type a message..."}
+                      </span>
+                    )}
 
-                        if (selectedFiles.length > 0) {
-                          await handleMultipleFileUpload(
-                            selectedFiles
-                          ); // Upload selected files
-                          dispatch(setSelectedFiles([])); // Clear selected files after sending
+                    {/* ContentEditable div */}
+                    <div
+                      ref={inputRef}
+                      contentEditable
+                      suppressContentEditableWarning
+                      dir="ltr"
+                      className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent min-h-[24px]"
+                      style={{
+                        direction: "ltr",
+                        textAlign: "left",
+                        fontFamily: 'system-ui, -apple-system, "Segoe UI Emoji",.3 "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Symbol", sans-serif'
+                      }}
+                      onInput={e => {
+                        const text = e.target.innerText;
+                        dispatch(setMessageInput(text));
+                        sendTypingStatus(selectedChat._id, true);
+                      }}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (selectedFiles.length > 0) {
+                            await handleMultipleFileUpload(selectedFiles);
+                            dispatch(setSelectedFiles([]));
+                          }
+                          await handleSubmit(e);
+                        } else if (
+                          e.key === "Escape" &&
+                          editingMessage
+                        ) {
+                          dispatch(setEditingMessage(null));
+                          dispatch(setMessageInput(""));
                         }
-                        await handleSubmit(e);
-                      } else if (
-                        e.key === "Escape" &&
-                        editingMessage
-                      ) {
-                        dispatch(setEditingMessage(null));
-                        dispatch(setMessageInput(""));
-                      }
-                    }}
-                  />
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: html,
+                      }}
+                    />
+                  </div>
                   <button
                     type="button"
                     className="absolute top-1/2 left-1 block md:hidden -translate-y-1/2 p-1  hover:bg-gray-100 dark:text-white dark:hover:bg-primary dark:hover:text-black rounded-full transition-colors flex-shrink-0"
@@ -730,11 +777,7 @@ const MessageInput = memo(
                     className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                     aria-label="Attach file"
                     onClick={() =>
-                      // document
-                      //   .getElementById("file-upload")
-                      //   .click()
                       setDocModel(!docModel)
-
                     }
                   >
                     {selectedFiles &&
@@ -814,11 +857,7 @@ const MessageInput = memo(
                   className="p-1 hover:bg-gray-100  hidden md:block rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                   aria-label="Attach file"
                   onClick={() =>
-                    // document
-                    //   .getElementById("file-upload")
-                    //   .click()
                     setDocModel(!docModel)
-
                   }
                 >
                   {selectedFiles &&
@@ -861,8 +900,8 @@ const MessageInput = memo(
               className={`${selectedFiles.length > 0 || messageInput || cameraStream || isRecording ? 'block md:block' : 'hidden md:block'} p-1 hover:bg-gray-100 rounded-full transition-colors text-xl text-primary dark:hover:bg-primary dark:hover:text-black`}
               onClick={() => {
                 if (selectedFiles.length > 0) {
-                  handleMultipleFileUpload(selectedFiles); // Upload selected files
-                  dispatch(setSelectedFiles([])); // Clear selected files after sending
+                  handleMultipleFileUpload(selectedFiles);
+                  dispatch(setSelectedFiles([]));
                 }
                 if (isRecording) {
                   handleVoiceMessage();
@@ -916,7 +955,7 @@ const MessageInput = memo(
                       <span className="w-5"><svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16.0359 5.92891V17.8398C16.0359 18.4797 15.5156 19 14.8758 19H4.16016C3.52031 19 3 18.4797 3 17.8398V2.16016C3 1.52031 3.52031 1 4.16016 1H11.107L16.0359 5.92891Z" fill="#518FF5" />
                         <path d="M6.18457 10.0371H12.8502V10.7789H6.18457V10.0371ZM6.18457 11.6895H12.8502V12.4313H6.18457V11.6895ZM6.18457 13.3453H12.8502V14.0871H6.18457V13.3453ZM6.18457 14.9977H10.9271V15.7395H6.18457V14.9977Z" fill="white" />
-                        <path d="M11.7803 5.74258L16.0377 9.19141V5.95L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
+                        <path d="M11.7803 5.74258L16.0377 9.19141V5.95078L13.626 4.55078L11.7803 5.74258Z" fill="black" fillOpacity="0.0980392" />
                         <path d="M16.0363 5.92891H12.2676C11.6277 5.92891 11.1074 5.40859 11.1074 4.76875V1L16.0363 5.92891Z" fill="#A6C5FA" />
                       </svg>
 
@@ -943,7 +982,5 @@ const MessageInput = memo(
     );
   }
 );
-
-// MessageInput.displayName = "MessageInput";
 
 export default MessageInput;

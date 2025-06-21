@@ -60,6 +60,7 @@ const GroupProfile = memo(({
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const selectedChat = useSelector(state => state.magageState.selectedChat)
   const { allUsers, messages } = useSelector((state) => state.user);
   const userId = useMemo(() => sessionStorage.getItem("userId"), []);
@@ -212,6 +213,14 @@ const GroupProfile = memo(({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -282,9 +291,10 @@ const GroupProfile = memo(({
 
   return (
     <div
-      className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
+      className="w-[380px] flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
+        width: screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '403px'
       }}
     >
       {attachFile ? (
