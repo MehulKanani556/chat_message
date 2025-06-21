@@ -63,6 +63,14 @@ const Chat2 = () => {
   const onlineUsers = useSelector(state => state.magageState.onlineUsers)
   // const participants = useSelector(state => state.magageState.participants)
 
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   console.log("onlineUsers", onlineUsers);
 
 
@@ -584,7 +592,7 @@ const Chat2 = () => {
     // Listen for the showProfile event
     const handleShowProfile = () => {
       dispatch(setShowProfile(true));
-      dispatch(setShowLeftSidebar(true));
+      // dispatch(setShowLeftSidebar(true));
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
@@ -598,7 +606,7 @@ const Chat2 = () => {
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
-      dispatch(setShowLeftSidebar(true));
+      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showChatList event
@@ -608,7 +616,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
-      dispatch(setShowLeftSidebar(true));
+      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showSettings event
@@ -618,7 +626,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowCallHistory(false));
-      dispatch(setShowLeftSidebar(true));
+      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showCall event
@@ -628,7 +636,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
-      dispatch(setShowLeftSidebar(true));
+      // dispatch(setShowLeftSidebar(true));
     };
 
     window.addEventListener("showProfile", handleShowProfile);
@@ -693,7 +701,7 @@ const Chat2 = () => {
         <Sidebar />
       )}
       {/* ==============================Right Sidebar chat list ============================== */}
-      {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
+      {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || showGroups || chatMessages) && (
 
         <>
           {/* Left Side */}
@@ -883,7 +891,7 @@ const Chat2 = () => {
             {!(isReceiving || isVideoCalling || isVoiceCalling) &&
               <div
                 className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
-                  (isGroupCreateModalOpen || isModalOpen) ||
+                  (isGroupCreateModalOpen || isModalOpen) || (isGroupCreateModalOpen) ||
                   (isUserProfileModalOpen && !selectedChat?.members)
                   ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
                   : "w-0 opacity-0"

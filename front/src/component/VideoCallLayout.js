@@ -460,27 +460,160 @@ const VideoCallLayout = memo(() => {
 
   const controlref = useRef(null);
 
-  useEffect(() => {
-    const handleMouseMove = e => {
-      console.log(e);
+  let isDragging_El = false;
+  let dragStart_El = null;
 
-      sendControl("mousemove", { x: e.clientX, y: e.clientY })
+  useEffect(() => {
+
+    const handleMouseDown = (e) => {
+      // if (!isControlling) return;
+
+      const video = e.currentTarget;
+      const rect = video.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+
+      dragStart_El = { x, y };
+      isDragging_El = true;
+      sendControl("dragStart", { x, y },);
     };
-    const handleClick = e => {
-      console.log(e);
-      sendControl("click", { x: e.clientX, y: e.clientY })
+
+    const handleMouseUp = (e) => {
+      // if (!isControlling || !isDragging) return;
+
+      const video = e.currentTarget;
+      const rect = video.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+
+      sendControl("dragEnd", { x, y },);
+      isDragging_El = false;
+      dragStart_El = null;
     };
-    const handleKeyDown = e => {
-      console.log(e.key);
-      sendControl("keydown", { key: e.key })
+
+
+    const handleMouseMove = (e) => {
+      // if (!isControlling) return;
+      // const rect = e.target.getBoundingClientRect();
+      // const x = e.clientX - rect.left;
+      // const y = e.clientY - rect.top;
+
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+
+      if (isDragging_El) {
+        sendControl("dragMove", { x, y },);
+      } else {
+        // sendControl("mousemove", { x, y },);
+      }
+    };
+
+    const handleClick = (e) => {
+      // if (!isControlling) return;
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+      if (!isDragging_El) {
+        sendControl("click", { x, y },);
+      }
+    };
+
+    const handleRightClick = (e) => {
+      // if (!isControlling) return;
+      e.preventDefault();
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+      sendControl("rightClick", { x, y },);
+    };
+
+
+
+
+    const handleDoubleClick = (e) => {
+      // if (!isControlling) return;
+      const videoElement = e.currentTarget;
+      const rect = videoElement.getBoundingClientRect();
+
+      // Calculate relative position (0-1 range)
+      const relativeX = (e.clientX - rect.left) / rect.width;
+      const relativeY = (e.clientY - rect.top) / rect.height;
+
+      // Get actual video dimensions
+      const videoWidth = videoElement.videoWidth;
+      const videoHeight = videoElement.videoHeight;
+
+      // Calculate absolute coordinates on host screen
+      const x = Math.round(relativeX * videoWidth);
+      const y = Math.round(relativeY * videoHeight);
+      sendControl("doubleClick", { x, y },);
+    };
+
+    const handleKeyDown = (e) => {
+      // if (!isControlling) return;
+
+      // Prevent default browser behavior for some keys
+      e.preventDefault();
+
+      sendControl('keydown', {
+        key: e.key,
+        shiftKey: e.shiftKey,
+        ctrlKey: e.ctrlKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey
+      },);
+    };
+
+    const handleScroll = (e) => {
+      // if (!isControlling) return;
+      sendControl("scroll", { amount: e.deltaY },);
     };
 
     const video = controlref.current;
-    console.log(video);
+    // console.log(video);
 
     if (video && isReceiving) {
       video.addEventListener("mousemove", handleMouseMove);
       video.addEventListener("click", handleClick);
+      video.addEventListener("contextmenu", handleRightClick);
+      video.addEventListener("dblclick", handleDoubleClick);
+      video.addEventListener("scroll", handleScroll);
+      video.addEventListener("mousedown", handleMouseDown);
+      video.addEventListener("mouseup", handleMouseUp);
       window.addEventListener("keydown", handleKeyDown);
     }
 
@@ -488,11 +621,15 @@ const VideoCallLayout = memo(() => {
       if (video) {
         video.removeEventListener("mousemove", handleMouseMove);
         video.removeEventListener("click", handleClick);
+        video.removeEventListener("contextmenu", handleRightClick);
+        video.removeEventListener("dblclick", handleDoubleClick);
+        video.removeEventListener("scroll", handleScroll);
+        video.removeEventListener("mousedown", handleMouseDown);
+        video.removeEventListener("mouseup", handleMouseUp);
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isReceiving, participants]);
-
 
 
   const content = (
@@ -611,11 +748,11 @@ const VideoCallLayout = memo(() => {
                     handleLocalVideoMouseDown(e, participantId)
                   }
                 >
-                  <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg">
+                  <div className="aspect-video relative w-full h-full bg-primary-dark overflow-hidden shadow-lg">
                     <video
                       autoPlay
                       playsInline
-                      className={`w-full h-full object-cover rounded-xl ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
+                      className={`max-w-full object-contain  ${!isReceiving ? 'transform -translate-x-1 -scale-x-100' : ''}`}
                       // muted={participantId === currentUser}
                       ref={(el) => {
 

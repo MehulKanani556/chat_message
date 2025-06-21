@@ -4,14 +4,46 @@ const { saveMessage } = require("./messageController");
 
 async function createGroup(req, res) {
   try {
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
+    
     const { userName, members, createdBy, bio } = req.body;
+    
+    // Handle members array properly - it might come as string or array
+    let membersArray = members;
+    if (typeof members === 'string') {
+      try {
+        membersArray = JSON.parse(members);
+      } catch (e) {
+        membersArray = [members]; // If it's a single member ID
+      }
+    } else if (Array.isArray(members)) {
+      membersArray = members;
+    } else {
+      membersArray = [];
+    }
+    
+    console.log("Processed members:", membersArray);
+    
     if(req.file){
         req.body.photo = req.file.location
     }
-    const group = await Group.create({ userName, members, createdBy, photo: req.body.photo ? req.body.photo : undefined, bio:bio });
+    
+    const groupData = { 
+      userName, 
+      members: membersArray, 
+      createdBy, 
+      photo: req.body.photo ? req.body.photo : undefined, 
+      bio: bio 
+    };
+    
+    console.log("Creating group with data:", groupData);
+    
+    const group = await Group.create(groupData);
     if(!group){
         return res.status(400).json({ error: "Failed to create group", code: 400 });
     }
+    console.log("Group created successfully:", group);
     return res.status(200).json({ groupId: group._id, group });
   } catch (error) {
     console.error("Error creating group:", error);

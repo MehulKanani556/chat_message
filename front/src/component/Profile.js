@@ -24,6 +24,7 @@ const Profile = () => {
   const [filesOpen, setFilesOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   // Initialize primary color on component mount
   useEffect(() => {
@@ -205,8 +206,23 @@ const Profile = () => {
     setShowColorPicker(!showColorPicker);
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="w-[380px] bg-[#F7F7F7] dark:bg-primary-dark/95 h-full shadow-sm relative">
+    <div
+      className="w-[380px] flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
+      style={{
+        boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
+        width: screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '403px'
+      }}
+    >
       <div>
         <div className="p-4 pb-2 flex items-center">
           <h1 className="text-lg font-semibold text-gray-800 dark:text-primary-light">
@@ -255,64 +271,64 @@ const Profile = () => {
                 </div>
 
                 <div className="max-w-md mx-auto rounded-lg shadow-sm p-8 dark:text-primary-light">
-                    <div className="mb-6">
-                        <h3 className="text-gray-400 text-sm mb-2">About</h3>
-                        <p className="text-black font-semibold dark:text-primary-light">
-                            {profileData.bio || "No bio available"}
-                        </p>
-                    </div>
+                  <div className="mb-6">
+                    <h3 className="text-gray-400 text-sm mb-2">About</h3>
+                    <p className="text-black font-semibold dark:text-primary-light">
+                      {profileData.bio || "No bio available"}
+                    </p>
+                  </div>
 
-                    <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
-                        <div className="border-b border-gray-300">
-                            <div className="px-4 pb-4 pt-1">
-                                <div className="mb-4">
-                                    <p className="text-gray-400 text-sm">Name</p>
-                                    <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
-                                </div>
-
-                                <div className="mb-4">
-                                    <p className="text-gray-400 text-sm">Email</p>
-                                    <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
-                                </div>
-                            </div>
+                  <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
+                    <div className="border-b border-gray-300">
+                      <div className="px-4 pb-4 pt-1">
+                        <div className="mb-4">
+                          <p className="text-gray-400 text-sm">Name</p>
+                          <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
                         </div>
+
+                        <div className="mb-4">
+                          <p className="text-gray-400 text-sm">Email</p>
+                          <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
+                        </div>
+                      </div>
                     </div>
-                </div>
-            </div>
-                <div className="mb-4">
-                  <p className="text-gray-400 text-sm">Email</p>
-                  <p className="text-black font-semibold dark:text-primary-light">
-                    {profileData.email}
-                  </p>
+                  </div>
                 </div>
               </div>
+              <div className="mb-4">
+                <p className="text-gray-400 text-sm">Email</p>
+                <p className="text-black font-semibold dark:text-primary-light">
+                  {profileData.email}
+                </p>
+              </div>
             </div>
+          </div>
 
-            {/* Theme Color Section */}
-            <div className="border-b border-gray-300">
-              <button
-                className="w-full px-4 py-3 flex justify-between items-center"
-                onClick={toggleColorPicker}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="w-4 h-4 rounded-full bg-primary"></span>
-                  <span className="font-medium">Theme Color</span>
-                </div>
-                {showColorPicker ? (
-                  <FaChevronUp size={12} />
-                ) : (
-                  <FaChevronDown size={12} />
-                )}
-              </button>
-
-              {showColorPicker && (
-                <div className="px-4 py-4">
-                  <ColorPicker />
-                </div>
+          {/* Theme Color Section */}
+          <div className="border-b border-gray-300">
+            <button
+              className="w-full px-4 py-3 flex justify-between items-center"
+              onClick={toggleColorPicker}
+            >
+              <div className="flex items-center space-x-2">
+                <span className="w-4 h-4 rounded-full bg-primary"></span>
+                <span className="font-medium">Theme Color</span>
+              </div>
+              {showColorPicker ? (
+                <FaChevronUp size={12} />
+              ) : (
+                <FaChevronDown size={12} />
               )}
-            </div>
+            </button>
 
-            {/* <div>
+            {showColorPicker && (
+              <div className="px-4 py-4">
+                <ColorPicker />
+              </div>
+            )}
+          </div>
+
+          {/* <div>
                             <button
                                 className="w-full px-4 py-3 flex justify-between items-center"
                                 onClick={() => setFilesOpen(!filesOpen)}
@@ -330,9 +346,9 @@ const Profile = () => {
                                 </div>
                             )}
                         </div> */}
-          </div>
         </div>
       </div>
+    </div>
   );
 };
 

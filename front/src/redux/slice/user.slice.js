@@ -325,6 +325,8 @@ export const updateUser = createAsyncThunk(
 export const createGroup = createAsyncThunk(
   "user/createGroup",
   async ({ groupData, socket }, { rejectWithValue }) => {
+    console.log(groupData, "///////////////////////////////");
+
     const token = await sessionStorage.getItem("token");
     const formData = new FormData();
     Object.keys(groupData).forEach((key) => {
@@ -925,7 +927,7 @@ const userSlice = createSlice({
       .addCase(deleteChat.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
-        state.message = action.payload?.message || "Failed to delete chat";       
+        state.message = action.payload?.message || "Failed to delete chat";
       })
       .addCase(pinChat.fulfilled, (state, action) => {
         state.loading = false;
@@ -947,7 +949,7 @@ const userSlice = createSlice({
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to muteChat chat";
       })
-      
+
   },
 });
 
