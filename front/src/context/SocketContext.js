@@ -40,6 +40,9 @@ import {
   setCallChatList,
   setshareRoomId,
   setShowScreenSource,
+  setIsHost,
+  setIsControlling,
+  setViewerControlling,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
@@ -140,14 +143,14 @@ export const SocketProvider = ({ children }) => {
 
   const { messages } = useSelector((state) => state.user);
 
-  const [isHost, setIsHost] = useState(false);
-  const [isControlling, setIsControlling] = useState(false);
-  const [viewerControlling, setViewerControlling] = useState(null);
+  // const [isHost, setIsHost] = useState(false);
+  // const [isControlling, setIsControlling] = useState(false);
+  // const [viewerControlling, setViewerControlling] = useState(null);
 
   // Add state change logging
-  useEffect(() => {
-    console.log("Socket state changed:", { isHost, isControlling, isReceiving });
-  }, [isHost, isControlling, isReceiving]);
+  // useEffect(() => {
+  //   console.log("Socket state changed:", { isHost, isControlling, isReceiving });
+  // }, [isHost, isControlling, isReceiving]);
 
   // Helper functions
   const generateCallRoomId = () => {
@@ -561,7 +564,7 @@ useEffect(() => {
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-
+      dispatch(setIsHost(true));
       dispatch(setIsReceiving(true));
       dispatch(updateParticipant({ userId, stream }));
 
@@ -645,7 +648,7 @@ useEffect(() => {
       }
 
       dispatch(setIsSharing(true));
-      setIsHost(true);
+    
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
         console.log("Stream ended by user");
@@ -669,7 +672,7 @@ useEffect(() => {
 
   const acceptScreenShare = () => {
     if (!incomingShare) return;
-    setIsHost(false);
+    dispatch(setIsHost(false));
     try {
       dispatch(setIsReceiving(true));
       setPeerEmail(incomingShare.fromEmail);
@@ -1018,38 +1021,38 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
           await window.electron.remoteControl.scroll(payload.amount);
           break;
 
-        case "dragStart":
-          try {
-            const { x, y } = payload;
-            isDragging = true;
-            await window.electron.remoteControl.moveMouse(x,y);
-            await window.electron.remoteControl.pressButton();
-          } catch (err) {
-            console.error("Drag start failed:", err);
-          }
-          break;
+        // case "dragStart":
+        //   try {
+        //     const { x, y } = payload;
+        //     isDragging = true;
+        //     await window.electron.remoteControl.moveMouse(x,y);
+        //     await window.electron.remoteControl.pressButton();
+        //   } catch (err) {
+        //     console.error("Drag start failed:", err);
+        //   }
+        //   break;
 
         case "dragMove":
           if (!isDragging) break;
           try {
             const { x, y } = payload;
-            await window.electron.remoteControl.moveMouse(x,y);
+            await window.electron.remoteControl.drag(x,y);
           } catch (err) {
             console.error("Drag move failed:", err);
           }
           break;
 
-        case "dragEnd":
-          if (!isDragging) break;
-          try {
-            const { x, y } = payload;
-            await window.electron.remoteControl.moveMouse(x,y);
-            await window.electron.remoteControl.releaseButton();
-            isDragging = false;
-          } catch (err) {
-            console.error("Drag end failed:", err);
-          }
-          break;
+        // case "dragEnd":
+        //   if (!isDragging) break;
+        //   try {
+        //     const { x, y } = payload;
+        //     await window.electron.remoteControl.moveMouse(x,y);
+        //     await window.electron.remoteControl.releaseButton();
+        //     isDragging = false;
+        //   } catch (err) {
+        //     console.error("Drag end failed:", err);
+        //   }
+        //   break;
 
         default:
           console.log("Unknown control type:", type);
@@ -1610,7 +1613,6 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
       }
       console.log("groupId",groupId,message);
 
-      
 
       const messageData = {
         senderId: userId,
@@ -1890,22 +1892,22 @@ console.log(callRoom);
     socketRef.current.emit("control-event", { roomId, type, payload });
   };
 
-  const registerAsHost = useCallback(() => {
-    if (!socketRef.current?.connected) return;
-    console.log("Registering as host");
-    socketRef.current.emit('register-as-host');
-    setIsHost(true);
-    setIsControlling(false);
-  }, [socketRef]);
+  // const registerAsHost = useCallback(() => {
+  //   if (!socketRef.current?.connected) return;
+  //   console.log("Registering as host");
+  //   socketRef.current.emit('register-as-host');
+  //   setIsHost(true);
+  //   setIsControlling(false);
+  // }, [socketRef]);
 
 
-  const unregisterAsHost = useCallback(() => {
-    if (!socketRef.current?.connected) return;
-    console.log("Unregistering as host");
-    socketRef.current.emit('unregister-as-host');
-    setIsHost(false);
-    setIsControlling(false);
-  }, [socketRef]);
+  // const unregisterAsHost = useCallback(() => {
+  //   if (!socketRef.current?.connected) return;
+  //   console.log("Unregistering as host");
+  //   socketRef.current.emit('unregister-as-host');
+  //   setIsHost(false);
+  //   setIsControlling(false);
+  // }, [socketRef]);
 
   const requestControl = useCallback((hostId) => {
     if (!socketRef.current?.connected) return;
@@ -1931,7 +1933,7 @@ console.log(callRoom);
 
     const handleControlPermission = (granted) => {
       console.log("Control permission received:", granted);
-      setIsControlling(granted);
+      dispatch(setIsControlling(granted));
       if (granted) {
         alert("You have been granted control");
       } else {
@@ -1948,18 +1950,18 @@ console.log(callRoom);
 
     const handleControlRevoked = () => {
       console.log("Control has been revoked");
-      setIsControlling(false);
+      dispatch(setIsControlling(false));
       alert("Control has been revoked by the host");
     };
 
     const handleControlGranted = ({ viewerId }) => {
       console.log("Control granted to:", viewerId);
-      setViewerControlling(viewerId);
+      dispatch(setViewerControlling(viewerId));
     };
 
     const handleControlRevokedForHost = ({ viewerId }) => {
       console.log("Control revoked from:", viewerId);
-      setViewerControlling(null);
+      dispatch(setViewerControlling(null));
     };
 
     socketRef.current.on('control-permission', handleControlPermission);
@@ -2021,10 +2023,8 @@ const value = useMemo(() => ({
   requestControl,
   grantControl,
   revokeControl,
-  registerAsHost,
-  unregisterAsHost,
-  isControlling,
-  isHost,
+  // registerAsHost,
+  // unregisterAsHost
   sendGroupMessage:memoizedsendGroupMessage
 }), [
   userId,
@@ -2058,7 +2058,7 @@ const value = useMemo(() => ({
   memoizedSubscribeToMessages,
   memoizedSendTypingStatus,
   memoizedsendControls,
-  memoizedsendGroupMessage
+  memoizedsendGroupMessage,
 ]);
  
 

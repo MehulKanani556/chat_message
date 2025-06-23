@@ -64,5 +64,6 @@ contextBridge.exposeInMainWorld("electron", {
       }),
     pressButton: () => ipcRenderer.invoke('remote-control',  { type: "pressButton", payload: {} }),
     releaseButton: () => ipcRenderer.invoke('remote-control', { type: "releaseButton", payload: {} }),
+    drag: (x,y) => ipcRenderer.invoke('remote-control', { type: "drag", payload: {x,y} }),
   },
 });

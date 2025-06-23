@@ -55,7 +55,8 @@ async function createGroup(req, res) {
 
 async function updateGroup(req, res) {
   try {
-    const { groupId } = req.body; // Only keep groupId from the body
+    const  groupId  = req.body.groupId || req.params.groupId;
+     // Only keep groupId from the body
     const updateData = {}; // Create an object to hold the fields to update
 
     if (req.body.userName) {
@@ -71,7 +72,10 @@ async function updateGroup(req, res) {
       updateData.photo = req.file.location; // Update photo if a file is uploaded
     }
 
-    const group = await Group.findByIdAndUpdate(groupId, updateData); // Update only the fields that are present
+    // console.log(groupId,updateData,"-----------");
+    
+
+    const group = await Group.findByIdAndUpdate(groupId, updateData, { new: true }); // Update only the fields that are present and return the new data
     return res.status(200).json({status: true, message: "Group updated successfully", group });
   } catch (error) {
     console.error("Error updating group:", error);
@@ -84,9 +88,10 @@ async function updateGroup(req, res) {
 async function addParticipants(req, res) {
   try {
     const { groupId, members, addedBy } = req.body; 
-    const group = await Group.findByIdAndUpdate(groupId, { $push: { members } });
+
+    console.log("---------",groupId, members, addedBy ,"---------");
+    const group = await Group.findByIdAndUpdate(groupId, { $push: { members } }, {new:true});
     
-    console.log(members);
   
     for (const memberId of members) {
       const addedByUser = await User.findById(addedBy);
@@ -152,7 +157,10 @@ async function findGroupById(groupId) {
 
 async function getAllGroups(req, res) {
   try {
-    const groups = await Group.find();
+    const userId = req.user._id;
+    const groups = await Group.find({ members: userId });
+    // console.log(groups,userId);
+    
     return res.status(200).json(groups);
   } catch (error) {
     console.error("Error retrieving all groups:", error);
@@ -165,6 +173,8 @@ async function getAllGroups(req, res) {
   async function leaveGroup(req, res) {
     try {
       const { userId, groupId, removeId } = req.body;
+      console.log(userId, groupId, removeId );
+      
       const group = await Group.findByIdAndUpdate(
         groupId,
         { $pull: { members: userId } }, // Remove the user from the group's members

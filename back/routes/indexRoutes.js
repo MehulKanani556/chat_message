@@ -82,7 +82,7 @@ indexRoutes.post("/addContactList", auth, addContactList);
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);
 indexRoutes.put("/updateGroup/:groupId", auth, upload.single("photo"), updateGroup);
 indexRoutes.delete("/deleteGroup/:groupId", auth, deleteGroup);
-indexRoutes.get("/allGroups", getAllGroups);
+indexRoutes.get("/allGroups",auth, getAllGroups);
 indexRoutes.get("/getGroupById/:groupId", auth, getGroupById);
 indexRoutes.post("/leaveGroup", auth, leaveGroup);
 indexRoutes.post("/addParticipants", auth, addParticipants);

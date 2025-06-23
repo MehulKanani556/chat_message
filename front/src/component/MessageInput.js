@@ -42,6 +42,9 @@ const MessageInput = memo(
     const editingMessage = useSelector(state => state.magageState.editingMessage);
     const facingMode = useSelector(state => state.magageState.facingMode);
 
+    console.log(selectedChat,"selectedChat");
+    
+
     // const [messageInput, setMessageInput] = useState("");
     const emojiPickerRef = useRef(null);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
@@ -187,7 +190,6 @@ const MessageInput = memo(
         setIsRecording(false);
       }
     };
-
 
     //   =============
 
@@ -393,6 +395,7 @@ const MessageInput = memo(
       }
       
       dispatch(setMessageInput(""));
+    
     };
 
     //===========handle send group message===========
@@ -406,7 +409,8 @@ const MessageInput = memo(
       } catch (error) {
         console.error("Failed to send group message:", error);
       }
-    }, []);
+      dispatch(setReplyingTo(null))
+    }, [selectedChat]);
 
     //=========== emoji picker ===========
     const onEmojiClick = (event, emojiObject) => {

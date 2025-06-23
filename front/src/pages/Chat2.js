@@ -74,8 +74,6 @@ const Chat2 = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  console.log("onlineUsers", onlineUsers);
-
 
   const dispatch = useDispatch();
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);

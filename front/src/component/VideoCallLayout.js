@@ -34,31 +34,25 @@ const getParticipantWidth = (count) => {
 const VideoCallLayout = memo(() => {
   const participants = useSelector((state) => state.magageState.participants);
   const selectedChat = useSelector((state) => state.magageState.selectedChat);
-  const selectedChatModule = useSelector(
-    (state) => state.magageState.selectedChatModule
-  );
-  const isMicrophoneOn = useSelector(
-    (state) => state.magageState.isMicrophoneOn
-  );
+  const selectedChatModule = useSelector((state) => state.magageState.selectedChatModule);
+  const isMicrophoneOn = useSelector((state) => state.magageState.isMicrophoneOn);
   const isCameraOn = useSelector((state) => state.magageState.isCameraOn);
-  const isVideoCalling = useSelector(
-    (state) => state.magageState.isVideoCalling
-  );
-  const isVoiceCalling = useSelector(
-    (state) => state.magageState.isVoiceCalling
-  );
+  const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
+  const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
   const cameraStatus = useSelector((state) => state.magageState.cameraStatus);
   const isReceiving = useSelector((state) => state.magageState.isReceiving);
   const userIncall = useSelector((state) => state.magageState.userIncall);
   const chatMessages = useSelector((state) => state.magageState.chatMessages);
-  const participantOpen = useSelector(
-    (state) => state.magageState.participantOpen
-  );
+  const isHost = useSelector((state) => state.magageState.isHost);
+  const isControlling = useSelector((state) => state.magageState.isControlling);
+  const viewerControlling = useSelector((state) => state.magageState.viewerControlling);
+  const participantOpen = useSelector((state) => state.magageState.participantOpen);
   const callChatList = useSelector((state) => state.magageState.callChatList);
   const roomId = useSelector((state) => state.magageState.shareRoomId);
+  const allUsers = useSelector((state) => state.user.allUsers);
 
-  const { allUsers, messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -79,13 +73,8 @@ const VideoCallLayout = memo(() => {
     requestControl,
     grantControl,
     revokeControl,
-    registerAsHost,
-    unregisterAsHost,
-    isControlling,
-    isHost,
-    viewerControlling
   } = useSocket();
-
+  
   //===========Use the custom socket hook===========
   const handleMouseDown = (e) => {
     if (!chatMessages) return;
@@ -566,6 +555,7 @@ const VideoCallLayout = memo(() => {
   useEffect(() => {
 
     const handleMouseDown = (e) => {
+      console.log(isDragging_El,"isDragging_El  Down");
       if (!isControlling) return;
     
       const video = e.currentTarget;
@@ -575,24 +565,27 @@ const VideoCallLayout = memo(() => {
     
       dragStart_El = { x, y };
       isDragging_El = true;
-      sendControl("dragStart", { x, y }, roomId);
+      // sendControl("dragStart", { x, y }, roomId);
     };
 
     const handleMouseUp = (e) => {
-      if (!isControlling || !isDragging) return;
+      console.log(isDragging_El,"isDragging_El  UP");
+      
+      if (!isControlling || !isDragging_El) return;
     
       const video = e.currentTarget;
       const rect = video.getBoundingClientRect();
       const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
       const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
     
-      sendControl("dragEnd", { x, y }, roomId);
+      // sendControl("dragEnd", { x, y }, roomId);
       isDragging_El = false;
       dragStart_El = null;
     };
 
 
     const handleMouseMove = (e) => {
+      console.log(isDragging_El,"isDragging_El");
       if (!isControlling) return;
       // const rect = e.target.getBoundingClientRect();
       // const x = e.clientX - rect.left;
@@ -613,7 +606,7 @@ const VideoCallLayout = memo(() => {
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
 
-      if (isDragging) {
+      if (isDragging_El) {
         sendControl("dragMove", { x, y }, roomId);
       } else {
         sendControl("mousemove", { x, y }, roomId);
@@ -637,10 +630,7 @@ const VideoCallLayout = memo(() => {
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
 
-      if( !isDragging_El){
-        sendControl("click", { x, y }, roomId);
-      }
-   
+      sendControl("click", { x, y }, roomId);
     };
 
     const handleRightClick = (e) => {
@@ -684,7 +674,6 @@ const VideoCallLayout = memo(() => {
     const handleKeyDown = (e) => {
       if (!isControlling) return;
       
-      // Prevent default browser behavior for some keys
       e.preventDefault();
       
       sendControl('keydown', {
@@ -869,7 +858,7 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className={`w-full${
+                      className={`w-full ${
                         !isReceiving
                           ? "transform -translate-x-1 -scale-x-100 h-full object-cover rounded-xl"
                           : "object-contain"
