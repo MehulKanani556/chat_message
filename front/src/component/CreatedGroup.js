@@ -6,7 +6,7 @@ import { createGroup, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { RiUserAddLine } from "react-icons/ri";
 import { FaChevronRight } from "react-icons/fa";
-import { setIsGroupCreateModalOpen, setIsModalOpen } from "../redux/slice/manageState.slice";
+import { setGroupBio, setGroupName, setGroupPhoto, setIsGroupCreateModalOpen, setIsModalOpen, setShowGroups, setShowLeftSidebar } from "../redux/slice/manageState.slice";
 const CreatedGroup = memo(({
   isOpen,
   // allUsers,
@@ -20,37 +20,24 @@ const CreatedGroup = memo(({
 }) => {
 
   console.log("CreatedGroup");
-  
+
   const dispatch = useDispatch();
-  const [groupName, setGroupName] = useState("");
-  const [groupBio, setGroupBio] = useState("");
+  // const [groupName, setGroupName] = useState("");
+  // const [groupBio, setGroupBio] = useState("");
   // const [groupUsers, setGroupUsers] = useState([]);
-  const [groupPhoto, setGroupPhoto] = useState(null);
+  // const [groupPhoto, setGroupPhoto] = useState(null);
   // const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
   // const { allUsers,messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
 
-  console.log(creatGroup, groupUsers);
-  // Reset state when modal is closed/opened
-  useEffect(() => {
-    if (!isOpen) {
-      setGroupName("");
-      setGroupBio("");
-      setGroupUsers([]);
-      setGroupPhoto(null);
-    }
-  }, [isOpen]);
 
-  const handleCreateClick = () => {
-    // Pass the data up to the parent component
-    onCreateGroup({
-      userName: groupName || "Group", // Default name if empty
-      photo: groupPhoto,
-      bio: groupBio,
-      members: [...groupUsers, currentUser], // Add current user as member
-    });
-    dispatch(setIsGroupCreateModalOpen(false));
-  };
+  // Reset state when modal is closed/opened
+  const groupName = useSelector(state => state.magageState.groupName);
+  const groupPhoto = useSelector(state => state.magageState.groupPhoto);
+  const groupBio = useSelector(state => state.magageState.groupBio);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  // Pass the data up to the parent component
+
 
   const handleCreateGroup = async () => {
     const data = {
@@ -60,12 +47,13 @@ const CreatedGroup = memo(({
       photo: groupPhoto,
       bio: groupBio,
     };
+
     try {
       await dispatch(createGroup({ groupData: data, socket }));
       setGroupUsers([]);
-      setGroupPhoto(null);
-      setGroupName("");
-      setGroupBio("");
+      dispatch(setGroupPhoto(null));
+      dispatch(setGroupName(""));
+      dispatch(setGroupBio(""));
       dispatch(setIsGroupCreateModalOpen(false));
       dispatch(getAllMessageUsers());
     } catch (error) {
@@ -74,23 +62,40 @@ const CreatedGroup = memo(({
       // Optionally show error to user via toast/alert
     }
   };
+  console.log(groupName);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   return (
     <div
-      className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
+      // className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
+      className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
+        width: screenWidth === 1024 ? '579px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
       }}
     >
       <div className="flex justify-between items-center p-4 py-6">
         <h2 className="text-lg font-bold dark:text-primary-light">
           Create Group
         </h2>
-        <button onClick={() => dispatch(setIsGroupCreateModalOpen(false))} className="text-gray-500 hover:text-gray-700">
+        <button onClick={() => {
+          dispatch(setIsGroupCreateModalOpen(false));
+          dispatch(setShowLeftSidebar(true));
+          dispatch(setShowGroups(true));
+        }} className="text-gray-500 hover:text-gray-700">
           <ImCross />
         </button>
       </div>
-      <div className="sm:block flex-1 h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
+      <div className="sm:block  h-[1px] bg-gradient-to-r from-gray-300/30 via-gray-300 to-gray-300/30 dark:bg-gradient-to-l dark:from-white/5 dark:via-white/30 dark:to-white/5 max-w-[100%] mx-auto" />
 
       <div className="flex flex-col items-center">
         <div className="relative w-24 h-24 rounded-full bg-gray-300  mt-4 group">
@@ -111,7 +116,7 @@ const CreatedGroup = memo(({
             accept="image/*"
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
-                setGroupPhoto(e.target.files[0]);
+                dispatch(setGroupPhoto(e.target.files[0]));
               }
             }}
           />
@@ -160,7 +165,7 @@ const CreatedGroup = memo(({
             type="text"
             placeholder="Group Name"
             value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
+            onChange={(e) => dispatch(setGroupName(e.target.value))}
             className="mt-2 text-xl font-semibold bg-transparent border-none dark:text-primary-light outline-none text-center disabled"
             disabled
           />
@@ -173,7 +178,7 @@ const CreatedGroup = memo(({
           placeholder="Group Name"
           className="w-full py-2 pl-2 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10  focus:outline-none"
           value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
+          onChange={(e) => dispatch(setGroupName(e.target.value))}
         />
 
         <label className="py-2 text-md">About </label>
@@ -182,7 +187,7 @@ const CreatedGroup = memo(({
           placeholder="About"
           className="w-full py-2 pl-2 pr-4 bg-[#E0E5EB] rounded-md text-gray-600 dark:text-white dark:bg-white/10  focus:outline-none"
           value={groupBio}
-          onChange={(e) => setGroupBio(e.target.value)}
+          onChange={(e) => dispatch(setGroupBio(e.target.value))}
         />
 
 
@@ -205,7 +210,7 @@ const CreatedGroup = memo(({
         </div>
       </div>
       {/* <div className="fixed bottom-8  mt-4 flex justify-center max-w-[350px] w-full"> */}
-      <div className=" fixed bottom-8 max-w-md bg-[#F9FAFA] w-[350px] flex rounded-lg m-3">
+      <div className=" fixed max-w-md bg-[#F9FAFA] w-[350px] flex rounded-lg m-3">
         <button
           onClick={handleCreateGroup}
           disabled={!groupName && groupUsers.length === 0} // Optional: Disable button if no name and no users selected

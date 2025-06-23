@@ -172,7 +172,7 @@ const Sidebar = memo(() => {
               />
             ) : (
               <span
-                className="text-black dark:text-primary-light text-lg font-bold capitalize cursor-pointer"
+                className="text-black dark:text-primary-light font-bold capitalize cursor-pointer text-xs sm:text-sm md:text-lg"
                 onClick={handleProfileClick}
               >
                 {user?.userName && user?.userName.includes(" ")
@@ -185,7 +185,7 @@ const Sidebar = memo(() => {
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute bottom-[50px] md:bottom-0 right-0 md:right-auto md:left-[55px] mt-2 w-48 bg-white dark:bg-primary-dark rounded-md shadow-lg py-1 z-50">
+            <div className="absolute bottom-[50px] md:bottom-0 right-[-24px] md:right-auto md:left-[55px] mt-2 w-48 bg-white dark:bg-primary-dark rounded-md shadow-lg py-1 z-50">
               <div className="py-1">
                 <button
                   onClick={() => {

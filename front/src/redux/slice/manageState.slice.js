@@ -1,93 +1,104 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-  const initialState = {
-    remoteStreams: new Map(),
-    participants: [],
-    callParticipantsList: {},
-    
-    isConnected: false,
-    onlineUsers: [],
-    isReceiving: false,
-    incomingCall: null,
-    isVideoCalling: false,
-    isVoiceCalling: false,
-    incomingShare: null,
-    isSharing: false,
-    isCameraOn: false,
-    isMicrophoneOn: false,
-    voiceCallData: null,
-    cameraStatus: {},
-    callParticipants: new Set(),
-    selectedImage: null,
-    participantOpen: false,
-    
-    isImageModalOpen: false,
-    selectedChatModule: true,
-    showProfile: false,
-    showSettings: false,
-    showGroups: false,
-    showCallHistory: false,
-    isGroupModalOpen: false,
-    isModalOpen: false,
-    isGroupCreateModalOpen: false,
-    isUserProfileModalOpen: false,
-    showLeftSidebar: true,
-    selectedChat: null,
-    uploadProgress: {},
-    selectedFiles: [],
-    replyingTo: null,
-    typingUsers: [],
-    searchInputbox: "",
-    cameraStream: null,
-    openCameraState: false,
-    backCameraAvailable: false,
-    facingMode: "user",
-    isSearchBoxOpen: false,
-    messageInput: "",
-    editingMessage: null,
+const initialState = {
+  remoteStreams: new Map(),
+  participants: [],
+  callParticipantsList: {},
 
-    videoCallChatList: false,
-    callChatList: false,
-    chatMessages: false,
+  isConnected: false,
+  onlineUsers: [],
+  isReceiving: false,
+  incomingCall: null,
+  isVideoCalling: false,
+  isVoiceCalling: false,
+  incomingShare: null,
+  isSharing: false,
+  isCameraOn: false,
+  isMicrophoneOn: false,
+  voiceCallData: null,
+  cameraStatus: {},
+  callParticipants: new Set(),
+  selectedImage: null,
+  participantOpen: false,
 
-    showForwardModal: false,
-    forwardingMessage: null,
-    userIncall: null,
-    shareRoomId:null,
-  };
+  showForwardModal: false,
+  forwardingMessage: null,
+  userIncall: null,
+  shareRoomId:null,
 
-  const manageStateSlice = createSlice({
-    name: "user",
-    initialState,
-    reducers: {
+  showScreenSource: false,
+  screenSource:null,
 
-      setSelectedChat:(state, action) => {
-        state.selectedChat = action.payload;
-      },
-      setRemoteStreams: (state, action) => {
-        state.remoteStreams = action.payload;
-      },
-      setParticipants: (state, action) => {
-        state.participants = action.payload;
-      },
-      updateParticipant: (state, action) => { 
-        const { userId, stream } = action.payload;
-        const allStreams = new Map(state.participants);
+  isImageModalOpen: false,
+  selectedChatModule: true,
+  showProfile: false,
+  showSettings: false,
+  showGroups: false,
+  showCallHistory: false,
+  isGroupModalOpen: false,
+  isModalOpen: false,
+  isGroupCreateModalOpen: false,
+  isUserProfileModalOpen: false,
+  showLeftSidebar: true,
+  selectedChat: null,
+  uploadProgress: {},
+  selectedFiles: [],
+  replyingTo: null,
+  typingUsers: [],
+  searchInputbox: "",
+  cameraStream: null,
+  openCameraState: false,
+  backCameraAvailable: false,
+  facingMode: "user",
+  isSearchBoxOpen: false,
+  messageInput: "",
+  editingMessage: null,
 
-         console.log(allStreams);
-        allStreams.set(userId, stream);
-        state.participants = Array.from(allStreams);
-      },
-      removeParticipant: (state, action) => {
-        const userId = action.payload;
-        const allStreams = new Map(state.participants);
-        allStreams.delete(userId)
-        state.participants = Array.from(allStreams);
-      },
-      setCallParticipantsList: (state, action) => {
-        state.callParticipantsList = action.payload;
-      },
-       // New reducers for socket states
+  videoCallChatList: false,
+  callChatList: false,
+  chatMessages: false,
+
+  showForwardModal: false,
+  forwardingMessage: null,
+  userIncall: null,
+
+  groupName: "",
+  groupBio: "",
+  groupPhoto: ""
+};
+
+const manageStateSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+
+    setSelectedChat: (state, action) => {
+      state.selectedChat = action.payload;
+    },
+    setRemoteStreams: (state, action) => {
+      state.remoteStreams = action.payload;
+    },
+    setParticipants: (state, action) => {
+      state.participants = action.payload;
+    },
+    updateParticipant: (state, action) => {
+      const { userId, stream } = action.payload;
+      const allStreams = new Map(state.participants);
+
+      console.log(allStreams);
+      allStreams.set(userId, stream);
+      state.participants = Array.from(allStreams);
+    },
+    removeParticipant: (state, action) => {
+      const userId = action.payload;
+      const allStreams = new Map(state.participants);
+      allStreams.delete(userId)
+      state.participants = Array.from(allStreams);
+    },
+    setCallParticipantsList: (state, action) => {
+      state.callParticipantsList = action.payload;
+    },
+    // New reducers for socket states
     setIsConnected: (state, action) => {
       state.isConnected = !state.isConnected;
     },
@@ -161,11 +172,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setIsImageModalOpen: (state, action) => {
       state.isImageModalOpen = action.payload;
     },
-    setSelectedImage : (state, action)=>{
+    setSelectedImage: (state, action) => {
       state.selectedImage = action.payload;
     },
     setUploadProgress: (state, action) => {
-      console.log("zzzzzzzzzzzzzzzzzz",action.payload);
       state.uploadProgress = action.payload;
     },
     setSelectedFiles: (state, action) => {
@@ -226,63 +236,81 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
     setUserIncall: (state, action) => {
       state.userIncall = action.payload;
     },
-    setshareRoomId: (state, action) => {
-      state.shareRoomId = action.payload;
+
+    setGroupName: (state, action) => {
+      state.groupName = action.payload;
     },
-  }
-  })
-  
-  export const {
-    setSelectedChat,
-    setRemoteStreams,
-    setParticipants,
-    updateParticipant,
-    removeParticipant,
-    setCallParticipantsList,
-    setIsConnected,
-    setOnlineUsers,
-    setIsReceiving,
-    setIncomingCall,
-    setIsVideoCalling,
-    setIsVoiceCalling,
-    setIncomingShare,
-    setIsSharing,
-    setIsCameraOn,
-    setIsMicrophoneOn,
-    setVoiceCallData,
-    setCameraStatus,
-    setCallParticipants,
-    setSelectedChatModule,
-    setShowProfile,
-    setShowSettings,
-    setShowGroups,
-    setShowCallHistory,
-    setIsGroupModalOpen,
-    setIsModalOpen,
-    setIsGroupCreateModalOpen,
-    setIsUserProfileModalOpen,
-    setShowLeftSidebar,
-    setIsImageModalOpen,
-    setSelectedImage,
-    setUploadProgress,
-    setSelectedFiles,
-    setReplyingTo,
-    setTypingUsers,
-    setParticipantOpen,
-    setSearchInputbox,
-    setCameraStream,
-    setOpenCameraState,
-    setBackCameraAvailable,
-    setFacingMode,
-    setIsSearchBoxOpen,
-    setMessageInput,
-    setEditingMessage,
-    setvideoCallChatList,
-    setCallChatList,
-    setChatMessages,
-    setShowForwardModal,
-    setForwardingMessage,
-    setUserIncall,
-    setshareRoomId
-  } = manageStateSlice.actions;
-  export default manageStateSlice.reducer;
+    setShowScreenSource: (state, action) => {
+      state.showScreenSource = action.payload;
+    },
+    setScreenSource: (state, action) => {
+      state.screenSource = action.payload;
+    },
+    setGroupBio: (state, action) => {
+      state.groupBio = action.payload;
+    },
+
+    setGroupPhoto: (state, action) => {
+      state.groupPhoto = action.payload;
+    },
+  },
+});
+
+export const {
+  setSelectedChat,
+  setRemoteStreams,
+  setParticipants,
+  updateParticipant,
+  removeParticipant,
+  setCallParticipantsList,
+  setIsConnected,
+  setOnlineUsers,
+  setIsReceiving,
+  setIncomingCall,
+  setIsVideoCalling,
+  setIsVoiceCalling,
+  setIncomingShare,
+  setIsSharing,
+  setIsCameraOn,
+  setIsMicrophoneOn,
+  setVoiceCallData,
+  setCameraStatus,
+  setCallParticipants,
+  setSelectedChatModule,
+  setShowProfile,
+  setShowSettings,
+  setShowGroups,
+  setShowCallHistory,
+  setIsGroupModalOpen,
+  setIsModalOpen,
+  setIsGroupCreateModalOpen,
+  setIsUserProfileModalOpen,
+  setShowLeftSidebar,
+  setIsImageModalOpen,
+  setSelectedImage,
+  setUploadProgress,
+  setSelectedFiles,
+  setReplyingTo,
+  setTypingUsers,
+  setParticipantOpen,
+  setSearchInputbox,
+  setCameraStream,
+  setOpenCameraState,
+  setBackCameraAvailable,
+  setFacingMode,
+  setIsSearchBoxOpen,
+  setMessageInput,
+  setEditingMessage,
+  setvideoCallChatList,
+  setCallChatList,
+  setChatMessages,
+  setShowForwardModal,
+  setForwardingMessage,
+  setUserIncall,
+  setGroupName,
+  setGroupBio,
+  setGroupPhoto,
+  setShowScreenSource,
+  setScreenSource,
+} = manageStateSlice.actions;
+export default manageStateSlice.reducer;

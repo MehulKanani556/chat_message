@@ -546,9 +546,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content
@@ -611,9 +643,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content
@@ -672,9 +736,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content
@@ -727,9 +823,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content
@@ -781,9 +909,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content
@@ -858,9 +1018,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : item?.messages?.[0]?.content.type ===
@@ -901,9 +1093,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content.content
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   ) : (
@@ -916,12 +1140,41 @@ const ChatList = memo(({
                                           maxWidth: "150px",
                                         }}
                                       >
-                                        {decryptMessage(
-                                          item?.messages?.[0]?.content?.content?.replace(
-                                            /\*\*/g,
-                                            ""
-                                          )
-                                        )}
+                                        {(() => {
+                                          const messageContent = decryptMessage(
+                                            item?.messages?.[0]?.content?.content?.replace(/\*\*/g, "")
+                                          );
+                                          // Check for URLs or emails
+                                          if (
+                                            messageContent?.match(/(https?:\/\/[^\s]+)/g) ||
+                                            messageContent?.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g)
+                                          ) {
+                                            return <span>{messageContent}</span>;
+                                          }
+                                          // Emoji splitting logic
+                                          return (messageContent || "")
+                                            .split(/(\p{Emoji})/gu)
+                                            .map((part, index) => {
+                                              if (part.match(/\p{Emoji}/gu)) {
+                                                return (
+                                                  <span key={index} className="inline-block align-middle">
+                                                    <img
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                        .codePointAt(0)
+                                                        .toString(16)}.png`}
+                                                      alt={part}
+                                                      className="inline h-5 w-5"
+                                                      onError={e => {
+                                                        e.target.onerror = null;
+                                                        e.target.replaceWith(document.createTextNode(part));
+                                                      }}
+                                                    />
+                                                  </span>
+                                                );
+                                              }
+                                              return <span key={index}>{part}</span>;
+                                            });
+                                        })()}
                                       </span>
                                     </span>
                                   )}
@@ -987,7 +1240,7 @@ const ChatList = memo(({
               })}
           </div>
         ) : (
-          <div className="overflow-y-auto h-[calc(100vh-150px)] p-3 scrollbar-hide">
+          <div className="overflow-y-auto h-[calc(100vh-175px)] p-3 scrollbar-hide">
             {filteredAllUsers.map((item) => {
               return (
                 <div

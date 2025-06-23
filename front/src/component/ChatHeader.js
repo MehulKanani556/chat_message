@@ -162,7 +162,7 @@ const ChatHeader = memo(({
             }
           }}
         >
-          <div className="font-medium dark:text-primary-light">
+          <div className="font-medium dark:text-primary-light line-clamp-1">
             {selectedChat?.userName || "Select a chat"}
           </div>
           {selectedChat?.members ? (
