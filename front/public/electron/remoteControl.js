@@ -33,6 +33,9 @@ const handleControlEvent = async ({ type, payload }) => {
       case "releaseButton":
         await mouse.releaseButton(Button.LEFT);
         break;
+        case "drag":
+        await mouse.drag(straightTo(new Point(payload.x, payload.y)));
+        break;
       case "keydown":
         try {
           const keyMap = {

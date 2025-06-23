@@ -39,7 +39,7 @@ const Profile = () => {
     email: "",
     phone: "",
     bio: "No bio available",
-    profileImage: "https://via.placeholder.com/150",
+    profileImage: "",
   });
   const [tempData, setTempData] = useState({ ...profileData });
 
@@ -67,7 +67,7 @@ const Profile = () => {
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
-          : "https://via.placeholder.com/150",
+          : "",
       });
     }
   }, [currentUser]);
@@ -91,7 +91,7 @@ const Profile = () => {
             bio: userData.bio || "No bio available",
             profileImage: userData.photo
               ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}`
-              : "https://via.placeholder.com/150",
+              : "",
           });
           setTempData({
             name: userData.userName || "User",
@@ -100,7 +100,7 @@ const Profile = () => {
             bio: userData.bio || "No bio available",
             profileImage: userData.photo
               ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}`
-              : "https://via.placeholder.com/150",
+              : "",
           });
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -121,7 +121,7 @@ const Profile = () => {
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
-          : "https://via.placeholder.com/150",
+          : "",
       });
       setTempData({
         name: currentUser.userName || "User",
@@ -130,7 +130,7 @@ const Profile = () => {
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
-          : "https://via.placeholder.com/150",
+          : "",
       });
     }
   }, [currentUser, targetUserId]);

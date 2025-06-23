@@ -64,7 +64,13 @@ const initialState = {
 
   groupName: "",
   groupBio: "",
-  groupPhoto: ""
+  groupPhoto: "",
+
+
+  isHost: false,
+  isControlling:false,
+  viewerControlling: null,
+
 };
 
 const manageStateSlice = createSlice({
@@ -253,6 +259,18 @@ const manageStateSlice = createSlice({
     setGroupPhoto: (state, action) => {
       state.groupPhoto = action.payload;
     },
+    setshareRoomId:(state, action) => {
+      state.shareRoomId = action.payload;
+    },
+    setIsHost:(state, action) => {
+      state.isHost = action.payload;
+    },
+    setIsControlling:(state, action) => {
+      state.isControlling = action.payload;
+    },
+    setViewerControlling:(state, action) => {
+      state.viewerControlling = action.payload;
+    },
   },
 });
 
@@ -312,5 +330,9 @@ export const {
   setGroupPhoto,
   setShowScreenSource,
   setScreenSource,
+  setshareRoomId,
+  setIsHost,
+  setIsControlling,
+  setViewerControlling
 } = manageStateSlice.actions;
 export default manageStateSlice.reducer;

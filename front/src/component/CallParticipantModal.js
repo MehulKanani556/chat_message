@@ -18,18 +18,20 @@ const CallParticipantModal = memo(({
   console.log("CallParticipantModal");
   const dispatch = useDispatch();
     const [searchInput, setSearchInput] = useState("");
-    const [invitedUsers, setInvitedUsers] = useState([]);
+    // const [invitedUsers, setInvitedUsers] = useState([]);
     const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
-    const { user,allUsers } = useSelector((state) => state.user);
+    const allUsers  = useSelector((state) => state.user.allUsers);
+
     const userId = useMemo(() => sessionStorage.getItem("userId"), []);
    
-    const remoteStreams = useSelector(state => state.magageState.remoteStreams);
+    // const remoteStreams = useSelector(state => state.magageState.remoteStreams);
     const participants = useSelector(state => state.magageState.participants);
     const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
     const callParticipants = useSelector(state => state.magageState.callParticipants);
     const participantOpen = useSelector(state => state.magageState.participantOpen);
     const {inviteToCall} = useSocket();
+    
   return (
     <>
       {participantOpen && (
@@ -155,7 +157,7 @@ const CallParticipantModal = memo(({
                         className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                         onClick={() => {
                           const invited = allUsers.filter(user => selectedCallUsers.has(user._id));
-                          setInvitedUsers(invited);
+                          // setInvitedUsers(invited);
                           selectedCallUsers.forEach(userId => {
                             inviteToCall(userId);
                           });

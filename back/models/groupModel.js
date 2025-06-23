@@ -16,7 +16,6 @@ const groupSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    default: "https://via.placeholder.com/150",
   },
   createdAt: {
     type: Date,
