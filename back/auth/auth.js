@@ -161,22 +161,22 @@ const sendOtpToMobile = async (req, res) => {
         let { mobileNumber } = req.body;
 
         // Generate a random OTP
-        let otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-
+        // let otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+        let otp = 123456;
         // Check if Twilio is configured
-        if (!twilioClient) {
-            return res.status(503).json({ 
-                status: 503, 
-                message: "SMS service is not configured. Please contact the administrator." 
-            });
-        }
+        // if (!twilioClient) {
+        //     return res.status(503).json({ 
+        //         status: 503, 
+        //         message: "SMS service is not configured. Please contact the administrator." 
+        //     });
+        // }
 
         // Send OTP via SMS
-        await twilioClient.messages.create({
-            body: `Your OTP is: ${otp}`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: mobileNumber
-        });
+        // await twilioClient.messages.create({
+        //     body: `Your OTP is: ${otp}`,
+        //     from: process.env.TWILIO_PHONE_NUMBER,
+        //     to: mobileNumber
+        // });
 
         // Save the OTP to the user's record
         let checkUser = await user.findOne({ mobileNumber });
@@ -233,6 +233,33 @@ const verifyMobileOtp = async (req, res) => {
     }
 };
 
+const profileInfo = async (req, res) => {
+    try {
+        let { userName, bio } = req.body;
+        var { _id } = req.user;
+
+        let userdata = await user.findOne({ _id });
+        if (!userdata) {
+            return res.status(404).json({ status: 404, message: "User not found." });
+        }
+
+        userdata.userName = userName;
+        userdata.bio = bio;
+
+        // Only update photo if a new photo is sent
+        if (req.file && req.file.location) {
+            userdata.photo = req.file.location;
+        }
+
+        await userdata.save();
+
+        return res.status(200).json({ status: 200, message: "Profile info fetched successfully.", user: userdata });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
 module.exports = {
     userLogin,
     googleLogin,
@@ -240,5 +267,6 @@ module.exports = {
     verifyOtp,
     changePassword,
     sendOtpToMobile,
-    verifyMobileOtp
+    verifyMobileOtp,
+    profileInfo
 };

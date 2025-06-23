@@ -380,10 +380,10 @@ const MessageInput = memo(
       if (editingMessage) {
         // If editing, always call handleSendMessage with selectedChat?._id
         handleSendMessage(data, selectedChat?._id);
-        alert("editingMessage");
+        // alert("editingMessage");
       } else if (selectedChat && selectedChat?.members?.length > 0) {
-        alert("replyingTo");
-        console.log("dt",data);
+        // alert("replyingTo");
+        // console.log("dt",data);
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);

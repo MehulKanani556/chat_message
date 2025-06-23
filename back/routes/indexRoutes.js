@@ -25,6 +25,7 @@ const {
   changePassword,
   sendOtpToMobile,
   verifyMobileOtp,
+  profileInfo,
 } = require("../auth/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
 const {
@@ -59,6 +60,7 @@ indexRoutes.post("/google-login", googleLogin);
 indexRoutes.post("/forgotPassword", forgotPassword);
 indexRoutes.post("/verifyOtp", verifyOtp);
 indexRoutes.post("/changePassword", changePassword);
+indexRoutes.post("/profile-info", auth, upload.single("photo"), profileInfo);
 
 // User Routes
 indexRoutes.post("/createUser", createUser);
