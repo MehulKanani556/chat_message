@@ -24,10 +24,10 @@ const initialState = {
   showForwardModal: false,
   forwardingMessage: null,
   userIncall: null,
-  shareRoomId:null,
+  shareRoomId: null,
 
   showScreenSource: false,
-  screenSource:null,
+  screenSource: null,
 
   isImageModalOpen: false,
   selectedChatModule: true,
@@ -253,6 +253,10 @@ const manageStateSlice = createSlice({
     setGroupPhoto: (state, action) => {
       state.groupPhoto = action.payload;
     },
+
+    setshareRoomId: (state, action) => {
+      state.shareRoomId = action.payload;
+    }
   },
 });
 
@@ -312,5 +316,6 @@ export const {
   setGroupPhoto,
   setShowScreenSource,
   setScreenSource,
+  setshareRoomId
 } = manageStateSlice.actions;
 export default manageStateSlice.reducer;

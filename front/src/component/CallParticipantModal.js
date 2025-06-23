@@ -17,23 +17,23 @@ const CallParticipantModal = memo(({
 
   console.log("CallParticipantModal");
   const dispatch = useDispatch();
-    const [searchInput, setSearchInput] = useState("");
-    const [invitedUsers, setInvitedUsers] = useState([]);
-    const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
-    const [showFirstSection, setShowFirstSection] = useState(false);
-    const { user,allUsers } = useSelector((state) => state.user);
-    const userId = useMemo(() => sessionStorage.getItem("userId"), []);
-   
-    const remoteStreams = useSelector(state => state.magageState.remoteStreams);
-    const participants = useSelector(state => state.magageState.participants);
-    const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
-    const callParticipants = useSelector(state => state.magageState.callParticipants);
-    const participantOpen = useSelector(state => state.magageState.participantOpen);
-    const {inviteToCall} = useSocket();
+  const [searchInput, setSearchInput] = useState("");
+  const [invitedUsers, setInvitedUsers] = useState([]);
+  const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
+  const [showFirstSection, setShowFirstSection] = useState(false);
+  const { user, allUsers } = useSelector((state) => state.user);
+  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+
+  const remoteStreams = useSelector(state => state.magageState.remoteStreams);
+  const participants = useSelector(state => state.magageState.participants);
+  const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
+  const callParticipants = useSelector(state => state.magageState.callParticipants);
+  const participantOpen = useSelector(state => state.magageState.participantOpen);
+  const { inviteToCall } = useSocket();
   return (
     <>
       {participantOpen && (
-       <>
+        <>
           {/* First Section */}
           {showFirstSection && (
             <div className="h-full w-96 bg-primary-light dark:bg-primary-dark/90 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
@@ -83,7 +83,7 @@ const CallParticipantModal = memo(({
 
                 <div className="p-4">
                   <div className="flex flex-col h-[calc(100vh-275px)] overflow-y-auto modal_scroll">
-                  {allUsers?.filter(user => (user?.userName || '').toLowerCase().includes(searchInput.toLowerCase()))
+                    {allUsers?.filter(user => (user?.userName || '').toLowerCase().includes(searchInput.toLowerCase()))
                       .filter(
                         (user) =>
                           !callParticipants.has(user._id) && user._id !== userId
@@ -103,11 +103,10 @@ const CallParticipantModal = memo(({
                           }}
                         >
                           <div
-                            className={`w-5 h-5 rounded border mr-3 ${
-                              selectedCallUsers.has(user._id)
+                            className={`w-5 h-5 rounded border mr-3 ${selectedCallUsers.has(user._id)
                                 ? "bg-primary border-primary"
                                 : "border-gray-400"
-                            }`}
+                              }`}
                           >
                             {selectedCallUsers.has(user._id) && (
                               <svg
@@ -134,10 +133,11 @@ const CallParticipantModal = memo(({
                               />
                             ) : (
                               <span className="text-gray-900 text-lg font-bold">
-                                {user.userName
+                                {(user.userName || "")
                                   .split(" ")
-                                  .map((n) => n[0].toUpperCase())
-                                  .join("")}
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
                               </span>
                             )}
                           </div>
@@ -210,34 +210,36 @@ const CallParticipantModal = memo(({
                 </div>
                 <div className="p-4">
                   <div className="flex flex-col overflow-y-auto modal_scroll">
-                    {callParticipantsList?.joined?.map((uID)=>{
-                        const user = allUsers.find((v)=>v._id == uID)
-                        return(
+                    {callParticipantsList?.joined?.map((uID) => {
+                      const user = allUsers.find((v) => v._id == uID)
+                      if (!user) return null;
+                      return (
                         <div key={user._id} className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2">
-                            <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                                  {user?.photo && user.photo !== "null" ? (
-                                    <img
-                                      src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                                      alt={`${user.userName}`}
-                                      className="object-cover h-full w-full"
-                                    />
-                                  ) : (
-                                    <span className="text-gray-900 text-lg font-bold">
-                                      {user.userName
-                                        .split(" ")
-                                        .map((n) => n[0].toUpperCase())
-                                        .join("")}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
-                                    {user.userName}
-                                  </h3>
-                                </div>
-                              <AiOutlineAudioMuted className="h-6 w-6" />
+                          <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                            {user?.photo && user.photo !== "null" ? (
+                              <img
+                                src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                                alt={`${user.userName}`}
+                                className="object-cover h-full w-full"
+                              />
+                            ) : (
+                              <span className="text-gray-900 text-lg font-bold">
+                                {(user.userName || "")
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                              {user.userName}
+                            </h3>
+                          </div>
+                          <AiOutlineAudioMuted className="h-6 w-6" />
                         </div>
-                            )
+                      )
                     })}
                   </div>
                 </div>
@@ -249,52 +251,54 @@ const CallParticipantModal = memo(({
                 <div className="p-4">
                   <div className="flex flex-col overflow-y-auto modal_scroll">
                     {callParticipantsList?.invited?.map(uId => {
-                         const user = allUsers.find((v)=>v._id == uId)
-                        return(
-                            <div
-                            key={user._id}
-                            className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2"
-                          >
-                            <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
-                              {user?.photo && user.photo !== "null" ? (
-                                <img
-                                  src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
-                                  alt={`${user.userName}`}
-                                  className="object-cover h-full w-full"
-                                />
-                              ) : (
-                                <span className="text-gray-900 text-lg font-bold">
-                                  {user.userName
-                                    .split(" ")
-                                    .map((n) => n[0].toUpperCase())
-                                    .join("")}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
-                                {user.userName}
-                              </h3>
-                            </div>
-                            {!callParticipantsList?.ringing.includes(uId) ? (
-                              <FaRegBell className="h-6 w-6" />
+                      const user = allUsers.find((v) => v._id == uId)
+                      if (!user) return null;
+                      return (
+                        <div
+                          key={user._id}
+                          className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2"
+                        >
+                          <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
+                            {user?.photo && user.photo !== "null" ? (
+                              <img
+                                src={`${IMG_URL}${user.photo.replace(/\\/g, "/")}`}
+                                alt={`${user.userName}`}
+                                className="object-cover h-full w-full"
+                              />
                             ) : (
-                              <div className="flex items-center justify-center gap-1 h-6 w-8 cursor-pointer">
-                                {Array.from({ length: 7 }).map((_, i) => (
-                                  <div
-                                    key={i}
-                                    className="w-2 bg-primary rounded-full transform transition-all duration-300 ease-in-out animate-callwaveform"
-                                    style={{
-                                      animationDelay: `${i * 0.1}s`,
-                                    }}
-                                  />
-                                ))}
-                              </div>
+                              <span className="text-gray-900 text-lg font-bold">
+                                {(user.userName || "")
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
+                              </span>
                             )}
                           </div>
-                        )
-                    } 
-                    
+                          <div className="flex-1">
+                            <h3 className="text-gray-800 dark:text-primary-light/80 font-semibold">
+                              {user.userName}
+                            </h3>
+                          </div>
+                          {!callParticipantsList?.ringing.includes(uId) ? (
+                            <FaRegBell className="h-6 w-6" />
+                          ) : (
+                            <div className="flex items-center justify-center gap-1 h-6 w-8 cursor-pointer">
+                              {Array.from({ length: 7 }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="w-2 bg-primary rounded-full transform transition-all duration-300 ease-in-out animate-callwaveform"
+                                  style={{
+                                    animationDelay: `${i * 0.1}s`,
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
                     )}
                   </div>
                 </div>
