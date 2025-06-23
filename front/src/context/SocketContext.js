@@ -127,7 +127,7 @@ export const SocketProvider = ({ children }) => {
     incomingCall,
     isCameraOn,
     isSharing,
-    isVideoCalling, 
+    isVideoCalling,
     isVoiceCalling,
     incomingShare,
     callParticipants,
@@ -487,29 +487,29 @@ export const SocketProvider = ({ children }) => {
       }
     };
   };
-  
+
   // Add this inside your SocketContext.js
   const waitForScreenSource = () => {
     const { store, persistor } = configureStore();
     const state = store.getState();
     console.log(store.getState().magageState);
-    
+
     return new Promise((resolve) => {
-        const source = state.magageState.screenSource;
-        console.log(source);
-        if (source) {
-          resolve(source);
-        }
-      });
+      const source = state.magageState.screenSource;
+      console.log(source);
+      if (source) {
+        resolve(source);
+      }
+    });
   };
 
   // ===========================screen share=============================
-// console.log(screenSource);
-useEffect(() => {
-  if (screenSource) {
-    startSharing(selectedChat);
-  }
-}, [screenSource]);
+  // console.log(screenSource);
+  useEffect(() => {
+    if (screenSource) {
+      startSharing(selectedChat);
+    }
+  }, [screenSource]);
 
   const startSharing = async (selectedChat) => {
     if (!selectedChat) {
@@ -526,13 +526,13 @@ useEffect(() => {
       let stream;
       // Check if running in Electron
       if (window.electron) {
-        if(!showScreenSource){
+        if (!showScreenSource) {
           await dispatch(setShowScreenSource(true));
         }
 
         console.log(screenSource);
 
-        if(screenSource){
+        if (screenSource) {
           try {
             stream = await navigator.mediaDevices.getUserMedia({
               audio: false,
@@ -546,11 +546,11 @@ useEffect(() => {
           } catch (err) {
             alert("Error: " + err.message);
           }
-        }else{
+        } else {
           return;
         }
-        
-        
+
+
       } else {
         stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
@@ -984,84 +984,84 @@ useEffect(() => {
         dispatch(setUserIncall("is onther Call Runing"));
       }
     });
-   // In your control-event handler
+    // In your control-event handler
 
-   let isDragging = false;
+    let isDragging = false;
 
-socketRef.current.on("control-event", async ({ type, payload }) => {
-  // console.log("Control received:", type, payload,window.electron);
-  try {
-    if (window.electron) {
-      switch (type) {
-        case "mousemove":
-          // console.log("Fbgfbffgfgfgfgfffgfgfgfg");
-          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
-          break;
+    socketRef.current.on("control-event", async ({ type, payload }) => {
+      // console.log("Control received:", type, payload,window.electron);
+      try {
+        if (window.electron) {
+          switch (type) {
+            case "mousemove":
+              // console.log("Fbgfbffgfgfgfgfffgfgfgfg");
+              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              break;
 
-        case "click":
-          await window.electron.remoteControl.click(payload.x, payload.y);
-          break;
+            case "click":
+              await window.electron.remoteControl.click(payload.x, payload.y);
+              break;
 
-        case "rightClick":
-          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
-          await window.electron.remoteControl.rightClick();
-          break;
+            case "rightClick":
+              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.rightClick();
+              break;
 
-        case "doubleClick":
-          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
-          await window.electron.remoteControl.doubleClick();
-          break;
+            case "doubleClick":
+              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.doubleClick();
+              break;
 
-        case "keydown":
-          await window.electron.remoteControl.pressKey(payload.key,payload.ctrlKey);
-          break;
+            case "keydown":
+              await window.electron.remoteControl.pressKey(payload.key, payload.ctrlKey);
+              break;
 
-        case "scroll":
-          await window.electron.remoteControl.moveMouse(payload.x, payload.y);
-          await window.electron.remoteControl.scroll(payload.amount);
-          break;
+            case "scroll":
+              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.scroll(payload.amount);
+              break;
 
-        // case "dragStart":
-        //   try {
-        //     const { x, y } = payload;
-        //     isDragging = true;
-        //     await window.electron.remoteControl.moveMouse(x,y);
-        //     await window.electron.remoteControl.pressButton();
-        //   } catch (err) {
-        //     console.error("Drag start failed:", err);
-        //   }
-        //   break;
+            case "dragStart":
+              try {
+                const { x, y } = payload;
+                isDragging = true;
+                await window.electron.remoteControl.moveMouse(x, y);
+                await window.electron.remoteControl.pressButton();
+              } catch (err) {
+                console.error("Drag start failed:", err);
+              }
+              break;
 
-        case "dragMove":
-          if (!isDragging) break;
-          try {
-            const { x, y } = payload;
-            await window.electron.remoteControl.drag(x,y);
-          } catch (err) {
-            console.error("Drag move failed:", err);
+            case "dragMove":
+              if (!isDragging) break;
+              try {
+                const { x, y } = payload;
+                await window.electron.remoteControl.moveMouse(x, y);
+              } catch (err) {
+                console.error("Drag move failed:", err);
+              }
+              break;
+
+            case "dragEnd":
+              if (!isDragging) break;
+              try {
+                const { x, y } = payload;
+                await window.electron.remoteControl.moveMouse(x, y);
+                await window.electron.remoteControl.releaseButton();
+                isDragging = false;
+              } catch (err) {
+                console.error("Drag end failed:", err);
+              }
+              break;
+
+            default:
+              console.log("Unknown control type:", type);
           }
-          break;
-
-        // case "dragEnd":
-        //   if (!isDragging) break;
-        //   try {
-        //     const { x, y } = payload;
-        //     await window.electron.remoteControl.moveMouse(x,y);
-        //     await window.electron.remoteControl.releaseButton();
-        //     isDragging = false;
-        //   } catch (err) {
-        //     console.error("Drag end failed:", err);
-        //   }
-        //   break;
-
-        default:
-          console.log("Unknown control type:", type);
+        }
+      } catch (err) {
+        console.error("Control error:", err);
       }
-    }
-  } catch (err) {
-    console.error("Control error:", err);
-  }
-});
+    });
 
     return () => {
       cleanupConnection();
@@ -1611,7 +1611,8 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
         reject(new Error("Socket not connected"));
         return;
       }
-      console.log("groupId",groupId,message);
+      console.log("groupId", groupId, message);
+
 
 
       const messageData = {
@@ -1885,10 +1886,10 @@ socketRef.current.on("control-event", async ({ type, payload }) => {
 
 
   // ====================================Controle========================
-console.log(callRoom);
+  console.log(callRoom);
 
-  const sendControl = (type, payload,roomId) => {
-    console.log(type, payload,roomId);
+  const sendControl = (type, payload, roomId) => {
+    console.log(type, payload, roomId);
     socketRef.current.emit("control-event", { roomId, type, payload });
   };
 
@@ -2107,9 +2108,9 @@ const value = useMemo(() => ({
   //   subscribeToMessages,
   //   sendTypingStatus
   // };
-// Add this function to handle source selection
+  // Add this function to handle source selection
   return (
-    <SocketContext.Provider value={value}>{children} 
+    <SocketContext.Provider value={value}>{children}
     </SocketContext.Provider>
   );
 };

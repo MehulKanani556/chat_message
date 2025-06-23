@@ -64,10 +64,10 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const { 
-    endCall, 
-    cleanupConnection, 
-    toggleCamera, 
+  const {
+    endCall,
+    cleanupConnection,
+    toggleCamera,
     toggleMicrophone,
     sendControl,
     requestControl,
@@ -548,7 +548,7 @@ const VideoCallLayout = memo(() => {
   // ====================================================================
 
   const controlref = useRef(null);
-  let isDragging_El= false;
+  let isDragging_El = false;
   let dragStart_El = null;
 
 
@@ -557,12 +557,12 @@ const VideoCallLayout = memo(() => {
     const handleMouseDown = (e) => {
       console.log(isDragging_El,"isDragging_El  Down");
       if (!isControlling) return;
-    
+
       const video = e.currentTarget;
       const rect = video.getBoundingClientRect();
       const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
       const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
-    
+
       dragStart_El = { x, y };
       isDragging_El = true;
       // sendControl("dragStart", { x, y }, roomId);
@@ -577,8 +577,8 @@ const VideoCallLayout = memo(() => {
       const rect = video.getBoundingClientRect();
       const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
       const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
-    
-      // sendControl("dragEnd", { x, y }, roomId);
+
+      sendControl("dragEnd", { x, y }, roomId);
       isDragging_El = false;
       dragStart_El = null;
     };
@@ -593,15 +593,15 @@ const VideoCallLayout = memo(() => {
 
       const videoElement = e.currentTarget;
       const rect = videoElement.getBoundingClientRect();
-      
+
       // Calculate relative position (0-1 range)
       const relativeX = (e.clientX - rect.left) / rect.width;
       const relativeY = (e.clientY - rect.top) / rect.height;
-      
+
       // Get actual video dimensions
       const videoWidth = videoElement.videoWidth;
       const videoHeight = videoElement.videoHeight;
-      
+
       // Calculate absolute coordinates on host screen
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
@@ -617,15 +617,15 @@ const VideoCallLayout = memo(() => {
       if (!isControlling) return;
       const videoElement = e.currentTarget;
       const rect = videoElement.getBoundingClientRect();
-      
+
       // Calculate relative position (0-1 range)
       const relativeX = (e.clientX - rect.left) / rect.width;
       const relativeY = (e.clientY - rect.top) / rect.height;
-      
+
       // Get actual video dimensions
       const videoWidth = videoElement.videoWidth;
       const videoHeight = videoElement.videoHeight;
-      
+
       // Calculate absolute coordinates on host screen
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
@@ -638,15 +638,15 @@ const VideoCallLayout = memo(() => {
       e.preventDefault();
       const videoElement = e.currentTarget;
       const rect = videoElement.getBoundingClientRect();
-      
+
       // Calculate relative position (0-1 range)
       const relativeX = (e.clientX - rect.left) / rect.width;
       const relativeY = (e.clientY - rect.top) / rect.height;
-      
+
       // Get actual video dimensions
       const videoWidth = videoElement.videoWidth;
       const videoHeight = videoElement.videoHeight;
-      
+
       // Calculate absolute coordinates on host screen
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
@@ -656,15 +656,15 @@ const VideoCallLayout = memo(() => {
       if (!isControlling) return;
       const videoElement = e.currentTarget;
       const rect = videoElement.getBoundingClientRect();
-      
+
       // Calculate relative position (0-1 range)
       const relativeX = (e.clientX - rect.left) / rect.width;
       const relativeY = (e.clientY - rect.top) / rect.height;
-      
+
       // Get actual video dimensions
       const videoWidth = videoElement.videoWidth;
       const videoHeight = videoElement.videoHeight;
-      
+
       // Calculate absolute coordinates on host screen
       const x = Math.round(relativeX * videoWidth);
       const y = Math.round(relativeY * videoHeight);
@@ -675,7 +675,7 @@ const VideoCallLayout = memo(() => {
       if (!isControlling) return;
       
       e.preventDefault();
-      
+
       sendControl('keydown', {
         key: e.key,
         shiftKey: e.shiftKey,
@@ -736,21 +736,20 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${
-        participantOpen ? "w-[70%]" : "w-full"
-      }`}
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"
+        }`}
       style={
         chatMessages
           ? {
-              width: "25%",
-              height: "34%",
-              position: "absolute",
-              top: position.y,
-              left: position.x,
-              cursor: isDragging ? "grabbing" : "grab",
-              userSelect: "none",
-              transform: "none",
-            }
+            width: "25%",
+            height: "34%",
+            position: "absolute",
+            top: position.y,
+            left: position.x,
+            cursor: isDragging ? "grabbing" : "grab",
+            userSelect: "none",
+            transform: "none",
+          }
           : {}
       }
       onMouseDown={handleMouseDown}
@@ -774,8 +773,8 @@ const VideoCallLayout = memo(() => {
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                 {selectedChat &&
-                selectedChat.photo &&
-                selectedChat.photo !== "null" ? (
+                  selectedChat.photo &&
+                  selectedChat.photo !== "null" ? (
                   <img
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
@@ -821,33 +820,30 @@ const VideoCallLayout = memo(() => {
                 <div
                   key={participantId}
                   ref={isLocalUser ? localVideoRef : null}
-                  className={`${
-                    participants.length == 2
+                  className={`${participants.length == 2
                       ? isLocalUser
                         ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                         : widthClass
                       : widthClass
-                  } p-2 flex items-center justify-center`}
+                    } p-2 flex items-center justify-center`}
                   style={{
-                    height: `${
-                      !(isLocalUser && participants.length == 2)
-                        ? `calc(100% / ${
-                            participants.length <= 2
-                              ? 1
-                              : participants.length <= 8 &&
-                                participants.length >= 2
-                              ? 2
-                              : 3
-                          })`
+                    height: `${!(isLocalUser && participants.length == 2)
+                        ? `calc(100% / ${participants.length <= 2
+                          ? 1
+                          : participants.length <= 8 &&
+                            participants.length >= 2
+                            ? 2
+                            : 3
+                        })`
                         : ""
-                    }`,
+                      }`,
                     ...(isLocalUser && participants.length == 2
                       ? {
-                          position: "absolute",
-                          bottom: "1rem",
-                          right: "1rem",
-                          cursor: isDraggingLocal ? "grabbing" : "grab",
-                        }
+                        position: "absolute",
+                        bottom: "1rem",
+                        right: "1rem",
+                        cursor: isDraggingLocal ? "grabbing" : "grab",
+                      }
                       : {}),
                   }}
                   onMouseDown={(e) =>
@@ -858,11 +854,10 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className={`w-full ${
-                        !isReceiving
+                      className={`w-full ${!isReceiving
                           ? "transform -translate-x-1 -scale-x-100 h-full object-cover rounded-xl"
                           : "object-contain"
-                      }`}
+                        }`}
                       // muted={participantId === currentUser}
                       ref={(el) => {
                         setVideoRef(el);
@@ -933,33 +928,30 @@ const VideoCallLayout = memo(() => {
                   <div
                     key={participantId}
                     ref={isLocalUser ? localVideoRef : null}
-                    className={`${
-                      participants.length == 2
+                    className={`${participants.length == 2
                         ? isLocalUser
                           ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                           : widthClass
                         : widthClass
-                    } p-2 flex items-center justify-center`}
+                      } p-2 flex items-center justify-center`}
                     style={{
-                      height: `${
-                        !(isLocalUser && participants.length == 2)
-                          ? `calc(100% / ${
-                              participants.length <= 2
-                                ? 1
-                                : participants.length <= 8 &&
-                                  participants.length >= 2
-                                ? 2
-                                : 3
-                            })`
+                      height: `${!(isLocalUser && participants.length == 2)
+                          ? `calc(100% / ${participants.length <= 2
+                            ? 1
+                            : participants.length <= 8 &&
+                              participants.length >= 2
+                              ? 2
+                              : 3
+                          })`
                           : ""
-                      }`,
+                        }`,
                       ...(isLocalUser && participants.length == 2
                         ? {
-                            position: "absolute",
-                            bottom: "1rem",
-                            right: "1rem",
-                            cursor: isDraggingLocal ? "grabbing" : "grab",
-                          }
+                          position: "absolute",
+                          bottom: "1rem",
+                          right: "1rem",
+                          cursor: isDraggingLocal ? "grabbing" : "grab",
+                        }
                         : {}),
                     }}
                     onMouseDown={(e) =>
@@ -972,11 +964,10 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${
-                              !isReceiving
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving
                                 ? "transform -translate-x-1 -scale-x-100"
                                 : ""
-                            }`}
+                              }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -1003,11 +994,10 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${
-                              !isReceiving
+                            className={`w-full h-full object-cover rounded-xl ${!isReceiving
                                 ? "transform -translate-x-1 -scale-x-100"
                                 : ""
-                            }`}
+                              }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -1022,7 +1012,7 @@ const VideoCallLayout = memo(() => {
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-500 flex items-center justify-center">
                               {participant?.photo &&
-                              participant.photo !== "null" ? (
+                                participant.photo !== "null" ? (
                                 <img
                                   src={`${IMG_URL}${participant.photo.replace(
                                     /\\/g,
@@ -1067,22 +1057,20 @@ const VideoCallLayout = memo(() => {
               dispatch(setCallChatList(!callChatList));
               // dispatch(setChatMessages(true));
             }}
-            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${
-              callChatList
+            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${callChatList
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-            }`}
+              }`}
           >
             <BsChatDots className="text-xl" />
           </button>
 
           <button
             onClick={toggleMicrophone}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-              isMicrophoneOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isMicrophoneOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-            }`}
+              }`}
           >
             {isMicrophoneOn ? (
               <IoMicOutline className="text-xl" />
@@ -1093,13 +1081,11 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={toggleCamera}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
-              isVideoCalling ? "" : "hidden"
-            }  ${
-              isCameraOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
+              }  ${isCameraOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-            }`}
+              }`}
           >
             {isCameraOn ? (
               <BsCameraVideo className="text-xl" />
@@ -1133,11 +1119,10 @@ const VideoCallLayout = memo(() => {
                 dispatch(setParticipantOpen(!participantOpen));
                 dispatch(setCallChatList(false));
               }}
-              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
-                participantOpen
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${participantOpen
                   ? "dark:bg-white dark:text-black bg-black/50 text-white"
                   : "dark:text-white text-black"
-              }`}
+                }`}
             >
               <MdOutlineGroupAdd className="text-xl" />
             </button>
@@ -1146,11 +1131,10 @@ const VideoCallLayout = memo(() => {
           <button
             onClick={() => (recording ? stopRecording() : startRecording())}
             className={`w-10 grid place-content-center rounded-full h-10 border text-white 
-             ${
-               recording
-                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                 : "dark:text-white text-black"
-             }
+             ${recording
+                ? "dark:bg-white dark:text-black bg-black/50 text-white"
+                : "dark:text-white text-black"
+              }
               `}
           >
             <AiOutlineVideoCamera className="text-xl" />
@@ -1224,38 +1208,38 @@ const VideoCallLayout = memo(() => {
           {isHost ? (
             // HOST's view
             viewerControlling ? (
-                <button 
-                    onClick={() => revokeControl(viewerControlling)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                >
-                    Revoke Control
-                </button>
+              <button
+                onClick={() => revokeControl(viewerControlling)}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              >
+                Revoke Control
+              </button>
             ) : (
-                <button 
-                    onClick={() => grantControl(selectedChat?._id)}
-                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                >
-                    Grant Control
-                </button>
+              <button
+                onClick={() => grantControl(selectedChat?._id)}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+              >
+                Grant Control
+              </button>
             )
           ) : (
-              // VIEWER's view
-              isReceiving && (
-                  isControlling ? (
-                      <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
-                          <span className="text-white text-sm">You have control</span>
-                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      </div>
-                  ) : (
-                      <button
-                          onClick={() => requestControl(hostId)}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-                          disabled={!hostId}
-                      >
-                          Request Control
-                      </button>
-                  )
+            // VIEWER's view
+            isReceiving && (
+              isControlling ? (
+                <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
+                  <span className="text-white text-sm">You have control</span>
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => requestControl(hostId)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                  disabled={!hostId}
+                >
+                  Request Control
+                </button>
               )
+            )
           )}
         </div>
       )}
