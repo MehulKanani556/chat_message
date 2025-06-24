@@ -294,7 +294,7 @@ async function handleCallRequest(socket, data) {
     }
   }
 
-  console.log(activeCalls, "=======================", isUserInCall);
+  console.log("activeCalls",activeCalls, "=======================", isUserInCall,"isUserInCall");
 
   if (isUserInCall) {
     socket.emit("user-in-call", {
@@ -314,7 +314,7 @@ async function handleCallRequest(socket, data) {
 
   const targetSocketId = onlineUsers.get(toEmail);
 
-  console.log(toEmail, targetSocketId);
+  // console.log(toEmail, targetSocketId);
 
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
@@ -445,27 +445,32 @@ function handleParticipantJoined(socket, data) {
 }
 
 function handleParticipantLeft(socket, data) {
-  const { leavingUser, to, duration, roomId } = data;
-  const targetSocketId = onlineUsers.get(to);
+  console.log("handleParticipantLeft");
+  
+  const { leavingUser, duration, roomId } = data;
 
-  if (targetSocketId) {
+  console.log(roomId,"roomId");
+  
+  socket.to(roomId).emit("participant-lefted", {
+    leavingUser,
+    duration,
+    roomId,
+  });
+  const call = activeCalls[roomId];
 
-    const call = activeCalls[roomId];
 
-    if (call) {
-      if (call?.joined && call?.joined.includes(leavingUser)) {
-        call.joined = call?.joined.filter((id) => id !== leavingUser);
-      }
-      if (call?.invited && !call?.invited.includes(leavingUser)) {
-        call.invited = call?.invited.push(leavingUser)
-      }
+  if (call) {
+    if (call?.joined && call?.joined.includes(leavingUser)) {
+      call.joined = call?.joined.filter((id) => id !== leavingUser);
     }
-
-    socket.to(targetSocketId).emit("participant-lefted", {
-      leavingUser,
-      duration,
-      roomId,
-    });
+    if (call?.invited) {
+      if (!call.invited.includes(leavingUser)) {
+        call.invited = [...call.invited, leavingUser];
+      }
+    } else {
+      call.invited = [leavingUser];
+    }
+    console.log("call------------", call, leavingUser);
     socket.to(roomId).emit("call:update-participant-list", call);
   }
   socket.leave(roomId);
@@ -476,7 +481,7 @@ function handleCallAccept(socket, data) {
 
   socket.join(roomId);
   const call = activeCalls[roomId];
-  console.log("call", call, roomId);
+  // console.log("call", call, roomId);
 
   if (call) {
     if (!call.joined.includes(fromEmail)) {
@@ -615,7 +620,7 @@ async function handleSaveCallMessage(socket, data) {
 async function handleCreateGroup(socket, data) {
   try {
     const { members, userName, createdBy } = data;
-    console.log("members", members, data);
+    // console.log("members", members, data);
 
     const createdByUser = await User.findById(createdBy);
 
@@ -902,19 +907,8 @@ async function handleForwardMessage(socket, data) {
 // ===========================camera status=============================
 function handleCameraStatusChange(socket, data) {
   const { userId, isCameraOn } = data;
-
-  console.log(
-    `[Camera Status] Backend received: User ${userId} camera status change to ${isCameraOn ? "ON" : "OFF"
-    }`
-  );
-
   // Get all online users except the sender
   const onlineUsersList = Array.from(onlineUsers.entries());
-
-  console.log(
-    `[Camera Status] Broadcasting to ${onlineUsersList.length - 1} other users`
-  );
-
   // Broadcast camera status to all other users
   onlineUsersList.forEach(([onlineUserId, socketId]) => {
     if (onlineUserId !== userId) {
@@ -925,6 +919,33 @@ function handleCameraStatusChange(socket, data) {
       });
     }
   });
+  socket.emit("camera-status-change", {
+    userId,
+    isCameraOn,
+  });
+}
+
+// ===========================mic status=============================
+function handleMicStatusChange(socket, data) {
+  const { userId, isMicOn ,roomId} = data;
+  // Get all online users except the sender
+  // const onlineUsersList = Array.from(onlineUsers.entries());
+  // // Broadcast camera status to all other users
+  // onlineUsersList.forEach(([onlineUserId, socketId]) => {
+  //   if (onlineUserId !== userId) {
+    console.log(`[mic Status] Sending update to user ${userId} ${isMicOn} ${roomId}`);
+      socket.to(roomId).emit("mic-status-change", {
+        userId,
+        isMicOn,
+        roomId
+      });
+      // socket.emit("mic-status-change", {
+      //   userId,
+      //   isMicOn,
+      //   roomId
+      // });
+    // }
+  // });
 }
 
 // ===========================host control=============================
@@ -1148,9 +1169,9 @@ function initializeSocket(io) {
     socket.on("forward-message", (data) => handleForwardMessage(socket, data));
 
     // Add camera status handler
-    socket.on("camera-status-change", (data) =>
-      handleCameraStatusChange(socket, data)
-    );
+    socket.on("camera-status-change", (data) =>handleCameraStatusChange(socket, data));
+    socket.on("mic-status-change", (data) =>handleMicStatusChange(socket, data));
+
 
     // Handle QR code scanning events
     socket.on('qr-scan-success', (data) => {

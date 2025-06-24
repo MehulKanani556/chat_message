@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
-import { BsCameraVideo, BsCameraVideoOff, BsChatDots } from "react-icons/bs";
+import { BsCameraVideo, BsCameraVideoOff, BsChatDots, BsMicMute } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import {
   IoCallOutline,
@@ -40,6 +40,7 @@ const VideoCallLayout = memo(() => {
   const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
   const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
   const cameraStatus = useSelector((state) => state.magageState.cameraStatus);
+  const micStatus = useSelector((state) => state.magageState.micStatus);
   const isReceiving = useSelector((state) => state.magageState.isReceiving);
   const userIncall = useSelector((state) => state.magageState.userIncall);
   const chatMessages = useSelector((state) => state.magageState.chatMessages);
@@ -876,6 +877,9 @@ const VideoCallLayout = memo(() => {
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Par"}
                     </div>
+                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                      {isLocalUser ? "You" : participant?.userName || "Par"}
+                    </div>
                     {userIncall && (
                       <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
                         {selectedChat?.userName} {userIncall}
@@ -906,9 +910,8 @@ const VideoCallLayout = memo(() => {
                 const participant = allUsers.find(
                   (u) => u._id === participantId
                 );
-                const isCameraEnabled = isVideoCalling
-                  ? cameraStatus?.[participantId] !== false
-                  : false;
+                const isCameraEnabled = isVideoCalling ? cameraStatus?.[participantId] !== false : false;
+                const isMicClose = isVideoCalling ? micStatus?.[participantId] == false : false;
                 const isLocalUser = participantId === currentUser;
                 const widthClass = getParticipantWidth(participants?.length);
                 // localVideoRef.current.srcObject = isLocalUser ? stream : null
@@ -988,6 +991,9 @@ const VideoCallLayout = memo(() => {
                               ? "You"
                               : participant?.userName || "Par"}
                           </div>
+                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) && 
+                          <div className="absolute top-2 right-2 text-xl  text-white"><BsMicMute /></div>
+                          }
                         </>
                       ) : (
                         <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
@@ -1067,12 +1073,12 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={toggleMicrophone}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isMicrophoneOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${!isMicrophoneOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
               }`}
           >
-            {isMicrophoneOn ? (
+            {!isMicrophoneOn ? (
               <IoMicOutline className="text-xl" />
             ) : (
               <IoMicOffOutline className="text-xl" />
@@ -1082,12 +1088,12 @@ const VideoCallLayout = memo(() => {
           <button
             onClick={toggleCamera}
             className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
-              }  ${isCameraOn
+              }  ${!isCameraOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
               }`}
           >
-            {isCameraOn ? (
+            {!isCameraOn ? (
               <BsCameraVideo className="text-xl" />
             ) : (
               <BsCameraVideoOff className="text-xl" />
@@ -1096,6 +1102,8 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={() => {
+              console.log("end");
+              
               if (!isReceiving) {
                 endCall();
               }

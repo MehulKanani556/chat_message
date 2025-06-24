@@ -22,7 +22,6 @@ const CallParticipantModal = memo(({
     const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
     const allUsers  = useSelector((state) => state.user.allUsers);
-
     const userId = useMemo(() => sessionStorage.getItem("userId"), []);
    
     // const remoteStreams = useSelector(state => state.magageState.remoteStreams);
@@ -30,8 +29,10 @@ const CallParticipantModal = memo(({
     const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
     const callParticipants = useSelector(state => state.magageState.callParticipants);
     const participantOpen = useSelector(state => state.magageState.participantOpen);
+    const micStatus = useSelector(state => state.magageState.micStatus);
+    const isMicrophoneOn = useSelector(state => state.magageState.isMicrophoneOn);
     const {inviteToCall} = useSocket();
-    
+    const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
   return (
     <>
       {participantOpen && (
@@ -214,7 +215,10 @@ const CallParticipantModal = memo(({
                   <div className="flex flex-col overflow-y-auto modal_scroll">
                     {callParticipantsList?.joined?.map((uID) => {
                       const user = allUsers.find((v) => v._id == uID)
+                      const isLocalUser = uID == currentUser;
+
                       if (!user) return null;
+                      const isMicClose = micStatus ? micStatus?.[uID] == false : false;
                       return (
                         <div key={user._id} className="flex items-center p-2 cursor-pointer hover:bg-gray-100 rounded-md dark:bg-primary-dark/80 mb-2">
                           <div className="w-9 h-9 rounded-full mr-3 bg-gray-300 overflow-hidden flex items-center justify-center border-[1px] border-gray-400">
@@ -239,7 +243,9 @@ const CallParticipantModal = memo(({
                               {user.userName}
                             </h3>
                           </div>
+                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) &&  
                           <AiOutlineAudioMuted className="h-6 w-6" />
+                          }
                         </div>
                       )
                     })}

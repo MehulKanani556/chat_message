@@ -96,6 +96,7 @@ const VideoCall = () => {
                             {Array.from(remoteStreams).map(([participantId, stream]) => {
                                 const participant = allUsers.find((user) => user._id === participantId);
                                 const isCameraEnabled = cameraStatus?.[participantId] !== false;
+                                const ismicClose = micStatus?.[participantId] == false;
 
                                 return (
                                     <div key={participantId} className="relative w-full">

@@ -17,6 +17,7 @@ const initialState = {
   isMicrophoneOn: false,
   voiceCallData: null,
   cameraStatus: {},
+  micStatus:{},
   callParticipants: new Set(),
   selectedImage: null,
   participantOpen: false,
@@ -47,6 +48,7 @@ const initialState = {
   typingUsers: [],
   searchInputbox: "",
   cameraStream: null,
+ 
   openCameraState: false,
   backCameraAvailable: false,
   facingMode: "user",
@@ -141,6 +143,9 @@ const manageStateSlice = createSlice({
     },
     setCameraStatus: (state, action) => {
       state.cameraStatus = action.payload;
+    },
+    setMicStatus: (state, action) => {
+      state.micStatus = action.payload;
     },
     setCallParticipants: (state, action) => {
       state.callParticipants = action.payload;
@@ -293,6 +298,7 @@ export const {
   setIsMicrophoneOn,
   setVoiceCallData,
   setCameraStatus,
+  setMicStatus,
   setCallParticipants,
   setSelectedChatModule,
   setShowProfile,
