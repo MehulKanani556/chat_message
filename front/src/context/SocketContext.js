@@ -661,7 +661,7 @@ export const SocketProvider = ({ children }) => {
       }
 
       dispatch(setIsSharing(true));
-    
+
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
         console.log("Stream ended by user");
@@ -1402,6 +1402,7 @@ export const SocketProvider = ({ children }) => {
       } else {
         dispatch(setIsVoiceCalling(true));
       }
+      setCallAccept(true)
       setPeerEmail(incomingCall.fromEmail);
       dispatch(setCallParticipants(new Set(incomingCall.participants)));
       dispatch(setIncomingCall(null));
@@ -1412,7 +1413,7 @@ export const SocketProvider = ({ children }) => {
   };
 
   const startCallDurationTimer = () => {
-    callTimerRef.current = setInterval(() => {
+      callTimerRef.current = setInterval(() => {
       if (callStartTime) {
         const duration = Math.floor((new Date() - callStartTime) / 1000);
         setCallDuration(duration);
@@ -1428,6 +1429,7 @@ export const SocketProvider = ({ children }) => {
       ? Math.floor((new Date() - callStartTime) / 1000)
       : 0;
     const no_of_callUser = sessionStorage.getItem("callUser");
+    console.log(callAccept, groupCall, callParticipantsList?.joined?.length);
 
     if (callAccept) {
       if (groupCall) {
@@ -2028,68 +2030,68 @@ export const SocketProvider = ({ children }) => {
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
   const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
- 
-// Use the memoized functions in useMemo
-const value = useMemo(() => ({
-  socket: socketRef.current,
-  sendPrivateMessage: memoizedSendPrivateMessage,
-  cleanupConnection: memoizedCleanupConnection,
-  startSharing: memoizedStartSharing,
-  startCall: memoizedStartCall,
-  acceptCall: memoizedAcceptCall,
-  endCall: memoizedEndCall,
-  toggleCamera: memoizedToggleCamera,
-  toggleMicrophone: memoizedToggleMicrophone,
-  markMessageAsRead: memoizedMarkMessageAsRead,
-  rejectCall: memoizedRejectCall,
-  acceptScreenShare: memoizedAcceptScreenShare,
-  inviteToCall: memoizedInviteToCall,
-  forwardMessage: memoizedForwardMessage,
-  addMessageReaction: memoizedAddMessageReaction,
-  subscribeToMessages: memoizedSubscribeToMessages,
-  sendTypingStatus: memoizedSendTypingStatus,
-  sendControl:memoizedsendControls,
-  requestControl,
-  grantControl,
-  revokeControl,
-  // registerAsHost,
-  // unregisterAsHost
-  sendGroupMessage:memoizedsendGroupMessage
-}), [
-  userId,
-  socketRef,
-  dispatch,
-  hasWebcam,
-  hasMicrophone,
-  incomingCall,
-  groupCall,
-  callParticipantsList,
-  callStartTime,
-  streamRef,
-  isCameraOn,
-  incomingShare,
-  callParticipants,
-  isVideoCalling,
-  memoizedSendPrivateMessage,
-  memoizedCleanupConnection,
-  memoizedStartSharing,
-  memoizedStartCall,
-  memoizedAcceptCall,
-  memoizedEndCall,
-  memoizedToggleCamera,
-  memoizedToggleMicrophone,
-  memoizedMarkMessageAsRead,
-  memoizedRejectCall,
-  memoizedAcceptScreenShare,
-  memoizedInviteToCall,
-  memoizedForwardMessage,
-  memoizedAddMessageReaction,
-  memoizedSubscribeToMessages,
-  memoizedSendTypingStatus,
-  memoizedsendControls,
-  memoizedsendGroupMessage,
-]);
- 
+
+  // Use the memoized functions in useMemo
+  const value = useMemo(() => ({
+    socket: socketRef.current,
+    sendPrivateMessage: memoizedSendPrivateMessage,
+    cleanupConnection: memoizedCleanupConnection,
+    startSharing: memoizedStartSharing,
+    startCall: memoizedStartCall,
+    acceptCall: memoizedAcceptCall,
+    endCall: memoizedEndCall,
+    toggleCamera: memoizedToggleCamera,
+    toggleMicrophone: memoizedToggleMicrophone,
+    markMessageAsRead: memoizedMarkMessageAsRead,
+    rejectCall: memoizedRejectCall,
+    acceptScreenShare: memoizedAcceptScreenShare,
+    inviteToCall: memoizedInviteToCall,
+    forwardMessage: memoizedForwardMessage,
+    addMessageReaction: memoizedAddMessageReaction,
+    subscribeToMessages: memoizedSubscribeToMessages,
+    sendTypingStatus: memoizedSendTypingStatus,
+    sendControl: memoizedsendControls,
+    requestControl,
+    grantControl,
+    revokeControl,
+    // registerAsHost,
+    // unregisterAsHost
+    sendGroupMessage: memoizedsendGroupMessage
+  }), [
+    userId,
+    socketRef,
+    dispatch,
+    hasWebcam,
+    hasMicrophone,
+    incomingCall,
+    groupCall,
+    callParticipantsList,
+    callStartTime,
+    streamRef,
+    isCameraOn,
+    incomingShare,
+    callParticipants,
+    isVideoCalling,
+    memoizedSendPrivateMessage,
+    memoizedCleanupConnection,
+    memoizedStartSharing,
+    memoizedStartCall,
+    memoizedAcceptCall,
+    memoizedEndCall,
+    memoizedToggleCamera,
+    memoizedToggleMicrophone,
+    memoizedMarkMessageAsRead,
+    memoizedRejectCall,
+    memoizedAcceptScreenShare,
+    memoizedInviteToCall,
+    memoizedForwardMessage,
+    memoizedAddMessageReaction,
+    memoizedSubscribeToMessages,
+    memoizedSendTypingStatus,
+    memoizedsendControls,
+    memoizedsendGroupMessage,
+  ]);
+
 
   // const value = {
   //   socket: socketRef.current,

@@ -796,7 +796,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                 </button>
               </div>
 
-              <div className="max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
+              <div className="max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 mt-3 mb-[25px]">
                 <button
                   className="w-full flex justify-between items-center text-[#FF0000]"
                   onClick={async () => {
