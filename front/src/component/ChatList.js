@@ -191,7 +191,7 @@ const ChatList = memo(({
             </svg>
           </div>
           <div
-            className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2"
+            className="text-gray-700 font-medium dark:text-primary-light cursor-pointer flex items-center gap-2 "
             onClick={() => {
               if (!findUser) {
                 setArchive(!archive);
@@ -311,7 +311,7 @@ const ChatList = memo(({
 
                       <div className="flex-1">
                         <div className="flex justify-between">
-                          <span className="font-medium dark:text-primary-light">
+                          <span className="font-medium dark:text-primary-light line-clamp-1">
                             {" "}
                             {item._id === currentUser
                               ? `${item.userName} (You)`

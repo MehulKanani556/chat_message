@@ -96,11 +96,17 @@ const manageStateSlice = createSlice({
       state.participants = Array.from(allStreams);
     },
     removeParticipant: (state, action) => {
+      console.log(action.payload);
+      
       const userId = action.payload;
       const allStreams = new Map(state.participants);
       allStreams.delete(userId)
+
+      console.log(Array.from(allStreams));
+      
       state.participants = Array.from(allStreams);
     },
+    
     setCallParticipantsList: (state, action) => {
       state.callParticipantsList = action.payload;
     },

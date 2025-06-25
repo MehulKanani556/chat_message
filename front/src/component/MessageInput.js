@@ -716,7 +716,7 @@ const MessageInput = memo(
                       <span
                         style={{
                           position: "absolute",
-                          left: 30, // adjust as needed for padding
+                          left: 8, // adjust as needed for padding
                           top: 4,   // adjust as needed for vertical alignment
                           color: "#aaa",
                           pointerEvents: "none",

@@ -80,7 +80,7 @@ const CreatedGroup = memo(({
       className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
-        width: screenWidth === 1024 ? '579px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
+        width: screenWidth === 1024 ? '579px' : screenWidth === 768 ? '404px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
       }}
     >
       <div className="flex justify-between items-center p-4 py-6">
@@ -210,7 +210,12 @@ const CreatedGroup = memo(({
         </div>
       </div>
       {/* <div className="fixed bottom-8  mt-4 flex justify-center max-w-[350px] w-full"> */}
-      <div className=" fixed max-w-md bg-[#F9FAFA] w-[350px] flex rounded-lg m-3">
+      <div
+        className="fixed max-w-md bg-[#F9FAFA] flex rounded-lg m-3"
+        style={{
+          width: screenWidth === 320 ? "294px" : screenWidth < 320 ? "100%" : "350px",
+        }}
+      >
         <button
           onClick={handleCreateGroup}
           disabled={!groupName && groupUsers.length === 0} // Optional: Disable button if no name and no users selected

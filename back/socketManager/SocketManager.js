@@ -218,8 +218,8 @@ async function handleUpdateMessage(socket, data) {
 // ===========================screen share=============================
 
 function handleScreenShareRequest(socket, data) {
-  console.log(data.roomId,"-----------");
-  
+  console.log(data.roomId, "-----------");
+
   socket.join(data.roomId)
   // socket.join(roomId);
   if (data.isGroup) {
@@ -406,7 +406,6 @@ function handleCallInvite(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
-
   const targetSocketId = onlineUsers.get(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
@@ -456,18 +455,24 @@ function handleParticipantLeft(socket, data) {
       if (call?.joined && call?.joined.includes(leavingUser)) {
         call.joined = call?.joined.filter((id) => id !== leavingUser);
       }
-      if (call?.invited && !call?.invited.includes(leavingUser)) {
-        call.invited = call?.invited.push(leavingUser)
-      }
-    }
 
-    socket.to(targetSocketId).emit("participant-lefted", {
-      leavingUser,
-      duration,
-      roomId,
-    });
+      // console.log(call,"============================");
+      // console.log(call?.invited);
+      
+
+      // if (call?.invited.length > 0  && !call?.invited.some(leavingUser)) {
+      //   call.invited = call?.invited.push(leavingUser)
+      // }else{
+      //   call.invited = call?.invited.push(leavingUser)
+      // }
+    }
     socket.to(roomId).emit("call:update-participant-list", call);
   }
+  socket.to(roomId).emit("participant-lefted", {
+    leavingUser,
+    duration,
+    roomId,
+  });
   socket.leave(roomId);
 }
 
@@ -944,7 +949,7 @@ function handleUnregisterAsHost(socket) {
 function handleRequestControl(socket, data) {
   const { hostId } = data;
   console.log(`User ${socket.userId} requesting control from host ${hostId}`);
-  
+
   const hostSocket = getSocketByUserId(hostId);
   if (hostSocket) {
     console.log("Sending control request to host:", hostId);
@@ -960,7 +965,7 @@ function handleRequestControl(socket, data) {
 function handleGrantControl(socket, data) {
   const { viewerId } = data;
   console.log(`Host ${socket.userId} granting control to viewer ${viewerId}`);
-  
+
   const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
     viewerSocket.emit('control-permission', true);
@@ -972,19 +977,19 @@ function handleGrantControl(socket, data) {
 function handleRevokeControl(socket, data) {
   const { viewerId } = data;
   console.log(`Host ${socket.userId} revoking control from viewer ${viewerId}`);
-  
+
   const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
     viewerSocket.emit('control-permission', false);
-     // Notify host that control is revoked
-     socket.emit('control-revoked-for-host', { viewerId });
+    // Notify host that control is revoked
+    socket.emit('control-revoked-for-host', { viewerId });
   }
 }
 
 function handleControlEvent(socket, data) {
   const { roomId, type, payload } = data;
   console.log(`Control event from ${socket.userId}:`, type, payload);
-  
+
   // Broadcast the control event to all sockets in the room
   socket.to(roomId).emit('control-event', { type, payload });
 }
@@ -1189,11 +1194,11 @@ function initializeSocket(io) {
     //         // await mouse.position = new Point(payload.x, payload.y);
     //         await mouse.move(straightTo(new Point(payload.x, payload.y)));
     //         break;
-  
+
     //       case "click":
     //         await mouse.click(Button.LEFT);
     //         break;
-  
+
     //       case "keydown":
     //         const key = Key[payload.key.toUpperCase()];
     //         if (key) {
@@ -1201,7 +1206,7 @@ function initializeSocket(io) {
     //           await keyboard.releaseKey(key);
     //         }
     //         break;
-  
+
     //       default:
     //         console.log("Unknown control type:", type);
     //     }
@@ -1209,26 +1214,26 @@ function initializeSocket(io) {
     //     console.error("Control error:", err);
     //   }
     // });
-  
 
-      //     case "click":
-      //       await mouse.click(Button.LEFT);
-      //       break;
 
-      //     case "keydown":
-      //       const key = Key[payload.key.toUpperCase()];
-      //       if (key) {
-      //         await keyboard.pressKey(key);
-      //         await keyboard.releaseKey(key);
-      //       }
-      //       break;
+    //     case "click":
+    //       await mouse.click(Button.LEFT);
+    //       break;
 
-      //     default:
-      //       console.log("Unknown control type:", type);
-      //   }
-      // } catch (err) {
-      //   console.error("Control error:", err);
-      // }
+    //     case "keydown":
+    //       const key = Key[payload.key.toUpperCase()];
+    //       if (key) {
+    //         await keyboard.pressKey(key);
+    //         await keyboard.releaseKey(key);
+    //       }
+    //       break;
+
+    //     default:
+    //       console.log("Unknown control type:", type);
+    //   }
+    // } catch (err) {
+    //   console.error("Control error:", err);
+    // }
     // });
 
 
