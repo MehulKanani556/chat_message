@@ -286,21 +286,21 @@ const Profile = () => {
                           <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
                         </div>
 
-                        <div className="mb-4">
+                        {/* <div className="mb-4">
                           <p className="text-gray-400 text-sm">Email</p>
                           <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <p className="text-gray-400 text-sm">Email</p>
                 <p className="text-black font-semibold dark:text-primary-light">
                   {profileData.email}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 

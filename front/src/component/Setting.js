@@ -459,10 +459,10 @@ const Setting = memo(() => {
                                         )}
                                     </div>
 
-                                    <div className="mb-4">
+                                    {/* <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Email</p>
                                         <p className="text-black font-semibold dark:text-primary-light break-words">{profileData.email}</p>
-                                    </div>
+                                    </div> */}
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Mobile Number</p>
                                         <p className="text-black font-semibold dark:text-primary-light">{profileData.mobileNumber}</p>

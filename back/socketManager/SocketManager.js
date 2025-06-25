@@ -564,7 +564,6 @@ async function handleSaveCallMessage(socket, data) {
       callfrom,
       joined,
     } = data;
-
     // Format duration string if exists
     let durationStr = "";
     if (duration) {

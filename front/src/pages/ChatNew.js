@@ -1313,7 +1313,7 @@ const Chat2 = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="font-medium">{user?.userName}</span>
-                  <p className="mb-0 text-xs">{user?.email}</p>
+                  {/* <p className="mb-0 text-xs">{user?.email}</p> */}
                 </div>
                 <PiDotsThreeBold />
               </div>
@@ -2703,10 +2703,10 @@ const Chat2 = () => {
                 <span className="text-gray-600 font-bold">Skype Name</span>
                 <span className="text-gray-800">{selectedChat?.userName}</span>
               </div>
-              <div className="flex items-center justify-between p-2 border-b ">
+              {/* <div className="flex items-center justify-between p-2 border-b ">
                 <span className="text-gray-600 font-bold">Email</span>
                 <span className="text-gray-800">{selectedChat?.email}</span>
-              </div>
+              </div> */}
               <div className="flex items-center justify-between p-2 border-b ">
                 <span className="text-gray-600 font-bold">Phone Number</span>
                 <span className="text-gray-800">
