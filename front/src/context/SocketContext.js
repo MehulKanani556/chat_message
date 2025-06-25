@@ -43,6 +43,7 @@ import {
   setIsHost,
   setIsControlling,
   setViewerControlling,
+  setMicStatus,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
@@ -96,7 +97,6 @@ const decryptMessage = (encryptedText) => {
 
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
-  const [socket, setSocket] = useState(null);
   const peerRef = useRef(null);
   const peersRef = useRef({});
   const [peerEmail, setPeerEmail] = useState("");
@@ -108,7 +108,7 @@ export const SocketProvider = ({ children }) => {
   const [callStartTime, setCallStartTime] = useState(null);
   const [callDuration, setCallDuration] = useState(null);
   const callTimerRef = useRef(null);
-  const [groupCall, setGroupCall] = useState("");
+  const [groupCall, setGroupCall] = useState(null);
   const [callFrom, setCallFrom] = useState("");
   const [allCallUsers, setAllCallUsers] = useState(new Map());
   const [callRoom, setCallRoom] = useState(null);
@@ -134,6 +134,7 @@ export const SocketProvider = ({ children }) => {
     isMicrophoneOn,
     voiceCallData,
     cameraStatus,
+    micStatus,
     typingUsers,
     selectedChat,
     isReceiving,
@@ -142,6 +143,9 @@ export const SocketProvider = ({ children }) => {
   } = useSelector((state) => state.magageState);
 
   const { messages } = useSelector((state) => state.user);
+
+  console.log(callAccept,"callAccept");
+  
 
   // const [isHost, setIsHost] = useState(false);
   // const [isControlling, setIsControlling] = useState(false);
@@ -255,7 +259,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     initializeSocket();
-  }, [userId, navigate, dispatch]);
+  }, [userId, navigate,]);
 
   // Media devices check effect
   useEffect(() => {
@@ -346,11 +350,20 @@ export const SocketProvider = ({ children }) => {
   };
 
   const toggleMicrophone = () => {
-    if (streamRef.current) {
-      const audioTracks = streamRef.current.getAudioTracks();
-      audioTracks.forEach((track) => (track.enabled = !track.enabled));
-      dispatch(setIsMicrophoneOn());
-    }
+    
+    if (socketRef.current?.connected) {
+    console.log(callRoom)
+    socketRef.current.emit("mic-status-change", {
+      userId,
+      isMicOn: !isMicrophoneOn,
+      roomId: callRoom
+    });
+  }
+  if (streamRef.current) {
+    const audioTracks = streamRef.current.getAudioTracks();
+    audioTracks.forEach((track) => (track.enabled = !track.enabled));
+    dispatch(setIsMicrophoneOn());
+  }
   };
 
   // console.log("userId", userId);
@@ -648,7 +661,7 @@ export const SocketProvider = ({ children }) => {
       }
 
       dispatch(setIsSharing(true));
-    
+
       // Handle stream end
       stream.getVideoTracks()[0].onended = () => {
         console.log("Stream ended by user");
@@ -757,6 +770,8 @@ export const SocketProvider = ({ children }) => {
           });
 
           if (incomingCall.isGroupCall) {
+            console.log("121212121212121");
+            
             socketRef.current.emit("participant-left", {
               leavingUser: userId,
               to: incomingCall.fromEmail,
@@ -1098,7 +1113,7 @@ export const SocketProvider = ({ children }) => {
     setCallRoom(roomId);
     setCallStatus("ringing");
     setCallFrom(userId);
-    setGroupCall(isGroupCall ? receiverId : "");
+    setGroupCall(isGroupCall ? receiverId : null);
     const calltype = type == "video" ? "video" : "voice";
 
     try {
@@ -1222,7 +1237,7 @@ export const SocketProvider = ({ children }) => {
   };
 
   const inviteToCall = async (newParticipantId) => {
-    console.log("cvcvcvc", newParticipantId);
+    // console.log("cvcvcvc", newParticipantId);
 
     setCallFrom(userId);
     // if (!streamRef.current) return;
@@ -1280,9 +1295,10 @@ export const SocketProvider = ({ children }) => {
       // Set call start time when call is accepted
       setCallStartTime(new Date());
       startCallDurationTimer();
-      setGroupCall(incomingCall?.isGroupCall ? incomingCall?.groupId : "");
+      setGroupCall(incomingCall?.isGroupCall ? incomingCall?.groupId : null);
       setCallFrom(incomingCall?.fromEmail);
       setCallStatus("accepted");
+      setCallAccept(true);
 
       let stream = null;
       try {
@@ -1386,6 +1402,7 @@ export const SocketProvider = ({ children }) => {
       } else {
         dispatch(setIsVoiceCalling(true));
       }
+      setCallAccept(true)
       setPeerEmail(incomingCall.fromEmail);
       dispatch(setCallParticipants(new Set(incomingCall.participants)));
       dispatch(setIncomingCall(null));
@@ -1396,7 +1413,7 @@ export const SocketProvider = ({ children }) => {
   };
 
   const startCallDurationTimer = () => {
-    callTimerRef.current = setInterval(() => {
+      callTimerRef.current = setInterval(() => {
       if (callStartTime) {
         const duration = Math.floor((new Date() - callStartTime) / 1000);
         setCallDuration(duration);
@@ -1405,27 +1422,25 @@ export const SocketProvider = ({ children }) => {
   };
 
   const endCall = () => {
+    console.log("fvddvddvdvdv");
+    
     // Calculate final call duration
     const finalDuration = callStartTime
       ? Math.floor((new Date() - callStartTime) / 1000)
       : 0;
     const no_of_callUser = sessionStorage.getItem("callUser");
+    console.log(callAccept, groupCall, callParticipantsList?.joined?.length);
 
     if (callAccept) {
       if (groupCall) {
         if (callParticipantsList?.joined?.length > 2) {
-          callParticipantsList?.joined.forEach((participantId) => {
-            if (participantId !== userId) {
-              if (socketRef.current) {
-                socketRef.current.emit("participant-left", {
-                  leavingUser: userId,
-                  to: participantId,
-                  duration: finalDuration,
-                  roomId: callRoom,
-                });
-              }
-            }
+          socketRef.current.emit("participant-left", {
+            leavingUser: userId,
+            // to: participantId,
+            duration: finalDuration,
+            roomId: callRoom,
           });
+      
         } else {
           callParticipantsList?.joined.forEach((participantId) => {
             if (participantId !== userId) {
@@ -1456,18 +1471,25 @@ export const SocketProvider = ({ children }) => {
         }
       } else {
         if (callParticipantsList?.joined?.length > 2) {
-          callParticipantsList?.joined.forEach((participantId) => {
-            if (participantId !== userId) {
-              if (socketRef.current) {
-                socketRef.current.emit("participant-left", {
-                  leavingUser: userId,
-                  to: participantId,
-                  duration: finalDuration,
-                  roomId: callRoom,
-                });
-              }
-            }
+          socketRef.current.emit("participant-left", {
+            leavingUser: userId,
+            // to: participantId,
+            duration: finalDuration,
+            roomId: callRoom,
           });
+          // callParticipantsList?.joined.forEach((participantId) => {
+          //   if (participantId !== userId) {
+          //     if (socketRef.current) {
+          //       console.log("2333333333");
+          //       socketRef.current.emit("participant-left", {
+          //         leavingUser: userId,
+          //         to: participantId,
+          //         duration: finalDuration,
+          //         roomId: callRoom,
+          //       });
+          //     }
+          //   }
+          // });
 
           callParticipantsList?.joined.forEach((participantId) => {
             if (participantId !== userId) {
@@ -1532,6 +1554,8 @@ export const SocketProvider = ({ children }) => {
     setCallStartTime(null);
     setCallDuration(null);
 
+    
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -1567,6 +1591,7 @@ export const SocketProvider = ({ children }) => {
     dispatch(setParticipants([]));
     dispatch(setRemoteStreams(new Map()));
     dispatch(setSelectedChatModule(true));
+    setCallAccept(false);
   };
 
   const rejectCall = (type, userId, groupId) => {
@@ -1665,13 +1690,13 @@ export const SocketProvider = ({ children }) => {
       peerRef.current = {};
     }
 
-    // Safely cleanup video refs
-    if (localVideoRef?.current) {
-      localVideoRef.current.srcObject = null;
-    }
-    if (remoteVideoRef?.current) {
-      remoteVideoRef.current.srcObject = null;
-    }
+    // // Safely cleanup video refs
+    // if (localVideoRef?.current) {
+    //   localVideoRef.current.srcObject = null;
+    // }
+    // if (remoteVideoRef?.current) {
+    //   remoteVideoRef.current.srcObject = null;
+    // }
 
     // Reset states
     dispatch(setIsSharing(false));
@@ -1732,23 +1757,24 @@ export const SocketProvider = ({ children }) => {
     if (!socketRef.current) return;
 
     // Add camera status change listener
-    socketRef.current.on(
-      "camera-status-change",
-      ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
-        console.log(
-          `[Camera Status] Received update: User ${remoteUserId} camera is now ${remoteCameraStatus ? "ON" : "OFF"
-          }`
-        );
+    socketRef.current.on("camera-status-change", ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
         dispatch(setCameraStatus({
           ...cameraStatus,
           [remoteUserId]: remoteCameraStatus,
         }));
       }
     );
-
+    socketRef.current.on("mic-status-change", ({ userId: remoteUserId, isMicOn: remoteMicStatus }) => {
+      dispatch(setMicStatus({
+        ...micStatus,
+        [remoteUserId]: remoteMicStatus,
+      }));
+    }
+    );
     return () => {
       if (socketRef.current) {
         socketRef.current.off("camera-status-change");
+        socketRef.current.off("mic-status-change");
       }
     };
   }, [socketRef.current]);
@@ -1768,6 +1794,8 @@ export const SocketProvider = ({ children }) => {
           if (groupCall) {
             Array.from(callParticipants).forEach((participantId) => {
               if (participantId !== userId) {
+                console.log("useEffect");
+                
                 socketRef.current.emit("participant-left", {
                   leavingUser: userId,
                   to: participantId,
@@ -1836,6 +1864,8 @@ export const SocketProvider = ({ children }) => {
 
       // Notify other participants about the disconnection
       if (socketRef.current?.connected) {
+        console.log(peerId,"peerId Left");
+        
         socketRef.current.emit("participant-left", {
           leavingUser: peerId,
           to: Array.from(callParticipants).filter(
@@ -1988,9 +2018,9 @@ export const SocketProvider = ({ children }) => {
   const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
   const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
   const memoizedAcceptCall = useCallback(acceptCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone, incomingCall]);
-  const memoizedEndCall = useCallback(endCall, [userId, socketRef, dispatch, groupCall, callParticipantsList, callStartTime]);
+  const memoizedEndCall = useCallback(endCall, [userId, socketRef, groupCall, callParticipantsList, callStartTime]);
   const memoizedToggleCamera = useCallback(toggleCamera, [streamRef, isCameraOn, userId, socketRef, dispatch]);
-  const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch]);
+  const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch,callRoom,userId,isMicrophoneOn]);
   const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [userId, socketRef, dispatch]);
   const memoizedRejectCall = useCallback(rejectCall, [userId, socketRef, dispatch, incomingCall]);
   const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [incomingShare, dispatch, userId, socketRef]);
@@ -2000,68 +2030,68 @@ export const SocketProvider = ({ children }) => {
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
   const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
- 
-// Use the memoized functions in useMemo
-const value = useMemo(() => ({
-  socket: socketRef.current,
-  sendPrivateMessage: memoizedSendPrivateMessage,
-  cleanupConnection: memoizedCleanupConnection,
-  startSharing: memoizedStartSharing,
-  startCall: memoizedStartCall,
-  acceptCall: memoizedAcceptCall,
-  endCall: memoizedEndCall,
-  toggleCamera: memoizedToggleCamera,
-  toggleMicrophone: memoizedToggleMicrophone,
-  markMessageAsRead: memoizedMarkMessageAsRead,
-  rejectCall: memoizedRejectCall,
-  acceptScreenShare: memoizedAcceptScreenShare,
-  inviteToCall: memoizedInviteToCall,
-  forwardMessage: memoizedForwardMessage,
-  addMessageReaction: memoizedAddMessageReaction,
-  subscribeToMessages: memoizedSubscribeToMessages,
-  sendTypingStatus: memoizedSendTypingStatus,
-  sendControl:memoizedsendControls,
-  requestControl,
-  grantControl,
-  revokeControl,
-  // registerAsHost,
-  // unregisterAsHost
-  sendGroupMessage:memoizedsendGroupMessage
-}), [
-  userId,
-  socketRef,
-  dispatch,
-  hasWebcam,
-  hasMicrophone,
-  incomingCall,
-  groupCall,
-  callParticipantsList,
-  callStartTime,
-  streamRef,
-  isCameraOn,
-  incomingShare,
-  callParticipants,
-  isVideoCalling,
-  memoizedSendPrivateMessage,
-  memoizedCleanupConnection,
-  memoizedStartSharing,
-  memoizedStartCall,
-  memoizedAcceptCall,
-  memoizedEndCall,
-  memoizedToggleCamera,
-  memoizedToggleMicrophone,
-  memoizedMarkMessageAsRead,
-  memoizedRejectCall,
-  memoizedAcceptScreenShare,
-  memoizedInviteToCall,
-  memoizedForwardMessage,
-  memoizedAddMessageReaction,
-  memoizedSubscribeToMessages,
-  memoizedSendTypingStatus,
-  memoizedsendControls,
-  memoizedsendGroupMessage,
-]);
- 
+
+  // Use the memoized functions in useMemo
+  const value = useMemo(() => ({
+    socket: socketRef.current,
+    sendPrivateMessage: memoizedSendPrivateMessage,
+    cleanupConnection: memoizedCleanupConnection,
+    startSharing: memoizedStartSharing,
+    startCall: memoizedStartCall,
+    acceptCall: memoizedAcceptCall,
+    endCall: memoizedEndCall,
+    toggleCamera: memoizedToggleCamera,
+    toggleMicrophone: memoizedToggleMicrophone,
+    markMessageAsRead: memoizedMarkMessageAsRead,
+    rejectCall: memoizedRejectCall,
+    acceptScreenShare: memoizedAcceptScreenShare,
+    inviteToCall: memoizedInviteToCall,
+    forwardMessage: memoizedForwardMessage,
+    addMessageReaction: memoizedAddMessageReaction,
+    subscribeToMessages: memoizedSubscribeToMessages,
+    sendTypingStatus: memoizedSendTypingStatus,
+    sendControl: memoizedsendControls,
+    requestControl,
+    grantControl,
+    revokeControl,
+    // registerAsHost,
+    // unregisterAsHost
+    sendGroupMessage: memoizedsendGroupMessage
+  }), [
+    userId,
+    socketRef,
+    dispatch,
+    hasWebcam,
+    hasMicrophone,
+    incomingCall,
+    groupCall,
+    callParticipantsList,
+    callStartTime,
+    streamRef,
+    isCameraOn,
+    incomingShare,
+    callParticipants,
+    isVideoCalling,
+    memoizedSendPrivateMessage,
+    memoizedCleanupConnection,
+    memoizedStartSharing,
+    memoizedStartCall,
+    memoizedAcceptCall,
+    memoizedEndCall,
+    memoizedToggleCamera,
+    memoizedToggleMicrophone,
+    memoizedMarkMessageAsRead,
+    memoizedRejectCall,
+    memoizedAcceptScreenShare,
+    memoizedInviteToCall,
+    memoizedForwardMessage,
+    memoizedAddMessageReaction,
+    memoizedSubscribeToMessages,
+    memoizedSendTypingStatus,
+    memoizedsendControls,
+    memoizedsendGroupMessage,
+  ]);
+
 
   // const value = {
   //   socket: socketRef.current,

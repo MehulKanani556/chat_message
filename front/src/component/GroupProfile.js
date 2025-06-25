@@ -914,8 +914,10 @@ const GroupProfile = memo(({
                     .sort((a, b) => (a == userId ? -1 : b == userId ? 1 : 0))
                     .map((member, index) => {
                       const user = allUsers.find((user) => user._id === member);
-                      const isMenuOpen = menuOpen === user._id;
-
+                      let isMenuOpen;
+                      if(user){
+                        isMenuOpen = menuOpen === user._id;
+                      }
                       return (
                         <div
                           key={index}

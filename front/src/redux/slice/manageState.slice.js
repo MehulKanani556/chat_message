@@ -17,6 +17,7 @@ const initialState = {
   isMicrophoneOn: false,
   voiceCallData: null,
   cameraStatus: {},
+  micStatus:{},
   callParticipants: new Set(),
   selectedImage: null,
   participantOpen: false,
@@ -47,6 +48,7 @@ const initialState = {
   typingUsers: [],
   searchInputbox: "",
   cameraStream: null,
+ 
   openCameraState: false,
   backCameraAvailable: false,
   facingMode: "user",
@@ -96,11 +98,17 @@ const manageStateSlice = createSlice({
       state.participants = Array.from(allStreams);
     },
     removeParticipant: (state, action) => {
+      console.log(action.payload);
+      
       const userId = action.payload;
       const allStreams = new Map(state.participants);
       allStreams.delete(userId)
+
+      console.log(Array.from(allStreams));
+      
       state.participants = Array.from(allStreams);
     },
+    
     setCallParticipantsList: (state, action) => {
       state.callParticipantsList = action.payload;
     },
@@ -141,6 +149,9 @@ const manageStateSlice = createSlice({
     },
     setCameraStatus: (state, action) => {
       state.cameraStatus = action.payload;
+    },
+    setMicStatus: (state, action) => {
+      state.micStatus = action.payload;
     },
     setCallParticipants: (state, action) => {
       state.callParticipants = action.payload;
@@ -293,6 +304,7 @@ export const {
   setIsMicrophoneOn,
   setVoiceCallData,
   setCameraStatus,
+  setMicStatus,
   setCallParticipants,
   setSelectedChatModule,
   setShowProfile,

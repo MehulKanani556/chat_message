@@ -35,7 +35,7 @@ const userLogin = async (req, res) => {
         let token = await jwt.sign({ _id: checkEmailIsExist._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
 
         return res.status(200).json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: token })
-        
+
     } catch (error) {
         console.log(error)
         return res.status(500).json({ status: 500, message: error.message })
@@ -71,7 +71,7 @@ const forgotPassword = async (req, res) => {
         if (!checkEmail) {
             return res.status(404).json({ status: 404, message: "Email Not Found" })
         }
- 
+
         const transport = nodemailer.createTransport({
             service: "Gmail",
             auth: {
@@ -87,8 +87,8 @@ const forgotPassword = async (req, res) => {
             to: email,
             subject: "Reset Password",
             text: `Your code is: ${otp} `
-        }   
-        
+        }
+
         checkEmail.otp = otp
 
         await checkEmail.save()
@@ -190,16 +190,16 @@ const sendOtpToMobile = async (req, res) => {
         return res.status(200).json({ status: 200, message: "OTP sent successfully." });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ 
-            status: 500, 
-            message: error.message || "Failed to send OTP. Please try again later." 
+        return res.status(500).json({
+            status: 500,
+            message: error.message || "Failed to send OTP. Please try again later."
         });
     }
 };
 
 const verifyMobileOtp = async (req, res) => {
     try {
-        const { mobileNumber, otp , isMobile } = req.body;
+        const { mobileNumber, otp, isMobile } = req.body;
 
         let userRecord = await user.findOne({ mobileNumber });
         if (!userRecord) {
