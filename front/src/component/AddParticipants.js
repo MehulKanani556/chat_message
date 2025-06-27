@@ -26,7 +26,7 @@ const AddParticipants = memo(({
   const selectedChat = useSelector(state => state.magageState.selectedChat)
   const { allUsers,messages } = useSelector((state) => state.user);
 
-  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+  const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
   console.log(creatGroup);
   

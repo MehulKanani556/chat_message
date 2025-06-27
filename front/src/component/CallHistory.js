@@ -11,13 +11,11 @@ const CallHistory = () => {
 
   console.log("CallHistory");
 
-  const [callHistory, setCallHistory] = useState([]);
+  // const [callHistory, setCallHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showMissedCallsOnly, setShowMissedCallsOnly] = useState(false);
-  const userId = sessionStorage.getItem("userId");
-  const token = sessionStorage.getItem("token");
-  const dispatch = useDispatch();
-  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
+
+  const {  allCallUsers } = useSelector((state) => state.user);
 
   // useEffect(() => { dispatch(getAllCallUsers())}, []);
 

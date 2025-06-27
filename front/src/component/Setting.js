@@ -17,7 +17,7 @@ const Setting = memo(() => {
     console.log("setting");
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const urlUserId = useMemo(() => sessionStorage.getItem("userId"), []);
+    const urlUserId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
     const [isEditing, setIsEditing] = useState(false);
     const currentUser = useSelector((state) => state.user.user);
     const [isLoading, setIsLoading] = useState(false);

@@ -56,7 +56,7 @@ const MessageInput = memo(
     const [audioChunks, setAudioChunks] = useState([]);
     const [recordingTime, setRecordingTime] = useState(0); // State to hold recording time
     const [docModel, setDocModel] = useState(false);
-    const [currentUser] = useState(sessionStorage.getItem("userId"));
+    const [currentUser] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"));
     const inputRef = useRef(null);
     const caretPositionRef = useRef(null);
 

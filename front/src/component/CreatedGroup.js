@@ -28,7 +28,7 @@ const CreatedGroup = memo(({
   // const [groupPhoto, setGroupPhoto] = useState(null);
   // const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
   // const { allUsers,messages } = useSelector((state) => state.user);
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
 
   // Reset state when modal is closed/opened

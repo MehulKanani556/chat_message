@@ -65,7 +65,7 @@ indexRoutes.post("/changePassword", changePassword);
 indexRoutes.post("/profile-info", auth, upload.single("photo"), profileInfo);
 // Generate new tokens
 indexRoutes.post("/generateNewTokens",generateNewToken);
-indexRoutes.post("/logout",logoutUser);
+indexRoutes.post("/logoutUser",logoutUser);
 
 
 // User Routes

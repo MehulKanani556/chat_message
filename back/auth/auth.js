@@ -21,29 +21,29 @@ try {
 const generateTokens = async (id) => {
     console.log("id", id);
     try {
-        const user = await user.findOne({ _id: id });
-        console.log("user", user);
-        if (!user) {
+        const userData = await user.findOne({ _id: id });
+        // console.log("user", userData);
+        if (!userData) {
             throw new Error("User not found");
         }
 
         const accessToken = await jwt.sign(
             {
-                _id: user._id,
+                _id: userData._id,
             },
             process.env.SECRET_KEY,
-            { expiresIn: '15m' });
+            { expiresIn: '2h' });
 
         const refreshToken = await jwt.sign(
             {
-                _id: user._id,
+                _id: userData._id,
             },
-            process.env.SECRET_KEY,
+            process.env.REFRESH_SECRET_KEY,
             { expiresIn: '15d' }
         );
 
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
+        userData.refreshToken = refreshToken;
+        await userData.save({ validateBeforeSave: false });    
 
         return {
             accessToken,
@@ -56,8 +56,10 @@ const generateTokens = async (id) => {
 }
 
 const generateNewToken = async (req, res) => {
-    const token = req.cookies.refreshToken ;
-    console.log("TOKENS", token);
+
+    const token = req.cookies.refreshToken || req.header('Authorization').split(' ')[1];
+
+    console.log("TOKENS---------------", token);
 
     if (!token) {
         return res.status(401)
@@ -67,8 +69,10 @@ const generateNewToken = async (req, res) => {
             })
     }
 
-    jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
+    jwt.verify(token, process.env.REFRESH_SECRET_KEY, async function (err, decoded) {
         try {
+            console.log(err);
+            
             if (err) {
                 return res.status(400)
                     .json({
@@ -87,24 +91,15 @@ const generateNewToken = async (req, res) => {
                         message: "User not found..!!"
                     })
             }
-
-            if (token !== USERS.refreshToken) {
-                return res.status(400)
-                    .json({
-                        success: false,
-                        message: "Invalid user"
-                    })
-            }
-
             const { accessToken, refreshToken } = await generateTokens(decoded._id);
 
             const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
             // console.log("userDetailsss", userDetails);
 
             return res.status(200)
-            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 15*60*1000, sameSite:"None" })
+            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
             .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
-            .json({ success: true, finduser: userDetails, accessToken: accessToken,refreshToken:refreshToken });
+            .json({ success: true, finduser: userDetails, accessToken: accessToken, refreshToken:refreshToken });
 
         } catch (error) {
             return res.status(500).json({
@@ -134,12 +129,12 @@ const userLogin = async (req, res) => {
             return res.status(404).json({ status: 404, message: "Password Not Match" })
         }
 
-        let token = await jwt.sign({ _id: checkEmailIsExist._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
+        // let token = await jwt.sign({ _id: checkEmailIsExist._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
         const { accessToken, refreshToken } = await generateTokens(checkEmailIsExist._id);
 
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
-        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
+        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, maxAge:15*24*60*60*1000, sameSite:"None" })
         .json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: assesToken })
         
     } catch (error) {
@@ -161,10 +156,10 @@ const googleLogin = async (req, res) => {
             });
         }
         checkUser = checkUser.toObject();
-        let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
+        // let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
         const { accessToken, refreshToken } = await generateTokens(checkUser._id);
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
         .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
         .json({ message: 'login successful', success: true, user: checkUser, token: accessToken });
 
@@ -325,25 +320,27 @@ const verifyMobileOtp = async (req, res) => {
         // Clear OTP after successful verification
         userRecord.otp = undefined;
         userRecord.devices= []
-        await userRecord.save();
+       
 
         // Generate token for the user
-        const token = jwt.sign(
-            { _id: userRecord._id },
-            process.env.SECRET_KEY,
-            { expiresIn: "1D" }
-        );
+        // const token = jwt.sign(
+        //     { _id: userRecord._id },
+        //     process.env.SECRET_KEY,
+        //     { expiresIn: "1D" }
+        // );
+        await userRecord.save();
 
         const { accessToken, refreshToken } = await generateTokens(userRecord._id);
 
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
         .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
         .json({
             status: 200,
             message: "OTP verified successfully.",
             user: userRecord,
-            token: accessToken
+            token: accessToken,
+            refreshToken:refreshToken
         });
     } catch (error) {
         console.log(error);
@@ -380,7 +377,7 @@ const profileInfo = async (req, res) => {
 
 const logoutUser = async (req, res) => {
     try {
-        const user = await user.findByIdAndUpdate(
+        const userData = await user.findByIdAndUpdate(
             req.body._id,
             {
                 $unset: {
@@ -397,7 +394,7 @@ const logoutUser = async (req, res) => {
             .clearCookie("refreshToken")
             .json({
                 success: true,
-                data: user,
+                data: userData,
                 message: 'user logout successfully'
             })
     } catch (error) {

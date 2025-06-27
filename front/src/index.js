@@ -18,9 +18,9 @@ const RouterToUse = isElectron ? HashRouter : Router;
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <GoogleOAuthProvider clientId="740597259200-767dkgoh1htbm0njb2r6nk9soai53c85.apps.googleusercontent.com">
-    <BrowserRouter>
+    <HashRouter>
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </GoogleOAuthProvider>
 );
 

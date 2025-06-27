@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import sessionStorage from "redux-persist/es/storage/session";
 import axios from "axios";
 import { BASE_URL } from "../../utils/baseUrl";
+import axiosInstance from "../../utils/axiosInstance";
 // import { Socket } from "socket.io-client";
 // import { enqueueSnackbar } from 'notistack';
 
@@ -125,17 +126,13 @@ export const googleLogin = createAsyncThunk(
     }
   }
 );
+
+
 export const getUser = createAsyncThunk(
   "auth/getUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/singleUser/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await axiosInstance.get(`/singleUser/${userId}`);
       return response.data; // Assuming the API returns the user data
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -172,13 +169,7 @@ export const getAllUsers = createAsyncThunk(
   "user/getAllUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/allUsers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await axiosInstance.get("/allUsers");
       return response.data.users;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -190,28 +181,19 @@ export const getAllMessageUsers = createAsyncThunk(
   "user/getAllMessageUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/allMessageUsers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get("/allMessageUsers");
       return response.data.users;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
     }
   }
 );
+
 export const getAllCallUsers = createAsyncThunk(
   "user/getAllCallUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/allCallUsers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.get("/allCallUsers");
       return response.data.users;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -240,17 +222,7 @@ export const getAllMessages = createAsyncThunk(
   "user/getAllMessages",
   async ({ selectedId }, { rejectWithValue }) => {
     try {
-      console.log(selectedId);
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(
-        `${BASE_URL}/allMessages`,
-        { selectedId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axiosInstance.post("/allMessages", { selectedId });
       return response.data.messages;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -262,15 +234,7 @@ export const deleteMessage = createAsyncThunk(
   "user/deleteMessage",
   async (messageId, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.get(
-        `${BASE_URL}/deleteMessage/${messageId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axiosInstance.get(`/deleteMessage/${messageId}`);
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -282,16 +246,7 @@ export const updateMessage = createAsyncThunk(
   "user/updateMessage",
   async ({ messageId, content }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.put(
-        `${BASE_URL}/updateMessage/${messageId}`,
-        { content },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axiosInstance.put(`/updateMessage/${messageId}`, { content });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -302,16 +257,13 @@ export const updateMessage = createAsyncThunk(
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
   async ({ id, values }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
       formData.append(key, values[key]);
     });
-    console.log("id", id, values)
     try {
-      const response = await axios.put(`${BASE_URL}/editUser/${id}`, formData, {
+      const response = await axiosInstance.put(`/editUser/${id}`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -325,9 +277,6 @@ export const updateUser = createAsyncThunk(
 export const createGroup = createAsyncThunk(
   "user/createGroup",
   async ({ groupData, socket }, { rejectWithValue }) => {
-    console.log(groupData, "///////////////////////////////");
-
-    const token = await sessionStorage.getItem("token");
     const formData = new FormData();
     Object.keys(groupData).forEach((key) => {
       if (Array.isArray(groupData[key])) {
@@ -339,16 +288,13 @@ export const createGroup = createAsyncThunk(
       }
     });
     try {
-      const response = await axios.post(`${BASE_URL}/createGroup`, formData, {
+      const response = await axiosInstance.post("/createGroup", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log("response", response.data);
       // Emit socket event for group creation
       if (socket) {
-        // console.log("socket", socket);
         socket.emit("create-group", response.data.group);
       }
       return response.data;
@@ -361,20 +307,18 @@ export const createGroup = createAsyncThunk(
 export const getAllGroups = createAsyncThunk(
   "user/getAllGroups",
   async (_, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
-    const response = await axios.get(`${BASE_URL}/allGroups`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
+    try {
+      const response = await axiosInstance.get("/allGroups");
+      return response.data;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
   }
 );
 
 export const updateGroup = createAsyncThunk(
   "user/updateGroup",
   async (groupData, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     const { groupId, userName, members, photo, bio } = groupData;
     const formData = new FormData();
     formData.append("groupId", groupId);
@@ -394,12 +338,11 @@ export const updateGroup = createAsyncThunk(
     }
 
     try {
-      const response = await axios.put(
-        `${BASE_URL}/updateGroup/${groupId}`,
+      const response = await axiosInstance.put(
+        `/updateGroup/${groupId}`,
         formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -414,16 +357,8 @@ export const updateGroup = createAsyncThunk(
 export const deleteGroup = createAsyncThunk(
   "user/deleteGroup",
   async (groupId, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.delete(
-        `${BASE_URL}/deleteGroup/${groupId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axiosInstance.delete(`/deleteGroup/${groupId}`);
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -434,13 +369,8 @@ export const deleteGroup = createAsyncThunk(
 export const addParticipants = createAsyncThunk(
   "user/addParticipants",
   async ({ groupId, members, addedBy }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(`${BASE_URL}/addParticipants`, { groupId, members, addedBy }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post("/addParticipants", { groupId, members, addedBy });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -451,16 +381,10 @@ export const addParticipants = createAsyncThunk(
 export const leaveGroup = createAsyncThunk(
   "user/leaveGroup",
   async ({ groupId, userId, removeId }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(
-        `${BASE_URL}/leaveGroup`,
-        { groupId, userId, removeId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/leaveGroup",
+        { groupId, userId, removeId }
       );
       return response.data;
     } catch (error) {
@@ -488,16 +412,10 @@ export const leaveGroup = createAsyncThunk(
 export const archiveUser = createAsyncThunk(
   "user/archiveUser",
   async ({ selectedUserId }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(
-        `${BASE_URL}/archiveUser`,
-        { selectedUserId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/archiveUser",
+        { selectedUserId }
       );
       return response.data;
     } catch (error) {
@@ -510,15 +428,9 @@ export const clearChat = createAsyncThunk(
   "user/clearChat",
   async ({ selectedId }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(
-        `${BASE_URL}/clearChat`,
-        { selectedId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/clearChat",
+        { selectedId }
       );
       return response.data;
     } catch (error) {
@@ -530,13 +442,8 @@ export const clearChat = createAsyncThunk(
 export const updateUserGroupToJoin = createAsyncThunk(
   "user/updateUserGroupToJoin",
   async ({ id, groupToJoin }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(`${BASE_URL}/updateUserGroupToJoin/${id}`, { groupToJoin }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post(`/updateUserGroupToJoin/${id}`, { groupToJoin });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -547,32 +454,22 @@ export const updateUserGroupToJoin = createAsyncThunk(
 export const updateUserProfilePhotoPrivacy = createAsyncThunk(
   "user/updateUserProfilePhotoPrivacy",
   async ({ id, profilePhoto }, { rejectWithValue }) => {
-    const token = await sessionStorage.getItem("token");
     try {
-      const response = await axios.post(`${BASE_URL}/updateUserProfilePhotoPrivacy/${id}`, { profilePhoto }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post(`/updateUserProfilePhotoPrivacy/${id}`, { profilePhoto });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
     }
   }
 );
+
 export const blockUser = createAsyncThunk(
   "user/blockUser",
   async ({ selectedUserId }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(
-        `${BASE_URL}/blockUser`,
-        { selectedUserId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await axiosInstance.post(
+        "/blockUser",
+        { selectedUserId }
       );
       return response.data;
     } catch (error) {
@@ -580,32 +477,24 @@ export const blockUser = createAsyncThunk(
     }
   }
 );
+
 export const deleteChat = createAsyncThunk(
   "user/deleteChat",
   async ({ selectedUserId }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(`${BASE_URL}/deleteChat`, { selectedUserId }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post("/deleteChat", { selectedUserId });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
     }
   }
 );
+
 export const pinChat = createAsyncThunk(
   "user/pinChat",
   async ({ selectedUserId }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(`${BASE_URL}/pinChat`, { selectedUserId }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post("/pinChat", { selectedUserId });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -617,12 +506,7 @@ export const muteChat = createAsyncThunk(
   "user/muteChat",
   async ({ selectedUserId }, { rejectWithValue }) => {
     try {
-      const token = await sessionStorage.getItem("token");
-      const response = await axios.post(`${BASE_URL}/muteChat`, { selectedUserId }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axiosInstance.post("/muteChat", { selectedUserId });
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);

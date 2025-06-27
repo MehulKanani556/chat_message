@@ -6,9 +6,20 @@
 //         ipcRenderer.on(channel, (event, ...args) => func(...args));
 //     },
 // });
-const { contextBridge, ipcRenderer,desktopCapturer } = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electron", {
+
+  saveAuthData: (data) => ipcRenderer.invoke("save-auth-data", data),
+
+  setActiveWindow: (windowName) => ipcRenderer.send('set-active-window', windowName),
+
+  getAuthToken: () => ipcRenderer.invoke("get-auth-token"),
+  getUserId: () => ipcRenderer.invoke("get-user-id"),
+  getRefToken: () => ipcRenderer.invoke("get-ref-token"),
+
+  clearAuthToken: () => ipcRenderer.invoke("clear-auth-data"),
+
   // Screen sharing
   getSources: () => ipcRenderer.invoke('get-sources'),
   // getSources: async () => {

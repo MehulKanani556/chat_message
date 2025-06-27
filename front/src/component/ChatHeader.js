@@ -26,13 +26,13 @@ const ChatHeader = memo(({
   setIsDeleteChatModalOpen,
   setGroupUsers,
 }) => {
-
-  console.log("header");
+  // console.log("header");
   const dispatch = useDispatch();
   const { cleanupConnection, startCall,startSharing,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [screenShareModal, setScreenShareModal] = useState(false);
   const mobileMenuRef = useRef(null);
 
   const selectedChat = useSelector(state => state.magageState.selectedChat);
@@ -41,7 +41,7 @@ const ChatHeader = memo(({
   const onlineUsers = useSelector(state => state.magageState.onlineUsers);
 
   const user = useSelector(state => state.user.user);
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
   let loginUser = selectedChat._id === currentUser
 
@@ -97,6 +97,46 @@ const ChatHeader = memo(({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [menuOpen]);
+
+  const handDownload = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    let downloadUrl = '';
+    let fileName = '';
+  
+    // Detect OS
+    if (/windows/i.test(userAgent)) {
+      downloadUrl = 'https://your-domain.com/downloads/your-app-windows.exe'; // Replace with your actual Windows download URL
+      fileName = 'your-app-windows.exe';
+    } else if (/macintosh|mac os x/i.test(userAgent)) {
+      downloadUrl = 'https://your-domain.com/downloads/your-app-mac.dmg'; // Replace with your actual Mac download URL
+      fileName = 'your-app-mac.dmg';
+    } else {
+      // Unsupported OS
+      alert('Sorry, your operating system is not supported. Please download manually from our website.');
+      return;
+    }
+  
+    // Create download link and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    
+    // Add error handling
+    link.onerror = () => {
+      alert('Download failed. Please try again.');
+    };
+  
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  
+    // Optional: Show success message
+    setTimeout(() => {
+      alert('Download started! If it doesn\'t start automatically, please check your browser\'s download settings.');
+    }, 100);
+  };
 
 
   return (
@@ -198,7 +238,13 @@ const ChatHeader = memo(({
                   title="Stop sharing"
                 />
               ) : (
-                <div className="w-6 h-6 cursor-pointer" onClick={() => handleStartScreenShare()}>
+                <div className="w-6 h-6 cursor-pointer" onClick={() =>{
+                  if(window.electron){
+                    handleStartScreenShare()
+                  }else{
+                    setScreenShareModal(true)
+                  }
+                } }>
                   <LuScreenShare className="w-full h-full" />
                 </div>
               )}
@@ -377,8 +423,13 @@ const ChatHeader = memo(({
                 <button
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                   onClick={() => {
-                    handleStartScreenShare();
-                    setMobileMenuOpen(false);
+                    if(window.electron){
+                      handleStartScreenShare();
+                      setMobileMenuOpen(false);
+                    }else{
+                      setScreenShareModal(true);
+                      setMobileMenuOpen(false);
+                    }
                   }}
                 >
                   <LuScreenShare className="w-5 h-5 mr-2" />
@@ -429,7 +480,51 @@ const ChatHeader = memo(({
               </div>
             </div>
           )}
+
+
         </div>
+      {screenShareModal &&
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
+              <div className="bg-white rounded-lg p-8  dark:bg-primary-dark">
+                <h3 className="text-lg text-center font-semibold mb-6 dark:text-gray-200">
+                 Screen Share
+                </h3>
+
+                <h3 className="w-2/3 text-center mx-auto font-semibold mb-8 text-black/50 dark:text-gray-200/50">
+                To enable remote control during screen sharing, you need to download and install the application.
+                </h3>
+
+                <div className="flex justify-center space-x-4 font-medium">
+                  <button
+                    onClick={() =>  setScreenShareModal(false)}
+                    className="px-4 py-2 w-full rounded dark:text-white border border-black dark:border-white "
+                    // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                     handDownload()
+                    }}
+                    className="px-4 py-2 w-full text-white rounded"
+                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                  >
+                   Download 
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleStartScreenShare();
+                      setScreenShareModal(false);
+                    }}
+                    className="px-4 py-2 w-full text-white rounded"
+                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                  >
+                   StartSharing
+                  </button>
+                </div>
+              </div>
+            </div>
+        }
       </div>
     </div>
   );

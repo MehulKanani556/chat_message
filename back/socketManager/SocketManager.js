@@ -46,6 +46,7 @@ async function handleUserLogin(socket, userId) {
 
   // Broadcast updated online users list to all connected clients
   const onlineUsersList = Array.from(onlineUsers.keys());
+  
   global.io.emit("user-status-changed", onlineUsersList);
   // socket.emit("user-status-changed", onlineUsersList);
 

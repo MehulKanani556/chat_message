@@ -20,7 +20,7 @@ const ChatList = memo(({
 
 }) => {
   const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [archive, setArchive] = useState(false);

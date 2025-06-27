@@ -63,7 +63,7 @@ const GroupProfile = memo(({
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const selectedChat = useSelector(state => state.magageState.selectedChat)
   const { allUsers, messages } = useSelector((state) => state.user);
-  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+  const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const { socket } = useSocket();
 
   const handlePhotoChange = async (e) => {

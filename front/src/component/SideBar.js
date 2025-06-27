@@ -1,20 +1,23 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {BsChatDots,BsPeople, BsMoonStars} from 'react-icons/bs';
 import { MdOutlineWbSunny } from 'react-icons/md';
 import { LuPhoneCall } from 'react-icons/lu';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../redux/slice/auth.slice';
 
 const Sidebar = memo(() => {
 
   console.log("sidebar");
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("chat");
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") ,[]);
 
   const {user } = useSelector((state) => state.user);
 
@@ -97,9 +100,13 @@ const Sidebar = memo(() => {
   ];
 
   // Logout
-  const handleLogout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("userId");
+  const handleLogout = async() => {
+    // sessionStorage.removeItem("token");
+    // sessionStorage.removeItem("userId");
+    // navigate("/");
+    console.log("Sdsdgsdfdfgdfg");
+    
+    await dispatch(logoutUser(currentUser));
     navigate("/");
   };
 

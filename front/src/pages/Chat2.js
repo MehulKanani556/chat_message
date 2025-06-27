@@ -76,7 +76,7 @@ const Chat2 = () => {
 
 
   const dispatch = useDispatch();
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") ,[]);
   // const [currentUser] = useState(sessionStorage.getItem("userId"));
  
   // const localVideoRef = useRef(null);
@@ -112,7 +112,7 @@ const Chat2 = () => {
     if (!currentUser) {
       navigate("/");
     }
-  }, []);
+  }, [currentUser]);
 
   //===========get all users===========
   useEffect(() => {

@@ -21,9 +21,7 @@ import DeviceListPage from "./pages/DeviceListPage";
 
 function App() {
   const { store, persistor } = configureStore();
-  const navigate = useNavigate();
-  const token = sessionStorage.getItem("token");
-  const user = sessionStorage.getItem("userId");
+
   useEffect(() => {
     // Initialize primary color on app load
     initializePrimaryColor();

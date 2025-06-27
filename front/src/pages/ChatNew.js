@@ -148,7 +148,7 @@ const Chat2 = () => {
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiPickerRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentUser] = useState(sessionStorage.getItem("userId")); // Replace with actual user data
+  const [currentUser] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId")); // Replace with actual user data
   const [typingUsers, setTypingUsers] = useState({});
   const localVideoRef = useRef(null);
   const [callUsers, setCallUsers] = useState([]);
@@ -163,7 +163,7 @@ const Chat2 = () => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   const inputRef = useRef(null);
-  const [userId, setUserId] = useState(sessionStorage.getItem("userId"));
+  const [userId] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"));
   const [groupUsers, setGroupUsers] = useState([]);
   const [groupNewUsers, setGroupNewUsers] = useState([]);
   const messagesContainerRef = useRef(null);

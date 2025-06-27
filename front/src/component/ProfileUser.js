@@ -37,7 +37,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
   const [activeTab, setActiveTab] = useState('media');
   const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
   const [enabled, setEnabled] = useState(false);
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const selectedChat = useSelector(state => state.magageState.selectedChat);
