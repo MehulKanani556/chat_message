@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import OtpModal from "../component/OtpModal";
@@ -15,6 +15,38 @@ import QRLoginPage from "./QRLoginPage";
 const LoginNew = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkToken() {
+      if(window?.electro){
+        const token = await window?.electron?.getAuthToken();
+        const id = await window?.electron?.getUserId();
+        const reftoken = await window?.electron?.getRefToken();
+  
+        if (token) {
+          // Set user as logged in, e.g., update Redux state
+          localStorage.setItem("ChatToken",token);
+          sessionStorage.setItem("token",token);
+        };
+        if(id){
+          localStorage.setItem("ChatuserId",id)
+        }
+        if(reftoken){
+          localStorage.setItem("refreshToken",reftoken)
+        }
+      }
+    }
+    checkToken();
+  }, []);
+
+  const token = localStorage.getItem("ChatToken");
+  useEffect(() => {
+    if (token) {
+      // Redirect to chat if already logged in
+      navigate("/chat", { replace: true });
+    }
+  }, [token]);
+
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [completePhoneNumber, setCompletePhoneNumber] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);

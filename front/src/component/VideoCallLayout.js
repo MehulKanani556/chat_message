@@ -52,7 +52,7 @@ const VideoCallLayout = memo(() => {
   const roomId = useSelector((state) => state.magageState.shareRoomId);
   const allUsers = useSelector((state) => state.user.allUsers);
 
-  const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -1213,7 +1213,8 @@ const VideoCallLayout = memo(() => {
               )}
             </>
           )} */}
-          {isHost ? (
+          {window.electron && (
+          isHost ? (
             // HOST's view
             viewerControlling ? (
               <button
@@ -1248,7 +1249,8 @@ const VideoCallLayout = memo(() => {
                 </button>
               )
             )
-          )}
+          ))
+        }
         </div>
       )}
     </div>

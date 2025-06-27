@@ -58,6 +58,9 @@ function ScreenSourceSelector({ onSelect }) {
     //   alert('Error: ' + err.message);
     // }
     await dispatch(setScreenSource(source));
+    if (window.electron && window.electron.setActiveWindow) {
+      window.electron.setActiveWindow(source.name);
+    }
     // dispatch(setShowScreenSource(false));
   };
 

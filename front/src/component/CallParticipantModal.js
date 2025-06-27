@@ -22,7 +22,7 @@ const CallParticipantModal = memo(({
     const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
     const [showFirstSection, setShowFirstSection] = useState(false);
     const allUsers  = useSelector((state) => state.user.allUsers);
-    const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+    const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
    
     // const remoteStreams = useSelector(state => state.magageState.remoteStreams);
     const participants = useSelector(state => state.magageState.participants);
@@ -32,7 +32,7 @@ const CallParticipantModal = memo(({
     const micStatus = useSelector(state => state.magageState.micStatus);
     const isMicrophoneOn = useSelector(state => state.magageState.isMicrophoneOn);
     const {inviteToCall} = useSocket();
-    const currentUser = useMemo(() => sessionStorage.getItem("userId"), []);
+    const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   return (
     <>
       {participantOpen && (

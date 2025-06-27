@@ -115,7 +115,7 @@ export const SocketProvider = ({ children }) => {
   const [callStatus, setCallStatus] = useState(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const userId = sessionStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") ;
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
@@ -186,7 +186,7 @@ export const SocketProvider = ({ children }) => {
       socketRef.current.disconnect();
     }
 
-    const token = sessionStorage.getItem('token');
+    const token = sessionStorage.getItem('token') || localStorage.getItem("ChatToken");
 
     const initializeSocket = async () => {
       const deviceId = await getDeviceId();
@@ -241,6 +241,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         socketRef.current.on("user-status-changed", (onlineUserIds) => {
+          console.log(onlineUserIds,"onlineUserIds");
           dispatch(setOnlineUsers(onlineUserIds));
         });
 

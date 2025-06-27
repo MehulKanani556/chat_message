@@ -26,6 +26,8 @@ const {
   sendOtpToMobile,
   verifyMobileOtp,
   profileInfo,
+  generateNewToken,
+  logoutUser
 } = require("../auth/auth");
 const { getOnlineUsers } = require("../socketManager/SocketManager");
 const {
@@ -61,6 +63,10 @@ indexRoutes.post("/forgotPassword", forgotPassword);
 indexRoutes.post("/verifyOtp", verifyOtp);
 indexRoutes.post("/changePassword", changePassword);
 indexRoutes.post("/profile-info", auth, upload.single("photo"), profileInfo);
+// Generate new tokens
+indexRoutes.post("/generateNewTokens",generateNewToken);
+indexRoutes.post("/logoutUser",logoutUser);
+
 
 // User Routes
 indexRoutes.post("/createUser", createUser);

@@ -7,20 +7,15 @@ import { BrowserRouter as Router, HashRouter, BrowserRouter } from "react-router
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./polyfills";
 
-// console.log( window, process);
 
-const isElectron = typeof window === 'undefined' || typeof process !== 'undefined' && process.versions && process.versions.electron;
-const isWeb = typeof window !== 'undefined';
-
-
-const RouterToUse = isElectron ? HashRouter : Router;
+const RouterToUse = window.electron ? HashRouter : BrowserRouter;
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <GoogleOAuthProvider clientId="740597259200-767dkgoh1htbm0njb2r6nk9soai53c85.apps.googleusercontent.com">
-    <BrowserRouter>
+    <RouterToUse>
       <App />
-    </BrowserRouter>
+    </RouterToUse>
   </GoogleOAuthProvider>
 );
 

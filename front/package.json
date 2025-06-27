@@ -2,6 +2,8 @@
   "name": "chat-message-app",
   "version": "0.1.0",
   "private": true,
+  "description": "A chat message app with Electron",
+  "author": "Your Name",
   "main": "public/electron/main.js",
   "homepage": ".",
   "dependencies": {
@@ -20,11 +22,13 @@
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
     "electron-is-dev": "^2.0.0",
+    "electron-store": "^7.0.3",
     "emoji-picker-react": "^4.12.0",
     "emoji-regex": "^10.4.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.7.2",
     "html5-qrcode": "^2.3.8",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mammoth": "^1.9.0",
@@ -63,7 +67,8 @@
     "electron-pack": "electron-builder -c.extraMetadata.main=build/electron/main.js",
     "preelectron-pack": "npm run build",
     "pack-win": "npm run electron-pack -- --win",
-    "pack-mac": "npm run electron-pack -- --mac"
+    "pack-mac": "npm run electron-pack -- --mac",
+    "dist": "electron-builder"
   },
   "eslintConfig": {
     "extends": [
@@ -111,17 +116,18 @@
         "dmg",
         "zip"
       ],
-      "icon": "assets/icon.icns"
+      "icon": "assets/chat.png"
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/chat.png"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "Chat Message App"
     }
   }
 }

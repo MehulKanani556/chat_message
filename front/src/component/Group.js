@@ -19,12 +19,7 @@ const Groups = memo(() => {
   const [searchInput, setSearchInput] = useState('');
   const { groups, loading } = useSelector((state) => state.user);
   const currentUser = useSelector((state) => state.user.user?._id);
-  const [groupName, setGroupName] = useState("");
-  const [groupUsers, setGroupUsers] = useState([]);
-  const [groupPhoto, setGroupPhoto] = useState(null);
-  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
-  const { allUsers } = useSelector((state) => state.user);
-
+ 
   // const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
 
   useEffect(() => {

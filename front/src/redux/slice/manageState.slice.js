@@ -60,10 +60,6 @@ const initialState = {
   callChatList: false,
   chatMessages: false,
 
-  showForwardModal: false,
-  forwardingMessage: null,
-  userIncall: null,
-
   groupName: "",
   groupBio: "",
   groupPhoto: "",
@@ -117,7 +113,7 @@ const manageStateSlice = createSlice({
       state.isConnected = !state.isConnected;
     },
     setOnlineUsers: (state, action) => {
-      console.log(action.payload);
+      // console.log(action.payload);
       state.onlineUsers = action.payload;
     },
     setIsReceiving: (state, action) => {

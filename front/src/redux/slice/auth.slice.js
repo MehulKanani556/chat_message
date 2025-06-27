@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import sessionStorage from 'redux-persist/es/storage/session';
 import axios from 'axios';
 import { BASE_URL } from '../../utils/baseUrl';
+import Cookies from 'js-cookie';
 // import { enqueueSnackbar } from 'notistack';
 
 const handleErrors = (error, dispatch, rejectWithValue) => {
@@ -108,10 +109,20 @@ export const verifyMobileOtp = createAsyncThunk(
     'auth/verify-mobile-otp',
     async ({ mobileNumber, otp }, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp });
+            const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp },{withCredentials: true});
             if (response.status === 200) {
                 sessionStorage.setItem('token', response.data.token);
+                localStorage.setItem('ChatToken', response.data.token);
                 sessionStorage.setItem('userId', response.data.user._id);
+                localStorage.setItem('ChatuserId', response.data.user._id);
+                localStorage.setItem('refreshToken',response.data.refreshToken);
+                if(window.electron){
+                    window.electron.saveAuthData({
+                        token: response.data.token,
+                        userId: response.data.user._id,
+                        refToken: response.data.refreshToken
+                      });  
+                }
                 return response.data; // Assuming the API returns a success message
             }
         } catch (error) {
@@ -170,6 +181,27 @@ export const createPlan = createAsyncThunk(
         }
     }
 );
+export const logoutUser = createAsyncThunk('auth/logout', async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/logoutUser`, { _id: userId });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Logout failed');
+      }
+      localStorage.removeItem('ChatToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem("ChatuserId")
+      sessionStorage.clear();
+
+      if(window.electron){
+        window.electron.clearAuthToken();
+      }
+     
+      
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.message || 'An unknown error occurred during logout.');
+    }
+  });
 
 const authSlice = createSlice({
     name: 'auth',
@@ -199,6 +231,25 @@ const authSlice = createSlice({
                 // }
             })
             .addCase(login.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload.message;
+                state.message = action.payload?.message || "Login Failed";
+                // enqueueSnackbar(state.message, { variant: 'error' });
+
+            })
+            .addCase(logoutUser.fulfilled, (state, action) => {
+                state.user = null;
+                state.isAuthenticated = false;
+                state.loggedIn = false;
+                state.isLoggedOut = true;
+                state.message = action.payload?.message || "Logged out successfully";
+                // window.localStorage.clear();
+                window.sessionStorage.clear();
+                // if (action.payload?.message) {
+                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
+                // }
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Login Failed";

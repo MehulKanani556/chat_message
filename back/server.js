@@ -5,21 +5,56 @@ const path = require("path");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const http = require("http");
+const cookieParser = require("cookie-parser");
+const passport = require('passport');
+const session = require('express-session');
 
 const indexRoutes = require("./routes/indexRoutes");
 const socketManager = require("./socketManager/SocketManager");
 
 const app = express();
+app.use(cookieParser());
 const port = process.env.PORT;
 
-// Middlewares
-app.use(express.json());
+app.use(session({
+  secret: 'sdh@hehf',
+  resave: true,
+  saveUninitialized: true,
+}));
+const allowedOrigins = [
+  'https://chat-message-2.onrender.com',
+  'http://localhost:3000',        // React dev server
+  'http://localhost:3001',        // optional second dev port
+  'app://.', 
+  'file://'                     // for Electron custom protocol if used
+];
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS origin not allowed: ' + origin));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// app.use(cors({
+//   origin: '*',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true
+// }));
+
+
+// Middlewares
+app.use(express.json());
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Static and API routes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -32,8 +67,9 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    // allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,

@@ -69,7 +69,7 @@ const MessageList = memo(({
   console.log("msglist");
 
 
-  const userId = useMemo(() => sessionStorage.getItem("userId"), []);
+  const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const dispatch = useDispatch();
   const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
 
