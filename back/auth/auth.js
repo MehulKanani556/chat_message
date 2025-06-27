@@ -16,6 +16,108 @@ try {
     console.error('Failed to initialize Twilio client:', error);
 }
 
+// ===========================Token===================================
+
+const generateTokens = async (id) => {
+    console.log("id", id);
+    try {
+        const user = await user.findOne({ _id: id });
+        console.log("user", user);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const accessToken = await jwt.sign(
+            {
+                _id: user._id,
+            },
+            process.env.SECRET_KEY,
+            { expiresIn: '15m' });
+
+        const refreshToken = await jwt.sign(
+            {
+                _id: user._id,
+            },
+            process.env.SECRET_KEY,
+            { expiresIn: '15d' }
+        );
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        return {
+            accessToken,
+            refreshToken
+        }
+
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+const generateNewToken = async (req, res) => {
+    const token = req.cookies.refreshToken ;
+    console.log("TOKENS", token);
+
+    if (!token) {
+        return res.status(401)
+            .json({
+                success: false,
+                message: "Token not available"
+            })
+    }
+
+    jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
+        try {
+            if (err) {
+                return res.status(400)
+                    .json({
+                        success: false,
+                        message: "Token invalid"
+                    })
+            }
+
+            const USERS = await user.findOne({ _id: decoded._id });
+            console.log("USERSss", USERS)
+
+            if (!USERS) {
+                return res.status(404)
+                    .json({
+                        success: false,
+                        message: "User not found..!!"
+                    })
+            }
+
+            if (token !== USERS.refreshToken) {
+                return res.status(400)
+                    .json({
+                        success: false,
+                        message: "Invalid user"
+                    })
+            }
+
+            const { accessToken, refreshToken } = await generateTokens(decoded._id);
+
+            const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
+            // console.log("userDetailsss", userDetails);
+
+            return res.status(200)
+            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 15*60*1000, sameSite:"None" })
+            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
+            .json({ success: true, finduser: userDetails, accessToken: accessToken,refreshToken:refreshToken });
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                data: [],
+                error: "Error in register user: " + error.message
+            })
+        }
+    });
+}
+
+// ==================================================================
+
 const userLogin = async (req, res) => {
     try {
         let { email, password } = req.body
@@ -33,9 +135,13 @@ const userLogin = async (req, res) => {
         }
 
         let token = await jwt.sign({ _id: checkEmailIsExist._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
+        const { accessToken, refreshToken } = await generateTokens(checkEmailIsExist._id);
 
-        return res.status(200).json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: token })
-
+        return res.status(200)
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
+        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
+        .json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: assesToken })
+        
     } catch (error) {
         console.log(error)
         return res.status(500).json({ status: 500, message: error.message })
@@ -56,7 +162,13 @@ const googleLogin = async (req, res) => {
         }
         checkUser = checkUser.toObject();
         let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
-        return res.status(200).json({ message: 'login successful', success: true, user: checkUser, token: token });
+        const { accessToken, refreshToken } = await generateTokens(checkUser._id);
+        return res.status(200)
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
+        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
+        .json({ message: 'login successful', success: true, user: checkUser, token: accessToken });
+
+
     } catch (error) {
         throw new Error(error);
     }
@@ -212,6 +324,7 @@ const verifyMobileOtp = async (req, res) => {
 
         // Clear OTP after successful verification
         userRecord.otp = undefined;
+        userRecord.devices= []
         await userRecord.save();
 
         // Generate token for the user
@@ -221,11 +334,16 @@ const verifyMobileOtp = async (req, res) => {
             { expiresIn: "1D" }
         );
 
-        return res.status(200).json({
+        const { accessToken, refreshToken } = await generateTokens(userRecord._id);
+
+        return res.status(200)
+        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:15*60*1000, sameSite:"None" })
+        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
+        .json({
             status: 200,
             message: "OTP verified successfully.",
             user: userRecord,
-            token: token
+            token: accessToken
         });
     } catch (error) {
         console.log(error);
@@ -260,6 +378,36 @@ const profileInfo = async (req, res) => {
     }
 }
 
+const logoutUser = async (req, res) => {
+    try {
+        const user = await user.findByIdAndUpdate(
+            req.body._id,
+            {
+                $unset: {
+                    refreshToken: 1
+                }
+            },
+            {
+                new: true
+            }
+        );
+
+        return res.status(200)
+            .clearCookie("accessToken")
+            .clearCookie("refreshToken")
+            .json({
+                success: true,
+                data: user,
+                message: 'user logout successfully'
+            })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "user logout not complete" + error.message
+        })
+    }
+}
+
 module.exports = {
     userLogin,
     googleLogin,
@@ -268,5 +416,7 @@ module.exports = {
     changePassword,
     sendOtpToMobile,
     verifyMobileOtp,
-    profileInfo
+    profileInfo,
+    generateNewToken,
+    logoutUser
 };

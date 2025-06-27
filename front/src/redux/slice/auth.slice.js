@@ -170,6 +170,20 @@ export const createPlan = createAsyncThunk(
         }
     }
 );
+export const logoutUser = createAsyncThunk('auth/logout', async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${BASE_URL}/logoutUser`, { _id: userId });
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Logout failed');
+      }
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.message || 'An unknown error occurred during logout.');
+    }
+  });
 
 const authSlice = createSlice({
     name: 'auth',
@@ -199,6 +213,25 @@ const authSlice = createSlice({
                 // }
             })
             .addCase(login.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload.message;
+                state.message = action.payload?.message || "Login Failed";
+                // enqueueSnackbar(state.message, { variant: 'error' });
+
+            })
+            .addCase(logoutUser.fulfilled, (state, action) => {
+                state.user = null;
+                state.isAuthenticated = false;
+                state.loggedIn = false;
+                state.isLoggedOut = true;
+                state.message = action.payload?.message || "Logged out successfully";
+                window.localStorage.clear();
+                window.sessionStorage.clear();
+                // if (action.payload?.message) {
+                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
+                // }
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Login Failed";

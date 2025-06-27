@@ -5,13 +5,14 @@ const path = require("path");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const http = require("http");
+const cookieParser = require("cookie-parser");
 
 const indexRoutes = require("./routes/indexRoutes");
 const socketManager = require("./socketManager/SocketManager");
 
 const app = express();
 const port = process.env.PORT;
-
+app.use(cookieParser());
 // Middlewares
 app.use(express.json());
 app.use(cors({
