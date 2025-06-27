@@ -75,13 +75,8 @@ const ChatList = memo(({
   }, [archive, searchInput, allMessageUsers]);
 
   // Filter all users based on search input
-  const filteredAllUsers = allUsers?.filter(
-    (user) =>
-      !user.members &&
-      user._id !== currentUser &&
-      user.userName?.toLowerCase().includes(searchInput?.toLowerCase())
-  );
-
+  const filteredAllUsers = user?.contactList;
+  console.log("filteredAllUsers", filteredAllUsers,user);
   // Add decryption function
   const decryptMessage = (content) => {
     if (typeof content === "string" && content.startsWith("data:")) {
@@ -144,6 +139,7 @@ const ChatList = memo(({
       const file = files[0];
     }
   };
+
 
   return (
     <div
@@ -1262,8 +1258,7 @@ const ChatList = memo(({
                   <div className="flex items-center">
                     <div className="relative mr-3">
                       {item?.photo &&
-                        item.photo !== "null" &&
-                        (item?.profilePhoto == "Everyone" || item.isGroup) ? (
+                        item.photo !== "null" ? (
                         <img
                           src={`${item.photo.replace(/\\/g, "/")}`}
                           alt="Profile"

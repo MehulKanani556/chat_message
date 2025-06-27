@@ -732,6 +732,9 @@ exports.getAllCallUsers = async (req, res) => {
           messages: { $addToSet: "$lastMessage" }, // Include messages in the final output as an array
         },
       },
+      {
+        $sort: { createdAt: -1 }
+      },
 
       // Final projection
       {
@@ -1040,43 +1043,44 @@ exports.addContactList = async (req, res) => {
     
     const currentUser = req.user._id;
     const userData = await user.findById(currentUser);
-
+    
     if (!userData) {
       return res.status(404).json({
         status: 404,
         message: "User not found"
       });
     }
-
+    
     // Initialize contacts array if it doesn't exist
     if (!userData.contactList) {
       userData.contactList = [];
     }
-
+    
     // Process each contact in the array
     for (const contact of contacts) {
       // Validate required fields
       if (!contact.id || !contact.name || !contact.phone) {
         continue; // Skip invalid contacts
       }
-
+      
       // Check if contact already exists in user's contact list
       const existingContact = userData.contactList.find(c => c.phone === contact.phone);
       
       if (!existingContact) {
         // Check if the phone number exists in the database
         const userWithPhone = await user.findOne({ mobileNumber: contact.phone });
+        console.log("contacts", userWithPhone);
         
         if (userWithPhone) {
           // Add new contact to the contacts array
           userData.contactList.push({
-            id: contact.id,
-            name: contact.name,
+            contactId: contact.id,
+            userName:userWithPhone.userName,
             phone: contact.phone,
-            photoUri: contact.photoUri || null,
+            photo: userWithPhone.photo || null,
             addedAt: new Date(),
             status: 'active',
-            userId: userWithPhone._id // Store the user's ID if they exist in the system
+            _id: userWithPhone._id // Store the user's ID if they exist in the system
           });
         }
       }

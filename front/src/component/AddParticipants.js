@@ -18,7 +18,7 @@ const AddParticipants = memo(({
   creatGroup,
 }) => {
 
-  console.log("AddParticipants");
+
   
   const dispatch = useDispatch();
   const [selectedUsers, setSelectedUsers] = useState([]);

@@ -36,11 +36,23 @@ const CallHistory = () => {
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleTimeString('en-US', {
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+
+      const time = date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: false
+        hour12: false,
       });
+
+      if (date.toDateString() === today.toDateString()) {
+        return `${time}`;
+      }
+      if (date.toDateString() === tomorrow.toDateString()) {
+        return `Tomorrow, ${time}`;
+      }
+      return `${date.toLocaleDateString()} ${time}`;
     } catch (error) {
       return dateString;
     }
