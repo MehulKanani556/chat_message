@@ -105,8 +105,8 @@ const ChatHeader = memo(({
   
     // Detect OS
     if (/windows/i.test(userAgent)) {
-      downloadUrl = 'https://your-domain.com/downloads/your-app-windows.exe'; // Replace with your actual Windows download URL
-      fileName = 'your-app-windows.exe';
+      downloadUrl = 'https://chat-message1.s3.us-east-1.amazonaws.com/1751272944675-532296635.exe'; // Replace with your actual Windows download URL
+      fileName = 'Chat Message App Setup 0.1.0.exe';
     } else if (/macintosh|mac os x/i.test(userAgent)) {
       downloadUrl = 'https://your-domain.com/downloads/your-app-mac.dmg'; // Replace with your actual Mac download URL
       fileName = 'your-app-mac.dmg';
@@ -497,7 +497,7 @@ const ChatHeader = memo(({
                 <div className="flex justify-center space-x-4 font-medium">
                   <button
                     onClick={() =>  setScreenShareModal(false)}
-                    className="px-4 py-2 w-full rounded dark:text-white border border-black dark:border-white "
+                    className="px-2 py-2 w-full rounded dark:text-white border border-black dark:border-white "
                     // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
                   >
                     Cancel
@@ -506,7 +506,7 @@ const ChatHeader = memo(({
                     onClick={() => {
                      handDownload()
                     }}
-                    className="px-4 py-2 w-full text-white rounded"
+                    className="px-2 py-2 w-full text-white rounded"
                     style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
                   >
                    Download 
@@ -516,7 +516,7 @@ const ChatHeader = memo(({
                       handleStartScreenShare();
                       setScreenShareModal(false);
                     }}
-                    className="px-4 py-2 w-full text-white rounded"
+                    className="px-2 py-2 w-full text-white rounded"
                     style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
                   >
                    StartSharing
