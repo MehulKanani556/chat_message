@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, desktopCapturer, dialog,nativeImage } = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
-const { screen,Region ,getWindows} = require("@nut-tree-fork/nut-js");
+const { screen,Region ,getWindows,getWindowRegion} = require("@nut-tree-fork/nut-js");
 const { handleControlEvent } = require("./remoteControl");
 
 app.commandLine.appendSwitch("enable-usermedia-screen-capturing");
@@ -94,56 +94,62 @@ async function createWindow() {
   });
 
   // Handle screen sharing
-  // ipcMain.handle("get-sources", async () => {
-  //   const sources = await desktopCapturer.getSources({
-  //     types: ["screen", "window"],
-  //     thumbnailSize: { width: 150, height: 150 },
-  //   });
-  //   const data = sources.map((source) => ({
-  //     id: source.id,
-  //     name: source.name,
-  //     thumbnail: source.thumbnail.toDataURL(),
-  //   }));
-  //   return data;
-  // });
-
   ipcMain.handle("get-sources", async () => {
-    const windows = await getWindows();
-    const data = [];
-  
-    for (const win of windows) {
-      try {
-        const title = await win.getTitle();
-        const bounds = await win.getBounds();
-  
-        // Skip windows without titles (often system/internal)
-        if (!title || title.trim() === "") continue;
-  
-        // Define region to capture
-        const region = new Region(bounds.left, bounds.top, bounds.width, bounds.height);
-  
-        // Capture image from screen
-        const image = await screen.captureRegion(region);
-  
-        // Convert to base64 (like toDataURL())
-        const base64 = nativeImage
-          .createFromBuffer(await image.toPNG())
-          .resize({ width: 150,height: 150 }) // Thumbnail size
-          .toDataURL();
-  
-        data.push({
-          name: title,
-          handle: win.getHandle(),
-          id: `${bounds.left}-${bounds.top}-${title}`,
-          thumbnail: base64,
-        });
-      } catch (err) {
-        console.error("Failed to process window:", err.message);
-      }
-    }
-  
+    const sources = await desktopCapturer.getSources({
+      types: ["screen", "window"],
+      thumbnailSize: { width: 150, height: 150 },
+    });
+    const data = sources.map((source) => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL(),
+    }));
     return data;
   });
+
+  // ipcMain.handle("get-sources", async () => {
+  //   const windows = await getWindows();
+  
+  //   for (const win of windows) {
+  //     try {
+  //       const title = await win.title;
+  //       if (!title) continue;
+  
+  //       const bounds = await win.getRegion();
+  
+  //       if (
+  //         typeof bounds.left !== "number" ||
+  //         typeof bounds.top !== "number" ||
+  //         typeof bounds.width !== "number" ||
+  //         typeof bounds.height !== "number" ||
+  //         bounds.width <= 0 ||
+  //         bounds.height <= 0 
+  //       ) {
+  //         console.warn("❌ Skipping window with invalid bounds:", title, bounds);
+  //         continue;
+  //       }
+  
+  //       // const region = new Region(bounds.left, bounds.top, bounds.width, bounds.height);
+  //       const image = await screen.captureRegion(bounds);
+  
+  //       const base64 = nativeImage
+  //         .createFromBuffer(await image.toPNG())
+  //         .resize({ width: 150, height: 150 })
+  //         .toDataURL();
+  
+  //       return {
+  //         name: title,
+  //         handle: win.getHandle(),
+  //         id: `${bounds.left}-${bounds.top}-${title}`,
+  //         thumbnail: base64,
+  //       };
+  //     } catch (err) {
+  //       console.error("❌ Failed to capture window:", err.message);
+  //     }
+  //   }
+  
+  //   return null; // if no match
+  // });
 
   // Handle remote control events
   ipcMain.handle("remote-control", async (event, data) => {
