@@ -37,7 +37,7 @@ export const setPrimaryColor = (color) => {
 
 // Apply the primary color to the document
 export const applyPrimaryColor = (color, rgb) => {
-  console.log("applyPrimaryColor", color, rgb);
+  // console.log("applyPrimaryColor", color, rgb);
   // Create or update CSS variables
   document.documentElement.style.setProperty("--primary-color", color);
   document.documentElement.style.setProperty("--primary-color-rgb", rgb);

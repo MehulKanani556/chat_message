@@ -15,7 +15,7 @@ const CallParticipantModal = memo(({
   // inviteToCall,
 }) => {
 
-  console.log("CallParticipantModal");
+  // console.log("CallParticipantModal");
   const dispatch = useDispatch();
     const [searchInput, setSearchInput] = useState("");
     // const [invitedUsers, setInvitedUsers] = useState([]);

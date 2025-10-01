@@ -96,8 +96,6 @@ const Chat2 = () => {
   const [userStreams, setUserStreams] = useState({});
   const [showOverlay, setShowOverlay] = useState(false);
 
-  // console.log(remoteStreams);
-
   //===========Use the custom socket hook===========
   const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall } = useSocket();
 
@@ -135,7 +133,7 @@ const Chat2 = () => {
     try {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
-      console.log("Notification permission:", permission);
+      // console.log("Notification permission:", permission);
     } catch (error) {
       console.error("Error requesting notification permission:", error);
     }
@@ -331,7 +329,7 @@ const Chat2 = () => {
   const handleSendMessage = async (data, userId) => {
     
     if (editingMessage) {
-      console.log("data",data,userId,editingMessage);
+      // console.log("data",data,userId,editingMessage);
       try {
         await dispatch(
           updateMessage({
@@ -356,7 +354,7 @@ const Chat2 = () => {
         !(selectedChat || userId)
       ) return;
 
-      console.log("data", data);
+      // console.log("data", data);
 
       try {
         const messageData = {
@@ -450,19 +448,19 @@ const Chat2 = () => {
       return;
     }
 
-    console.log("Starting call with type:", type);
-    console.log("Selected chat:", selectedChat);
+    // console.log("Starting call with type:", type);
+    // console.log("Selected chat:", selectedChat);
 
     try {
       if (selectedChat?.members) {
-        console.log("Starting group call");
+        // console.log("Starting group call");
         const success = await startCall(selectedChat._id, true, selectedChat, type);
         if (!success) {
           console.error("Failed to start group call");
           // alert("Failed to start group call. Please check your microphone permissions.");
         }
       } else {
-        console.log("Starting individual call");
+        // console.log("Starting individual call");
         const success = await startCall(selectedChat._id, false, selectedChat, type);
         if (!success) {
           console.error("Failed to start individual call");
@@ -698,7 +696,7 @@ const Chat2 = () => {
     };
   }, []);
 
-  console.log("cHAT2");
+  // console.log("cHAT2");
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">

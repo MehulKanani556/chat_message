@@ -151,7 +151,7 @@ const VideoCallLayout = memo(() => {
     };
   }, [isReceiving, ringtone, participants]);
 
-  console.log("VideoCallLayout");
+  // console.log("VideoCallLayout");
   // console.log(participants.length, isVoiceCalling);
 
   const handleLocalVideoMouseDown = (e, participantId) => {
@@ -222,7 +222,7 @@ const VideoCallLayout = memo(() => {
         videoElements = [screenStreamRef.current];
       }
       // let videoElements  = Object.values(videoElementsRef.current)
-      console.log(videoElements);
+      // console.log(videoElements);
 
       // Create a canvas to combine video streams
       const canvas = canvasRef.current;
@@ -556,7 +556,7 @@ const VideoCallLayout = memo(() => {
   useEffect(() => {
 
     const handleMouseDown = (e) => {
-      console.log(isDragging_El,"isDragging_El  Down");
+      // console.log(isDragging_El,"isDragging_El  Down");
       if (!isControlling) return;
 
       const video = e.currentTarget;
@@ -570,7 +570,7 @@ const VideoCallLayout = memo(() => {
     };
 
     const handleMouseUp = (e) => {
-      console.log(isDragging_El,"isDragging_El  UP");
+      // console.log(isDragging_El,"isDragging_El  UP");
       
       if (!isControlling || !isDragging_El) return;
     
@@ -586,7 +586,7 @@ const VideoCallLayout = memo(() => {
 
 
     const handleMouseMove = (e) => {
-      console.log(isDragging_El,"isDragging_El");
+      // console.log(isDragging_El,"isDragging_El");
       if (!isControlling) return;
       // const rect = e.target.getBoundingClientRect();
       // const x = e.clientX - rect.left;
@@ -721,7 +721,7 @@ const VideoCallLayout = memo(() => {
 
   // Add effect to handle control state changes
   useEffect(() => {
-    console.log("Control state changed:", { isHost, isControlling });
+    // console.log("Control state changed:", { isHost, isControlling });
     // Force re-render when control state changes
     if (isControlling) {
       // Re-initialize video elements or other necessary updates
@@ -807,7 +807,7 @@ const VideoCallLayout = memo(() => {
               const widthClass = getParticipantWidth(participants?.length);
               // console.log(cameraStatus, isCameraEnabled, participantId);
               const setVideoRef = (el) => {
-                console.log(el, "-------------------");
+                // console.log(el, "-------------------");
                 if (el) {
                   videoElementsRef.current[participantId] = el;
                   controlref.current = el;
@@ -918,7 +918,7 @@ const VideoCallLayout = memo(() => {
 
                 // console.log(cameraStatus, isCameraEnabled, participantId);
                 const setVideoRef = (el) => {
-                  console.log(el, "--------------------aaaaaaaaaa");
+                  // console.log(el, "--------------------aaaaaaaaaa");
                   if (el) {
                     videoElementsRef.current[participantId] = el;
                   } else {
@@ -1102,7 +1102,7 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={() => {
-              console.log("end");
+              // console.log("end");
               
               if (!isReceiving) {
                 endCall();

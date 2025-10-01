@@ -7,8 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
-
-import { useSocket } from "../context/SocketContext";
 import { setSelectedChat, setShowLeftSidebar, setIsVideoCalling, setChatMessages } from "../redux/slice/manageState.slice";
 const ChatList = memo(({
   // allMessageUsers,
@@ -52,7 +50,7 @@ const ChatList = memo(({
   const dispatch = useDispatch();
 
 
-  console.log("ChatList", onlineUsers);
+  // console.log("ChatList", onlineUsers);
 
   useEffect(() => {
     let filteredUsers = [];
@@ -76,7 +74,7 @@ const ChatList = memo(({
 
   // Filter all users based on search input
   const filteredAllUsers = user?.contactList;
-  console.log("filteredAllUsers", filteredAllUsers,user);
+  // console.log("filteredAllUsers", filteredAllUsers,user);
   // Add decryption function
   const decryptMessage = (content) => {
     if (typeof content === "string" && content.startsWith("data:")) {
@@ -101,7 +99,7 @@ const ChatList = memo(({
 
   // Function to handle drag start
   const handleDragStart = (event, user) => {
-    console.log("Drag started:", user);
+    // console.log("Drag started:", user);
     setDraggedUser(user);
     event.dataTransfer.effectAllowed = "move";
   };
@@ -132,10 +130,10 @@ const ChatList = memo(({
     event.preventDefault();
     event.currentTarget.classList.remove('bg-primary/50', 'dark:bg-primary/30');
     const files = event.dataTransfer.files;
-    console.log(files);
+    // console.log(files);
 
     if (files.length > 0) {
-      console.log("Files dropped:", files);
+      // console.log("Files dropped:", files);
       const file = files[0];
     }
   };

@@ -38,12 +38,12 @@ const generateTokens = async (id) => {
             {
                 _id: userData._id,
             },
-            process.env.REFRESH_SECRET_KEY,
+            process.env.SECRET_KEY,
             { expiresIn: '15d' }
         );
 
         userData.refreshToken = refreshToken;
-        await userData.save({ validateBeforeSave: false });    
+        await userData.save({ validateBeforeSave: false });
 
         return {
             accessToken,
@@ -69,10 +69,10 @@ const generateNewToken = async (req, res) => {
             })
     }
 
-    jwt.verify(token, process.env.REFRESH_SECRET_KEY, async function (err, decoded) {
+    jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
         try {
             console.log(err);
-            
+
             if (err) {
                 return res.status(400)
                     .json({
@@ -97,9 +97,9 @@ const generateNewToken = async (req, res) => {
             // console.log("userDetailsss", userDetails);
 
             return res.status(200)
-            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
-            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
-            .json({ success: true, finduser: userDetails, accessToken: accessToken, refreshToken:refreshToken });
+                .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
+                .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
+                .json({ success: true, finduser: userDetails, accessToken: accessToken, refreshToken: refreshToken });
 
         } catch (error) {
             return res.status(500).json({
@@ -133,10 +133,10 @@ const userLogin = async (req, res) => {
         const { accessToken, refreshToken } = await generateTokens(checkEmailIsExist._id);
 
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
-        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, maxAge:15*24*60*60*1000, sameSite:"None" })
-        .json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: assesToken })
-        
+            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
+            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
+            .json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: assesToken })
+
     } catch (error) {
         console.log(error)
         return res.status(500).json({ status: 500, message: error.message })
@@ -159,9 +159,9 @@ const googleLogin = async (req, res) => {
         // let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
         const { accessToken, refreshToken } = await generateTokens(checkUser._id);
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
-        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
-        .json({ message: 'login successful', success: true, user: checkUser, token: accessToken });
+            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
+            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
+            .json({ message: 'login successful', success: true, user: checkUser, token: accessToken });
 
 
     } catch (error) {
@@ -319,8 +319,8 @@ const verifyMobileOtp = async (req, res) => {
 
         // Clear OTP after successful verification
         userRecord.otp = undefined;
-        userRecord.devices= []
-       
+        userRecord.devices = []
+
 
         // Generate token for the user
         // const token = jwt.sign(
@@ -333,15 +333,15 @@ const verifyMobileOtp = async (req, res) => {
         const { accessToken, refreshToken } = await generateTokens(userRecord._id);
 
         return res.status(200)
-        .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge:2*60*60*1000, sameSite:"None" })
-        .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge:15*24*60*60*1000, sameSite:"None" })
-        .json({
-            status: 200,
-            message: "OTP verified successfully.",
-            user: userRecord,
-            token: accessToken,
-            refreshToken:refreshToken
-        });
+            .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
+            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
+            .json({
+                status: 200,
+                message: "OTP verified successfully.",
+                user: userRecord,
+                token: accessToken,
+                refreshToken: refreshToken
+            });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ status: 500, message: error.message });

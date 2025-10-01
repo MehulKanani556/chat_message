@@ -1465,55 +1465,71 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
 
   // Function to detect URLs in text
   const detectUrls = (text) => {
+    if (typeof text !== "string") return text;
+
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/g;
 
     // First split by URLs
-    let parts = text.split(urlRegex);
+    let parts = text?.split(urlRegex);
 
     // Then process each part for email addresses
-    return parts.map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a
-            key={`url-${index}`}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary-dark dark:text-primary-light hover:text-blue-500 underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(part, '_blank');
-            }}
-          >
-            {part}
-          </a>
-        );
-      }
-
-      // Split the part by email addresses
-      const emailParts = part.split(emailRegex);
-      return emailParts.map((emailPart, emailIndex) => {
-        if (emailPart.match(emailRegex)) {
+    return parts
+      .map((part, index) => {
+        if (part?.match(urlRegex)) {
           return (
             <a
-              key={`email-${index}-${emailIndex}`}
-              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailPart)}`}
+              key={`url-${index}`}
+              href={part}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary-dark dark:text-primary-light hover:text-blue-500 underline"
               onClick={(e) => {
                 e.stopPropagation();
-                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailPart)}`, '_blank');
+                window.open(part, "_blank");
               }}
             >
-              {emailPart}
+              {part}
             </a>
           );
         }
-        return emailPart;
-      });
-    }).flat();
+
+        // Split the part by email addresses
+        const emailParts = part?.split(emailRegex);
+        return emailParts?.map((emailPart, emailIndex) => {
+          if (emailPart?.match(emailRegex)) {
+            return (
+              <a
+                key={`email-${index}-${emailIndex}`}
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                  emailPart
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-dark dark:text-primary-light hover:text-blue-500 underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(
+                    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                      emailPart
+                    )}`,
+                    "_blank"
+                  );
+                }}
+              >
+                {emailPart}
+              </a>
+            );
+          }
+          // Non-URL, non-email: apply highlighting
+          return (
+            <span key={`text-${index}-${emailIndex}`}>
+              {highlightText(emailPart, searchInputbox)}
+            </span>
+          );
+        });
+      })
+      .flat();
   };
 
   return (
@@ -1545,7 +1561,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
             return (
               <span key={index}>{highlightText(part, searchInputbox)}</span>
             );
-          }) : <span>{detectUrls(highlightText(messageContent, searchInputbox))}</span>}
+          }) : <span>{detectUrls(messageContent)}</span>}
         </p>
         {/* <p className="flex-1">
           {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {

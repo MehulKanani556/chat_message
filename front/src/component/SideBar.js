@@ -7,9 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../redux/slice/auth.slice';
 
 const Sidebar = memo(() => {
-
-  console.log("sidebar");
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -104,7 +101,7 @@ const Sidebar = memo(() => {
     // sessionStorage.removeItem("token");
     // sessionStorage.removeItem("userId");
     // navigate("/");
-    console.log("Sdsdgsdfdfgdfg");
+    // console.log("Sdsdgsdfdfgdfg");
     
     await dispatch(logoutUser(currentUser));
     navigate("/");
