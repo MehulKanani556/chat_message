@@ -219,7 +219,7 @@ async function handleUpdateMessage(socket, data) {
 // ===========================screen share=============================
 
 function handleScreenShareRequest(socket, data) {
-  console.log(data.roomId, "-----------");
+  // console.log(data.roomId, "-----------");
 
   socket.join(data.roomId)
   // socket.join(roomId);
@@ -295,7 +295,7 @@ async function handleCallRequest(socket, data) {
     }
   }
 
-  console.log("activeCalls",activeCalls, "=======================", isUserInCall,"isUserInCall");
+  // console.log("activeCalls",activeCalls, "=======================", isUserInCall,"isUserInCall");
 
   if (isUserInCall) {
     socket.emit("user-in-call", {
@@ -445,11 +445,11 @@ function handleParticipantJoined(socket, data) {
 }
 
 function handleParticipantLeft(socket, data) {
-  console.log("handleParticipantLeft");
+  // console.log("handleParticipantLeft");
   
   const { leavingUser, duration, roomId } = data;
 
-  console.log(roomId,"roomId");
+  // console.log(roomId,"roomId");
   
   socket.to(roomId).emit("participant-lefted", {
     leavingUser,
@@ -470,7 +470,7 @@ function handleParticipantLeft(socket, data) {
     } else {
       call.invited = [leavingUser];
     }
-    console.log("call------------", call, leavingUser);
+    // console.log("call------------", call, leavingUser);
     socket.to(roomId).emit("call:update-participant-list", call);
   }
   socket.to(roomId).emit("participant-lefted", {
@@ -656,7 +656,7 @@ async function handleCreateGroup(socket, data) {
     // Emit to all members of the group
     members.forEach((memberId) => {
       const memberSocket = onlineUsers.get(memberId.toString());
-      console.log("memberSocket", memberSocket);
+      // console.log("memberSocket", memberSocket);
       if (memberSocket) {
         socket.to(memberSocket).emit("group-updated", {
           type: "created",
@@ -732,7 +732,7 @@ async function handleDeleteGroup(socket, groupId) {
 
 async function handleGroupMessage(socket, data) {
   const { groupId, senderId, content } = data;
-  console.log("Handling group message:", data, socket.id);
+  // console.log("Handling group message:", data, socket.id);
 
   try {
     // Save message to database (content should not include replyTo, only other data)
@@ -838,7 +838,7 @@ function handleDisconnect(socket) {
 }
 
 async function getOnlineUsers(req, res) {
-  console.log("onlineUsers", onlineUsers);
+  // console.log("onlineUsers", onlineUsers);
   const onlineUsersArray = Array.from(onlineUsers.keys());
   // console.log("onlineUsersArray", onlineUsersArray);
 
@@ -870,7 +870,7 @@ async function handleForwardMessage(socket, data) {
   const { senderId, receiverId, content, forwardedFrom } = data;
 
   try {
-    console.log("content", data);
+    // console.log("content", data);
     // Save forwarded message to database
     const savedMessage = await saveMessage({
       senderId,
@@ -916,7 +916,7 @@ function handleCameraStatusChange(socket, data) {
   // Broadcast camera status to all other users
   onlineUsersList.forEach(([onlineUserId, socketId]) => {
     if (onlineUserId !== userId) {
-      console.log(`[Camera Status] Sending update to user ${onlineUserId}`);
+      // console.log(`[Camera Status] Sending update to user ${onlineUserId}`);
       socket.to(socketId).emit("camera-status-change", {
         userId,
         isCameraOn,
@@ -937,7 +937,7 @@ function handleMicStatusChange(socket, data) {
   // // Broadcast camera status to all other users
   // onlineUsersList.forEach(([onlineUserId, socketId]) => {
   //   if (onlineUserId !== userId) {
-    console.log(`[mic Status] Sending update to user ${userId} ${isMicOn} ${roomId}`);
+    // console.log(`[mic Status] Sending update to user ${userId} ${isMicOn} ${roomId}`);
       socket.to(roomId).emit("mic-status-change", {
         userId,
         isMicOn,
@@ -955,12 +955,12 @@ function handleMicStatusChange(socket, data) {
 // ===========================host control=============================
 
 function handleRegisterAsHost(socket) {
-  console.log(`User ${socket.userId} registered as host`);
+  // console.log(`User ${socket.userId} registered as host`);
   socket.isHost = true;
 }
 
 function handleUnregisterAsHost(socket) {
-  console.log(`User ${socket.userId} unregistered as host`);
+  // console.log(`User ${socket.userId} unregistered as host`);
   socket.isHost = false;
   // Notify any viewers that control has been revoked
   socket.broadcast.emit('control-revoked');
@@ -968,23 +968,23 @@ function handleUnregisterAsHost(socket) {
 
 function handleRequestControl(socket, data) {
   const { hostId } = data;
-  console.log(`User ${socket.userId} requesting control from host ${hostId}`);
+  // console.log(`User ${socket.userId} requesting control from host ${hostId}`);
 
   const hostSocket = getSocketByUserId(hostId);
   if (hostSocket) {
-    console.log("Sending control request to host:", hostId);
+    // console.log("Sending control request to host:", hostId);
     hostSocket.emit('control-request', {
       viewerId: socket.userId
     });
   } else {
-    console.log("Host not found:", hostId);
+    // console.log("Host not found:", hostId);
     socket.emit('control-permission', false);
   }
 }
 
 function handleGrantControl(socket, data) {
   const { viewerId } = data;
-  console.log(`Host ${socket.userId} granting control to viewer ${viewerId}`);
+  // console.log(`Host ${socket.userId} granting control to viewer ${viewerId}`);
 
   const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
@@ -996,7 +996,7 @@ function handleGrantControl(socket, data) {
 
 function handleRevokeControl(socket, data) {
   const { viewerId } = data;
-  console.log(`Host ${socket.userId} revoking control from viewer ${viewerId}`);
+  // console.log(`Host ${socket.userId} revoking control from viewer ${viewerId}`);
 
   const viewerSocket = getSocketByUserId(viewerId);
   if (viewerSocket) {
@@ -1008,7 +1008,7 @@ function handleRevokeControl(socket, data) {
 
 function handleControlEvent(socket, data) {
   const { roomId, type, payload } = data;
-  console.log(`Control event from ${socket.userId}:`, type, payload);
+  // console.log(`Control event from ${socket.userId}:`, type, payload);
 
   // Broadcast the control event to all sockets in the room
   socket.to(roomId).emit('control-event', { type, payload });
@@ -1018,11 +1018,11 @@ function handleControlEvent(socket, data) {
 
 function initializeSocket(io) {
   io.on("connection", (socket) => {
-    console.log("New socket connection:", socket.id);
+    // console.log("New socket connection:", socket.id);
 
     // Add device room joining when socket connects
     socket.on("join-device-room", (deviceId) => {
-      console.log(`Socket ${socket.id} joining device room:`, deviceId);
+      // console.log(`Socket ${socket.id} joining device room:`, deviceId);
       socket.join(deviceId);
       // console.log('Device room set:', deviceId, socket);
       deviceRooms.set(deviceId, socket.id);
@@ -1031,7 +1031,7 @@ function initializeSocket(io) {
     // Handle force logout
     socket.on("force-logout", (data) => {
       const { deviceId } = data;
-      console.log('Handling force logout for device:', deviceId);
+      // console.log('Handling force logout for device:', deviceId);
 
       // Get all sockets in the device room
       const deviceRoom = io.sockets.adapter.rooms.get(deviceId);
@@ -1049,7 +1049,7 @@ function initializeSocket(io) {
     // Handle session creation from website
     socket.on("create_session", (data) => {
       const { sessionId } = data;
-      console.log("Session created:", sessionId);
+      // console.log("Session created:", sessionId);
 
       // Store session with TTL (Time To Live)
       activeSessions[sessionId] = {
@@ -1079,9 +1079,9 @@ function initializeSocket(io) {
           token,
         });
 
-        console.log(
-          `User ${userId} (${username}) authenticated for session ${sessionId}`
-        );
+        // console.log(
+        //   `User ${userId} (${username}) authenticated for session ${sessionId}`
+        // );
 
         // Clean up the session
         delete activeSessions[sessionId];
@@ -1155,7 +1155,7 @@ function initializeSocket(io) {
 
     // Handle group messages
     socket.on("group-message", (data) => {
-      console.log("group-message", data);
+      // console.log("group-message", data);
       handleGroupMessage(socket, data);
     });
 
@@ -1179,13 +1179,13 @@ function initializeSocket(io) {
 
     // Handle QR code scanning events
     socket.on('qr-scan-success', (data) => {
-      console.log('QR scan success:', data);
+      // console.log('QR scan success:', data);
       // Broadcast to all clients except sender
       socket.broadcast.emit('qr-scan-success', data);
     });
 
     socket.on('qr-scan-error', (data) => {
-      console.log('QR scan error:', data);
+      // console.log('QR scan error:', data);
       // Broadcast to all clients except sender
       socket.broadcast.emit('qr-scan-error', data);
     });
@@ -1277,7 +1277,7 @@ setInterval(() => {
       const socketId = activeSessions[sessionId].socketId;
       io.to(socketId).emit("session_expired", { sessionId });
       delete activeSessions[sessionId];
-      console.log("Session expired:", sessionId);
+      // console.log("Session expired:", sessionId);
     }
   });
 }, 60 * 1000);

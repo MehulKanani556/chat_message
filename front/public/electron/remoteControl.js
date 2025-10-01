@@ -7,7 +7,7 @@ let isDragging = false;
 
 const handleControlEvent = async ({ type, payload }) => {
   try {
-    console.log("6. RemoteControl: Processing control event:", type, payload);
+    // console.log("6. RemoteControl: Processing control event:", type, payload);
 
     switch (type) {
       case "mousemove":
@@ -218,7 +218,7 @@ const handleControlEvent = async ({ type, payload }) => {
 
       case "scroll":
         if (payload.amount > 0) {
-          console.log(payload.amount, "scroll----------------");
+          // console.log(payload.amount, "scroll----------------");
 
           await mouse.scrollDown(payload.amount);
         } else {

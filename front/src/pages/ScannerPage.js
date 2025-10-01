@@ -27,7 +27,7 @@ const ScannerPage = () => {
 
   const handleScanSuccess = (data) => {
     try {
-      console.log('Handling scan success:', data);
+      // console.log('Handling scan success:', data);
       setLoading(true);
       setError(null);
       

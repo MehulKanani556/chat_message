@@ -28,7 +28,7 @@ export const login = createAsyncThunk(
             const response = await axios.post(`${BASE_URL}/usrLogin`, credentials);
             sessionStorage.setItem('token', response.data.token);
             sessionStorage.setItem('userId', response.data.user._id);
-            console.log(response.data)
+            // console.log(response.data)
             return response.data;
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -54,7 +54,7 @@ export const forgotPassword = createAsyncThunk(
     'auth/forgotPassword',
     async (email, { rejectWithValue }) => {
         try {
-            console.log(email);
+            // console.log(email);
             const response = await axios.post(`${BASE_URL}/forgotPassword`, { email });
             if (response.status === 200) {
                 return response.data; // Assuming the API returns a success message

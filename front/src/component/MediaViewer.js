@@ -12,7 +12,7 @@ const MediaViewer = memo(({
   onClose,
   // onDeleteMessage,
 }) => {
-  console.log("MediaViewer");
+  // console.log("MediaViewer");
   const dispatch = useDispatch();
   const { socket } = useSocket();
   const { messages } = useSelector((state) => state.user);

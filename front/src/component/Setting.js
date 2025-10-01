@@ -14,7 +14,7 @@ import { SlPencil } from "react-icons/sl";
 // import styled from 'styled-components';
 const Setting = memo(() => {
 
-    console.log("setting");
+    // console.log("setting");
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const urlUserId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
@@ -95,10 +95,10 @@ const Setting = memo(() => {
             const fetchUserData = async () => {
                 try {
                     setIsLoading(true);
-                    console.log('Fetching user data for ID:', targetUserId);
+                    // console.log('Fetching user data for ID:', targetUserId);
                     const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${targetUserId}`);
                     const userData = response.data;
-                    console.log(response.data)
+                    // console.log(response.data)
 
                     setUser(userData);
                     setProfileData({
@@ -129,7 +129,7 @@ const Setting = memo(() => {
             fetchUserData();
         } else if (currentUser) {
             // Use current user data
-            console.log('Using current user data:', currentUser._id);
+            // console.log('Using current user data:', currentUser._id);
             setUser(currentUser);
             setProfileData({
                 name: currentUser.userName || '',
@@ -159,7 +159,7 @@ const Setting = memo(() => {
     };
 
     const handleImageUpload = (e) => {
-        console.log('File selected:', e.target.files[0]);
+        // console.log('File selected:', e.target.files[0]);
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();

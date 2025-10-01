@@ -36,7 +36,7 @@ export const login = createAsyncThunk(
       const response = await axios.post(`${BASE_URL}/usrLogin`, credentials);
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("userId", response.data.user._id);
-      console.log(response.data);
+      // console.log(response.data);
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -117,7 +117,7 @@ export const googleLogin = createAsyncThunk(
         name,
         email,
       });
-      console.log(response.data.user);
+      // console.log(response.data.user);
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("userId", response.data.user._id);
       return response.data;

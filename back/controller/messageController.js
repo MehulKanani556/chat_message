@@ -4,7 +4,7 @@ const Users = require("../models/userModels");
 
 exports.saveMessage = async (messageData) => {
   try {
-    console.log("messageData", messageData);
+    // console.log("messageData", messageData);
     const message = new Message({
       sender: messageData.senderId,
       receiver: messageData.receiverId,

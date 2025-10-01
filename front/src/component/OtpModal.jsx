@@ -58,7 +58,7 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
     e.preventDefault();
     const otpString = otp.join("");
     if (otpString.length === 6) {
-      console.log(otpString,);
+      // console.log(otpString,);
 
       onVerify(otpString );
     }

@@ -28,7 +28,7 @@ const AddParticipants = memo(({
 
   const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
-  console.log(creatGroup);
+  // console.log(creatGroup);
   
   const filteredAllUsers = allUsers.filter(
     (user) =>

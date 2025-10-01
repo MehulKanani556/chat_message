@@ -66,7 +66,7 @@ const MessageList = memo(({
   handleMultipleFileUpload,
 }) => {
 
-  console.log("msglist");
+  // console.log("msglist");
 
 
   const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
@@ -236,7 +236,7 @@ const MessageList = memo(({
 
   // Scroll event listener to show/hide the button with interval
   useEffect(() => {
-    console.log("useEffect");
+    // console.log("useEffect");
     scrollToBottom();
     const handleScroll = () => {
       if (messagesContainerRef.current) {
@@ -347,7 +347,7 @@ const MessageList = memo(({
       const photoData = canvas.toDataURL('image/jpeg', 0.8);
       setPhoto(photoData);
       handleUploadCapturePic(photoData);
-      console.log(photoData);
+      // console.log(photoData);
     }
   };
 
@@ -366,7 +366,7 @@ const MessageList = memo(({
     const blob = dataURLtoBlob(dataUrl);
     // Optionally, give it a filename
     const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-    console.log(file);
+    // console.log(file);
 
     handleMultipleFileUpload([file], selectedChat._id);
     closeCamera();
@@ -425,7 +425,7 @@ const MessageList = memo(({
       return count + countOccurrences(msg, searchInputbox);
     }, 0);
 
-    console.log("matches", matches);
+    // console.log("matches", matches);
 
 
     setTotalMatches(matches == 0 ? 0 : matches);
@@ -514,7 +514,7 @@ const MessageList = memo(({
 
 
   const handleForwardMessage = (message) => {
-    console.log(message, "message");
+    // console.log(message, "message");
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     dispatch(setForwardingMessage(message));
     dispatch(setShowForwardModal(true));
@@ -2062,12 +2062,12 @@ const ReplyPreview = memo(({
           const originalMessage = messages.find(
             (msg) => msg._id === message.replyTo._id
           );
-          console.log(
-            "originalMessage",
-            originalMessage,
-            messages,
-            message.replyTo._id
-          );
+          // console.log(
+          //   "originalMessage",
+          //   originalMessage,
+          //   messages,
+          //   message.replyTo._id
+          // );
           if (originalMessage) {
             const messageElement = document.getElementById(
               `message-${originalMessage._id}`

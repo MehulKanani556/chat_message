@@ -22,7 +22,7 @@ const handleQrLogin = async (req, res) => {
         const { sessionId, timestamp } = qrData;
 
         // console.log('QR data:', qrData);
-        console.log('Device info:', deviceInfo);
+        // console.log('Device info:', deviceInfo);
 
         // Validate QR data
         if (!sessionId || !timestamp) {

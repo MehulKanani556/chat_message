@@ -4,8 +4,8 @@ const { saveMessage } = require("./messageController");
 
 async function createGroup(req, res) {
   try {
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file);
+    // console.log("Request body:", req.body);
+    // console.log("Request file:", req.file);
     
     const { userName, members, createdBy, bio } = req.body;
     
@@ -23,7 +23,7 @@ async function createGroup(req, res) {
       membersArray = [];
     }
     
-    console.log("Processed members:", membersArray);
+    // console.log("Processed members:", membersArray);
     
     if(req.file){
         req.body.photo = req.file.location
@@ -37,13 +37,13 @@ async function createGroup(req, res) {
       bio: bio 
     };
     
-    console.log("Creating group with data:", groupData);
+    // console.log("Creating group with data:", groupData);
     
     const group = await Group.create(groupData);
     if(!group){
         return res.status(400).json({ error: "Failed to create group", code: 400 });
     }
-    console.log("Group created successfully:", group);
+    // console.log("Group created successfully:", group);
     return res.status(200).json({ groupId: group._id, group });
   } catch (error) {
     console.error("Error creating group:", error);
@@ -89,7 +89,7 @@ async function addParticipants(req, res) {
   try {
     const { groupId, members, addedBy } = req.body; 
 
-    console.log("---------",groupId, members, addedBy ,"---------");
+    // console.log("---------",groupId, members, addedBy ,"---------");
     const group = await Group.findByIdAndUpdate(groupId, { $push: { members } }, {new:true});
     
   
@@ -173,7 +173,7 @@ async function getAllGroups(req, res) {
   async function leaveGroup(req, res) {
     try {
       const { userId, groupId, removeId } = req.body;
-      console.log(userId, groupId, removeId );
+      // console.log(userId, groupId, removeId );
       
       const group = await Group.findByIdAndUpdate(
         groupId,

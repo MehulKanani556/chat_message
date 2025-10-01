@@ -31,7 +31,7 @@ function ScreenSourceSelector({ onSelect }) {
   const loadSources = async () => {
     if (window.electron) {
       const availableSources = await window.electron.getSources();
-      console.log(availableSources);
+      // console.log(availableSources);
       
       setSources(availableSources);
     }

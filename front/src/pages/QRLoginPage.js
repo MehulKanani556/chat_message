@@ -136,7 +136,7 @@ const getDeviceName = (deviceInfo) => {
   const { browser, deviceType, hardware } = deviceInfo;
   
   // Try to extract device model and browser name from user agent
-  console.log(deviceInfo,"deviceInfo")
+  // console.log(deviceInfo,"deviceInfo")
   const userAgent = browser.userAgent;
   let deviceName = '';
   let browserName = '';
@@ -238,7 +238,7 @@ const QRLoginPage = () => {
     });
 
     socket.on('qr-scan-success', (data) => {
-      console.log('Received QR scan success:', data);
+      // console.log('Received QR scan success:', data);
       if (data.sessionId === sessionId) {
         // Store authentication data
         sessionStorage.setItem('token', data.token);
@@ -254,7 +254,7 @@ const QRLoginPage = () => {
     });
 
     socket.on('qr-scan-error', (data) => {
-      console.log('Received QR scan error:', data);
+      // console.log('Received QR scan error:', data);
       if (data.sessionId === sessionId) {
         setError(data.message);
         setStatus('error');

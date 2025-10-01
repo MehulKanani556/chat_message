@@ -11,7 +11,7 @@ import { initializePrimaryColor } from "../utils/themeUtils";
 
 const Profile = () => {
 
-  console.log("profile");
+  // console.log("profile");
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -77,7 +77,7 @@ const Profile = () => {
       const fetchUserData = async () => {
         try {
           setIsLoading(true);
-          console.log("Fetching user data for ID:", targetUserId);
+          // console.log("Fetching user data for ID:", targetUserId);
           const response = await axios.get(
             `${process.env.REACT_APP_API_URL}/api/users/${targetUserId}`
           );
@@ -112,7 +112,7 @@ const Profile = () => {
       fetchUserData();
     } else if (currentUser) {
       // Use current user data
-      console.log("Using current user data:", currentUser._id);
+      // console.log("Using current user data:", currentUser._id);
       setUser(currentUser);
       setProfileData({
         name: currentUser.userName || "User",

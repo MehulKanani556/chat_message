@@ -19,7 +19,7 @@ const CreatedGroup = memo(({
   setGroupUsers
 }) => {
 
-  console.log("CreatedGroup");
+  // console.log("CreatedGroup");
 
   const dispatch = useDispatch();
   // const [groupName, setGroupName] = useState("");
@@ -62,7 +62,7 @@ const CreatedGroup = memo(({
       // Optionally show error to user via toast/alert
     }
   };
-  console.log(groupName);
+  // console.log(groupName);
 
   useEffect(() => {
     const handleResize = () => {

@@ -565,12 +565,12 @@ exports.getAllMessageUsers = async (req, res) => {
             const deletedForStrings = u.deletedFor.map((id) => id.toString());
             return !deletedForStrings.includes(currentUser._id.toString());
           });
-        console.log(
-          "hasMessages",
-          hasMessages.length,
-          isInDeleteChatFor,
-          currentUser._id.toString()
-        );
+        // console.log(
+        //   "hasMessages",
+        //   hasMessages.length,
+        //   isInDeleteChatFor,
+        //   currentUser._id.toString()
+        // );
         }
 
         if(hasMessages && hasMessages?.length <= 0){
@@ -1069,7 +1069,7 @@ exports.addContactList = async (req, res) => {
       if (!existingContact) {
         // Check if the phone number exists in the database
         const userWithPhone = await user.findOne({ mobileNumber: contact.phone });
-        console.log("contacts", userWithPhone);
+        // console.log("contacts", userWithPhone);
         
         if (userWithPhone) {
           // Add new contact to the contacts array

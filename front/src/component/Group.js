@@ -13,7 +13,7 @@ import { setIsGroupCreateModalOpen, setSelectedChat, setShowLeftSidebar } from '
 
 const Groups = memo(() => {
 
-  console.log("groups");
+  // console.log("groups");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');

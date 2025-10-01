@@ -76,9 +76,9 @@ const Chat2 = () => {
 
 
   const dispatch = useDispatch();
-  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") ,[]);
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   // const [currentUser] = useState(sessionStorage.getItem("userId"));
- 
+
   // const localVideoRef = useRef(null);
   const navigate = useNavigate();
   const [groupUsers, setGroupUsers] = useState([]);
@@ -327,7 +327,7 @@ const Chat2 = () => {
   //===========handle send message ===========
 
   const handleSendMessage = async (data, userId) => {
-    
+
     if (editingMessage) {
       // console.log("data",data,userId,editingMessage);
       try {
@@ -399,7 +399,7 @@ const Chat2 = () => {
         });
         if (response.status == 200) {
           const { fileUrl, fileType } = response.data;
-  
+
 
           await handleSendMessage({
             type: "file",
@@ -1090,7 +1090,7 @@ const Chat2 = () => {
         </div>
       )}
 
-      {showScreenSource && <ScreenSourceSelector/>}
+      {showScreenSource && <ScreenSourceSelector />}
 
     </div >
   );

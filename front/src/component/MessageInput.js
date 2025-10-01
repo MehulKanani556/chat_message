@@ -42,7 +42,7 @@ const MessageInput = memo(
     const editingMessage = useSelector(state => state.magageState.editingMessage);
     const facingMode = useSelector(state => state.magageState.facingMode);
 
-    console.log(selectedChat,"selectedChat");
+    // console.log(selectedChat,"selectedChat");
     
 
     // const [messageInput, setMessageInput] = useState("");
@@ -224,7 +224,7 @@ const MessageInput = memo(
         setWaveformData([]);
 
         // Get user's audio stream
-        console.log(navigator)
+        // console.log(navigator)
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // Set up audio context and analyser
@@ -402,7 +402,7 @@ const MessageInput = memo(
     const handleSendGroupMessage = useCallback(async (data) => {
       if (data.content.trim() === "") return;
 
-      console.log("data",data,selectedChat._id);
+      // console.log("data",data,selectedChat._id);
       try {
         await sendGroupMessage(selectedChat._id, data);
         dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
@@ -414,7 +414,7 @@ const MessageInput = memo(
 
     //=========== emoji picker ===========
     const onEmojiClick = (event, emojiObject) => {
-      console.log(event.emoji);
+      // console.log(event.emoji);
 
       dispatch(setMessageInput(messageInput + event.emoji));
     };
@@ -674,7 +674,7 @@ const MessageInput = memo(
                                   )}
                                 </div>
                                 <div>
-                                  {console.log(uploadProgress)}
+                                  {/* {console.log(uploadProgress)} */}
 
                                   <div className="text-white text-sm line-clamp-2 ">
                                     {file}

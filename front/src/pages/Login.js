@@ -80,7 +80,7 @@ const OTPInput = ({ length = 4, onComplete, resendTimer, setResendTimer, handleV
     setError('');
     try {
       const response = await dispatch(verifyOtp({ email: email, otp: otpValue }));
-      console.log(response);
+      // console.log(response);
       if (response.payload.status === 200) {
         handleVerifyOTP(otpValue);
       } else {
@@ -198,10 +198,10 @@ const Login = () => {
   };
 
   const handleChangePassword = (values) => {
-    console.log(values);
+    // console.log(values);
     const { newPassword } = values; // Extract newPassword from values
     dispatch(resetPassword({ newPassword, email })).then((response) => {
-      console.log(response)
+      // console.log(response)
       if (response.payload.status == 200) {
         setForgotPasswordStep(0);
       }
@@ -326,7 +326,7 @@ const Login = () => {
                   <GoogleLogin
                     onSuccess={response => {
                       const { name, email, sub: uid, picture: photo } = jwtDecode(response.credential);
-                      console.log(jwtDecode(response.credential))
+                      // console.log(jwtDecode(response.credential))
                       dispatch(googleLogin({ uid, userName: name, email })).then((response) => {
                         if (response.payload) navigate('/chat');
                       });
@@ -471,10 +471,10 @@ const Login = () => {
               })}
               onSubmit={(values, { resetForm }) => {
                 // Logic to handle form submission
-                console.log(values.email);
+                // console.log(values.email);
                 setEmail(values.email);
                 dispatch(forgotPassword(values.email)).then((response) => {
-                  console.log(response);
+                  // console.log(response);
                   if (response.payload.success) {
                     handleSendOTP();
                     resetForm(); // Clear the form on success

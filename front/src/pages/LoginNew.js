@@ -102,7 +102,7 @@ const LoginNew = () => {
     try {
       dispatch(mobileOtp({ mobileNumber: fullPhoneNumber }))
         .then((response) => {
-          console.log(response)
+          // console.log(response)
           if (response.payload.status == 200) {
             setShowOtpModal(true);
           }
@@ -121,7 +121,7 @@ const LoginNew = () => {
         otp
       }))
         .then((response) => {
-          console.log(response)
+          // console.log(response)
           if (response.payload.status == 200) {
           navigate('/chat')
           }

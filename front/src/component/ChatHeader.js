@@ -287,7 +287,7 @@ const ChatHeader = memo(({
                     await dispatch(getAllMessageUsers());
                   }}
                 >
-                  {console.log(user)}
+                  {/* {console.log(user)} */}
 
                   <SlPin className="text-lg" />{" "}
                   {user.pinChatFor?.includes(selectedChat?._id)

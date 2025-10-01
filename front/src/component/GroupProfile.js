@@ -46,7 +46,7 @@ const GroupProfile = memo(({
   // handleImageClick
 }) => {
 
-  console.log("groupProfile");
+  // console.log("groupProfile");
 
   const dispatch = useDispatch();
   // const [isEditing, setIsEditing] = useState(false);

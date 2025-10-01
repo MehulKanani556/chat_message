@@ -9,7 +9,7 @@ import { FiArrowDownLeft, FiArrowUpRight, FiPhoneMissed } from 'react-icons/fi';
 
 const CallHistory = () => {
 
-  console.log("CallHistory");
+  // console.log("CallHistory");
 
   // const [callHistory, setCallHistory] = useState([]);
   const [loading, setLoading] = useState(false);

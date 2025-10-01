@@ -29,7 +29,7 @@ const fetchUrlTitle = async (url) => {
 };
 const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
-  console.log("ProfileUser");
+  // console.log("ProfileUser");
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);

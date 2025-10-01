@@ -19,7 +19,7 @@ try {
 // ===========================Token===================================
 
 const generateTokens = async (id) => {
-    console.log("id", id);
+    // console.log("id", id);
     try {
         const userData = await user.findOne({ _id: id });
         // console.log("user", userData);
@@ -59,7 +59,7 @@ const generateNewToken = async (req, res) => {
 
     const token = req.cookies.refreshToken || req.header('Authorization').split(' ')[1];
 
-    console.log("TOKENS---------------", token);
+    // console.log("TOKENS---------------", token);
 
     if (!token) {
         return res.status(401)
@@ -71,7 +71,7 @@ const generateNewToken = async (req, res) => {
 
     jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
         try {
-            console.log(err);
+            // console.log(err);
 
             if (err) {
                 return res.status(400)
@@ -82,7 +82,7 @@ const generateNewToken = async (req, res) => {
             }
 
             const USERS = await user.findOne({ _id: decoded._id });
-            console.log("USERSss", USERS)
+            // console.log("USERSss", USERS)
 
             if (!USERS) {
                 return res.status(404)

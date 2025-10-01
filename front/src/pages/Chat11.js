@@ -97,7 +97,7 @@ const Chat = () => {
     };
 
     const onEmojiClick = (event, emojiObject) => {
-        console.log(emojiObject.emoji);
+        // console.log(emojiObject.emoji);
         setMessage(prevMessage => prevMessage + event.emoji);
     };
 
