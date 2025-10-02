@@ -59,6 +59,7 @@ const SocketContext = createContext();
 const fpPromise = FingerprintJS.load();
 
 // Function to get device ID
+
 const getDeviceId = async () => {
   let deviceId = localStorage.getItem('deviceId');
 

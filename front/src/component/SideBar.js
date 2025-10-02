@@ -179,10 +179,10 @@ const Sidebar = memo(() => {
                 className="text-black dark:text-primary-light font-bold capitalize cursor-pointer text-xs sm:text-sm md:text-lg"
                 onClick={handleProfileClick}
               >
-                {user?.userName && user?.userName.includes(" ")
-                  ? user?.userName.split(" ")[0][0] +
-                  user?.userName.split(" ")[1][0]
-                  : user?.userName[0]}
+                {user?.userName && user?.userName?.includes(" ")
+                  ? user?.userName?.split(" ")[0][0] +
+                  user?.userName?.split(" ")[1][0]
+                  : user?.userName?.[0]}
               </span>
             )}
           </div>
