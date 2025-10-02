@@ -100,10 +100,12 @@ const Chat2 = () => {
   const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall } = useSocket();
 
   useEffect(() => {
-    if (window.innerWidth <= 1439) {
+    if (screenWidth <= 1439) {
       setShowOverlay(true);
+    } else {
+      setShowOverlay(false);
     }
-  }, [showOverlay]);
+  }, [screenWidth]); // Changed from showOverlay to screenWidth
   // ====================auth=======================
 
   useEffect(() => {
@@ -508,16 +510,12 @@ const Chat2 = () => {
 
   // Add useEffect to handle initial sidebar state based on screen width and selected chat
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 600) {
-        dispatch(setShowLeftSidebar(true));
-      } else {
-        dispatch(setShowLeftSidebar(false));
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    if (screenWidth <= 600) {
+      dispatch(setShowLeftSidebar(true));
+    } else {
+      dispatch(setShowLeftSidebar(false));
+    }
+  }, [screenWidth]); // Changed from empty dependency to screenWidth
 
   // useEffect(() => {
   //   // Set showLeftSidebar to true when no chat is selected
@@ -710,7 +708,7 @@ const Chat2 = () => {
           {/* Left Side */}
           {(callChatList || showGroups || showProfile || selectedChatModule || showSettings || showCallHistory) &&
             <div
-              className={`${window.innerWidth <= 600
+              className={`${screenWidth <= 600
                 ? "ml-0 w-full"
                 : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
                 } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
@@ -720,7 +718,7 @@ const Chat2 = () => {
 
               {selectedChatModule && (
                 <ChatList
-                  handleMultipleFileUpload={handleMultipleFileUpload} // Pass the function here
+                  handleMultipleFileUpload={handleMultipleFileUpload}
                 />
               )}
               {showSettings && <Setting />}
@@ -896,7 +894,9 @@ const Chat2 = () => {
                 className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                   (isGroupCreateModalOpen || isModalOpen) || (isGroupCreateModalOpen) ||
                   (isUserProfileModalOpen && !selectedChat?.members)
-                  ? "2xl:w-[380px]  sm:max-w-full  xl:w-[380px]  opacity-100"
+                  ? screenWidth <= 768
+                    ? "w-full opacity-100" // Full width on mobile
+                    : "2xl:w-[380px] sm:max-w-full xl:w-[380px] opacity-100" // Original responsive classes
                   : "w-0 opacity-0"
                   }`}
                 style={{

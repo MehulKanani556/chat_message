@@ -112,8 +112,9 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
 
   return (
+    // sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px]
     <div
-      className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`w-full md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)", }} >
       {/* <div
       className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"

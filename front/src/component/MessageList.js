@@ -2228,7 +2228,7 @@ const MessageReactions = memo(({
         </>
       )}
       {message.reactions && message.reactions.length > 0 && (
-        <div className="absolute -bottom-4 left-1 flex space-x-1" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute -bottom-4 flex space-x-1" onClick={(e) => e.stopPropagation()}>
           {/* Show first 2 reactions */}
           {message.reactions.slice(0, 2).map((reaction, index) => {
             const isUserReaction = reaction.userId === userId;
@@ -2539,7 +2539,10 @@ const RegularMessage = memo(({
     ${showTime ? "mt-3" : ""}`}
     >
       <div
-        className="flex flex-col relative group"
+        className={`flex flex-col relative group w-[90%] lg:w-auto ${message.sender === userId
+          ? "justify-end items-end"
+          : "justify-start items-start"
+          }`}
         onContextMenu={(e) => handleContextMenu(e, message)}
       >
         <div className="flex justify-between items-center">
