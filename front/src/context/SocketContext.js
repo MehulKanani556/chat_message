@@ -1657,6 +1657,21 @@ export const SocketProvider = ({ children }) => {
     }
   };
 
+  // Add new function to remove message reaction
+  const removeMessageReaction = (message, emoji) => {
+    if (!socketRef.current?.connected) return;
+    socketRef.current.emit("remove-message-reaction", {
+      messageId: message._id,
+      userId,
+      emoji,
+    });
+    if (message.receiver === userId) {
+      dispatch(getAllMessages({ selectedId: message.sender }));
+    } else {
+      dispatch(getAllMessages({ selectedId: message.receiver }));
+    }
+  };
+
   // ===========================cleanup Connection=============================
 
   const cleanupConnection = () => {
@@ -2012,6 +2027,7 @@ export const SocketProvider = ({ children }) => {
   const memoizedInviteToCall = useCallback(inviteToCall, [userId, socketRef, dispatch, callParticipants, isVideoCalling]);
   const memoizedForwardMessage = useCallback(forwardMessage, [userId, socketRef]);
   const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
+  const memoizedRemoveMessageReaction = useCallback(removeMessageReaction, [userId, socketRef, dispatch]);
   const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
   const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
   const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
@@ -2033,6 +2049,7 @@ export const SocketProvider = ({ children }) => {
     inviteToCall: memoizedInviteToCall,
     forwardMessage: memoizedForwardMessage,
     addMessageReaction: memoizedAddMessageReaction,
+    removeMessageReaction: memoizedRemoveMessageReaction,
     subscribeToMessages: memoizedSubscribeToMessages,
     sendTypingStatus: memoizedSendTypingStatus,
     sendControl: memoizedsendControls,
@@ -2071,6 +2088,7 @@ export const SocketProvider = ({ children }) => {
     memoizedInviteToCall,
     memoizedForwardMessage,
     memoizedAddMessageReaction,
+    memoizedRemoveMessageReaction,
     memoizedSubscribeToMessages,
     memoizedSendTypingStatus,
     memoizedsendControls,

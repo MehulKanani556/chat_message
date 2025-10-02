@@ -43,7 +43,7 @@ const MessageInput = memo(
     const facingMode = useSelector(state => state.magageState.facingMode);
 
     // console.log(selectedChat,"selectedChat");
-    
+
 
     // const [messageInput, setMessageInput] = useState("");
     const emojiPickerRef = useRef(null);
@@ -152,7 +152,7 @@ const MessageInput = memo(
                       "Content-Type": "multipart/form-data",
                       Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                     },
-                    
+
                   }
                 );
 
@@ -379,7 +379,7 @@ const MessageInput = memo(
       if (replyingTo) {
         data.replyTo = replyingTo;
       }
-      
+
       if (editingMessage) {
         // If editing, always call handleSendMessage with selectedChat?._id
         handleSendMessage(data, selectedChat?._id);
@@ -393,9 +393,9 @@ const MessageInput = memo(
       } else if (data.type === "text") {
         handleSendMessage(data, selectedChat?._id);
       }
-      
+
       dispatch(setMessageInput(""));
-    
+
     };
 
     //===========handle send group message===========
@@ -516,7 +516,7 @@ const MessageInput = memo(
     const regex = emojiRegex();
 
     const html = messageInput.replace(regex, (match) => {
-      return `<span class='inline-block align-middle'><img src='https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${match.codePointAt(0).toString(16)}.png' alt='${match}' class='inline h-5 w-5' onerror='this.onerror=null;this.replaceWith(document.createTextNode("${match}"));' /></span>`;
+      return `<span class='inline-block align-middle'><img src='https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${match.codePointAt(0).toString(16)}.png' alt='${match}' class='inline h-5 w-5' onerror='this.onerror=null;this.replaceWith(document.createTextNode("${match}"));' /></span>`;
     });
 
     return (
@@ -713,16 +713,7 @@ const MessageInput = memo(
                   <div style={{ position: "relative" }}>
                     {/* Placeholder */}
                     {(!messageInput || messageInput.length === 0) && (
-                      <span
-                        style={{
-                          position: "absolute",
-                          left: 8, // adjust as needed for padding
-                          top: 4,   // adjust as needed for vertical alignment
-                          color: "#aaa",
-                          pointerEvents: "none",
-                          fontSize: "1rem",
-                          zIndex: 1,
-                        }}
+                      <span className="absolute text-[#aaa] top-[4px] text-base left-[35px] md600:left-[12px] z-[1px] pointer-events-none"
                       >
                         {editingMessage ? "Edit message..." : "Type a message..."}
                       </span>
@@ -825,13 +816,15 @@ const MessageInput = memo(
           {isEmojiPickerOpen && (
             <div
               ref={emojiPickerRef}
-              className="absolute rounded shadow-lg bottom-[90px] right-[100px] z-50"
+              className="absolute rounded shadow-lg bottom-[90px] md:right-[100px] z-50"
             >
               <EmojiPicker
                 onEmojiClick={onEmojiClick}
                 previewConfig={{
                   showPreview: false,
                 }}
+                width={290}
+                // height={300}
               >
               </EmojiPicker>
             </div>
@@ -910,7 +903,7 @@ const MessageInput = memo(
                 if (isRecording) {
                   handleVoiceMessage();
                 }
-               
+
               }}
             >
               <svg
@@ -937,7 +930,7 @@ const MessageInput = memo(
               </svg>
             </button>
             {docModel && (
-              <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-10 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
+              <div className="optionMenu absolute right-5 bottom-14 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 z-40 min-w-36 dark:text-white " onClick={() => setDocModel(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                   <ul className="dark:text-white  flex flex-col ">
                     <li className="flex gap-2 items-center  hover:bg-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-md cursor-pointer" onClick={() => { openCamera(); setDocModel(false); }}>

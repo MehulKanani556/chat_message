@@ -781,17 +781,22 @@ async function handleMessageReaction(socket, data) {
     const message = await Message.findById(messageId);
     if (!message) return;
 
-    // Remove existing reaction from this user if any
-    // message.reactions = message.reactions.filter(
-    //   reaction => reaction.userId.toString() !== userId
-    // );
+    // Check if user already has a reaction with this emoji
+    const existingReactionIndex = message.reactions.findIndex(
+      reaction => reaction.userId.toString() === userId && reaction.emoji === emoji
+    );
 
-    // Add new reaction
-    message.reactions.push({
-      userId,
-      emoji,
-      createdAt: new Date(),
-    });
+    if (existingReactionIndex !== -1) {
+      // Remove existing reaction (toggle off)
+      message.reactions.splice(existingReactionIndex, 1);
+    } else {
+      // Add new reaction
+      message.reactions.push({
+        userId,
+        emoji,
+        createdAt: new Date(),
+      });
+    }
 
     await message.save();
 
@@ -803,6 +808,7 @@ async function handleMessageReaction(socket, data) {
       messageId,
       userId,
       emoji,
+      action: existingReactionIndex !== -1 ? 'removed' : 'added'
     };
 
     if (receiverSocketId) {
@@ -813,6 +819,44 @@ async function handleMessageReaction(socket, data) {
     }
   } catch (error) {
     console.error("Error handling message reaction:", error);
+  }
+}
+
+// Add new function to handle removing reactions
+async function handleRemoveMessageReaction(socket, data) {
+  const { messageId, userId, emoji } = data;
+
+  try {
+    // Find the message
+    const message = await Message.findById(messageId);
+    if (!message) return;
+
+    // Remove reaction from this user
+    message.reactions = message.reactions.filter(
+      reaction => !(reaction.userId.toString() === userId && reaction.emoji === emoji)
+    );
+
+    await message.save();
+
+    // Emit to sender and receiver
+    const receiverSocketId = onlineUsers.get(message.receiver.toString());
+    const senderSocketId = onlineUsers.get(message.sender.toString());
+
+    const reactionData = {
+      messageId,
+      userId,
+      emoji,
+      action: 'removed'
+    };
+
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit("message-reaction", reactionData);
+    }
+    if (senderSocketId && senderSocketId !== socket.id) {
+      socket.to(senderSocketId).emit("message-reaction", reactionData);
+    }
+  } catch (error) {
+    console.error("Error handling remove message reaction:", error);
   }
 }
 
@@ -1167,6 +1211,9 @@ function initializeSocket(io) {
     // ===========================message reaction=============================
     socket.on("message-reaction", (data) =>
       handleMessageReaction(socket, data)
+    );
+    socket.on("remove-message-reaction", (data) =>
+      handleRemoveMessageReaction(socket, data)
     );
 
     // Add to socket.on handlers

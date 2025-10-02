@@ -105,6 +105,7 @@ const MessageList = memo(({
     markMessageAsRead,
     rejectCall,
     sendPrivateMessage,
+    removeMessageReaction,
     sendTypingStatus,
     subscribeToMessages,
     sendGroupMessage,
@@ -635,6 +636,7 @@ const MessageList = memo(({
 
                       return (
                         <RegularMessage
+                          removeMessageReaction={removeMessageReaction}
                           key={message._id}
                           message={message}
                           userId={userId}
@@ -1543,7 +1545,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
               return (
                 <span key={index} className="inline-block align-middle">
                   <img
-                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                       .codePointAt(0)
                       .toString(16)}.png`}
                     alt={part}
@@ -1570,7 +1572,7 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
               return (
                 <span key={index} className="inline-block align-middle">
                   <img
-                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                       .codePointAt(0)
                       .toString(16)}.png`}
                     alt={part}
@@ -2123,6 +2125,7 @@ const ReplyPreview = memo(({
 const MessageReactions = memo(({
   message,
   userId,
+  removeMessageReaction,
   // showEmojiPicker,
   // setShowEmojiPicker,
   addMessageReaction,
@@ -2148,13 +2151,28 @@ const MessageReactions = memo(({
     };
   }, [showEmojiPicker]);
 
+  // Function to handle reaction click (toggle behavior)
+  const handleReactionClick = (emoji) => {
+    const userReaction = message.reactions?.find(
+      reaction => reaction.userId === userId && reaction.emoji === emoji
+    );
+
+    if (userReaction) {
+      // User already has this reaction, remove it
+      removeMessageReaction(message, emoji);
+    } else {
+      // User doesn't have this reaction, add it
+      addMessageReaction(message, emoji);
+    }
+  };
+
   return (
     <>
       {message.sender !== userId && (
         <>
           <div className="relative">
             <button
-              className="hover:scale-125 transition-transform absolute -right-6 -top-0 text-gray-400"
+              className="hover:scale-125 transition-transform absolute -right-6 -top-0 text-gray-400 emoji-trigger-button"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -2184,11 +2202,10 @@ const MessageReactions = memo(({
                     ? { bottom: "24px" }
                     : { top: "24px" }),
                 }}
-              // onMouseLeave={() => setShowEmojiPicker(null)}
               >
                 <EmojiPicker
                   onEmojiClick={(event) => {
-                    addMessageReaction(message, event.emoji);
+                    handleReactionClick(event.emoji);
                     setShowEmojiPicker(null);
                   }}
                   width={250}
@@ -2201,8 +2218,8 @@ const MessageReactions = memo(({
                   }}
                   theme="light"
                   emojiSize={20}
-                  emojiStyle="google"
-                  emojiSet="google"
+                  // emojiStyle="google"
+                  // emojiSet="google"
                   lazyLoadEmojis={true}
                 />
               </div>
@@ -2212,25 +2229,105 @@ const MessageReactions = memo(({
       )}
       {message.reactions && message.reactions.length > 0 && (
         <div className="absolute -bottom-4 left-1 flex space-x-1" onClick={(e) => e.stopPropagation()}>
-          {message.reactions.map((reaction, index) => (
-            <div
-              key={index}
-              className="z-40 bg-white rounded-full p-1 w-6 h-6 flex items-center justify-center shadow-md shadow-gray-400"
-              title={allUsers.find((u) => u._id === reaction.userId)?.userName}
-            >
-              <img
-                src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${reaction.emoji
-                  .codePointAt(0)
-                  .toString(16)}.png`}
-                alt={reaction.emoji}
-                className="w-4 h-4"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.innerHTML = reaction.emoji;
-                }}
-              />
+          {/* Show first 2 reactions */}
+          {message.reactions.slice(0, 2).map((reaction, index) => {
+            const isUserReaction = reaction.userId === userId;
+            return (
+              <div
+                key={index}
+                className={`z-40 rounded-full p-1 w-6 h-6 flex items-center justify-center shadow-md shadow-gray-400 cursor-pointer transition-all duration-200 bg-white`}
+                title={`${allUsers.find((u) => u._id === reaction.userId)?.userName} - Click to ${isUserReaction ? 'remove' : 'add'} reaction`}
+                onClick={() => handleReactionClick(reaction.emoji)}
+              >
+                <img
+                  src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${reaction.emoji
+                    .codePointAt(0)
+                    .toString(16)}.png`}
+                  alt={reaction.emoji}
+                  className="w-4 h-4"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.innerHTML = reaction.emoji;
+                  }}
+                />
+              </div>
+            );
+          })}
+
+          {/* Show remaining count if there are more than 2 reactions */}
+          {message.reactions.length > 2 && (
+            <div className="relative group/inner">
+              <div className="z-40 bg-white rounded-full p-1 w-6 h-6 flex items-center justify-center shadow-md shadow-gray-400 cursor-pointer">
+                <span className="text-xs font-medium text-gray-600">+{message.reactions.length - 2}</span>
+              </div>
+
+              {/* Hover tooltip showing all remaining reactions with user names */}
+              <div className={`absolute bottom-5 ${message.sender === userId ? 'right-0' : 'left-0'} mb-2 hidden group-hover/inner:block z-50`}>
+                <div className="bg-[#b1b1b1] dark:bg-[#232323] dark:text-primary-light rounded-lg shadow-lg min-w-max max-w-xs">
+                  {/* Header */}
+                  <div className="px-4 py-2 border-b border-gray-700">
+                    <h3 className="text-sm font-medium dark:text-primary-light">More reactions</h3>
+                  </div>
+
+                  {/* Reactions list */}
+                  <div className="py-2">
+                    {message.reactions.slice(2).map((reaction, index) => {
+                      const user = allUsers.find((u) => u._id === reaction.userId);
+                      const isUserReaction = reaction.userId === userId;
+                      return (
+                        <div key={index + 2} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-400 dark:hover:bg-gray-700">
+                          {/* User avatar/initials */}
+                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium dark:text-primary-light">
+                              {user?.userName ? user.userName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}
+                            </span>
+                          </div>
+
+                          {/* User name */}
+                          <span className="text-sm dark:text-primary-light flex-1">
+                            {user?.userName || 'Unknown User'}
+                          </span>
+
+                          {/* Reaction emoji */}
+                          <div
+                            className={`cursor-pointer p-1 rounded transition-colors`}
+                            onClick={() => handleReactionClick(reaction.emoji)}
+                            title={`Click to ${isUserReaction ? 'remove' : 'add'} this reaction`}
+                          >
+                            <img
+                              src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${reaction.emoji
+                                .codePointAt(0)
+                                .toString(16)}.png`}
+                              alt={reaction.emoji}
+                              className="w-5 h-5"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.innerHTML = reaction.emoji;
+                              }}
+                            />
+                          </div>
+
+                          {/* Remove button for user's own reactions */}
+                          {isUserReaction && (
+                            <div
+                              className="cursor-pointer p-1 rounded transition-colors"
+                              onClick={() => removeMessageReaction(message, reaction.emoji)}
+                              title="Remove this reaction"
+                            >
+                              <RxCross2 className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Arrow pointing down */}
+                  <div className={`absolute top-full ${message.sender === userId ? 'right-2' : 'left-2'} w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#b1b1b1] dark:border-t-[#232323]`}></div>
+                </div>
+              </div>
             </div>
-          ))}
+          )}
         </div>
       )}
     </>
@@ -2414,6 +2511,7 @@ const RegularMessage = memo(({
   setActiveMessageId,
   allUsers,
   IMG_URL,
+  removeMessageReaction,
   // showEmojiPicker,
   // setShowEmojiPicker,
   addMessageReaction,
@@ -2538,6 +2636,7 @@ const RegularMessage = memo(({
           {!isSingleEmoji && (
             <MessageReactions
               message={message}
+              removeMessageReaction={removeMessageReaction}
               userId={userId}
               // showEmojiPicker={showEmojiPicker}
               // setShowEmojiPicker={setShowEmojiPicker}

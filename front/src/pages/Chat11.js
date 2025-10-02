@@ -377,7 +377,9 @@ const Chat = () => {
 
                         {isEmojiPickerOpen && (
                             <div ref={emojiPickerRef} className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]">
-                                <EmojiPicker onEmojiClick={onEmojiClick} />
+                                <EmojiPicker onEmojiClick={onEmojiClick} width={290}
+                                // height={300}
+                                />
                             </div>
                         )}
 

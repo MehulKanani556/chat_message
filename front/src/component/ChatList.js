@@ -559,7 +559,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -656,7 +656,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -749,7 +749,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -836,7 +836,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -922,7 +922,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -1031,7 +1031,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -1106,7 +1106,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}
@@ -1153,7 +1153,7 @@ const ChatList = memo(({
                                                 return (
                                                   <span key={index} className="inline-block align-middle">
                                                     <img
-                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-facebook/img/facebook/64/${part
+                                                      src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
                                                         .codePointAt(0)
                                                         .toString(16)}.png`}
                                                       alt={part}

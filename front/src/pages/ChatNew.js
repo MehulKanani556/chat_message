@@ -1365,8 +1365,8 @@ const Chat2 = () => {
               <div className="flex border-b">
                 <button
                   className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "All"
-                      ? "text-gray-700 border-b-2 border-blue-500"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "text-gray-700 border-b-2 border-blue-500"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                   onClick={() => setActiveSearchTab("All")}
                 >
@@ -1374,8 +1374,8 @@ const Chat2 = () => {
                 </button>
                 <button
                   className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "People"
-                      ? "text-gray-700 border-b-2 border-blue-500"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "text-gray-700 border-b-2 border-blue-500"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                   onClick={() => setActiveSearchTab("People")}
                 >
@@ -1383,8 +1383,8 @@ const Chat2 = () => {
                 </button>
                 <button
                   className={`flex-1 py-2 px-4 text-sm font-medium ${activeSearchTab === "Groups"
-                      ? "text-gray-700 border-b-2 border-blue-500"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "text-gray-700 border-b-2 border-blue-500"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                   onClick={() => setActiveSearchTab("Groups")}
                 >
@@ -1795,8 +1795,8 @@ const Chat2 = () => {
                     ) : (
                       <div
                         className={`text-sm ${onlineUsers.includes(selectedChat?._id)
-                            ? "text-green-500"
-                            : "text-gray-500"
+                          ? "text-green-500"
+                          : "text-gray-500"
                           }`}
                       >
                         {onlineUsers.includes(selectedChat?._id)
@@ -2116,7 +2116,9 @@ const Chat2 = () => {
                         ref={emojiPickerRef}
                         className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
                       >
-                        <EmojiPicker onEmojiClick={onEmojiClick} />
+                        <EmojiPicker onEmojiClick={onEmojiClick} width={290}
+                        // height={300}
+                        />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -2237,10 +2239,10 @@ const Chat2 = () => {
       >
         <div
           className={`flex-1 relative ${isReceiving
-              ? "flex items-center justify-center"
-              : `grid gap-4 ${getGridColumns(
-                parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
-              )}`
+            ? "flex items-center justify-center"
+            : `grid gap-4 ${getGridColumns(
+              parseInt(remoteStreams.size) + (isVideoCalling ? 1 : 0)
+            )}`
             }`}
         >
           {/* Local video */}
@@ -2456,7 +2458,7 @@ const Chat2 = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg w-96 p-4 modal_background">
-            <AddParticipants 
+            <AddParticipants
               socket={socket}
               groupUsers={groupUsers}
               setGroupUsers={setGroupUsers}
