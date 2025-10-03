@@ -3,7 +3,7 @@ import { IMG_URL } from "../utils/baseUrl";
 
 const Front = ({ data, handleMultipleFileUpload }) => {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-primary-dark dark:to-primary-dark py-12 px-4 sm:px-6 lg:px-8 grid place-content-center" >
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-primary-dark dark:to-primary-dark py-12 px-4 md:px-6 lg:px-8 grid place-content-center" >
             <div className="max-w-2xl mx-auto">
                 {/* Profile Section */}
                 <div className="bg-white dark:bg-primary/50 rounded-2xl shadow-lg p-8">

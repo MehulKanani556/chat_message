@@ -7,6 +7,7 @@ import {
   leaveGroup,
   getAllMessageUsers,
   updateUser,
+  getAllMessages,
 } from "../redux/slice/user.slice";
 import { CgProfile } from "react-icons/cg";
 import {
@@ -107,12 +108,19 @@ const GroupProfile = memo(({
         userId: memberId,
         removeId: userId,
       })
-    );
-    socket.emit("update-group", {
-      groupId: selectedChat._id,
-      members: selectedChat?.members.filter((id) => id !== memberId),
+    ).then((res) => {
+      if (res.payload.success) {
+        socket.emit("update-group", {
+          groupId: selectedChat._id,
+          members: selectedChat?.members.filter((id) => id !== memberId),
+          removeId: memberId
+        });
+        dispatch(getAllMessageUsers());
+        dispatch(setIsModalOpen(false));
+        dispatch(setIsGroupModalOpen(false));
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+      }
     });
-    dispatch(getAllMessageUsers());
   };
   // ============changed==============
   const [profileData, setProfileData] = useState({
@@ -915,7 +923,7 @@ const GroupProfile = memo(({
                     .map((member, index) => {
                       const user = allUsers.find((user) => user._id === member);
                       let isMenuOpen;
-                      if(user){
+                      if (user) {
                         isMenuOpen = menuOpen === user._id;
                       }
                       return (

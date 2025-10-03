@@ -7,7 +7,7 @@ import { FaUserPlus, FaArrowLeft } from 'react-icons/fa';
 import { createGroup } from "../redux/slice/user.slice";
 import { ImCross } from 'react-icons/im';
 import { MdOutlineModeEdit } from 'react-icons/md';
-import { setIsGroupCreateModalOpen, setSelectedChat, setShowLeftSidebar } from '../redux/slice/manageState.slice';
+import { setIsGroupCreateModalOpen, setIsGroupModalOpen, setSelectedChat, setShowLeftSidebar } from '../redux/slice/manageState.slice';
 
 
 
@@ -19,7 +19,7 @@ const Groups = memo(() => {
   const [searchInput, setSearchInput] = useState('');
   const { groups, loading } = useSelector((state) => state.user);
   const currentUser = useSelector((state) => state.user.user?._id);
- 
+
   // const { isGroupCreateModalOpen,selectedChat } = useSelector(state => state.magageState);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const Groups = memo(() => {
     }
   };
   return (
-    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full  relative"
+    <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-full relative"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)"
       }}>
@@ -57,6 +57,7 @@ const Groups = memo(() => {
           </div>
           <button
             onClick={() => {
+              dispatch(setIsGroupModalOpen(false));
               dispatch(setIsGroupCreateModalOpen(true));
               dispatch(setShowLeftSidebar(false));
             }}

@@ -6,9 +6,9 @@ async function createGroup(req, res) {
   try {
     // console.log("Request body:", req.body);
     // console.log("Request file:", req.file);
-    
+
     const { userName, members, createdBy, bio } = req.body;
-    
+
     // Handle members array properly - it might come as string or array
     let membersArray = members;
     if (typeof members === 'string') {
@@ -22,26 +22,26 @@ async function createGroup(req, res) {
     } else {
       membersArray = [];
     }
-    
+
     // console.log("Processed members:", membersArray);
-    
-    if(req.file){
-        req.body.photo = req.file.location
+
+    if (req.file) {
+      req.body.photo = req.file.location
     }
-    
-    const groupData = { 
-      userName, 
-      members: membersArray, 
-      createdBy, 
-      photo: req.body.photo ? req.body.photo : undefined, 
-      bio: bio 
+
+    const groupData = {
+      userName,
+      members: membersArray,
+      createdBy,
+      photo: req.body.photo ? req.body.photo : undefined,
+      bio: bio
     };
-    
+
     // console.log("Creating group with data:", groupData);
-    
+
     const group = await Group.create(groupData);
-    if(!group){
-        return res.status(400).json({ error: "Failed to create group", code: 400 });
+    if (!group) {
+      return res.status(400).json({ error: "Failed to create group", code: 400 });
     }
     // console.log("Group created successfully:", group);
     return res.status(200).json({ groupId: group._id, group });
@@ -55,8 +55,8 @@ async function createGroup(req, res) {
 
 async function updateGroup(req, res) {
   try {
-    const  groupId  = req.body.groupId || req.params.groupId;
-     // Only keep groupId from the body
+    const groupId = req.body.groupId || req.params.groupId;
+    // Only keep groupId from the body
     const updateData = {}; // Create an object to hold the fields to update
 
     if (req.body.userName) {
@@ -73,10 +73,10 @@ async function updateGroup(req, res) {
     }
 
     // console.log(groupId,updateData,"-----------");
-    
+
 
     const group = await Group.findByIdAndUpdate(groupId, updateData, { new: true }); // Update only the fields that are present and return the new data
-    return res.status(200).json({status: true, message: "Group updated successfully", group });
+    return res.status(200).json({ status: true, message: "Group updated successfully", group });
   } catch (error) {
     console.error("Error updating group:", error);
     return res
@@ -87,12 +87,12 @@ async function updateGroup(req, res) {
 
 async function addParticipants(req, res) {
   try {
-    const { groupId, members, addedBy } = req.body; 
+    const { groupId, members, addedBy } = req.body;
 
     // console.log("---------",groupId, members, addedBy ,"---------");
-    const group = await Group.findByIdAndUpdate(groupId, { $push: { members } }, {new:true});
-    
-  
+    const group = await Group.findByIdAndUpdate(groupId, { $push: { members } }, { new: true });
+
+
     for (const memberId of members) {
       const addedByUser = await User.findById(addedBy);
       const memberName = await User.findById(memberId); // Function to get user name by ID
@@ -105,9 +105,9 @@ async function addParticipants(req, res) {
           content: `**${addedByUser.userName}** added **${memberName.userName}** `,
         },
       });
-     }
+    }
 
-    return res.status(200).json({status:true,  group }); 
+    return res.status(200).json({ status: true, group });
   } catch (error) {
     console.error("Error adding participants:", error);
     return res
@@ -146,21 +146,21 @@ async function getGroupById(req, res) {
 }
 
 async function findGroupById(groupId) {
-    try {
-      const group = await Group.findById(groupId);
-      return group; // Return the group or null if not found
-    } catch (error) {
-      console.error("Error retrieving group by ID:", error);
-      return null; // Return null on error
-    }
+  try {
+    const group = await Group.findById(groupId);
+    return group; // Return the group or null if not found
+  } catch (error) {
+    console.error("Error retrieving group by ID:", error);
+    return null; // Return null on error
   }
+}
 
 async function getAllGroups(req, res) {
   try {
     const userId = req.user._id;
     const groups = await Group.find({ members: userId });
     // console.log(groups,userId);
-    
+
     return res.status(200).json(groups);
   } catch (error) {
     console.error("Error retrieving all groups:", error);
@@ -170,24 +170,24 @@ async function getAllGroups(req, res) {
   }
 }
 
-  async function leaveGroup(req, res) {
-    try {
-      const { userId, groupId, removeId } = req.body;
-      // console.log(userId, groupId, removeId );
-      
-      const group = await Group.findByIdAndUpdate(
-        groupId,
-        { $pull: { members: userId } }, // Remove the user from the group's members
-        { new: true, runValidators: true } // Return the updated group and run validators
-      );
-      if (!group) {
-        return res.status(404).json({ error: "Group not found", code: 404 });
-      }
-      const user = await User.findById(userId);
-     
-      // Save a message indicating the user has left the group
+async function leaveGroup(req, res) {
+  try {
+    const { userId, groupId, removeId } = req.body;
+    // console.log(userId, groupId, removeId );
 
-      if(removeId){
+    const group = await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { members: userId } }, // Remove the user from the group's members
+      { new: true, runValidators: true } // Return the updated group and run validators
+    );
+    if (!group) {
+      return res.status(404).json({ error: "Group not found", code: 404 });
+    }
+    const user = await User.findById(userId);
+
+    // Save a message indicating the user has left the group
+
+    if (removeId) {
 
       const removeUser = await User.findById(removeId);
       await saveMessage({
@@ -198,24 +198,24 @@ async function getAllGroups(req, res) {
           content: `**${removeUser.userName}** has removed **${user.userName}**`,
         },
       });
-      }else{
-        await saveMessage({
-          senderId: userId,
-          receiverId: groupId,
-          content: {
-            type: "system",
-            content: `**${user.userName}** has left.`,
-          },
-        });
-      }
-      return res.status(200).json({ message: "User left the group successfully", group });
-    } catch (error) {
-      console.error("Error leaving group:", error);
-      return res
-        .status(500)
-        .json({ error: "Error leaving group", code: error.code || 500 });
+    } else {
+      await saveMessage({
+        senderId: userId,
+        receiverId: groupId,
+        content: {
+          type: "system",
+          content: `**${user.userName}** has left.`,
+        },
+      });
     }
+    return res.status(200).json({ success: true, message: "User left the group successfully", group });
+  } catch (error) {
+    console.error("Error leaving group:", error);
+    return res
+      .status(500)
+      .json({ error: "Error leaving group", code: error.code || 500 });
   }
+}
 
 module.exports = {
   createGroup,

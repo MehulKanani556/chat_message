@@ -46,7 +46,7 @@ async function handleUserLogin(socket, userId) {
 
   // Broadcast updated online users list to all connected clients
   const onlineUsersList = Array.from(onlineUsers.keys());
-  
+
   global.io.emit("user-status-changed", onlineUsersList);
   // socket.emit("user-status-changed", onlineUsersList);
 
@@ -446,11 +446,11 @@ function handleParticipantJoined(socket, data) {
 
 function handleParticipantLeft(socket, data) {
   // console.log("handleParticipantLeft");
-  
+
   const { leavingUser, duration, roomId } = data;
 
   // console.log(roomId,"roomId");
-  
+
   socket.to(roomId).emit("participant-lefted", {
     leavingUser,
     duration,
@@ -670,7 +670,7 @@ async function handleCreateGroup(socket, data) {
 }
 
 async function handleUpdateGroup(socket, data) {
-  const { groupId, name, members, updateType, user, newData, oldData } = data;
+  const { groupId, name, members, updateType, user, newData, oldData, removeId } = data;
   try {
     const userData = await User.findById(user);
     let contentData;
@@ -706,6 +706,16 @@ async function handleUpdateGroup(socket, data) {
         });
       }
     });
+    if (removeId) {
+      const memberSocket = onlineUsers.get(removeId);
+      if (memberSocket) {
+        // console.log("aa",updatedGroup)
+        socket.to(memberSocket).emit("group-updated", {
+          type: "updated",
+          // group: updatedGroup,
+        });
+      }
+    }
   } catch (error) {
     console.error("Error updating group:", error);
   }
@@ -975,24 +985,24 @@ function handleCameraStatusChange(socket, data) {
 
 // ===========================mic status=============================
 function handleMicStatusChange(socket, data) {
-  const { userId, isMicOn ,roomId} = data;
+  const { userId, isMicOn, roomId } = data;
   // Get all online users except the sender
   // const onlineUsersList = Array.from(onlineUsers.entries());
   // // Broadcast camera status to all other users
   // onlineUsersList.forEach(([onlineUserId, socketId]) => {
   //   if (onlineUserId !== userId) {
-    // console.log(`[mic Status] Sending update to user ${userId} ${isMicOn} ${roomId}`);
-      socket.to(roomId).emit("mic-status-change", {
-        userId,
-        isMicOn,
-        roomId
-      });
-      // socket.emit("mic-status-change", {
-      //   userId,
-      //   isMicOn,
-      //   roomId
-      // });
-    // }
+  // console.log(`[mic Status] Sending update to user ${userId} ${isMicOn} ${roomId}`);
+  socket.to(roomId).emit("mic-status-change", {
+    userId,
+    isMicOn,
+    roomId
+  });
+  // socket.emit("mic-status-change", {
+  //   userId,
+  //   isMicOn,
+  //   roomId
+  // });
+  // }
   // });
 }
 
@@ -1220,8 +1230,8 @@ function initializeSocket(io) {
     socket.on("forward-message", (data) => handleForwardMessage(socket, data));
 
     // Add camera status handler
-    socket.on("camera-status-change", (data) =>handleCameraStatusChange(socket, data));
-    socket.on("mic-status-change", (data) =>handleMicStatusChange(socket, data));
+    socket.on("camera-status-change", (data) => handleCameraStatusChange(socket, data));
+    socket.on("mic-status-change", (data) => handleMicStatusChange(socket, data));
 
 
     // Handle QR code scanning events

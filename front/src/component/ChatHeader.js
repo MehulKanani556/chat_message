@@ -28,8 +28,8 @@ const ChatHeader = memo(({
 }) => {
   // console.log("header");
   const dispatch = useDispatch();
-  const { cleanupConnection, startCall,startSharing,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
-  
+  const { cleanupConnection, startCall, startSharing, registerAsHost, unregisterAsHost, isControlling, isHost } = useSocket();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [screenShareModal, setScreenShareModal] = useState(false);
@@ -102,7 +102,7 @@ const ChatHeader = memo(({
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     let downloadUrl = '';
     let fileName = '';
-  
+
     // Detect OS
     if (/windows/i.test(userAgent)) {
       downloadUrl = 'https://chat-message1.s3.us-east-1.amazonaws.com/1751272944675-532296635.exe'; // Replace with your actual Windows download URL
@@ -115,23 +115,23 @@ const ChatHeader = memo(({
       alert('Sorry, your operating system is not supported. Please download manually from our website.');
       return;
     }
-  
+
     // Create download link and trigger download
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = fileName;
     link.target = '_blank';
-    
+
     // Add error handling
     link.onerror = () => {
       alert('Download failed. Please try again.');
     };
-  
+
     // Trigger download
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  
+
     // Optional: Show success message
     setTimeout(() => {
       alert('Download started! If it doesn\'t start automatically, please check your browser\'s download settings.');
@@ -238,13 +238,13 @@ const ChatHeader = memo(({
                   title="Stop sharing"
                 />
               ) : (
-                <div className="w-6 h-6 cursor-pointer" onClick={() =>{
-                  if(window.electron){
+                <div className="w-6 h-6 cursor-pointer" onClick={() => {
+                  if (window.electron) {
                     handleStartScreenShare()
-                  }else{
+                  } else {
                     setScreenShareModal(true)
                   }
-                } }>
+                }}>
                   <LuScreenShare className="w-full h-full" />
                 </div>
               )}
@@ -398,7 +398,7 @@ const ChatHeader = memo(({
               ref={mobileMenuRef}
             >
               <div className="p-2 ">
-              <button
+                <button
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                   onClick={async () => {
                     await dispatch(pinChat({ selectedUserId: selectedChat?._id, }));
@@ -453,7 +453,7 @@ const ChatHeader = memo(({
                     setMobileMenuOpen(false);
                   }}
                 >
-                  
+
                   <MdOutlineCancel className="w-5 h-5 mr-2" />
                   <span>Clear Chat</span>
                 </button>
@@ -472,10 +472,10 @@ const ChatHeader = memo(({
                 <button
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center text-nowrap"
                   onClick={() => {
-                    if(window.electron){
+                    if (window.electron) {
                       handleStartScreenShare();
                       setMobileMenuOpen(false);
-                    }else{
+                    } else {
                       setScreenShareModal(true);
                       setMobileMenuOpen(false);
                     }
@@ -547,47 +547,47 @@ const ChatHeader = memo(({
 
 
         </div>
-      {screenShareModal &&
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
-              <div className="bg-white rounded-lg p-8  dark:bg-primary-dark">
-                <h3 className="text-lg text-center font-semibold mb-6 dark:text-gray-200">
-                 Screen Share
-                </h3>
+        {screenShareModal &&
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
+            <div className="bg-white rounded-lg p-8  dark:bg-primary-dark">
+              <h3 className="text-lg text-center font-semibold mb-6 dark:text-gray-200">
+                Screen Share
+              </h3>
 
-                <h3 className="w-2/3 text-center mx-auto font-semibold mb-8 text-black/50 dark:text-gray-200/50">
+              <h3 className="w-2/3 text-center mx-auto font-semibold mb-8 text-black/50 dark:text-gray-200/50">
                 To enable remote control during screen sharing, you need to download and install the application.
-                </h3>
+              </h3>
 
-                <div className="flex justify-center space-x-4 font-medium">
-                  <button
-                    onClick={() =>  setScreenShareModal(false)}
-                    className="px-2 py-2 w-full rounded dark:text-white border border-black dark:border-white "
-                    // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                     handDownload()
-                    }}
-                    className="px-2 py-2 w-full text-white rounded"
-                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
-                  >
-                   Download 
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleStartScreenShare();
-                      setScreenShareModal(false);
-                    }}
-                    className="px-2 py-2 w-full text-white rounded"
-                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
-                  >
-                   StartSharing
-                  </button>
-                </div>
+              <div className="flex justify-center space-x-4 font-medium">
+                <button
+                  onClick={() => setScreenShareModal(false)}
+                  className="px-2 py-2 w-full rounded dark:text-white border border-black dark:border-white "
+                // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handDownload()
+                  }}
+                  className="px-2 py-2 w-full text-white rounded"
+                  style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                >
+                  Download
+                </button>
+                <button
+                  onClick={() => {
+                    handleStartScreenShare();
+                    setScreenShareModal(false);
+                  }}
+                  className="px-2 py-2 w-full text-white rounded"
+                  style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                >
+                  StartSharing
+                </button>
               </div>
             </div>
+          </div>
         }
       </div>
     </div>

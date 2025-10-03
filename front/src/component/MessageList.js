@@ -990,7 +990,7 @@ const MessageContent = memo(({
 });
 
 const ImageMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => (
-  <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
+  <div className={`max-h-[125px] max-w-[125px] md:max-h-[200px] md:max-w-[200px] lg:max-w-[300px] lg:max-h-[300px] overflow-hidden rounded-xl`}>
     <img
       src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
       alt={decryptMessage(message.content.content)}
@@ -1027,7 +1027,7 @@ const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
 
   return (
     <>
-      <div className={`max-w-[300px] max-h-[300px]  overflow-hidden rounded-xl`}>
+      <div className={`max-h-[125px] max-w-[125px] md:max-h-[200px] md:max-w-[200px] lg:max-w-[300px] lg:max-h-[300px] overflow-hidden rounded-xl`}>
         <video
           src={`${message.content.fileUrl.replace(/\\/g, "/")}`}
           controls
@@ -2701,7 +2701,7 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
       </div>
 
       <div className="flex flex-col items-center justify-center dark:bg-primary-light/10 dark:text-white shadow-lg p-6 rounded-lg min-w-[300px]">
-        <div className="w-10 h-10 rounded-full overflow-hidden mb-4 bg-gray-500 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full overflow-hidden mb-4 bg-primary flex items-center justify-center">
           {selectedChat?.photo &&
             selectedChat.photo !== "null" &&
             selectedChat?.profilePhoto == "Everyone" ? (

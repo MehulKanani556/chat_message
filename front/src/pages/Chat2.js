@@ -33,7 +33,7 @@ import ScreenSourceSelector from "../component/ScreenSourceSelector";
 
 
 const Chat2 = () => {
-  const { allUsers, user } = useSelector((state) => state.user);
+  const { allUsers, user, allMessageUsers } = useSelector((state) => state.user);
 
   const remoteStreams = useSelector(state => state.magageState.remoteStreams);
   const isConnected = useSelector(state => state.magageState.isConnected);
@@ -224,17 +224,17 @@ const Chat2 = () => {
     }, 5000);
   };
 
-  // useEffect(() => {
-  //   if (selectedChat && allMessageUsers) {
-  //     const updatedChat = allMessageUsers.find(
-  //       (chat) => chat._id === selectedChat._id
-  //     );
-  //     // console.log("updatedChat", updatedChat);
-  //     if (updatedChat) {
-  //       dispatch(setSelectedChat(updatedChat));
-  //     }
-  //   }
-  // }, [allMessageUsers]);
+  useEffect(() => {
+    if (selectedChat && allMessageUsers) {
+      const updatedChat = allMessageUsers.find(
+        (chat) => chat._id === selectedChat._id
+      );
+      // console.log("updatedChat", updatedChat);`
+      if (updatedChat) {
+        dispatch(setSelectedChat(updatedChat));
+      }
+    }
+  }, [allMessageUsers, selectedChat]);
 
   const [ringtone] = useState(new Audio('/src/assets/Ringtone.mp3')); // Specify the path of the ringtone file in src/assets
 

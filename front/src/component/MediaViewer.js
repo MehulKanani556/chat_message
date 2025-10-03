@@ -19,9 +19,9 @@ const MediaViewer = memo(({
   const selectedImage = useSelector(state => state.magageState.selectedImage)
   const isImageModalOpen = useSelector(state => state.magageState.isImageModalOpen)
   const selectedChat = useSelector(state => state.magageState.selectedChat)
-  const [videoDurations, setVideoDurations] = useState({}); 
-   // button
-   useEffect(() => {
+  const [videoDurations, setVideoDurations] = useState({});
+  // button
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isImageModalOpen || !selectedImage) return;
 
@@ -76,8 +76,8 @@ const MediaViewer = memo(({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="relative w-full h-full flex items-center flex-col justify-center gap-2 p-8">
-        <div style={{ height: 'calc(100vh - 80px)' }} className="">
+      <div className="w-full h-full flex items-center flex-col justify-center gap-2 p-4 md600:p-8">
+        <div className="relative">
           {selectedImage && (
             <div className="mb-4">
               {selectedImage.endsWith('.mp4') ? (
@@ -99,6 +99,49 @@ const MediaViewer = memo(({
               )}
             </div>
           )}
+
+          <div className="absolute top-1/2 left-0 md:-left-5 transform -translate-y-1/2">
+            <button
+              onClick={() => {
+                const mediaMessages = messages.filter(
+                  message => message.content?.fileType &&
+                    (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
+                );
+                const currentIndex = mediaMessages.findIndex(
+                  message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
+                );
+                const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
+                dispatch(setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`));
+              }}
+              className="bg-primary flex justify-center items-center h-[30px] w-[30px] md600:h-[40px] md600:w-[40px] text-white p-2 rounded-full"
+            >
+              <span>
+                <FaChevronLeft className='text-xs md600:text-base' />
+              </span>
+            </button>
+          </div>
+
+          <div className="absolute top-1/2 right-0 md:-right-5 transform -translate-y-1/2">
+            <button
+              onClick={() => {
+                const mediaMessages = messages.filter(
+                  message => message.content?.fileType &&
+                    (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
+                );
+                const currentIndex = mediaMessages.findIndex(
+                  message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
+                );
+                const nextIndex = (currentIndex + 1) % mediaMessages.length;
+                dispatch(setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`));
+              }}
+              className="bg-primary flex justify-center items-center h-[30px] w-[30px] md600:h-[40px] md600:w-[40px] text-white p-2 rounded-full"
+            >
+              <span>
+                <FaChevronRight className='text-xs md600:text-base' />
+              </span>
+            </button>
+          </div>
+
         </div>
 
         <div className="flex gap-2 items-end">
@@ -108,10 +151,10 @@ const MediaViewer = memo(({
                 <div className="relative">
                   {selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` && (
                     <div className="absolute inset-0 bg-black opacity-60 z-10">
-                      <div 
-                        className="text-white flex items-center justify-center h-full text-2xl cursor-pointer" 
-                        onClick={() => { 
-                          onDeleteMessage(message._id); 
+                      <div
+                        className="text-white flex items-center justify-center h-full text-2xl cursor-pointer"
+                        onClick={() => {
+                          onDeleteMessage(message._id);
                           dispatch(setIsImageModalOpen(false))
                         }}
                       >
@@ -121,9 +164,8 @@ const MediaViewer = memo(({
                   )}
 
                   <img
-                    className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${
-                      selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''
-                    }`}
+                    className={`w-[75px] h-[75px] object-cover rounded cursor-pointer ${selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''
+                      }`}
                     src={`${message.content.fileUrl.replace(/\\/g, '/')}`}
                     alt={`Image ${index}`}
                     onClick={() => {
@@ -133,8 +175,8 @@ const MediaViewer = memo(({
                 </div>
               )}
               {message.content?.fileType?.startsWith('video/') && (
-                <div 
-                  className="flex flex-col items-center relative cursor-pointer" 
+                <div
+                  className="flex flex-col items-center relative cursor-pointer"
                   onClick={() => {
                     dispatch(setSelectedImage(`${message.content.fileUrl.replace(/\\/g, '/')}`));
                   }}
@@ -142,9 +184,8 @@ const MediaViewer = memo(({
                   <div className="relative">
                     <div className="absolute inset-0 bg-black opacity-50 z-10" />
                     <video
-                      className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${
-                        selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''
-                      }`}
+                      className={`w-[75px] h-[75px] rounded object-cover cursor-pointer ${selectedImage === `${message.content.fileUrl.replace(/\\/g, '/')}` ? 'border-2 border-blue-500' : ''
+                        }`}
                       src={`${message.content.fileUrl.replace(/\\/g, '/')}`}
                       alt={`Video ${index}`}
                       onLoadedMetadata={(e) => {
@@ -164,50 +205,10 @@ const MediaViewer = memo(({
           ))}
         </div>
 
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
-          <button
-            onClick={() => {
-              const mediaMessages = messages.filter(
-                message => message.content?.fileType && 
-                (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
-              );
-              const currentIndex = mediaMessages.findIndex(
-                message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
-              );
-              const prevIndex = (currentIndex - 1 + mediaMessages.length) % mediaMessages.length;
-              dispatch(setSelectedImage(`${mediaMessages[prevIndex].content.fileUrl.replace(/\\/g, '/')}`));
-            }}
-            className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
-          >
-            <span>
-              <FaChevronLeft />
-            </span>
-          </button>
-        </div>
 
-        <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
-          <button
-            onClick={() => {
-              const mediaMessages = messages.filter(
-                message => message.content?.fileType && 
-                (message.content.fileType.startsWith('image/') || message.content.fileType.startsWith('video/'))
-              );
-              const currentIndex = mediaMessages.findIndex(
-                message => `${message.content.fileUrl.replace(/\\/g, '/')}` === selectedImage
-              );
-              const nextIndex = (currentIndex + 1) % mediaMessages.length;
-              dispatch(setSelectedImage(`${mediaMessages[nextIndex].content.fileUrl.replace(/\\/g, '/')}`));
-            }}
-            className="bg-primary flex justify-center items-center h-[40px] w-[40px] text-white p-2 rounded-full"
-          >
-            <span>
-              <FaChevronRight />
-            </span>
-          </button>
-        </div>
 
         <button
-          onClick={()=>{dispatch(setIsImageModalOpen(false))}}
+          onClick={() => { dispatch(setIsImageModalOpen(false)) }}
           className="absolute top-4 right-4 text-white hover:text-gray-300"
         >
           <RxCross2 className="w-6 h-6" />

@@ -1179,7 +1179,7 @@ const ChatList = memo(({
                           <div className="flex gap-2">
                             {user?.pinChatFor.length > 0 &&
                               user?.pinChatFor?.includes(item?._id) ? (
-                              <SlPin className="text-lg" />
+                              <SlPin className="text-lg dark:text-white" />
                             ) : (
                               ""
                             )}
