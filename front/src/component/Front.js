@@ -26,7 +26,7 @@ const Front = ({ data, handleMultipleFileUpload }) => {
                             </div>
                         </div>
                         <div className="text-center">
-                            <h1 className="text-3xl font-bold text-primary-dark dark:text-white mb-2">Welcome back!</h1>
+                            <h1 className="text-3xl font-bold text-primary-dark dark:text-white mb-2">Welcome Back!</h1>
                             <p className="text-2xl font-semibold text-primary dark:text-primary">{data?.userName}</p>
                             <p className="text-gray-500 dark:text-gray-400 mt-2">{data?.email}</p>
                         </div>
