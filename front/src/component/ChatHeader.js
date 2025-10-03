@@ -105,10 +105,10 @@ const ChatHeader = memo(({
 
     // Detect OS
     if (/windows/i.test(userAgent)) {
-      downloadUrl = 'https://chat-message1.s3.us-east-1.amazonaws.com/1751272944675-532296635.exe'; // Replace with your actual Windows download URL
+      downloadUrl = 'https://chat-message1.s3.eu-north-1.amazonaws.com/1751272944675-532296635.exe';
       fileName = 'Chat Message App Setup 0.1.0.exe';
     } else if (/macintosh|mac os x/i.test(userAgent)) {
-      downloadUrl = 'https://your-domain.com/downloads/your-app-mac.dmg'; // Replace with your actual Mac download URL
+      downloadUrl = 'https://your-domain.com/downloads/your-app-mac.dmg';
       fileName = 'your-app-mac.dmg';
     } else {
       // Unsupported OS

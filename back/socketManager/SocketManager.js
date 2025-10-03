@@ -163,6 +163,44 @@ async function handleMessageRead(socket, data) {
   }
 }
 
+// ===========================handle group message read status=============================
+async function handleGroupMessageRead(socket, data) {
+  const { messageId, readerId, groupId } = data;
+
+  try {
+    // Update message to add reader to readBy array
+    await Message.findByIdAndUpdate(
+      messageId,
+      {
+        $addToSet: {
+          readBy: {
+            userId: readerId,
+            readAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+
+    // Get group members to notify them about read status
+    const group = await findGroupById(groupId);
+    if (group && group.members) {
+      group.members.forEach((memberId) => {
+        const memberSocketId = onlineUsers.get(memberId.toString());
+        if (memberSocketId && memberSocketId !== socket.id) {
+          socket.to(memberSocketId).emit("group-message-read", {
+            messageId,
+            readerId,
+            groupId
+          });
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error handling group message read status:", error);
+  }
+}
+
 // ===========================handle typing status=============================
 function handleTypingStatus(socket, data) {
   const { senderId, receiverId, isTyping } = data;
@@ -752,6 +790,7 @@ async function handleGroupMessage(socket, data) {
       receiverId: groupId,
       content: contentWithoutReplyTo,
       replyTo: replyTo,
+      isGroupMessage: true,
     });
 
     async function getGroupMembers(groupId) {
@@ -1169,6 +1208,7 @@ function initializeSocket(io) {
 
     // Add handler for message read status
     socket.on("message-read", (data) => handleMessageRead(socket, data));
+    socket.on("group-message-read", (data) => handleGroupMessageRead(socket, data));
 
     // Handle typing status
     socket.on("typing-status", (data) => handleTypingStatus(socket, data));

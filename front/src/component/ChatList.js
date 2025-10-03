@@ -8,6 +8,8 @@ import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
 import { setSelectedChat, setShowLeftSidebar, setIsVideoCalling, setChatMessages } from "../redux/slice/manageState.slice";
+import { useSocket } from "../context/SocketContext";
+import { getAllMessageUsers } from "../redux/slice/user.slice";
 const ChatList = memo(({
   // allMessageUsers,
   // item,
@@ -49,7 +51,7 @@ const ChatList = memo(({
 
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
-
+  const { socket } = useSocket();
 
   // console.log("ChatList", onlineUsers);
 
@@ -139,6 +141,56 @@ const ChatList = memo(({
     }
   };
 
+  const getUnreadCount = (item, currentUser) => {
+    if (!item.messages || !Array.isArray(item.messages)) return 0;
+
+    if (item.isGroup) {
+      // For groups, count messages where current user hasn't read them
+      return item.messages.filter(message => {
+        // Skip system messages
+        if (message.content?.type === 'system') return false;
+        // Skip messages sent by current user
+        if (message.sender === currentUser) return false;
+        // Skip deleted messages
+        if (message.deletedFor?.includes(currentUser)) return false;
+        // Check if current user has read this message
+        const hasRead = message.readBy?.some(read => read.userId === currentUser);
+        return !hasRead;
+      }).length;
+    } else {
+      // For individual chats, use existing logic
+      return item.messages.filter(
+        (message) =>
+          message.receiver === currentUser &&
+          message.status !== "read"
+      ).length;
+    }
+  };
+
+  // Add this function to mark group messages as read when chat is opened
+  const markGroupMessagesAsRead = (item, currentUser) => {
+    if (item.isGroup && item.messages && socket) {
+      const unreadMessages = item.messages.filter(message => {
+        if (message.content?.type === 'system') return false;
+        if (message.sender === currentUser) return false;
+        if (message.deletedFor?.includes(currentUser)) return false;
+        const hasRead = message.readBy?.some(read => read.userId === currentUser);
+        return !hasRead;
+      });
+
+      // Emit socket event to mark messages as read
+      unreadMessages.forEach(message => {
+        socket.emit("group-message-read", {
+          messageId: message._id,
+          readerId: currentUser,
+          groupId: item._id
+        });
+      });
+
+      // Refetch after marking as read
+      dispatch(getAllMessageUsers());
+    }
+  };
 
   return (
     <div
@@ -272,6 +324,11 @@ const ChatList = memo(({
                       }
                       dispatch(setSelectedChat(item));
                       dispatch(setShowLeftSidebar(false));
+
+                      // Mark group messages as read
+                      if (item.isGroup) {
+                        markGroupMessagesAsRead(item, currentUser);
+                      }
                     }}
                   >
                     <div className="flex items-center">
@@ -1200,31 +1257,19 @@ const ChatList = memo(({
                               ""
                             )}
 
-                            {item.messages?.filter(
-                              (message) =>
-                                message.receiver === currentUser &&
-                                message.status !== "read"
-                            ).length > 0 && (
-                                <div
-                                  className={`ml-2 w-5 h-5 text-center flex items-center justify-center text-xs font-semibold rounded-full
-                              ${selectedChat?._id === item._id
-                                      ? "bg-white text-primary-dark"
-                                      : "bg-primary text-white"
-                                    }`}
-                                >
-                                  {item.messages?.filter(
-                                    (message) =>
-                                      message.receiver === currentUser &&
-                                      message.status !== "read"
-                                  ).length > 99
-                                    ? "99+"
-                                    : item.messages?.filter(
-                                      (message) =>
-                                        message.receiver === currentUser &&
-                                        message.status !== "read"
-                                    ).length}
-                                </div>
-                              )}
+                            {getUnreadCount(item, currentUser) > 0 && (
+                              <div
+                                className={`ml-2 w-5 h-5 text-center flex items-center justify-center text-xs font-semibold rounded-full
+                                  ${selectedChat?._id === item._id
+                                    ? "bg-white text-primary-dark"
+                                    : "bg-primary text-white"
+                                  }`}
+                              >
+                                {getUnreadCount(item, currentUser) > 99
+                                  ? "99+"
+                                  : getUnreadCount(item, currentUser)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

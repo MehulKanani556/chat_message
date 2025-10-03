@@ -57,6 +57,20 @@ const messageSchema = mongoose.Schema(
       enum: ["sent", "delivered", "read", "deleted"],
       default: "sent",
     },
+    // Add this new field for group message read status
+    readBy: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "user",
+          required: true,
+        },
+        readAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     edited: {
       type: Boolean,
       default: false,

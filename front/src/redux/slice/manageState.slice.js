@@ -17,7 +17,7 @@ const initialState = {
   isMicrophoneOn: false,
   voiceCallData: null,
   cameraStatus: {},
-  micStatus:{},
+  micStatus: {},
   callParticipants: new Set(),
   selectedImage: null,
   participantOpen: false,
@@ -48,7 +48,7 @@ const initialState = {
   typingUsers: [],
   searchInputbox: "",
   cameraStream: null,
- 
+
   openCameraState: false,
   backCameraAvailable: false,
   facingMode: "user",
@@ -66,7 +66,7 @@ const initialState = {
 
 
   isHost: false,
-  isControlling:false,
+  isControlling: false,
   viewerControlling: null,
 
 };
@@ -75,7 +75,21 @@ const manageStateSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-
+    updateMessageReadStatus: (state, action) => {
+      const { messageId, readerId, groupId } = action.payload;
+      // Find the group in your state (e.g., in allMessageUsers or wherever you keep group chats)
+      const group = state.allMessageUsers?.find(g => g._id === groupId);
+      if (group && group.messages) {
+        const msg = group.messages.find(m => m._id === messageId);
+        if (msg) {
+          if (!msg.readBy) msg.readBy = [];
+          // Only add if not already present
+          if (!msg.readBy.some(r => r.userId === readerId)) {
+            msg.readBy.push({ userId: readerId, readAt: new Date() });
+          }
+        }
+      }
+    },
     setSelectedChat: (state, action) => {
       state.selectedChat = action.payload;
     },
@@ -95,16 +109,16 @@ const manageStateSlice = createSlice({
     },
     removeParticipant: (state, action) => {
       // console.log(action.payload);
-      
+
       const userId = action.payload;
       const allStreams = new Map(state.participants);
       allStreams.delete(userId)
 
       // console.log(Array.from(allStreams));
-      
+
       state.participants = Array.from(allStreams);
     },
-    
+
     setCallParticipantsList: (state, action) => {
       state.callParticipantsList = action.payload;
     },
@@ -266,16 +280,16 @@ const manageStateSlice = createSlice({
     setGroupPhoto: (state, action) => {
       state.groupPhoto = action.payload;
     },
-    setshareRoomId:(state, action) => {
+    setshareRoomId: (state, action) => {
       state.shareRoomId = action.payload;
     },
-    setIsHost:(state, action) => {
+    setIsHost: (state, action) => {
       state.isHost = action.payload;
     },
-    setIsControlling:(state, action) => {
+    setIsControlling: (state, action) => {
       state.isControlling = action.payload;
     },
-    setViewerControlling:(state, action) => {
+    setViewerControlling: (state, action) => {
       state.viewerControlling = action.payload;
     },
   },
@@ -341,6 +355,7 @@ export const {
   setshareRoomId,
   setIsHost,
   setIsControlling,
-  setViewerControlling
+  setViewerControlling,
+  updateMessageReadStatus,
 } = manageStateSlice.actions;
 export default manageStateSlice.reducer;

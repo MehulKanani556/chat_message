@@ -44,6 +44,7 @@ import {
   setIsControlling,
   setViewerControlling,
   setMicStatus,
+  updateMessageReadStatus,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
@@ -168,6 +169,18 @@ export const SocketProvider = ({ children }) => {
       );
     }
   };
+
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.on("group-message-read", (data) => {
+        // Just log or handle the data without dispatching
+        // console.log("Group message read:", data);
+        // You can trigger a re-fetch of messages here if needed
+        dispatch(updateMessageReadStatus(data));
+        dispatch(getAllMessageUsers());
+      });
+    }
+  }, [socketRef.current]);
 
   // Socket connection effect
   useEffect(() => {

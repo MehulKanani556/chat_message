@@ -3,7 +3,7 @@ import { RxCross2 } from 'react-icons/rx';
 import { RiUserAddLine } from 'react-icons/ri';
 import { IoIosArrowForward } from 'react-icons/io';
 import { AiOutlineAudioMuted } from 'react-icons/ai';
-import { FaRegBell } from 'react-icons/fa';
+import { FaChevronLeft, FaRegBell } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { setParticipantOpen } from '../redux/slice/manageState.slice';
@@ -17,22 +17,22 @@ const CallParticipantModal = memo(({
 
   // console.log("CallParticipantModal");
   const dispatch = useDispatch();
-    const [searchInput, setSearchInput] = useState("");
-    // const [invitedUsers, setInvitedUsers] = useState([]);
-    const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
-    const [showFirstSection, setShowFirstSection] = useState(false);
-    const allUsers  = useSelector((state) => state.user.allUsers);
-    const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
-   
-    // const remoteStreams = useSelector(state => state.magageState.remoteStreams);
-    const participants = useSelector(state => state.magageState.participants);
-    const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
-    const callParticipants = useSelector(state => state.magageState.callParticipants);
-    const participantOpen = useSelector(state => state.magageState.participantOpen);
-    const micStatus = useSelector(state => state.magageState.micStatus);
-    const isMicrophoneOn = useSelector(state => state.magageState.isMicrophoneOn);
-    const {inviteToCall} = useSocket();
-    const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
+  const [searchInput, setSearchInput] = useState("");
+  // const [invitedUsers, setInvitedUsers] = useState([]);
+  const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
+  const [showFirstSection, setShowFirstSection] = useState(false);
+  const allUsers = useSelector((state) => state.user.allUsers);
+  const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
+
+  // const remoteStreams = useSelector(state => state.magageState.remoteStreams);
+  const participants = useSelector(state => state.magageState.participants);
+  const callParticipantsList = useSelector(state => state.magageState.callParticipantsList);
+  const callParticipants = useSelector(state => state.magageState.callParticipants);
+  const participantOpen = useSelector(state => state.magageState.participantOpen);
+  const micStatus = useSelector(state => state.magageState.micStatus);
+  const isMicrophoneOn = useSelector(state => state.magageState.isMicrophoneOn);
+  const { inviteToCall } = useSocket();
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   return (
     <>
       {participantOpen && (
@@ -42,7 +42,10 @@ const CallParticipantModal = memo(({
             <div className="h-full w-96 bg-primary-light dark:bg-primary-dark/90 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
               <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
                 <div className="flex justify-between items-center p-4 py-6">
-                  <h2 className="text-lg font-bold">Add Members</h2>
+                  <div className="flex gap-1 items-center">
+                    <FaChevronLeft className="text-lg cursor-pointer" onClick={() => { setShowFirstSection(false) }} />
+                    <h2 className="text-lg font-bold">Add Members</h2>
+                  </div>
                   <button
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => {
@@ -107,8 +110,8 @@ const CallParticipantModal = memo(({
                         >
                           <div
                             className={`w-5 h-5 rounded border mr-3 ${selectedCallUsers.has(user._id)
-                                ? "bg-primary border-primary"
-                                : "border-gray-400"
+                              ? "bg-primary border-primary"
+                              : "border-gray-400"
                               }`}
                           >
                             {selectedCallUsers.has(user._id) && (
@@ -243,8 +246,8 @@ const CallParticipantModal = memo(({
                               {user.userName}
                             </h3>
                           </div>
-                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) &&  
-                          <AiOutlineAudioMuted className="h-6 w-6" />
+                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) &&
+                            <AiOutlineAudioMuted className="h-6 w-6" />
                           }
                         </div>
                       )

@@ -9,7 +9,7 @@ const Front = ({ data, handleMultipleFileUpload }) => {
                 <div className="bg-white dark:bg-primary/50 rounded-2xl shadow-lg p-8">
                     <div className="flex flex-col  items-center gap-8">
                         <div className="relative">
-                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/40 to-primary dark:from-primary/30 dark:to-primary overflow-hidden border-4 border-white dark:border-primary-light shadow-lg">
+                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/40 to-primary dark:from-primary/30 dark:to-primary overflow-hidden border-4 dark:border-white border-black/60 shadow-lg">
                                 {data?.photo && data?.photo != "null" ? (
                                     <img
                                         src={`${data?.photo.replace(/\\/g, "/")}`}

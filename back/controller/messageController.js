@@ -13,11 +13,20 @@ exports.saveMessage = async (messageData) => {
       replyTo: messageData.replyTo,
       isBlocked: messageData.isBlocked,
     });
+
+    // If it's a group message, initialize readBy with sender
+    if (messageData.isGroupMessage) {
+      message.readBy = [{
+        userId: messageData.senderId,
+        readAt: new Date()
+      }];
+    }
+
     await message.save();
 
     const sender = messageData.senderId;
     const receiver = messageData.receiverId;
-    
+
     await Users.updateMany(
       {
         deleteChatFor: { $in: [sender, receiver] },
@@ -220,14 +229,14 @@ exports.clearChat = async (req, res) => {
 
     const group = await groupModel.findById(selectedId)
     // Find all messages between these users
-    let messages ;
-    if(group){
+    let messages;
+    if (group) {
       messages = await Message.find({
         $or: [
           { receiver: selectedId },
         ],
       });
-    }else{
+    } else {
       messages = await Message.find({
         $or: [
           { sender: userId, receiver: selectedId },

@@ -240,8 +240,7 @@ const Sidebar = memo(() => {
                       setIsLogoutModalOpen(false);
                       handleLogout();
                     }}
-                    className="px-4 py-2 w-full text-white rounded"
-                    style={{ backgroundColor: "#7269FF", color: "white", border: "1px solid #7269FF" }}
+                    className="px-4 py-2 w-full text-white bg-primary rounded"
                   >
                     Yes, Sign out
                   </button>

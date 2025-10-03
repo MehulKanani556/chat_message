@@ -74,7 +74,7 @@ const Chat2 = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [screenWidth, window.innerWidth]);
 
-  console.log(screenWidth);
+  // console.log(screenWidth);
   
 
 
@@ -738,7 +738,7 @@ const Chat2 = () => {
           }
           {/* Right Side */}
           <>
-              {console.log("showOverlay",showOverlay)}
+              {/* {console.log("showOverlay",showOverlay)} */}
           
             {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
