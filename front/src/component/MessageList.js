@@ -1039,7 +1039,7 @@ const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
           }
         />
         <div className=" w-full flex justify-between items-center mt-1">
-          <div className="flex">
+          <div className="flex min-w-0">
             <svg
               width="20"
               height="20"
@@ -1069,14 +1069,11 @@ const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
                 fill="#E8467C"
               ></path>
             </svg>
-            <div className="font-medium text-sm ps-1">{messageContent}</div>
+            <div className="font-medium text-sm ps-1 overflow-hidden text-ellipsis whitespace-nowrap">{messageContent}</div>
           </div>
           <div className="text-[10px] opacity-60 flex items-center"><GoDotFill className="mr-0.5" />{message.content?.size}</div>
         </div>
       </div>
-
-
-
     </>
   );
 
@@ -1086,8 +1083,8 @@ const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
 const AudioMessage = memo(({ message, userId, IMG_URL }) => {
   let messageContent = message?.content?.content;
 
-  console.log("asdasasa",messageContent);
-  
+  console.log("asdasasa", messageContent);
+
   // Decrypt the message if it's encrypted
   if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
     try {
