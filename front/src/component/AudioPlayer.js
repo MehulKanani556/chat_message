@@ -12,6 +12,9 @@ const AudioPlayer = ({ audioUrl }) => {
   const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2]; 
   const [currentRateIndex, setCurrentRateIndex] = useState(3); 
 
+  console.log("audioUrl",audioUrl);
+  
+
   useEffect(() => {
     let wavesurfer = null;
     

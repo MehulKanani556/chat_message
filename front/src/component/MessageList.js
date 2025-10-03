@@ -1086,6 +1086,8 @@ const VideoMessage = memo(({ message, userId, handleImageClick, IMG_URL }) => {
 const AudioMessage = memo(({ message, userId, IMG_URL }) => {
   let messageContent = message?.content?.content;
 
+  console.log("asdasasa",messageContent);
+  
   // Decrypt the message if it's encrypted
   if (typeof messageContent === 'string' && messageContent.startsWith('data:')) {
     try {

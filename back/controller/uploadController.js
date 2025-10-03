@@ -31,7 +31,7 @@ const uploadController = {
 
       // use the public URL that multer-s3 already gave us
       const fileUrl = file.location;
-      // console.log("file4");
+      console.log("fileUrl",fileUrl);
 
 
       // return the public URL

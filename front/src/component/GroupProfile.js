@@ -291,10 +291,10 @@ const GroupProfile = memo(({
 
   return (
     <div
-      className="w-[380px] flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
+      className="w-full flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
-        width: screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
+        maxWidth: screenWidth === 1024 ? '600px' : screenWidth === 768 ? '404px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
       }}
     >
       {attachFile ? (

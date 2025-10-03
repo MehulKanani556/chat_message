@@ -72,7 +72,10 @@ const Chat2 = () => {
     const handleResize = () => setScreenWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [screenWidth, window.innerWidth]);
+
+  console.log(screenWidth);
+  
 
 
   const dispatch = useDispatch();
@@ -517,17 +520,18 @@ const Chat2 = () => {
     }
   }, [screenWidth]); // Changed from empty dependency to screenWidth
 
-  // useEffect(() => {
-  //   // Set showLeftSidebar to true when no chat is selected
-  //   if (!selectedChat) {
-  //     // setShowLeftSidebar(false);
-  //     if (window.innerWidth <= 600) {
-  //       setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
-  //     } else {
-  //       setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
-  //     }
-  //   }
-  // }, [selectedChat]);
+  useEffect(() => {
+    // Set showLeftSidebar to true when no chat is selected
+    if (!selectedChat) {
+      // setShowLeftSidebar(false);
+      if (window.innerWidth <= 600) {
+        setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
+      } else {
+        setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
+      }
+    }
+    
+  }, [selectedChat]);
 
 
   // clear chat
@@ -694,6 +698,13 @@ const Chat2 = () => {
     };
   }, []);
 
+  useEffect(() => {
+    dispatch(setIsGroupModalOpen(false))
+    dispatch(setIsUserProfileModalOpen(false))
+    dispatch(setIsGroupCreateModalOpen(false))
+    dispatch(setIsModalOpen(false))
+  }, [selectedChat]);
+
   // console.log("cHAT2");
 
   return (
@@ -727,14 +738,14 @@ const Chat2 = () => {
           }
           {/* Right Side */}
           <>
-
+              {console.log("showOverlay",showOverlay)}
+          
             {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
                 className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
-                  (isGroupModalOpen ||
-                    isModalOpen ||
+                  (((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                     isGroupCreateModalOpen ||
-                    isUserProfileModalOpen)
+                    (isUserProfileModalOpen && !selectedChat?.members))
                   ? "w-0 opacity-0"
                   : "w-full opacity-100"
                   } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
@@ -743,13 +754,12 @@ const Chat2 = () => {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                {(!(
+                {/* {(!(
                   isGroupModalOpen ||
                   isModalOpen ||
                   isGroupCreateModalOpen ||
                   isUserProfileModalOpen
-                ) ||
-                  !showOverlay) && (
+                ) ||  !showOverlay) && ( */}
                     <>
                       {selectedChat ? (
                         <>
@@ -884,17 +894,17 @@ const Chat2 = () => {
                         <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
                       )}
                     </>
-                  )}
+                  {/* )} */}
               </div>
             }
             {/* // ============================== right sidebar =========================================== */}
 
             {!(isReceiving || isVideoCalling || isVoiceCalling) &&
               <div
-                className={`transition-all duration-300 ease-in-out flex-grow shrink-0 ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
+                className={`transition-all duration-300 ease-in-out flex-grow shrink-0  ${!showLeftSidebar ? "block" : "hidden md600:block"} ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                   (isGroupCreateModalOpen || isModalOpen) || (isGroupCreateModalOpen) ||
                   (isUserProfileModalOpen && !selectedChat?.members)
-                  ? screenWidth <= 768
+                  ? screenWidth <= 600
                     ? "w-full opacity-100" // Full width on mobile
                     : "2xl:w-[380px] sm:max-w-full xl:w-[380px] opacity-100" // Original responsive classes
                   : "w-0 opacity-0"
