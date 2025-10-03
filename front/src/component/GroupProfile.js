@@ -296,7 +296,6 @@ const GroupProfile = memo(({
     dispatch(setIsImageModalOpen(true));
   };
 
-
   return (
     <div
       className="w-full flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
@@ -967,9 +966,9 @@ const GroupProfile = memo(({
                               className={`absolute z-10 bg-white dark:bg-black/50 dark:text-white shadow-md rounded ${openDirection === "top" ? "bottom-5" : "top-5"
                                 } right-8`}
                             >
-                              <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
+                              {/* <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
                                 <MdBlock className="mr-2" /> Block
-                              </button>
+                              </button> */}
                               <button className=" px-4 py-2 text-sm text-red-600  flex items-center w-full hover:bg-opacity-25" onClick={() => handleRemoveMember(member)}>
                                 <RiDeleteBin6Line className="mr-2" /> Remove
                               </button>

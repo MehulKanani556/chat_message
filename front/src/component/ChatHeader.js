@@ -343,7 +343,9 @@ const ChatHeader = memo(({
                     : "Archive Chat"}
                 </li>
                 <li
-                  onClick={() => { setIsClearChatModalOpen(true) }}
+                  onClick={() => { setIsClearChatModalOpen(true);
+                    setMenuOpen(false)
+                   }}
                   className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                 >
                   <MdOutlineCancel className="text-lg" />{" "}
@@ -353,6 +355,7 @@ const ChatHeader = memo(({
                 <li
                   onClick={() => {
                     setIsDeleteChatModalOpen(true);
+                    setMenuOpen(false)
                   }}
                   className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                 >
@@ -547,6 +550,10 @@ const ChatHeader = memo(({
 
 
         </div>
+
+
+        {/* ======================================screenShareModal===================== */}
+
         {screenShareModal &&
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 dark:bg-primary-light/15">
             <div className="bg-white rounded-lg p-8  dark:bg-primary-dark">

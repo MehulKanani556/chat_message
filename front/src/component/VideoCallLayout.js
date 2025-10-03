@@ -1,6 +1,11 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { AiOutlineVideoCamera } from "react-icons/ai";
-import { BsCameraVideo, BsCameraVideoOff, BsChatDots, BsMicMute } from "react-icons/bs";
+import {
+  BsCameraVideo,
+  BsCameraVideoOff,
+  BsChatDots,
+  BsMicMute,
+} from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
 import {
   IoCallOutline,
@@ -21,6 +26,7 @@ import {
 import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
 import ElectronStatus from "./ElectronStatus";
+import { PiVinylRecord, PiVinylRecordBold } from "react-icons/pi";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return "w-full";
@@ -34,11 +40,19 @@ const getParticipantWidth = (count) => {
 const VideoCallLayout = memo(() => {
   const participants = useSelector((state) => state.magageState.participants);
   const selectedChat = useSelector((state) => state.magageState.selectedChat);
-  const selectedChatModule = useSelector((state) => state.magageState.selectedChatModule);
-  const isMicrophoneOn = useSelector((state) => state.magageState.isMicrophoneOn);
+  const selectedChatModule = useSelector(
+    (state) => state.magageState.selectedChatModule
+  );
+  const isMicrophoneOn = useSelector(
+    (state) => state.magageState.isMicrophoneOn
+  );
   const isCameraOn = useSelector((state) => state.magageState.isCameraOn);
-  const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
-  const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
+  const isVideoCalling = useSelector(
+    (state) => state.magageState.isVideoCalling
+  );
+  const isVoiceCalling = useSelector(
+    (state) => state.magageState.isVoiceCalling
+  );
   const cameraStatus = useSelector((state) => state.magageState.cameraStatus);
   const micStatus = useSelector((state) => state.magageState.micStatus);
   const isReceiving = useSelector((state) => state.magageState.isReceiving);
@@ -46,13 +60,21 @@ const VideoCallLayout = memo(() => {
   const chatMessages = useSelector((state) => state.magageState.chatMessages);
   const isHost = useSelector((state) => state.magageState.isHost);
   const isControlling = useSelector((state) => state.magageState.isControlling);
-  const viewerControlling = useSelector((state) => state.magageState.viewerControlling);
-  const participantOpen = useSelector((state) => state.magageState.participantOpen);
+  const viewerControlling = useSelector(
+    (state) => state.magageState.viewerControlling
+  );
+  const participantOpen = useSelector(
+    (state) => state.magageState.participantOpen
+  );
   const callChatList = useSelector((state) => state.magageState.callChatList);
   const roomId = useSelector((state) => state.magageState.shareRoomId);
   const allUsers = useSelector((state) => state.user.allUsers);
 
-  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
+  const currentUser = useMemo(
+    () =>
+      sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"),
+    []
+  );
 
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -75,17 +97,31 @@ const VideoCallLayout = memo(() => {
     grantControl,
     revokeControl,
   } = useSocket();
-  
+
   //===========Use the custom socket hook===========
+
+
   const handleMouseDown = (e) => {
     if (!chatMessages) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    // console.log(rect, "==========================================");
 
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
+    });
+    setIsDragging(true);
+  };
+
+  // Touch start handler: attach to the draggable element (see above)
+  const handleTouchStart = (e) => {
+    if (!chatMessages) return;
+    const touch = e.touches[0];
+    const rect = containerRef.current.getBoundingClientRect();
+
+    setDragOffset({
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
     });
     setIsDragging(true);
   };
@@ -112,7 +148,38 @@ const VideoCallLayout = memo(() => {
     Y = constrainedY;
   };
 
+  // Touch move handler
+  const handleTouchMove = (e) => {
+    if (!isDragging || !chatMessages) return;
+    const touch = e.touches[0];
+
+    const newX = touch.clientX - dragOffset.x;
+    const newY = touch.clientY - dragOffset.y;
+
+    // Get window dimensions
+    const maxX = window.innerWidth - containerRef.current.offsetWidth;
+    const maxY = window.innerHeight - containerRef.current.offsetHeight;
+
+    // Constrain position within window bounds
+    const constrainedX = Math.max(0, Math.min(newX, maxX));
+    const constrainedY = Math.max(0, Math.min(newY, maxY));
+
+    containerRef.current.style.left = `${constrainedX}px`;
+    containerRef.current.style.top = `${constrainedY}px`;
+
+    X = constrainedX;
+    Y = constrainedY;
+  };
+
   const handleMouseUp = () => {
+    setIsDragging(false);
+    if (X && Y) {
+      setPosition({ x: X, y: Y });
+    }
+  };
+
+  // Touch end handler
+  const handleTouchEnd = () => {
     setIsDragging(false);
     if (X && Y) {
       setPosition({ x: X, y: Y });
@@ -123,11 +190,15 @@ const VideoCallLayout = memo(() => {
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleTouchEnd);
     }
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isDragging]);
 
@@ -542,7 +613,9 @@ const VideoCallLayout = memo(() => {
   };
 
   let hostId = useMemo(() => {
-    const participantEntry = Array.from(participants).find(([id, stream]) => stream instanceof MediaStream);
+    const participantEntry = Array.from(participants).find(
+      ([id, stream]) => stream instanceof MediaStream
+    );
     return participantEntry ? participantEntry[0] : null;
   }, [participants]);
 
@@ -552,17 +625,19 @@ const VideoCallLayout = memo(() => {
   let isDragging_El = false;
   let dragStart_El = null;
 
-
   useEffect(() => {
-
     const handleMouseDown = (e) => {
       // console.log(isDragging_El,"isDragging_El  Down");
       if (!isControlling) return;
 
       const video = e.currentTarget;
       const rect = video.getBoundingClientRect();
-      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
-      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+      const x = Math.round(
+        ((e.clientX - rect.left) / rect.width) * video.videoWidth
+      );
+      const y = Math.round(
+        ((e.clientY - rect.top) / rect.height) * video.videoHeight
+      );
 
       dragStart_El = { x, y };
       isDragging_El = true;
@@ -571,19 +646,22 @@ const VideoCallLayout = memo(() => {
 
     const handleMouseUp = (e) => {
       // console.log(isDragging_El,"isDragging_El  UP");
-      
+
       if (!isControlling || !isDragging_El) return;
-    
+
       const video = e.currentTarget;
       const rect = video.getBoundingClientRect();
-      const x = Math.round(((e.clientX - rect.left) / rect.width) * video.videoWidth);
-      const y = Math.round(((e.clientY - rect.top) / rect.height) * video.videoHeight);
+      const x = Math.round(
+        ((e.clientX - rect.left) / rect.width) * video.videoWidth
+      );
+      const y = Math.round(
+        ((e.clientY - rect.top) / rect.height) * video.videoHeight
+      );
 
       sendControl("dragEnd", { x, y }, roomId);
       isDragging_El = false;
       dragStart_El = null;
     };
-
 
     const handleMouseMove = (e) => {
       // console.log(isDragging_El,"isDragging_El");
@@ -674,16 +752,20 @@ const VideoCallLayout = memo(() => {
 
     const handleKeyDown = (e) => {
       if (!isControlling) return;
-      
+
       e.preventDefault();
 
-      sendControl('keydown', {
-        key: e.key,
-        shiftKey: e.shiftKey,
-        ctrlKey: e.ctrlKey,
-        altKey: e.altKey,
-        metaKey: e.metaKey
-      }, roomId);
+      sendControl(
+        "keydown",
+        {
+          key: e.key,
+          shiftKey: e.shiftKey,
+          ctrlKey: e.ctrlKey,
+          altKey: e.altKey,
+          metaKey: e.metaKey,
+        },
+        roomId
+      );
     };
 
     const handleScroll = (e) => {
@@ -726,33 +808,40 @@ const VideoCallLayout = memo(() => {
     if (isControlling) {
       // Re-initialize video elements or other necessary updates
       const videoElements = Object.values(videoElementsRef.current);
-      videoElements.forEach(video => {
+      videoElements.forEach((video) => {
         if (video && video.srcObject) {
-          video.play().catch(err => console.error("Error playing video:", err));
+          video
+            .play()
+            .catch((err) => console.error("Error playing video:", err));
         }
       });
     }
   }, [isHost, isControlling]);
 
+  console.log(chatMessages,"chatMessageschatMessages");
+  
+
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"
-        }`}
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${
+        participantOpen ? "w-[70%]" : "w-full"
+      }`}
       style={
         chatMessages
           ? {
-            width: "25%",
-            height: "34%",
-            position: "absolute",
-            top: position.y,
-            left: position.x,
-            cursor: isDragging ? "grabbing" : "grab",
-            userSelect: "none",
-            transform: "none",
-          }
+              width: "25%",
+              height: "34%",
+              position: "absolute",
+              top: position.y,
+              left: position.x,
+              cursor: isDragging ? "grabbing" : "grab",
+              userSelect: "none",
+              transform: "none",
+            }
           : {}
       }
+      onTouchStart={handleTouchStart}
       onMouseDown={handleMouseDown}
     >
       <ElectronStatus />
@@ -763,19 +852,20 @@ const VideoCallLayout = memo(() => {
         style={{ display: "none" }}
       />
       {/* Participant Grid */}
-      <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden h-[calc(100vh-130px)]">
+      <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden">
         {/* Add hidden canvas for recording */}
         {participants.length == 1 ? (
           isVoiceCalling ? (
             <div className="w-full h-full dark:bg-white/10 relative rounded-xl">
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
+              <div className="flex flex-col items-center">
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0.5s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
                 <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                 {selectedChat &&
-                  selectedChat.photo &&
-                  selectedChat.photo !== "null" ? (
+                selectedChat.photo &&
+                selectedChat.photo !== "null" ? (
                   <img
                     src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                     alt="User profile"
@@ -792,10 +882,11 @@ const VideoCallLayout = memo(() => {
                   {selectedChat?.userName || "Unknown User"}
                 </p>
                 {userIncall && (
-                  <p className="mt-20 text-white text-lg font-medium text-center animate-pulse">
+                  <p className="mt-10 text-red-500 text-lg font-medium text-center animate-pulse">
                     {selectedChat?.userName} {userIncall}
                   </p>
                 )}
+                </div>
               </div>
             </div>
           ) : (
@@ -821,30 +912,33 @@ const VideoCallLayout = memo(() => {
                 <div
                   key={participantId}
                   ref={isLocalUser ? localVideoRef : null}
-                  className={`${participants.length == 2
+                  className={`${
+                    participants.length == 2
                       ? isLocalUser
                         ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                         : widthClass
                       : widthClass
-                    } p-2 flex items-center justify-center`}
+                  } p-2 flex items-center justify-center`}
                   style={{
-                    height: `${!(isLocalUser && participants.length == 2)
-                        ? `calc(100% / ${participants.length <= 2
-                          ? 1
-                          : participants.length <= 8 &&
-                            participants.length >= 2
-                            ? 2
-                            : 3
-                        })`
+                    height: `${
+                      !(isLocalUser && participants.length == 2)
+                        ? `calc(100% / ${
+                            participants.length <= 2
+                              ? 1
+                              : participants.length <= 8 &&
+                                participants.length >= 2
+                              ? 2
+                              : 3
+                          })`
                         : ""
-                      }`,
+                    }`,
                     ...(isLocalUser && participants.length == 2
                       ? {
-                        position: "absolute",
-                        bottom: "1rem",
-                        right: "1rem",
-                        cursor: isDraggingLocal ? "grabbing" : "grab",
-                      }
+                          position: "absolute",
+                          bottom: "1rem",
+                          right: "1rem",
+                          cursor: isDraggingLocal ? "grabbing" : "grab",
+                        }
                       : {}),
                   }}
                   onMouseDown={(e) =>
@@ -855,10 +949,11 @@ const VideoCallLayout = memo(() => {
                     <video
                       autoPlay
                       playsInline
-                      className={`w-full ${!isReceiving
+                      className={`w-full ${
+                        !isReceiving
                           ? "transform -translate-x-1 -scale-x-100 h-full object-cover rounded-xl"
                           : "object-contain"
-                        }`}
+                      }`}
                       // muted={participantId === currentUser}
                       ref={(el) => {
                         setVideoRef(el);
@@ -910,8 +1005,12 @@ const VideoCallLayout = memo(() => {
                 const participant = allUsers.find(
                   (u) => u._id === participantId
                 );
-                const isCameraEnabled = isVideoCalling ? cameraStatus?.[participantId] !== false : false;
-                const isMicClose = isVideoCalling ? micStatus?.[participantId] == false : false;
+                const isCameraEnabled = isVideoCalling
+                  ? cameraStatus?.[participantId] !== false
+                  : false;
+                const isMicClose = isVideoCalling
+                  ? micStatus?.[participantId] == false
+                  : false;
                 const isLocalUser = participantId === currentUser;
                 const widthClass = getParticipantWidth(participants?.length);
                 // localVideoRef.current.srcObject = isLocalUser ? stream : null
@@ -931,30 +1030,33 @@ const VideoCallLayout = memo(() => {
                   <div
                     key={participantId}
                     ref={isLocalUser ? localVideoRef : null}
-                    className={`${participants.length == 2
+                    className={`${
+                      participants.length == 2
                         ? isLocalUser
                           ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
                           : widthClass
                         : widthClass
-                      } p-2 flex items-center justify-center`}
+                    } p-2 flex items-center justify-center`}
                     style={{
-                      height: `${!(isLocalUser && participants.length == 2)
-                          ? `calc(100% / ${participants.length <= 2
-                            ? 1
-                            : participants.length <= 8 &&
-                              participants.length >= 2
-                              ? 2
-                              : 3
-                          })`
+                      height: `${
+                        !(isLocalUser && participants.length == 2)
+                          ? `calc(100% / ${
+                              participants.length <= 2
+                                ? 1
+                                : participants.length <= 8 &&
+                                  participants.length >= 2
+                                ? 2
+                                : 3
+                            })`
                           : ""
-                        }`,
+                      }`,
                       ...(isLocalUser && participants.length == 2
                         ? {
-                          position: "absolute",
-                          bottom: "1rem",
-                          right: "1rem",
-                          cursor: isDraggingLocal ? "grabbing" : "grab",
-                        }
+                            position: "absolute",
+                            bottom: "1rem",
+                            right: "1rem",
+                            cursor: isDraggingLocal ? "grabbing" : "grab",
+                          }
                         : {}),
                     }}
                     onMouseDown={(e) =>
@@ -967,10 +1069,11 @@ const VideoCallLayout = memo(() => {
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${!isReceiving
+                            className={`w-full h-full object-cover rounded-xl ${
+                              !isReceiving
                                 ? "transform -translate-x-1 -scale-x-100"
                                 : ""
-                              }`}
+                            }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -991,19 +1094,22 @@ const VideoCallLayout = memo(() => {
                               ? "You"
                               : participant?.userName || "Par"}
                           </div>
-                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) && 
-                          <div className="absolute top-2 right-2 text-xl  text-white"><BsMicMute /></div>
-                          }
+                          {(isMicClose || (!isMicrophoneOn && isLocalUser)) && (
+                            <div className="absolute top-2 right-2 text-xl  text-white">
+                              <BsMicMute />
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div className="w-full h-full bg-gray-800 flex items-center justify-center flex-col rounded-xl">
                           <video
                             autoPlay
                             playsInline
-                            className={`w-full h-full object-cover rounded-xl ${!isReceiving
+                            className={`w-full h-full object-cover rounded-xl ${
+                              !isReceiving
                                 ? "transform -translate-x-1 -scale-x-100"
                                 : ""
-                              }`}
+                            }`}
                             muted={participantId === currentUser}
                             ref={(el) => {
                               setVideoRef(el);
@@ -1015,10 +1121,10 @@ const VideoCallLayout = memo(() => {
                               }
                             }}
                           />
-                          <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-500 flex items-center justify-center">
                               {participant?.photo &&
-                                participant.photo !== "null" ? (
+                              participant.photo !== "null" ? (
                                 <img
                                   src={`${IMG_URL}${participant.photo.replace(
                                     /\\/g,
@@ -1036,13 +1142,13 @@ const VideoCallLayout = memo(() => {
                                 </div>
                               )}
                             </div>
-                          </div>
-                          {/* <div className="absolute inset-0 flex items-center justify-center"> */}
-                          <div className="absolute bottom-[40%] mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
+                          <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
                             {participant?.userName || "Pa"}{" "}
                             {!isVideoCalling ? "" : " (Camera Off)"}
                             {/* </div> */}
                           </div>
+                          </div>
+                          {/* <div className="absolute inset-0 flex items-center justify-center"> */}
                         </div>
                       )}
                     </div>
@@ -1063,20 +1169,22 @@ const VideoCallLayout = memo(() => {
               dispatch(setCallChatList(!callChatList));
               // dispatch(setChatMessages(true));
             }}
-            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${callChatList
+            className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${
+              callChatList
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-              }`}
+            }`}
           >
             <BsChatDots className="text-xl" />
           </button>
 
           <button
             onClick={toggleMicrophone}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${!isMicrophoneOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+              !isMicrophoneOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-              }`}
+            }`}
           >
             {!isMicrophoneOn ? (
               <IoMicOutline className="text-xl" />
@@ -1087,11 +1195,13 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={toggleCamera}
-            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${isVideoCalling ? "" : "hidden"
-              }  ${!isCameraOn
+            className={`w-10 grid place-content-center border rounded-full h-10 text-white ${
+              isVideoCalling ? "" : "hidden"
+            }  ${
+              !isCameraOn
                 ? "dark:bg-white dark:text-black bg-black/50 text-white"
                 : "dark:text-white text-black"
-              }`}
+            }`}
           >
             {!isCameraOn ? (
               <BsCameraVideo className="text-xl" />
@@ -1103,7 +1213,7 @@ const VideoCallLayout = memo(() => {
           <button
             onClick={() => {
               // console.log("end");
-              
+
               if (!isReceiving) {
                 endCall();
               }
@@ -1127,25 +1237,49 @@ const VideoCallLayout = memo(() => {
                 dispatch(setParticipantOpen(!participantOpen));
                 dispatch(setCallChatList(false));
               }}
-              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${participantOpen
+              className={`w-10 grid place-content-center rounded-full h-10 border text-white ${
+                participantOpen
                   ? "dark:bg-white dark:text-black bg-black/50 text-white"
                   : "dark:text-white text-black"
-                }`}
+              }`}
             >
               <MdOutlineGroupAdd className="text-xl" />
             </button>
           )}
 
           <button
+            title="Recording"
             onClick={() => (recording ? stopRecording() : startRecording())}
-            className={`w-10 grid place-content-center rounded-full h-10 border text-white 
-             ${recording
-                ? "dark:bg-white dark:text-black bg-black/50 text-white"
-                : "dark:text-white text-black"
+            className={`w-10 grid place-content-center rounded-full h-10 border
+              ${recording
+                ? " text-white animate-spin-slow"
+                : " text-black dark:text-white"
               }
-              `}
+            `}
+            style={{
+              borderColor: recording ? "#dc2626" : "",
+              transition: "background 0.3s, color 0.3s"
+            }}
           >
-            <AiOutlineVideoCamera className="text-xl" />
+            <PiVinylRecord
+              className={`text-2xl transition-all duration-300
+                ${recording ? "text-red-500 animate-spin-slow" : ""}
+              `}
+              style={{
+                color: recording ? "#ef4444" : "",
+                animation: recording ? "spin 1.5s linear infinite" : "none"
+              }}
+            />
+            <style>
+              {`
+                @keyframes spin {
+                  100% { transform: rotate(360deg); }
+                }
+                .animate-spin-slow {
+                  animation: spin 1.5s linear infinite;
+                }
+              `}
+            </style>
           </button>
           {/* {console.log("aaaaaaaaaaacurrentUser",currentUser,selectedChat)} */}
           {/* {!isReceiving && isHost ? (
@@ -1213,28 +1347,28 @@ const VideoCallLayout = memo(() => {
               )}
             </>
           )} */}
-          {window.electron && (
-          isHost ? (
-            // HOST's view
-            viewerControlling ? (
-              <button
-                onClick={() => revokeControl(viewerControlling)}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-              >
-                Revoke Control
-              </button>
+          {window.electron &&
+            (isHost ? (
+              // HOST's view
+              viewerControlling ? (
+                <button
+                  onClick={() => revokeControl(viewerControlling)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                >
+                  Revoke Control
+                </button>
+              ) : (
+                <button
+                  onClick={() => grantControl(selectedChat?._id)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
+                >
+                  Grant Control
+                </button>
+              )
             ) : (
-              <button
-                onClick={() => grantControl(selectedChat?._id)}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-              >
-                Grant Control
-              </button>
-            )
-          ) : (
-            // VIEWER's view
-            isReceiving && (
-              isControlling ? (
+              // VIEWER's view
+              isReceiving &&
+              (isControlling ? (
                 <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
                   <span className="text-white text-sm">You have control</span>
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -1247,10 +1381,8 @@ const VideoCallLayout = memo(() => {
                 >
                   Request Control
                 </button>
-              )
-            )
-          ))
-        }
+              ))
+            ))}
         </div>
       )}
     </div>
@@ -1260,6 +1392,6 @@ const VideoCallLayout = memo(() => {
 });
 
 // Add display name for better debugging
-VideoCallLayout.displayName = 'VideoCallLayout';
+VideoCallLayout.displayName = "VideoCallLayout";
 
 export default VideoCallLayout;

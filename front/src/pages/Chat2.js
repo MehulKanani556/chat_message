@@ -951,7 +951,7 @@ const Chat2 = () => {
 
       {/*=========================================== screen share ==================================*/}
       < div
-        className={`h-full w-full flex-1 flex bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling
+        className={`h-full w-full flex-1 flex bg-primary-light dark:bg-primary-dark scrollbar-hide ${(isReceiving || isVideoCalling || isVoiceCalling)
           ? ""
           : "hidden"
           } ${participantOpen ? "" : ""}`}
@@ -971,12 +971,12 @@ const Chat2 = () => {
 
       {incomingShare && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-black rounded-lg p-6 w-72 text-center">
-            <h3 className="text-2xl text-gray-300 mb-2 ">
+          <div className="bg-black rounded-lg p-6 w-64 md:w-72  text-center">
+            <h3 className=" text-xl md:text-2xl  text-gray-300 mb-2 ">
               Incoming Screen <br /> Request...
             </h3>
             <p className="text-gray-400 mb-8">
-              {allUsers.find((user) => user._id === incomingShare.fromEmail)?.userName}
+              {allUsers.find((user) => user._id === incomingShare?.fromEmail)?.userName}
             </p>
             <div className="flex justify-center gap-8">
               <button
@@ -1101,7 +1101,6 @@ const Chat2 = () => {
       )}
 
       {showScreenSource && <ScreenSourceSelector />}
-
     </div >
   );
 };

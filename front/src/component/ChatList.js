@@ -27,6 +27,7 @@ const ChatList = memo(({
   const selectedChat = useSelector((state) => state.magageState.selectedChat);
   const typingUsers = useSelector((state) => state.magageState.typingUsers);
   const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
+  const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
   // const { onlineUsers, selectedChat, typingUsers, isVideoCalling } = useSelector(state => state.magageState)
 
   useEffect(() => {
@@ -159,7 +160,6 @@ const ChatList = memo(({
             )}{" "}
             Chats
           </h1>
-
           {/* Search bar */}
           <div className="relative mb-4">
             <input
@@ -267,7 +267,7 @@ const ChatList = memo(({
                       handleFileDrop(e, item);
                     }}
                     onClick={() => {
-                      if (isVideoCalling) {
+                      if (isVideoCalling || isVoiceCalling) {
                         dispatch(setChatMessages(item));
                       }
                       dispatch(setSelectedChat(item));
