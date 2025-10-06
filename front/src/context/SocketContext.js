@@ -461,7 +461,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     const groupMessageHandler = (message) => {
-      console.log("Received group message:", message);
+      // console.log("Received group message:", message);
       // Decrypt the message content if it's encrypted
       let content = message.content.content;
       const hasEmoji = (str) => {
