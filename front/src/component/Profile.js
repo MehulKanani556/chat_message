@@ -15,7 +15,7 @@ const Profile = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") );
+  const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"));
   const [isEditing, setIsEditing] = useState(false);
   const currentUser = useSelector((state) => state.user.user);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +37,7 @@ const Profile = () => {
   const [profileData, setProfileData] = useState({
     name: "User",
     email: "",
-    phone: "",
+    mobileNumber: "",
     bio: "No bio available",
     profileImage: "",
   });
@@ -63,7 +63,7 @@ const Profile = () => {
       setProfileData({
         name: currentUser.userName || "User",
         email: currentUser.email || "",
-        phone: currentUser.phone || "",
+        mobileNumber: currentUser.mobileNumber || "",
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
@@ -87,7 +87,7 @@ const Profile = () => {
           setProfileData({
             name: userData.userName || "User",
             email: userData.email || "",
-            phone: userData.phone || "",
+            mobileNumber: userData.mobileNumber || "",
             bio: userData.bio || "No bio available",
             profileImage: userData.photo
               ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}`
@@ -96,7 +96,7 @@ const Profile = () => {
           setTempData({
             name: userData.userName || "User",
             email: userData.email || "",
-            phone: userData.phone || "",
+            mobileNumber: userData.mobileNumber || "",
             bio: userData.bio || "No bio available",
             profileImage: userData.photo
               ? `${IMG_URL}${userData.photo.replace(/\\/g, "/")}`
@@ -117,7 +117,7 @@ const Profile = () => {
       setProfileData({
         name: currentUser.userName || "User",
         email: currentUser.email || "",
-        phone: currentUser.phone || "",
+        mobileNumber: currentUser.mobileNumber || "",
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
@@ -126,7 +126,7 @@ const Profile = () => {
       setTempData({
         name: currentUser.userName || "User",
         email: currentUser.email || "",
-        phone: currentUser.phone || "",
+        mobileNumber: currentUser.mobileNumber || "",
         bio: currentUser.bio || "No bio available",
         profileImage: currentUser.photo
           ? `${IMG_URL}${currentUser.photo.replace(/\\/g, "/")}`
@@ -148,7 +148,7 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("userName", tempData.name);
       formData.append("email", tempData.email);
-      formData.append("phone", tempData.phone);
+      formData.append("mobileNumber", tempData.mobileNumber);
       formData.append("bio", tempData.bio);
 
       // If there's a new image file, append it

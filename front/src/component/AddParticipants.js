@@ -1,25 +1,17 @@
 import React, { useState, memo, useMemo } from 'react';
 import { ImCross } from 'react-icons/im';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateGroup, getAllMessageUsers, addParticipants, getAllMessages } from '../redux/slice/user.slice';
+import { getAllMessageUsers, addParticipants, getAllMessages } from '../redux/slice/user.slice';
 import { IoIosArrowBack } from "react-icons/io";
 import { IMG_URL } from '../utils/baseUrl';
 import { setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsModalOpen } from '../redux/slice/manageState.slice';
 
 const AddParticipants = memo(({
-  // selectedChat,
-  // setIsModalOpen,
-  // allUsers,
-  // userId,
   socket,
   groupUsers,
   setGroupUsers,
-  // setIsGroupModalOpen,
   creatGroup,
 }) => {
-
-
-
   const dispatch = useDispatch();
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchInput, setSearchInput] = useState("");
@@ -28,12 +20,8 @@ const AddParticipants = memo(({
 
   const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
-  // console.log(creatGroup);
-
   const filteredAllUsers = allUsers.filter(
     (user) =>
-      // !user.members &&
-      // user._id !== userId &&
       user.userName?.toLowerCase().includes(searchInput?.toLowerCase())
   );
 

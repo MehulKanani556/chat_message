@@ -1,5 +1,4 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { AiOutlineVideoCamera } from "react-icons/ai";
 import {
   BsCameraVideo,
   BsCameraVideoOff,
@@ -9,7 +8,6 @@ import {
 import { GoUnmute } from "react-icons/go";
 import {
   IoCallOutline,
-  IoMicOffCircleOutline,
   IoMicOffOutline,
   IoMicOutline,
 } from "react-icons/io5";
@@ -20,13 +18,12 @@ import {
   setParticipantOpen,
   setSelectedChatModule,
   setChatMessages,
-  setvideoCallChatList,
   setCallChatList,
 } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
 import ElectronStatus from "./ElectronStatus";
-import { PiVinylRecord, PiVinylRecordBold } from "react-icons/pi";
+import { PiVinylRecord } from "react-icons/pi";
 
 const getParticipantWidth = (count) => {
   if (count === 1) return "w-full";
@@ -222,9 +219,6 @@ const VideoCallLayout = memo(() => {
     };
   }, [isReceiving, ringtone, participants]);
 
-  // console.log("VideoCallLayout");
-  // console.log(participants.length, isVoiceCalling);
-
   const handleLocalVideoMouseDown = (e, participantId) => {
     if (participants.length !== 2 || participantId !== currentUser) return;
 
@@ -292,8 +286,6 @@ const VideoCallLayout = memo(() => {
       } else {
         videoElements = [screenStreamRef.current];
       }
-      // let videoElements  = Object.values(videoElementsRef.current)
-      // console.log(videoElements);
 
       // Create a canvas to combine video streams
       const canvas = canvasRef.current;
@@ -627,7 +619,6 @@ const VideoCallLayout = memo(() => {
 
   useEffect(() => {
     const handleMouseDown = (e) => {
-      // console.log(isDragging_El,"isDragging_El  Down");
       if (!isControlling) return;
 
       const video = e.currentTarget;
@@ -645,8 +636,6 @@ const VideoCallLayout = memo(() => {
     };
 
     const handleMouseUp = (e) => {
-      // console.log(isDragging_El,"isDragging_El  UP");
-
       if (!isControlling || !isDragging_El) return;
 
       const video = e.currentTarget;
@@ -664,11 +653,7 @@ const VideoCallLayout = memo(() => {
     };
 
     const handleMouseMove = (e) => {
-      // console.log(isDragging_El,"isDragging_El");
       if (!isControlling) return;
-      // const rect = e.target.getBoundingClientRect();
-      // const x = e.clientX - rect.left;
-      // const y = e.clientY - rect.top;
 
       const videoElement = e.currentTarget;
       const rect = videoElement.getBoundingClientRect();
@@ -774,7 +759,6 @@ const VideoCallLayout = memo(() => {
     };
 
     const video = controlref.current;
-    // console.log(video);
 
     if (video && isReceiving) {
       video.addEventListener("mousemove", handleMouseMove);
@@ -803,7 +787,6 @@ const VideoCallLayout = memo(() => {
 
   // Add effect to handle control state changes
   useEffect(() => {
-    // console.log("Control state changed:", { isHost, isControlling });
     // Force re-render when control state changes
     if (isControlling) {
       // Re-initialize video elements or other necessary updates
@@ -817,9 +800,6 @@ const VideoCallLayout = memo(() => {
       });
     }
   }, [isHost, isControlling]);
-
-  console.log(chatMessages, "chatMessageschatMessages");
-
 
   const content = (
     <div
@@ -895,9 +875,7 @@ const VideoCallLayout = memo(() => {
               const isLocalUser = participantId === currentUser;
 
               const widthClass = getParticipantWidth(participants?.length);
-              // console.log(cameraStatus, isCameraEnabled, participantId);
               const setVideoRef = (el) => {
-                // console.log(el, "-------------------");
                 if (el) {
                   videoElementsRef.current[participantId] = el;
                   controlref.current = el;
@@ -1010,9 +988,7 @@ const VideoCallLayout = memo(() => {
                 const widthClass = getParticipantWidth(participants?.length);
                 // localVideoRef.current.srcObject = isLocalUser ? stream : null
 
-                // console.log(cameraStatus, isCameraEnabled, participantId);
                 const setVideoRef = (el) => {
-                  // console.log(el, "--------------------aaaaaaaaaa");
                   if (el) {
                     videoElementsRef.current[participantId] = el;
                   } else {
@@ -1199,8 +1175,6 @@ const VideoCallLayout = memo(() => {
 
           <button
             onClick={() => {
-              // console.log("end");
-
               if (!isReceiving) {
                 endCall();
               }
@@ -1267,72 +1241,6 @@ const VideoCallLayout = memo(() => {
               `}
             </style>
           </button>
-          {/* {console.log("aaaaaaaaaaacurrentUser",currentUser,selectedChat)} */}
-          {/* {!isReceiving && isHost ? (
-            <>
-              <button 
-                onClick={() => unregisterAsHost()}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-              >
-                Stop Hosting
-              </button>
-              {selectedChat?._id && isHost && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      if (isControlling) {
-                        revokeControl(selectedChat?._id);
-                      } else {
-                        requestControl(selectedChat?._id);
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-md transition-colors ${
-                      isControlling 
-                        ? 'bg-red-500 text-white hover:bg-red-600' 
-                        : 'bg-blue-500 text-white hover:bg-blue-600'
-                    }`}
-                  >
-                    {isControlling ? 'Revoke Control' : 'Request Control'}
-                  </button>
-                  {isControlling && (
-                    <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
-                      <span className="text-white text-sm">Control Active</span>
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => registerAsHost()}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-              >
-                Start Hosting
-              </button>
-              {selectedChat?._id && isHost && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => requestControl(selectedChat?._id)}
-                    className={`px-4 py-2 rounded-md transition-colors ${
-                      isControlling 
-                        ? 'bg-green-500 text-white hover:bg-green-600' 
-                        : 'bg-blue-500 text-white hover:bg-blue-600'
-                    }`}
-                  >
-                    {isControlling ? 'Control Granted' : 'Request Control'}
-                  </button>
-                  {isControlling && (
-                    <div className="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-md">
-                      <span className="text-white text-sm">Control Active</span>
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )} */}
           {
             window.electron &&
             (isHost ? (

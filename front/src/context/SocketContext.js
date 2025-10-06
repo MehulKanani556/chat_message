@@ -1629,7 +1629,7 @@ export const SocketProvider = ({ children }) => {
 
   // ==================group message=============================
   // Send group message
-  const sendGroupMessage = (groupId, message) => {
+  const sendGroupMessage = (groupId, message,) => {
     return new Promise((resolve, reject) => {
       if (!socketRef.current?.connected) {
         reject(new Error("Socket not connected"));

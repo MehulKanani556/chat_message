@@ -9,20 +9,17 @@ const AudioPlayer = ({ audioUrl }) => {
   const audioRef = useRef(null);
   const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
-  const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2]; 
-  const [currentRateIndex, setCurrentRateIndex] = useState(3); 
-
-  console.log("audioUrl",audioUrl);
-  
+  const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2];
+  const [currentRateIndex, setCurrentRateIndex] = useState(3);
 
   useEffect(() => {
     let wavesurfer = null;
-    
+
     const initWaveSurfer = async () => {
       wavesurfer = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: "#484848", 
-        progressColor: "#808080", 
+        waveColor: "#484848",
+        progressColor: "#808080",
         cursorColor: "transparent",
         barWidth: 3,
         barGap: 2,
@@ -68,7 +65,7 @@ const AudioPlayer = ({ audioUrl }) => {
           }
         }
       };
-      
+
       cleanup();
     };
   }, [audioUrl]);

@@ -29,8 +29,6 @@ const fetchUrlTitle = async (url) => {
 };
 const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
-  // console.log("ProfileUser");
-
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
   const [attachFile, setAttachFile] = useState(false)
@@ -112,16 +110,9 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
 
 
   return (
-    // sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px]
     <div
       className={`w-full md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-      style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)", }} >
-      {/* <div
-      className="w-full  bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
-      style={{
-        boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
-      }}
-    > */}
+      style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)", }}>
       {attachFile ? (
         <>
           <div>
@@ -556,10 +547,6 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                   ) : (
                     <div
                       className="w-24 h-24 text-center rounded-full text-gray-600 grid place-content-center"
-                    // style={{
-                    //   background:
-                    //     "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(189,214,230,1) 48%, rgba(34,129,195,1) 100%)",
-                    // }}
                     >
                       <span className="text-primary font-medium text-2xl">
                         {selectedChat?.userName.charAt(0).toUpperCase()}
@@ -576,11 +563,6 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                 {" "}
                 {selectedChat?.userName}
               </h2>
-
-              {/* <div className="flex items-center mt-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                        <span className="text-sm text-gray-500 dark:text-primary-light">Active</span>
-                    </div> */}
             </div>
 
             {/* Profile Content */}
@@ -767,11 +749,6 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
               <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3">
                 <button
                   className="w-full flex justify-between items-center"
-                // onClick={() => {
-                //   setGroupUsers(selectedChat?.members);
-                //   setIsGroupModalOpen(false);
-                //   setIsModalOpen(true);
-                // }}
                 >
                   <div className="flex items-center space-x-2">
                     <IoNotificationsOutline size={18} />

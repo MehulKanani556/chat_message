@@ -1,23 +1,16 @@
 import { GoPencil } from "react-icons/go";
-import { PiPencilSimpleBold } from "react-icons/pi";
 import { VscCallIncoming, VscCallOutgoing } from "react-icons/vsc";
 import React, { useState, useEffect, memo, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { FaAngleLeft, FaChevronDown } from "react-icons/fa";
+import { FaAngleLeft } from "react-icons/fa";
 import { RiArrowUpDownLine } from "react-icons/ri";
 import { SlPin } from "react-icons/sl";
-import { setSelectedChat, setShowLeftSidebar, setIsVideoCalling, setChatMessages } from "../redux/slice/manageState.slice";
+import { setSelectedChat, setShowLeftSidebar, setChatMessages } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
 import { getAllMessageUsers } from "../redux/slice/user.slice";
-const ChatList = memo(({
-  // allMessageUsers,
-  // item,
-  // currentUser,
-  // setSelectedChat,
-  // allUsers,
-  handleMultipleFileUpload,
 
+const ChatList = memo(({
+  handleMultipleFileUpload,
 }) => {
   const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
@@ -30,7 +23,6 @@ const ChatList = memo(({
   const typingUsers = useSelector((state) => state.magageState.typingUsers);
   const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
   const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
-  // const { onlineUsers, selectedChat, typingUsers, isVideoCalling } = useSelector(state => state.magageState)
 
   useEffect(() => {
     let filteredUsers = [];
@@ -44,16 +36,9 @@ const ChatList = memo(({
     setFilteredMessageUsers(filteredUsers);
   }, [archive, searchInput, allMessageUsers]);
 
-  // const onlineUsers = useSelector((state) => state.magageState.onlineUsers);
-  // const selectedChat = useSelector((state) => state.magageState.selectedChat);
-  // const typingUsers = useSelector((state) => state.magageState.typingUsers);
-  // const { onlineUsers, selectedChat, typingUsers, isVideoCalling } = useSelector(state => state.magageState)
-
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
   const { socket } = useSocket();
-
-  // console.log("ChatList", onlineUsers);
 
   useEffect(() => {
     let filteredUsers = [];
@@ -77,7 +62,6 @@ const ChatList = memo(({
 
   // Filter all users based on search input
   const filteredAllUsers = user?.contactList;
-  // console.log("filteredAllUsers", filteredAllUsers,user);
   // Add decryption function
   const decryptMessage = (content) => {
     if (typeof content === "string" && content.startsWith("data:")) {
@@ -102,7 +86,6 @@ const ChatList = memo(({
 
   // Function to handle drag start
   const handleDragStart = (event, user) => {
-    // console.log("Drag started:", user);
     setDraggedUser(user);
     event.dataTransfer.effectAllowed = "move";
   };
@@ -133,7 +116,6 @@ const ChatList = memo(({
     event.preventDefault();
     event.currentTarget.classList.remove('bg-primary/50', 'dark:bg-primary/30');
     const files = event.dataTransfer.files;
-    // console.log(files);
 
     if (files.length > 0) {
       // console.log("Files dropped:", files);
@@ -332,7 +314,6 @@ const ChatList = memo(({
                     }}
                   >
                     <div className="flex items-center">
-                      {/* {console.log("object", item)}  */}
                       <div className="relative mr-3">
                         {item?.photo &&
                           item.photo !== "null" &&

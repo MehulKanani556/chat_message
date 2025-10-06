@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-// import { IoMdSearch, IoVideocamOutline, IoCallOutline, IoArchiveOutline, IoVolumeOffOutline } from "react-icons/io5";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
 import { SlPin } from "react-icons/sl";
@@ -26,7 +25,6 @@ const ChatHeader = memo(({
   setIsDeleteChatModalOpen,
   setGroupUsers,
 }) => {
-  // console.log("header");
   const dispatch = useDispatch();
   const { cleanupConnection, startCall, startSharing, registerAsHost, unregisterAsHost, isControlling, isHost } = useSocket();
 
@@ -49,10 +47,8 @@ const ChatHeader = memo(({
   //================screen sharing================
 
   const handleStartScreenShare = async () => {
-    // console.log(selectedChat);
     if (selectedChat) {
       const success = await startSharing(selectedChat);
-      // console.log(success);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
@@ -287,8 +283,6 @@ const ChatHeader = memo(({
                     await dispatch(getAllMessageUsers());
                   }}
                 >
-                  {/* {console.log(user)} */}
-
                   <SlPin className="text-lg" />{" "}
                   {user.pinChatFor?.includes(selectedChat?._id)
                     ? "UnPin Chat"
@@ -343,9 +337,10 @@ const ChatHeader = memo(({
                     : "Archive Chat"}
                 </li>
                 <li
-                  onClick={() => { setIsClearChatModalOpen(true);
+                  onClick={() => {
+                    setIsClearChatModalOpen(true);
                     setMenuOpen(false)
-                   }}
+                  }}
                   className="py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-2"
                 >
                   <MdOutlineCancel className="text-lg" />{" "}
@@ -409,8 +404,6 @@ const ChatHeader = memo(({
                     await dispatch(getAllMessageUsers());
                   }}
                 >
-                  {/* {console.log(user)} */}
-
                   <SlPin className="text-lg mr-2" />{" "}
                   {user.pinChatFor?.includes(selectedChat?._id)
                     ? "UnPin Chat"

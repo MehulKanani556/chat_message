@@ -10,15 +10,10 @@ import { setParticipantOpen } from '../redux/slice/manageState.slice';
 import { useSocket } from '../context/SocketContext';
 
 const CallParticipantModal = memo(({
-  // participantOpen,
-  // setParticipantOpen,
-  // inviteToCall,
-}) => {
 
-  // console.log("CallParticipantModal");
+}) => {
   const dispatch = useDispatch();
   const [searchInput, setSearchInput] = useState("");
-  // const [invitedUsers, setInvitedUsers] = useState([]);
   const [selectedCallUsers, setSelectedCallUsers] = useState(new Set());
   const [showFirstSection, setShowFirstSection] = useState(false);
   const allUsers = useSelector((state) => state.user.allUsers);

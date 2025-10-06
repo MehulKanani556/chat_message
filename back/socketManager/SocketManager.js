@@ -811,7 +811,9 @@ async function handleGroupMessage(socket, data) {
           _id: Date.now().toString(),
           sender: senderId,
           content: content,
+          groupId,
           createdAt: new Date().toISOString(),
+          group: true
         });
       }
     });

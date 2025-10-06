@@ -1,23 +1,14 @@
-import React, { useState, useEffect, } from 'react';
-import { BASE_URL, IMG_URL } from "../utils/baseUrl";
-import { BsArrowLeft, BsTelephone, BsTelephoneX, BsTelephoneFill } from 'react-icons/bs';
-import axios from 'axios';
-import { useDispatch, useSelector } from 'react-redux';
-import { getAllCallUsers } from '../redux/slice/user.slice';
-import { FaChevronLeft } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { IMG_URL } from "../utils/baseUrl";
+import { BsTelephone, BsTelephoneFill } from 'react-icons/bs';
+import { useSelector } from 'react-redux';
 import { FiArrowDownLeft, FiArrowUpRight, FiPhoneMissed } from 'react-icons/fi';
 
 const CallHistory = () => {
-
-  // console.log("CallHistory");
-
-  // const [callHistory, setCallHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showMissedCallsOnly, setShowMissedCallsOnly] = useState(false);
 
-  const {  allCallUsers } = useSelector((state) => state.user);
-
-  // useEffect(() => { dispatch(getAllCallUsers())}, []);
+  const { allCallUsers } = useSelector((state) => state.user);
 
   // Filter calls based on the showMissedCallsOnly state
   const filteredCalls = showMissedCallsOnly

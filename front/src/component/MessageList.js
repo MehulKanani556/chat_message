@@ -2211,6 +2211,8 @@ const MessageReactions = memo(({
                   previewConfig={{
                     showPreview: false,
                   }}
+                  emojiVersion="5.0"
+                  defaultSkinTone="neutral"
                   theme="light"
                   emojiSize={20}
                   // emojiStyle="google"

@@ -63,8 +63,7 @@ const Chat2 = () => {
   const showForwardModal = useSelector(state => state.magageState.showForwardModal);
   const onlineUsers = useSelector(state => state.magageState.onlineUsers)
   const uploadProgress = useSelector(state => state.magageState.uploadProgress);
-  const showScreenSource = useSelector(state => state.magageState.showScreenSource)
-  // const participants = useSelector(state => state.magageState.participants)
+  const showScreenSource = useSelector(state => state.magageState.showScreenSource);
 
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
@@ -74,15 +73,9 @@ const Chat2 = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [screenWidth, window.innerWidth]);
 
-  // console.log(screenWidth);
-  
-
-
   const dispatch = useDispatch();
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
-  // const [currentUser] = useState(sessionStorage.getItem("userId"));
 
-  // const localVideoRef = useRef(null);
   const navigate = useNavigate();
   const [groupUsers, setGroupUsers] = useState([]);
 
@@ -138,19 +131,21 @@ const Chat2 = () => {
     try {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
-      // console.log("Notification permission:", permission);
+      console.log(permission);
+
     } catch (error) {
       console.error("Error requesting notification permission:", error);
     }
   };
 
+
   // Function to show notification for new message
   const showMessageNotification = (message, senderName) => {
+
     if (notificationPermission !== "granted") return;
 
     // Don't show notification if the chat is currently selected
-    if (selectedChat && selectedChat._id === message.sender) return;
-
+    if ((selectedChat && selectedChat._id === message.sender && !message.group) || (selectedChat._id === message.groupId && message.group)) return;
     if (!user?.notification) return;
     if (user?.muteUsers?.includes(message.sender)) return;
 
@@ -158,9 +153,10 @@ const Chat2 = () => {
     let notificationTitle = senderName || "New Message";
     let notificationBody = "";
 
+    console.log(message, "dcfsdfg");
+
     // Handle different message types
     if (message.content.type === "text") {
-
       let messageContent;
       if (
         typeof message.content.content === "string" &&
@@ -168,7 +164,6 @@ const Chat2 = () => {
       ) {
         try {
           const key = "chat";
-          // console.log(messageContent, typeof messageContent && messageContent.startsWith('data:'))
           // Assuming 'data:' prefix is part of the encrypted message, remove it before decoding
           const encodedText = message.content.content.split("data:")[1];
           const decodedText = atob(encodedText);
@@ -179,7 +174,6 @@ const Chat2 = () => {
             );
           }
           messageContent = result;
-          // console.log(messageContent)
         } catch (error) {
           console.error("Decryption error:", error);
         }
@@ -229,7 +223,6 @@ const Chat2 = () => {
       const updatedChat = allMessageUsers.find(
         (chat) => chat._id === selectedChat._id
       );
-      // console.log("updatedChat", updatedChat);`
       if (updatedChat) {
         dispatch(setSelectedChat(updatedChat));
       }
@@ -334,7 +327,6 @@ const Chat2 = () => {
   const handleSendMessage = async (data, userId) => {
 
     if (editingMessage) {
-      // console.log("data",data,userId,editingMessage);
       try {
         await dispatch(
           updateMessage({
@@ -358,8 +350,6 @@ const Chat2 = () => {
         (data.type == "text" && data?.content?.trim() === "") ||
         !(selectedChat || userId)
       ) return;
-
-      // console.log("data", data);
 
       try {
         const messageData = {
@@ -432,40 +422,20 @@ const Chat2 = () => {
   // Add call handling functions
 
   const handleMakeCall = useCallback(async (type) => {
-    //   if (!selectedChat) return;
-    //   if (selectedChat?.members) {
-    //     const success = await startCall(selectedChat._id, true, selectedChat, type);
-    //     // const success = await startCall(selectedChat, type);
-    //     if (!success) {
-    //       console.error("Failed to start screen sharing");
-    //     }
-    //   } else {
-    //     const success = await startCall(selectedChat._id, false, selectedChat, type);
-    //     // const success = await startCall(selectedChat._id,type);
-    //     if (!success) {
-    //       console.error("Failed to start screen sharing");
-    //     }
-    //   }
-    // }, []);
 
     if (!selectedChat) {
       console.error("No chat selected");
       return;
     }
 
-    // console.log("Starting call with type:", type);
-    // console.log("Selected chat:", selectedChat);
-
     try {
       if (selectedChat?.members) {
-        // console.log("Starting group call");
         const success = await startCall(selectedChat._id, true, selectedChat, type);
         if (!success) {
           console.error("Failed to start group call");
           // alert("Failed to start group call. Please check your microphone permissions.");
         }
       } else {
-        // console.log("Starting individual call");
         const success = await startCall(selectedChat._id, false, selectedChat, type);
         if (!success) {
           console.error("Failed to start individual call");
@@ -530,7 +500,7 @@ const Chat2 = () => {
         setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
       }
     }
-    
+
   }, [selectedChat]);
 
 
@@ -659,38 +629,6 @@ const Chat2 = () => {
     };
   }, []);
 
-  // Add this useEffect hook after the other useEffect hooks
-  // useEffect(() => {
-  //   if (selectedChat && user) {
-  //     // If the selectedChat is the current user, update it with the latest user data
-  //     if (selectedChat._id === user._id) {
-  //       dispatch(setSelectedChat(user));
-  //     }
-  //   }
-  // }, [user, selectedChat?._id]);
-
-  // let audioContext;
-
-  // try {
-  //   audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  //   console.log('AudioContext created successfully');
-  // } catch (error) {
-  //   console.error('Failed to create AudioContext:', error);
-  // }
-
-  // // Example of resuming the AudioContext
-  // if (audioContext.state === 'suspended') {
-  //   audioContext.resume().then(() => {
-  //     console.log('AudioContext resumed');
-  //   }).catch(err => {
-  //     console.error('Error resuming AudioContext:', err);
-  //   });
-  // }
-
-  // const analyser = audioContext.createAnalyser();
-  // const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-
   useEffect(() => {
     // Cleanup function to close the participant section when the component unmounts
     return () => {
@@ -704,8 +642,6 @@ const Chat2 = () => {
     dispatch(setIsGroupCreateModalOpen(false))
     dispatch(setIsModalOpen(false))
   }, [selectedChat]);
-
-  // console.log("cHAT2");
 
   return (
     <div className="flex h-screen bg-white transition-all duration-300">
@@ -738,8 +674,6 @@ const Chat2 = () => {
           }
           {/* Right Side */}
           <>
-              {/* {console.log("showOverlay",showOverlay)} */}
-          
             {(chatMessages || !(isReceiving || isVideoCalling || isVoiceCalling)) &&
               <div
                 className={`flex flex-col relative transition-all duration-300 ease-in-out bg-primary-light dark:bg-primary-dark ${showOverlay &&
@@ -760,141 +694,141 @@ const Chat2 = () => {
                   isGroupCreateModalOpen ||
                   isUserProfileModalOpen
                 ) ||  !showOverlay) && ( */}
+                <>
+                  {selectedChat ? (
                     <>
-                      {selectedChat ? (
-                        <>
 
-                          <ChatHeader
-                            handleProfileImageClick={handleProfileImageClick}
-                            setIsClearChatModalOpen={setIsClearChatModalOpen}
-                            setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
-                            setGroupUsers={setGroupUsers}
-                          />
+                      <ChatHeader
+                        handleProfileImageClick={handleProfileImageClick}
+                        setIsClearChatModalOpen={setIsClearChatModalOpen}
+                        setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
+                        setGroupUsers={setGroupUsers}
+                      />
 
-                          {/*========================== Messages ==============================*/}
-                          <div className="relative">
+                      {/*========================== Messages ==============================*/}
+                      <div className="relative">
 
-                            {isDragging && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
-                                <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
-                                  <div className="text-center">
-                                    <div className="mb-4">
-                                      <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                      </svg>
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
+                        {isDragging && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-primary-dark/15 dark:bg-primary-light/15 backdrop-blur-sm z-50 p-8">
+                            <div className="rounded-lg p-8 w-full h-full mx-4 transform transition-all border-2 border-white border-dashed flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="mb-4">
+                                  <svg className="w-20 h-20 mx-auto text-primary dark:text-primary-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                  </svg>
+                                </div>
+                                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Drag and Drop here</h3>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {/* {visibleDate && <FloatingDateIndicator />} */}
+                        <MessageList
+                          handleMakeCall={handleMakeCall}
+                          // handleForward={handleForwardMessage}
+                          handleMultipleFileUpload={handleMultipleFileUpload}
+                        // openCamera={openCamera}
+                        />
+
+                        {selectedFiles && selectedFiles?.length > 0 && (
+                          <div className="flex px-6  dark:bg-primary-dark">
+                            {selectedFiles?.map((file, index) => {
+                              const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+                              let fileIcon;
+                              if (file.type.startsWith("image/")) {
+                                fileIcon = (
+                                  <img
+                                    src={fileUrl}
+                                    alt={`Selected ${index}`}
+                                    className="w-20 h-[40px] object-cover "
+                                  />
+                                );
+                              } else if (file.type === "application/pdf") {
+                                fileIcon = (
+                                  <FaFilePdf className="w-20 h-[40px] text-gray-500" />
+                                ); // PDF file icon
+                              } else if (
+                                file.type === "application/vnd.ms-excel" ||
+                                file.type ===
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                              ) {
+                                fileIcon = (
+                                  <FaFileExcel className="w-20 h-[40px] text-gray-500" />
+                                ); // Excel file icon
+                              } else if (
+                                file.type === "application/msword" ||
+                                file.type ===
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                              ) {
+                                fileIcon = (
+                                  <FaFileWord className="w-20 h-[40px] text-gray-500" />
+                                ); // Word file icon
+                              } else if (
+                                file.type === "application/vnd.ms-powerpoint" ||
+                                file.type ===
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                              ) {
+                                fileIcon = (
+                                  <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
+                                ); // PowerPoint file icon
+                              } else if (file.type === "application/zip") {
+                                fileIcon = (
+                                  <FaFileArchive className="w-20 h-[40px] text-gray-500" />
+                                ); // ZIP file icon
+                              } else {
+                                fileIcon = (
+                                  <FaPaperclip className="w-20 h-[40px] text-gray-500" />
+                                ); // Generic file icon
+                              }
+                              return (
+                                <div className=" rounded-t-lg  p-2">
+                                  <div
+                                    key={index}
+                                    className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
+                                  >
+                                    {fileIcon}
+                                    <div className="w-full text-sm text-ellipsis  text-nowrap ">
+                                      {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
+                                    </div>{" "}
+                                    {/* Display file name */}
+                                    <span className="text-xs text-gray-500">
+                                      {(file.size / (1024 * 1024)).toFixed(2)}{" "}
+                                      MB
+                                    </span>{" "}
+                                    {/* Display file size */}
+                                    <button
+                                      className="absolute top-1 right-1 bg-white rounded-full"
+                                      onClick={() => {
+                                        dispatch(setSelectedFiles(
+                                          selectedFiles?.filter((_, i) => i !== index)
+                                        ));
+                                      }}
+                                    >
+                                      <RxCross2 />
+                                    </button>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                            {/* {visibleDate && <FloatingDateIndicator />} */}
-                            <MessageList
-                              handleMakeCall={handleMakeCall}
-                              // handleForward={handleForwardMessage}
-                              handleMultipleFileUpload={handleMultipleFileUpload}
-                            // openCamera={openCamera}
-                            />
-
-                            {selectedFiles && selectedFiles?.length > 0 && (
-                              <div className="flex px-6  dark:bg-primary-dark">
-                                {selectedFiles?.map((file, index) => {
-                                  const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-                                  let fileIcon;
-                                  if (file.type.startsWith("image/")) {
-                                    fileIcon = (
-                                      <img
-                                        src={fileUrl}
-                                        alt={`Selected ${index}`}
-                                        className="w-20 h-[40px] object-cover "
-                                      />
-                                    );
-                                  } else if (file.type === "application/pdf") {
-                                    fileIcon = (
-                                      <FaFilePdf className="w-20 h-[40px] text-gray-500" />
-                                    ); // PDF file icon
-                                  } else if (
-                                    file.type === "application/vnd.ms-excel" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFileExcel className="w-20 h-[40px] text-gray-500" />
-                                    ); // Excel file icon
-                                  } else if (
-                                    file.type === "application/msword" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFileWord className="w-20 h-[40px] text-gray-500" />
-                                    ); // Word file icon
-                                  } else if (
-                                    file.type === "application/vnd.ms-powerpoint" ||
-                                    file.type ===
-                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                  ) {
-                                    fileIcon = (
-                                      <FaFilePowerpoint className="w-20 h-[40px] text-gray-500" />
-                                    ); // PowerPoint file icon
-                                  } else if (file.type === "application/zip") {
-                                    fileIcon = (
-                                      <FaFileArchive className="w-20 h-[40px] text-gray-500" />
-                                    ); // ZIP file icon
-                                  } else {
-                                    fileIcon = (
-                                      <FaPaperclip className="w-20 h-[40px] text-gray-500" />
-                                    ); // Generic file icon
-                                  }
-                                  return (
-                                    <div className=" rounded-t-lg  p-2">
-                                      <div
-                                        key={index}
-                                        className="relative mx-1 flex flex-col items-center w-20 h-20 p-1 overflow-hidden dark:bg-primary-light/70 bg-primary-dark/30 rounded-lg"
-                                      >
-                                        {fileIcon}
-                                        <div className="w-full text-sm text-ellipsis  text-nowrap ">
-                                          {file.name.length > 8 ? `${file.name.substring(0, 8)}...` : file.name}
-                                        </div>{" "}
-                                        {/* Display file name */}
-                                        <span className="text-xs text-gray-500">
-                                          {(file.size / (1024 * 1024)).toFixed(2)}{" "}
-                                          MB
-                                        </span>{" "}
-                                        {/* Display file size */}
-                                        <button
-                                          className="absolute top-1 right-1 bg-white rounded-full"
-                                          onClick={() => {
-                                            dispatch(setSelectedFiles(
-                                              selectedFiles?.filter((_, i) => i !== index)
-                                            ));
-                                          }}
-                                        >
-                                          <RxCross2 />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {/*========== Message Input ==========*/}
-
-                            <MessageInput
-                              handleMultipleFileUpload={handleMultipleFileUpload}
-                              handleSendMessage={handleSendMessage}
-                              // openCamera={openCamera}
-                              setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
-                            />
+                              );
+                            })}
                           </div>
+                        )}
 
-                        </>
-                      ) : (
-                        <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
-                      )}
+                        {/*========== Message Input ==========*/}
+
+                        <MessageInput
+                          handleMultipleFileUpload={handleMultipleFileUpload}
+                          handleSendMessage={handleSendMessage}
+                          // openCamera={openCamera}
+                          setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
+                        />
+                      </div>
+
                     </>
-                  {/* )} */}
+                  ) : (
+                    <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
+                  )}
+                </>
+                {/* )} */}
               </div>
             }
             {/* // ============================== right sidebar =========================================== */}

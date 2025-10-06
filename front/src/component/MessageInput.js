@@ -825,6 +825,9 @@ const MessageInput = memo(
                 }}
                 width={290}
                 // height={300}
+                emojiVersion="5.0"     // show all emojis from latest Unicode
+                lazyLoadEmojis={false}    // load all emojis immediately
+                defaultSkinTone="neutral"
               >
               </EmojiPicker>
             </div>
