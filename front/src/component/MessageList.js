@@ -41,7 +41,7 @@ import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
 import { useDispatch, useSelector } from "react-redux";
 import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal, setActiveMessageId } from "../redux/slice/manageState.slice";
-import { deleteMessage, getAllMessages } from "../redux/slice/user.slice";
+import { deleteMessage, getAllMessages, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useSocket } from "../context/SocketContext";
 import { RxCross2 } from "react-icons/rx";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
@@ -671,6 +671,7 @@ const MessageList = memo(({
             ) : (
               <EmptyMessages
                 selectedChat={selectedChat}
+                sendGroupMessage={sendGroupMessage}
                 sendPrivateMessage={sendPrivateMessage}
               />
             )}
@@ -2663,7 +2664,9 @@ const RegularMessage = memo(({
   );
 });
 
-const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
+const EmptyMessages = ({ selectedChat, sendPrivateMessage, sendGroupMessage }) => {
+
+  const dispatch = useDispatch();
 
   const handleSayHello = async () => {
     if (!selectedChat?._id) return;
@@ -2676,7 +2679,16 @@ const EmptyMessages = ({ selectedChat, sendPrivateMessage }) => {
         }
       };
 
-      await sendPrivateMessage(selectedChat._id, messageData);
+      if (selectedChat?.members) {
+        // GROUP CHAT
+        await sendGroupMessage(selectedChat._id, messageData.data);
+        dispatch(getAllMessages({ selectedId: selectedChat._id }));
+        dispatch(getAllMessageUsers());
+        dispatch(setReplyingTo(null));
+      } else {
+        await sendPrivateMessage(selectedChat._id, messageData);
+      }
+
     } catch (error) {
       console.error("Error sending hello message:", error);
     }

@@ -1658,15 +1658,13 @@ export const SocketProvider = ({ children }) => {
       }
       // console.log("groupId", groupId, message);
 
-
-
       const messageData = {
         senderId: userId,
         groupId,
         content: message,
       };
 
-      console.log("Sending group message:", messageData);
+      // console.log("Sending group message:", messageData);
 
       socketRef.current.emit("group-message", messageData);
 
