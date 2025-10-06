@@ -93,7 +93,7 @@ const Chat2 = () => {
   const [showOverlay, setShowOverlay] = useState(false);
 
   //===========Use the custom socket hook===========
-  const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall } = useSocket();
+  const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall, sendGroupMessage } = useSocket();
 
   useEffect(() => {
     if (screenWidth <= 1439) {
@@ -145,7 +145,7 @@ const Chat2 = () => {
     if (notificationPermission !== "granted") return;
 
     // Don't show notification if the chat is currently selected
-    if ((selectedChat && selectedChat._id === message.sender && !message.group) || (selectedChat._id === message.groupId && message.group)) return;
+    if ((selectedChat && selectedChat?._id === message.sender && !message.group) || (selectedChat?._id === message?.groupId && message?.group)) return;
     if (!user?.notification) return;
     if (user?.muteUsers?.includes(message.sender)) return;
 
@@ -345,6 +345,7 @@ const Chat2 = () => {
         console.error("Failed to update message:", error);
       }
     } else {
+      console.log("isBlockedByRecipient");
       const isBlockedByRecipient = selectedChat?.blockedUsers?.includes(currentUser);
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
@@ -352,15 +353,26 @@ const Chat2 = () => {
       ) return;
 
       try {
-        const messageData = {
-          data,
-          isBlocked: isBlockedByRecipient,
-        };
-
-        const status = await sendPrivateMessage(userId ? userId : selectedChat._id, messageData);
-        dispatch(getAllMessages({ selectedId: userId ? userId : selectedChat._id }));
-        dispatch(getAllMessageUsers());
-        dispatch(setReplyingTo(null));
+        if (selectedChat?.members) {
+          // GROUP CHAT
+          await sendGroupMessage(selectedChat._id, {
+            ...data,
+            // add any group-specific fields if needed
+          });
+          dispatch(getAllMessages({ selectedId: selectedChat._id }));
+          dispatch(getAllMessageUsers());
+          dispatch(setReplyingTo(null));
+        } else {
+          // ONE-TO-ONE
+          const messageData = {
+            data,
+            isBlocked: isBlockedByRecipient,
+          };
+          const status = await sendPrivateMessage(userId ? userId : selectedChat._id, messageData);
+          dispatch(getAllMessages({ selectedId: userId ? userId : selectedChat._id }));
+          dispatch(getAllMessageUsers());
+          dispatch(setReplyingTo(null));
+        }
       } catch (error) {
         console.error("Failed to send message:", error);
       }

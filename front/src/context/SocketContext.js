@@ -461,16 +461,37 @@ export const SocketProvider = ({ children }) => {
     };
 
     const groupMessageHandler = (message) => {
-      // console.log("Received group message:", message);
+      console.log("Received group message:", message);
       // Decrypt the message content if it's encrypted
-      if (message.content && message.content.content) {
-        try {
-          const decryptedContent = decryptMessage(message.content.content);
-          message.content.content = decryptedContent;
-        } catch (error) {
-          console.error("Decryption error:", error);
-        }
+      let content = message.content.content;
+      const hasEmoji = (str) => {
+        const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
+        return emojiRegex.test(str);
+      };
+
+      if (typeof content === 'string' && hasEmoji(content)) {
+        content = content; // Keep emoji as is without encryption
       }
+
+      if (!content.startsWith("data:") && !hasEmoji(content)) {
+        const key = "chat";
+        let result = "";
+        for (let i = 0; i < content.length; i++) {
+          result += String.fromCharCode(
+            content.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+          );
+        }
+        content = "data:" + btoa(result);
+      }
+      message.content.content = content;
+      // if (message.content && message.content.content) {
+      //   try {
+      //     const decryptedContent = decryptMessage(message.content.content) || message.content.content;
+      //     message.content.content = decryptedContent;
+      //   } catch (error) {
+      //     console.error("Decryption error:", error);
+      //   }
+      // }
       callback(message);
     };
 
@@ -1645,7 +1666,7 @@ export const SocketProvider = ({ children }) => {
         content: message,
       };
 
-      //  console.log("Sending group message:", messageData);
+      console.log("Sending group message:", messageData);
 
       socketRef.current.emit("group-message", messageData);
 

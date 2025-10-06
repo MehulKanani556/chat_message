@@ -19,7 +19,6 @@ exports.auth = async (req, res, next) => {
             }
 
             jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
-                console.log('JWT error:', err);
                 if (err) {
                     return res.status(401).json({
                         success: false,

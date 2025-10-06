@@ -780,7 +780,7 @@ async function handleDeleteGroup(socket, groupId) {
 
 async function handleGroupMessage(socket, data) {
   const { groupId, senderId, content } = data;
-  // console.log("Handling group message:", data, socket.id);
+  console.log("Handling group message:", data, socket.id);
 
   try {
     // Save message to database (content should not include replyTo, only other data)
