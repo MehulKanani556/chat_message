@@ -1,34 +1,14 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  FaPhone,
-  FaRegSmile,
-  FaDownload,
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileAudio,
-  FaFile,
-  FaArrowDown,
-  FaSearch,
-} from "react-icons/fa";
-import { MdOutlineCallMade, MdOutlineCallReceived, MdOutlineContentCopy, MdOutlineFlipCameraIos, MdPhoneEnabled } from "react-icons/md";
-import { GoDeviceCameraVideo, GoDotFill } from "react-icons/go";
-import { BiShare, BiReply } from "react-icons/bi";
-import { VscCopy, VscEye } from "react-icons/vsc";
-import { MdOutlineModeEdit } from "react-icons/md";
-import { CiSquareRemove } from "react-icons/ci";
-import {
-  IoCheckmarkCircleOutline,
-  IoCheckmarkDoneCircleOutline,
-  IoCheckmarkDoneCircle,
-} from "react-icons/io5";
-import {
-  PiDotsThreeCircleVerticalBold,
-  PiDotsThreeVerticalBold,
-} from "react-icons/pi";
+import { FaRegSmile, FaArrowDown, FaSearch } from "react-icons/fa";
+import { MdOutlineCallMade, MdOutlineCallReceived, MdOutlineContentCopy, MdOutlineFlipCameraIos } from "react-icons/md";
+import { GoDotFill } from "react-icons/go";
+import { BiShare } from "react-icons/bi";
+import { VscEye } from "react-icons/vsc";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
+import { PiDotsThreeVerticalBold } from "react-icons/pi";
 import { FiEdit2 } from "react-icons/fi";
 import { SlActionUndo } from "react-icons/sl";
-import EmojiPicker, { EmojiStyle } from "emoji-picker-react";
+import EmojiPicker from "emoji-picker-react";
 import AudioPlayer from "./AudioPlayer";
 import { FaRegClock } from "react-icons/fa";
 import { IMG_URL } from "../utils/baseUrl";
@@ -40,39 +20,20 @@ import useExcelThumbnail from "../hooks/useExcelThumbnail";
 import usePptThumbnail from "../hooks/usePptThumbnail";
 import useWordThumbnail from "../hooks/useWordThumbnail";
 import { useDispatch, useSelector } from "react-redux";
-import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal, setActiveMessageId } from "../redux/slice/manageState.slice";
+import { setCameraStream, setEditingMessage, setFacingMode, setForwardingMessage, setIsImageModalOpen, setIsSearchBoxOpen, setMessageInput, setOpenCameraState, setReplyingTo, setSearchInputbox, setSelectedImage, setShowForwardModal } from "../redux/slice/manageState.slice";
 import { deleteMessage, getAllMessages, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useSocket } from "../context/SocketContext";
 import { RxCross2 } from "react-icons/rx";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
-
-
 const MessageList = memo(({
   handleMakeCall,
-  // handleEditMessage,
-  // handleForward,
-  // handleImageClick,
-  // searchInputbox,
-  // activeMessageId,
-  // contextMenu,
-  // setContextMenu,
-  // setActiveMessageId,
-  // showEmojiPicker,
-  // setShowEmojiPicker,
-  // addMessageReaction,
-  // dropdownRef,
-  // sendPrivateMessage,
   handleMultipleFileUpload,
 }) => {
 
-  // console.log("msglist");
-
-
   const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const dispatch = useDispatch();
-  const { allUsers, messages, allMessageUsers, groups, user, allCallUsers } = useSelector((state) => state.user);
-
+  const { allUsers, messages } = useSelector((state) => state.user);
   const selectedChat = useSelector(state => state.magageState.selectedChat);
   const typingUsers = useSelector(state => state.magageState.typingUsers);
   const selectedFiles = useSelector(state => state.magageState.selectedFiles);
@@ -84,8 +45,6 @@ const MessageList = memo(({
   const facingMode = useSelector(state => state.magageState.facingMode);
   const searchInputbox = useSelector(state => state.magageState.searchInputbox);
   const isSearchBoxOpen = useSelector(state => state.magageState.isSearchBoxOpen);
-
-
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null });
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const messagesContainerRef = useRef(null);
@@ -94,29 +53,8 @@ const MessageList = memo(({
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const searchBoxRef = useRef(null);
 
-
   //===========Use the custom socket hook===========
-  const { socket,
-    startSharing,
-    endCall,
-    cleanupConnection,
-    toggleCamera,
-    toggleMicrophone,
-    markMessageAsRead,
-    rejectCall,
-    sendPrivateMessage,
-    removeMessageReaction,
-    sendTypingStatus,
-    subscribeToMessages,
-    sendGroupMessage,
-    acceptScreenShare,
-    inviteToCall,
-    forwardMessage,
-    addMessageReaction,
-    startCall,
-    acceptCall,
-  } = useSocket();
-
+  const { socket, sendPrivateMessage, removeMessageReaction, sendGroupMessage, addMessageReaction } = useSocket();
 
   //===========group messages by date===========
   const groupMessagesByDate = (messages) => {
@@ -223,8 +161,6 @@ const MessageList = memo(({
 
   // ====================scroll to bottom====================
   const scrollToBottom = useCallback(() => {
-    // console.log("scrollToBottom");
-
     const isEmojiPickerOpen = document.querySelector('.EmojiPickerReact');
     if (isEmojiPickerOpen) return; // Don't scroll if emoji picker is open
 
@@ -237,7 +173,6 @@ const MessageList = memo(({
 
   // Scroll event listener to show/hide the button with interval
   useEffect(() => {
-    // console.log("useEffect");
     scrollToBottom();
     const handleScroll = () => {
       if (messagesContainerRef.current) {
@@ -262,7 +197,6 @@ const MessageList = memo(({
     };
   }, [messages]);
 
-
   // Ensure scroll happens after messages are loaded
   useEffect(() => {
     if (messages.length > 0) {
@@ -271,33 +205,10 @@ const MessageList = memo(({
     }
   }, [messages.length]);
 
-  // Scroll after component updates
-  // useEffect(() => {
-  //   const messageContainer = messagesContainerRef.current;
-  //   if (messageContainer) {
-  //     const config = { childList: true, subtree: true };
-
-  //     const observer = new MutationObserver(() => {
-  //       messageContainer.scrollTop = messageContainer.scrollHeight;
-  //     });
-
-  //     observer.observe(messageContainer, config);
-  //     return () => observer.disconnect();
-  //   }
-  // }, []);
-
   // ==========================capture photo===================
 
-  // const [cameraStream, setCameraStream] = useState(null);
   const videoRef = useRef(null);
   const [photo, setPhoto] = useState(null);
-  // const [openCameraState, setOpenCameraState] = useState(false);
-
-  // {{ edit_1 }} add state for facingMode & availability
-  // const [facingMode, setFacingMode] = useState('user');
-  // const [backCameraAvailable, setBackCameraAvailable] = useState(false);
-
-
 
   function dataURLtoBlob(dataurl) {
     const arr = dataurl.split(',');
@@ -310,19 +221,6 @@ const MessageList = memo(({
     }
     return new Blob([u8arr], { type: mime });
   }
-  // const capturePhoto = () => {
-  //   const canvas = document.createElement('canvas');
-  //   const context = canvas.getContext('2d');
-  //   if (videoRef.current) {
-  //     canvas.width = videoRef.current.videoWidth;
-  //     canvas.height = videoRef.current.videoHeight;
-  //     context.drawImage(videoRef.current, 0, 0);
-  //     const photoData = canvas.toDataURL('image/jpeg', 0.8); // JPEG
-  //     setPhoto(photoData); // Store the photo data
-  //     handleUploadCapturePic(photoData);
-  //     console.log(photoData);
-  //   }
-  // };
 
   const capturePhoto = () => {
     const canvas = document.createElement('canvas');
@@ -348,7 +246,6 @@ const MessageList = memo(({
       const photoData = canvas.toDataURL('image/jpeg', 0.8);
       setPhoto(photoData);
       handleUploadCapturePic(photoData);
-      // console.log(photoData);
     }
   };
 
@@ -367,14 +264,12 @@ const MessageList = memo(({
     const blob = dataURLtoBlob(dataUrl);
     // Optionally, give it a filename
     const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-    // console.log(file);
-
     handleMultipleFileUpload([file], selectedChat._id);
     closeCamera();
 
   };
 
-  // {{ edit_3 }} switchCamera toggles facingMode and re-opens the stream
+  // switchCamera toggles facingMode and re-opens the stream
   const switchCamera = async () => {
     try {
       const newFacing = facingMode === 'user' ? 'environment' : 'user';
@@ -404,7 +299,6 @@ const MessageList = memo(({
   const countOccurrences = (text, word) => {
     if (!word.trim() || !text) return 0;
     const regex = new RegExp(word, "gi");
-    // console.log(regex,text);
     const msg = decryptMessage(text);
 
     return (msg.match(regex) || []).length;
@@ -421,21 +315,17 @@ const MessageList = memo(({
         ? message?.content?.content : "";
 
       const msg = decryptMessage(content);
-      // console.log(countOccurrences(content, searchInputbox),content);
 
       return count + countOccurrences(msg, searchInputbox);
     }, 0);
-
-    // console.log("matches", matches);
-
 
     setTotalMatches(matches == 0 ? 0 : matches);
   }, [searchInputbox, messages]);
 
   useEffect(() => {
     if (selectedChat) {
-      dispatch(setIsSearchBoxOpen(false)); // Close the search box
-      dispatch(setSearchInputbox('')); // Clear the search input
+      dispatch(setIsSearchBoxOpen(false));
+      dispatch(setSearchInputbox(''));
     }
   }, [selectedChat]);
 
@@ -451,7 +341,6 @@ const MessageList = memo(({
 
     // Find all highlighted spans containing the search text
     const highlightedSpans = document.querySelectorAll(".highlight-text");
-    // console.log("highlightedSpans", highlightedSpans);
 
     if (highlightedSpans.length > 0) {
       highlightedSpans.forEach((span) => {
@@ -462,7 +351,6 @@ const MessageList = memo(({
         currentMatchIndex++;
       });
     }
-    // console.log("targetElement", targetElement, targetSpan);
 
     // Scroll to the target element if found
     if (targetElement && targetSpan) {
@@ -501,7 +389,6 @@ const MessageList = memo(({
     });
   };
 
-
   // ===========================Edit message=============================
 
   const handleEditMessage = (message) => {
@@ -513,9 +400,7 @@ const MessageList = memo(({
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
   };
 
-
   const handleForwardMessage = (message) => {
-    // console.log(message, "message");
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
     dispatch(setForwardingMessage(message));
     dispatch(setShowForwardModal(true));
@@ -527,27 +412,6 @@ const MessageList = memo(({
     dispatch(setSelectedImage(imageUrl));
     dispatch(setIsImageModalOpen(true));
   }, [dispatch]);
-
-  // console.log("contextMenu");
-
-  // // ======================Download file =====================
-  // const handleDownload = (fileUrl, fileName) => {
-  //   const durl = `${IMG_URL}${fileUrl}`;
-  //   fetch(durl)
-  //     .then((response) => response.blob())
-  //     .then((blob) => {
-  //       const url = URL.createObjectURL(blob);
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.download = fileName;
-  //       document.body.appendChild(link);
-  //       link.click();
-  //       document.body.removeChild(link);
-  //       URL.revokeObjectURL(url);
-  //     })
-  //     .catch((error) => console.error("Download error:", error));
-  // };
-
 
   return (
     <div className="relative">
@@ -613,7 +477,6 @@ const MessageList = memo(({
                       });
                       // console.log("message", message);
                       if (message.isBlocked && message.sender !== userId) {
-                        console.log("message.isBlocked", message.isBlocked);
                         return;
                       }
 
@@ -657,8 +520,6 @@ const MessageList = memo(({
                           setContextMenu={setContextMenu}
                           allUsers={allUsers}
                           IMG_URL={IMG_URL}
-                          // showEmojiPicker={showEmojiPicker}
-                          // setShowEmojiPicker={setShowEmojiPicker}
                           addMessageReaction={addMessageReaction}
                           selectedChat={selectedChat}
                           messages={messages}
@@ -871,9 +732,6 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
         <div className="rounded-full border w-8 h-8 p-1 text-xl border-gray-600 dark:border-white flex items-center justify-center">
           {isCompleted ? message.sender === userId ? <MdOutlineCallMade className="text-[#22C55E]" /> : <MdOutlineCallReceived className="text-[#22C55E]" /> : <HiOutlinePhoneMissedCall className=" text-[#FF0000]" />}
         </div>
-        {/* <FaPhone
-          className={message.sender === userId ? "rotate-90" : "-rotate-90"}
-        /> */}
         <div className="flex flex-col ml-2 w-full">
           <span>
             {message.sender === userId ? isCompleted ? (group ? "Group call" : "Outgoing call") : "Call not answered"
@@ -898,20 +756,6 @@ const CallMessage = ({ message, userId, handleMakeCall }) => {
             </span>
           </div>
         </div>
-        {/* <span className="cursor-pointer ml-12 bg-gray-300 p-2 rounded-full">
-          {message.content.callType === "voice" ||
-          message.content.callType === "audio" ? (
-            <MdPhoneEnabled
-              className="w-5 h-5 cursor-pointer text-black"
-              onClick={() => handleMakeCall("audio")}
-            />
-          ) : (
-            <GoDeviceCameraVideo
-              className="w-5 h-5 cursor-pointer text-black"
-              onClick={() => handleMakeCall("video")}
-            />
-          )}
-        </span> */}
       </div>
     </div>
   );
@@ -927,7 +771,6 @@ const MessageContent = memo(({
   allUsers,
   messages,
 }) => {
-  // console.log("aaA", message)
   if (message.replyTo) {
     return (
       <ReplyPreview
@@ -1114,8 +957,6 @@ const AudioMessage = memo(({ message, userId, IMG_URL }) => {
 
 const FileMessage = memo(({
   message,
-  userId,
-  IMG_URL,
   highlightText,
   searchInputbox,
 }) => {
@@ -1142,7 +983,6 @@ const FileMessage = memo(({
       console.error("Decryption error:", error);
     }
   }
-
 
   // Get thumbnails for different file types
   const { thumbnail: pdfThumbnail, error: pdfError } = usePdfThumbnail(
@@ -1434,7 +1274,7 @@ const FileMessage = memo(({
   );
 });
 
-const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
+const TextMessage = ({ message, highlightText, searchInputbox }) => {
   let messageContent = message?.content?.content;
 
   // Decrypt the message if it's encrypted
@@ -1561,40 +1401,12 @@ const TextMessage = ({ message, userId, highlightText, searchInputbox }) => {
             );
           }) : <span>{detectUrls(messageContent)}</span>}
         </p>
-        {/* <p className="flex-1">
-          {messageContent?.split(/(\p{Emoji})/gu).map((part, index) => {
-            // Check if the part is an emoji
-            if (part.match(/\p{Emoji}/gu)) {
-              return (
-                <span key={index} className="inline-block align-middle">
-                  <img
-                    src={`https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${part
-                      .codePointAt(0)
-                      .toString(16)}.png`}
-                    alt={part}
-                    className={`inline ${isSingleEmoji ? "h-14 w-14" : "h-5 w-5"}`}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.replaceWith(document.createTextNode(part));
-                    }}
-                  />
-                </span>
-              );
-            }
-            // If not an emoji, detect URLs and apply highlight text function
-            return (
-              <span key={index}>
-                {detectUrls(highlightText(part, searchInputbox))}
-              </span>
-            );
-          })}
-        </p> */}
       </div>
     </div>
   );
 };
 
-const MessageStatus = memo(({ message, userId, last }) => (
+const MessageStatus = memo(({ message, last }) => (
   <div
     className={`flex items-end mt-1 ${message.showTime ? "bottom-3" : "-bottom-2"
       } right-0`}
@@ -1619,7 +1431,6 @@ const ReplyPreview = memo(({
   allUsers,
   IMG_URL,
   messages,
-  userId,
   highlightText,
   searchInputbox,
 }) => {
@@ -2049,23 +1860,13 @@ const ReplyPreview = memo(({
   return (
     <div
       className="flex justify-between rounded-lg flex-col-reverse relative"
-    // style={{
-    //   backgroundColor: `${message.sender === userId ? "#ccf7ff" : "#f1f1f1"}`,
-    // }}
     >
-      {/* <div className="flex flex-col-reverse"> */}
       <div
         className="reply-preview bg-gray-50 p-1 rounded mb-1 text-sm order-2 mx-1 my-1 cursor-pointer"
         onClick={() => {
           const originalMessage = messages.find(
             (msg) => msg._id === message.replyTo._id
           );
-          // console.log(
-          //   "originalMessage",
-          //   originalMessage,
-          //   messages,
-          //   message.replyTo._id
-          // );
           if (originalMessage) {
             const messageElement = document.getElementById(
               `message-${originalMessage._id}`
@@ -2113,7 +1914,6 @@ const ReplyPreview = memo(({
       <p className="p-2 ">
         {highlightText(decryptMessage(message.content.content), searchInputbox)}
       </p>
-      {/* </div> */}
     </div>
   );
 });
@@ -2122,8 +1922,6 @@ const MessageReactions = memo(({
   message,
   userId,
   removeMessageReaction,
-  // showEmojiPicker,
-  // setShowEmojiPicker,
   addMessageReaction,
   allUsers,
 }) => {
@@ -2216,8 +2014,6 @@ const MessageReactions = memo(({
                   defaultSkinTone="neutral"
                   theme="light"
                   emojiSize={20}
-                  // emojiStyle="google"
-                  // emojiSet="google"
                   lazyLoadEmojis={true}
                 />
               </div>
@@ -2343,8 +2139,6 @@ const MessageContextMenu = ({
   handleReplyMessage,
   handleForwardMessage,
   setContextMenu,
-  setActiveMessageId,
-  dropdownRef,
   userId,
 }) => {
   const getMenuPosition = () => {
@@ -2422,10 +2216,8 @@ const MessageContextMenu = ({
                       <path d="M2.50834 18C2.44155 18.0001 2.3754 17.9869 2.3137 17.9613C2.25201 17.9357 2.19599 17.8982 2.14886 17.8508C2.08679 17.7888 2.04185 17.7118 2.01843 17.6273C1.995 17.5427 1.99389 17.4536 2.0152 17.3685L2.97035 13.5346C2.99264 13.4451 3.03884 13.3632 3.10401 13.2979L13.8564 2.54547C14.5836 1.81818 15.7675 1.81818 16.4948 2.54547L17.454 3.50472C18.1814 4.23208 18.1814 5.41591 17.454 6.14311L6.70177 16.8955C6.63654 16.9609 6.55466 17.0071 6.46501 17.0292L2.63122 17.9843C2.59114 17.995 2.54983 18.0002 2.50837 18H2.50834ZM3.92289 13.9173L3.20651 16.7924L6.08165 16.076L16.7349 5.42335C17.0653 5.09294 17.0653 4.55429 16.7349 4.22387L15.7757 3.26462C15.4446 2.93357 14.9059 2.93418 14.5762 3.26462L3.92289 13.9173Z" fill="currentColor" />
                       <path d="M15.441 7.94777C15.3107 7.94777 15.1804 7.89819 15.0814 7.79856L12.2029 4.92068C12.004 4.72179 12.004 4.39958 12.2029 4.20083C12.4017 4.00207 12.7239 4.00207 12.9227 4.20083L15.8013 7.07947C16.0001 7.27823 16.0001 7.60044 15.8013 7.79919C15.7008 7.89819 15.5706 7.94777 15.441 7.94777ZM6.34325 17.0455C6.21296 17.0455 6.0828 16.9959 5.98377 16.8962L3.10512 14.0177C2.90637 13.8188 2.90637 13.4966 3.10512 13.2978C3.30388 13.0991 3.62612 13.0991 3.82501 13.2978L6.70352 16.1765C6.90228 16.3752 6.90228 16.6975 6.70352 16.8962C6.65629 16.9436 6.60014 16.9812 6.5383 17.0069C6.47647 17.0325 6.41018 17.0456 6.34325 17.0455Z" fill="currentColor" />
                     </svg>
-
                   </span> Edit
                 </button>
-
               </>
             )}
 
@@ -2473,14 +2265,6 @@ const MessageContextMenu = ({
               Remove
             </button>
           )}
-          {/* {message.content?.fileType?.includes("audio/") && (
-            <button
-              className="w-28 px-4 py-2 text-left text-black dark:text-white flex items-center hover:bg-gray-100 dark:hover:text-primary-dark"
-              onClick={() => handleDeleteMessage(message._id)}
-            >
-              <CiSquareRemove className="mr-2" /> Remove
-            </button>
-          )} */}
         </div>
       )}
     </>
@@ -2509,8 +2293,6 @@ const RegularMessage = memo(({
   allUsers,
   IMG_URL,
   removeMessageReaction,
-  // showEmojiPicker,
-  // setShowEmojiPicker,
   addMessageReaction,
   dropdownRef,
   selectedChat,
@@ -2638,14 +2420,11 @@ const RegularMessage = memo(({
               message={message}
               removeMessageReaction={removeMessageReaction}
               userId={userId}
-              // showEmojiPicker={showEmojiPicker}
-              // setShowEmojiPicker={setShowEmojiPicker}
               addMessageReaction={addMessageReaction}
               allUsers={allUsers}
             />
           )}
         </div>
-        {/* {console.log("contextMenu", contextMenu)} */}
         <MessageContextMenu
           message={message}
           contextMenu={contextMenu}

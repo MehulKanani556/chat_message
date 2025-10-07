@@ -41,8 +41,8 @@ const MessageInputForm = ({
             className="absolute bg-white border rounded shadow-lg p-2 bottom-[70px]"
           >
             <EmojiPicker onEmojiClick={onEmojiClick} width={290}
-              emojiVersion="5.0"     // show all emojis from latest Unicode
-              lazyLoadEmojis={false}    // load all emojis immediately
+              emojiVersion="5.0"
+              lazyLoadEmojis={false}
               defaultSkinTone="neutral"
             // height={300}
             />
@@ -110,8 +110,8 @@ const MessageInputForm = ({
               aria-label="Send message"
               onClick={() => {
                 if (selectedFiles.length > 0) {
-                  handleMultipleFileUpload(selectedFiles); // Upload selected files
-                  setSelectedFiles([]); // Clear selected files after sending
+                  handleMultipleFileUpload(selectedFiles);
+                  setSelectedFiles([]);
                 }
               }}
             >

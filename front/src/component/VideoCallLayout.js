@@ -1,25 +1,11 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import {
-  BsCameraVideo,
-  BsCameraVideoOff,
-  BsChatDots,
-  BsMicMute,
-} from "react-icons/bs";
+import { BsCameraVideo, BsCameraVideoOff, BsChatDots, BsMicMute } from "react-icons/bs";
 import { GoUnmute } from "react-icons/go";
-import {
-  IoCallOutline,
-  IoMicOffOutline,
-  IoMicOutline,
-} from "react-icons/io5";
+import { IoCallOutline, IoMicOffOutline, IoMicOutline } from "react-icons/io5";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
-import {
-  setParticipantOpen,
-  setSelectedChatModule,
-  setChatMessages,
-  setCallChatList,
-} from "../redux/slice/manageState.slice";
+import { setParticipantOpen, setSelectedChatModule, setChatMessages, setCallChatList } from "../redux/slice/manageState.slice";
 import { useSocket } from "../context/SocketContext";
 import { LuFullscreen } from "react-icons/lu";
 import ElectronStatus from "./ElectronStatus";
@@ -37,19 +23,10 @@ const getParticipantWidth = (count) => {
 const VideoCallLayout = memo(() => {
   const participants = useSelector((state) => state.magageState.participants);
   const selectedChat = useSelector((state) => state.magageState.selectedChat);
-  const selectedChatModule = useSelector(
-    (state) => state.magageState.selectedChatModule
-  );
-  const isMicrophoneOn = useSelector(
-    (state) => state.magageState.isMicrophoneOn
-  );
+  const isMicrophoneOn = useSelector((state) => state.magageState.isMicrophoneOn);
   const isCameraOn = useSelector((state) => state.magageState.isCameraOn);
-  const isVideoCalling = useSelector(
-    (state) => state.magageState.isVideoCalling
-  );
-  const isVoiceCalling = useSelector(
-    (state) => state.magageState.isVoiceCalling
-  );
+  const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
+  const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
   const cameraStatus = useSelector((state) => state.magageState.cameraStatus);
   const micStatus = useSelector((state) => state.magageState.micStatus);
   const isReceiving = useSelector((state) => state.magageState.isReceiving);
@@ -57,21 +34,13 @@ const VideoCallLayout = memo(() => {
   const chatMessages = useSelector((state) => state.magageState.chatMessages);
   const isHost = useSelector((state) => state.magageState.isHost);
   const isControlling = useSelector((state) => state.magageState.isControlling);
-  const viewerControlling = useSelector(
-    (state) => state.magageState.viewerControlling
-  );
-  const participantOpen = useSelector(
-    (state) => state.magageState.participantOpen
-  );
+  const viewerControlling = useSelector((state) => state.magageState.viewerControlling);
+  const participantOpen = useSelector((state) => state.magageState.participantOpen);
   const callChatList = useSelector((state) => state.magageState.callChatList);
   const roomId = useSelector((state) => state.magageState.shareRoomId);
   const allUsers = useSelector((state) => state.user.allUsers);
 
-  const currentUser = useMemo(
-    () =>
-      sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"),
-    []
-  );
+  const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
   const dispatch = useDispatch();
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -90,13 +59,11 @@ const VideoCallLayout = memo(() => {
     toggleCamera,
     toggleMicrophone,
     sendControl,
-    requestControl,
     grantControl,
     revokeControl,
   } = useSocket();
 
   //===========Use the custom socket hook===========
-
 
   const handleMouseDown = (e) => {
     if (!chatMessages) return;
@@ -430,7 +397,6 @@ const VideoCallLayout = memo(() => {
                 layout.height
               );
             }
-            // ctx.drawImage(videoElement, layout.x, layout.y, layout.width, layout.height);
           }
         });
 
@@ -488,11 +454,6 @@ const VideoCallLayout = memo(() => {
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
     }
-
-    // if (screenShareStreamRef.current) {
-    // screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-    //   screenShareStreamRef.current = null;
-    // }
   };
 
   const formatDate = (date) => {
@@ -1050,10 +1011,6 @@ const VideoCallLayout = memo(() => {
                                   console.error("Remote video error:", err)
                                 );
                               }
-                              // If you want to keep localVideoRef for the current user:
-                              // if (participantId === currentUser && localVideoRef) {
-                              //   localVideoRef.current = el;
-                              // }
                             }}
                           />
                           <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
@@ -1115,7 +1072,6 @@ const VideoCallLayout = memo(() => {
                               {/* </div> */}
                             </div>
                           </div>
-                          {/* <div className="absolute inset-0 flex items-center justify-center"> */}
                         </div>
                       )}
                     </div >
@@ -1131,10 +1087,8 @@ const VideoCallLayout = memo(() => {
           <button
             onClick={() => {
               dispatch(setParticipantOpen(false));
-              // dispatch(setvideoCallChatList(true));
               dispatch(setSelectedChatModule(true));
               dispatch(setCallChatList(!callChatList));
-              // dispatch(setChatMessages(true));
             }}
             className={`w-10  place-content-center rounded-full h-10 border hidden [@media(min-width:426px)]:grid ${callChatList
               ? "dark:bg-white dark:text-black bg-black/50 text-white"

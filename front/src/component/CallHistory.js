@@ -47,11 +47,6 @@ const CallHistory = () => {
     }
   };
 
-  // Toggle between showing all calls and missed calls only
-  const toggleMissedCallsFilter = () => {
-    setShowMissedCallsOnly(!showMissedCallsOnly);
-  };
-
   // Determine if a call was returned (has a message after a missed call)
   const isCallReturned = (call) => {
     if (!call.messages || call.messages.length < 2) return false;

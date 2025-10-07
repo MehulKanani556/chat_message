@@ -1,5 +1,3 @@
-// front/src/component/ElectronStatus.js
-
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 

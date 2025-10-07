@@ -58,15 +58,12 @@ const OtpModal = ({ phoneNumber, onVerify, onClose }) => {
     e.preventDefault();
     const otpString = otp.join("");
     if (otpString.length === 6) {
-      // console.log(otpString,);
-
       onVerify(otpString );
     }
   };
 
   const handleResend = () => {
     // Implement resend OTP logic here
-    console.log("Resending OTP...");
   };
 
   return (

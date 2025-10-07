@@ -8,11 +8,8 @@ import { deleteMessage, getAllMessages } from '../redux/slice/user.slice';
 import { useSocket } from '../context/SocketContext';
 
 const MediaViewer = memo(({
-  isOpen,
-  onClose,
-  // onDeleteMessage,
 }) => {
-  // console.log("MediaViewer");
+
   const dispatch = useDispatch();
   const { socket } = useSocket();
   const { messages } = useSelector((state) => state.user);
@@ -204,8 +201,6 @@ const MediaViewer = memo(({
             </React.Fragment>
           ))}
         </div>
-
-
 
         <button
           onClick={() => { dispatch(setIsImageModalOpen(false)) }}

@@ -16,14 +16,8 @@ import emojiRegex from 'emoji-regex';
 
 const MessageInput = memo(
   ({
-    // selectedFiles,
-    // setSelectedFiles,
     handleMultipleFileUpload,
-    // editingMessage,
-    // setEditingMessage,
-    // cameraStream,
     handleSendMessage,
-    // openCamera,
     setIsDeleteChatModalOpen,
   }) => {
 
@@ -42,33 +36,25 @@ const MessageInput = memo(
     const editingMessage = useSelector(state => state.magageState.editingMessage);
     const facingMode = useSelector(state => state.magageState.facingMode);
 
-    // console.log(selectedChat,"selectedChat");
-
-
-    // const [messageInput, setMessageInput] = useState("");
     const emojiPickerRef = useRef(null);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     let typingTimeout;
     const [waveformData, setWaveformData] = useState([]);
+
     // Add state to manage recording
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const [audioChunks, setAudioChunks] = useState([]);
-    const [recordingTime, setRecordingTime] = useState(0); // State to hold recording time
+    const [recordingTime, setRecordingTime] = useState(0);
     const [docModel, setDocModel] = useState(false);
     const [currentUser] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"));
     const inputRef = useRef(null);
-    const caretPositionRef = useRef(null);
-
-    // console.log(messageInput, "messageInput");
-
 
     useEffect(() => {
       if (inputRef.current && replyingTo) {
         inputRef.current.focus();
       }
     }, [replyingTo, messageInput, editingMessage])
-
 
     const handleInputChange = (e) => {
       const files = e.target.files;
@@ -78,16 +64,13 @@ const MessageInput = memo(
         dispatch(setSelectedFiles([...selectedFiles, ...filesArray]));
         return;
       }
-
-      // console.log("e.target.value", e.target.value);
       dispatch(setMessageInput(e.target.value));
 
       if (selectedChat) {
         if (typingTimeout) clearTimeout(typingTimeout);
-
         typingTimeout = setTimeout(() => {
           sendTypingStatus(selectedChat._id, true);
-        }, 2000); // Wait 3 seconds after last input
+        }, 2000);
       }
     };
 
@@ -129,7 +112,6 @@ const MessageInput = memo(
           recorder.onstop = async () => {
             stopRecording();
             const audioBlob = new Blob(chunks, { type: "audio/webm" }); // Change to 'audio/webm' for better quality
-            // console.log("Audio Blob:", audioBlob);
 
             // Dispatch the audio message
             if (selectedChat) {
@@ -137,7 +119,6 @@ const MessageInput = memo(
                 type: "file", // Determine the type based on input
                 content: audioBlob, // The actual content of the message
               };
-              // console.log("add", audioBlob);
 
               // Use the same upload logic as for other files
               const formData = new FormData();
@@ -224,7 +205,6 @@ const MessageInput = memo(
         setWaveformData([]);
 
         // Get user's audio stream
-        // console.log(navigator)
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // Set up audio context and analyser
@@ -366,10 +346,8 @@ const MessageInput = memo(
         dispatch(setMessageInput(""));
       }
     };
-    // console.log("messageInput", messageInput);
 
     const handleSubmit = (e) => {
-      // console.log("messageInput", messageInput);
       e.preventDefault();
       const data = {
         type: messageInput instanceof FileList ? "file" : "text",
@@ -383,10 +361,7 @@ const MessageInput = memo(
       if (editingMessage) {
         // If editing, always call handleSendMessage with selectedChat?._id
         handleSendMessage(data, selectedChat?._id);
-        // alert("editingMessage");
       } else if (selectedChat && selectedChat?.members?.length > 0) {
-        // alert("replyingTo");
-        // console.log("dt",data);
         handleSendGroupMessage(data); // Send group message
       } else if (data.type === "file") {
         handleMultipleFileUpload(messageInput);
@@ -402,7 +377,6 @@ const MessageInput = memo(
     const handleSendGroupMessage = useCallback(async (data) => {
       if (data.content.trim() === "") return;
 
-      // console.log("data",data,selectedChat._id);
       try {
         await sendGroupMessage(selectedChat._id, data);
         dispatch(getAllMessages({ selectedId: selectedChat._id })); // Refresh messages if needed
@@ -414,8 +388,6 @@ const MessageInput = memo(
 
     //=========== emoji picker ===========
     const onEmojiClick = (event, emojiObject) => {
-      // console.log(event.emoji);
-
       dispatch(setMessageInput(messageInput + event.emoji));
     };
 
@@ -454,7 +426,7 @@ const MessageInput = memo(
       const range = document.createRange();
       const sel = window.getSelection();
       range.selectNodeContents(el);
-      range.collapse(false); // false = to end
+      range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
     };
@@ -674,7 +646,6 @@ const MessageInput = memo(
                                   )}
                                 </div>
                                 <div>
-                                  {/* {console.log(uploadProgress)} */}
 
                                   <div className="text-white text-sm line-clamp-2 ">
                                     {file}
@@ -825,8 +796,8 @@ const MessageInput = memo(
                 }}
                 width={290}
                 // height={300}
-                emojiVersion="5.0"     // show all emojis from latest Unicode
-                lazyLoadEmojis={false}    // load all emojis immediately
+                emojiVersion="5.0"
+                lazyLoadEmojis={false}
                 defaultSkinTone="neutral"
               >
               </EmojiPicker>

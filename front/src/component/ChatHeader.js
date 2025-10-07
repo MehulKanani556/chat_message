@@ -4,7 +4,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
 import { SlPin } from "react-icons/sl";
 import { RiUserAddLine, RiDeleteBinLine } from "react-icons/ri";
-import { MdOutlineCancel, MdOutlineBlock, MdOutlineDeleteSweep, MdGroupAdd } from "react-icons/md";
+import { MdOutlineCancel, MdOutlineBlock, MdGroupAdd } from "react-icons/md";
 import { GoDeviceCameraVideo } from "react-icons/go";
 import { useSocket } from '../context/SocketContext';
 import {
@@ -26,7 +26,7 @@ const ChatHeader = memo(({
   setGroupUsers,
 }) => {
   const dispatch = useDispatch();
-  const { cleanupConnection, startCall, startSharing, registerAsHost, unregisterAsHost, isControlling, isHost } = useSocket();
+  const { cleanupConnection, startCall, startSharing } = useSocket();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,9 +43,7 @@ const ChatHeader = memo(({
 
   let loginUser = selectedChat._id === currentUser
 
-
   //================screen sharing================
-
   const handleStartScreenShare = async () => {
     if (selectedChat) {
       const success = await startSharing(selectedChat);
@@ -61,13 +59,11 @@ const ChatHeader = memo(({
     if (!selectedChat) return;
     if (selectedChat?.members) {
       const success = await startCall(selectedChat._id, true, selectedChat, type);
-      // const success = await startCall(selectedChat, type);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
     } else {
       const success = await startCall(selectedChat._id, false, selectedChat, type);
-      // const success = await startCall(selectedChat._id,type);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
@@ -78,7 +74,6 @@ const ChatHeader = memo(({
     const handleClickOutside = (event) => {
       if ((menuOpen) && !event.target.closest(".optionMenu")) {
         setMenuOpen(false);
-        // setDocModel(false);
       }
       if (
         mobileMenuRef.current &&
@@ -222,10 +217,7 @@ const ChatHeader = memo(({
             onClick={() => dispatch(setIsSearchBoxOpen(!isSearchBoxOpen))}
             title="Find"
           />
-
-
           {!loginUser ? (
-
             <>
               {isSharing ? (
                 <LuScreenShareOff

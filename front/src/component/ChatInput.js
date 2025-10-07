@@ -1,4 +1,3 @@
-// front/src/components/ChatInput.js
 import React, { useRef, useState } from 'react';
 import { IoMicOutline } from 'react-icons/io5';
 import { PiSmiley } from 'react-icons/pi';
@@ -149,7 +148,7 @@ const ChatInput = ({
                       await handleMultipleFileUpload(
                         selectedFiles
                       ); // Upload selected files
-                      setSelectedFiles([]); // Clear selected files after sending
+                      setSelectedFiles([]);
                     }
                     await handleSubmit(e);
                   } else if (
@@ -176,11 +175,7 @@ const ChatInput = ({
                 className="p-1 absolute top-1/2 right-1 block md:hidden -translate-y-1/2 hover:bg-gray-100 rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                 aria-label="Attach file"
                 onClick={() =>
-                  // document
-                  //   .getElementById("file-upload")
-                  //   .click()
                   setDocModel(!docModel)
-
                 }
               >
                 {selectedFiles &&
@@ -231,8 +226,8 @@ const ChatInput = ({
               }}
               width={290}
               // height={300}
-              emojiVersion="5.0"    // show all emojis from latest Unicode
-              lazyLoadEmojis={false}    // load all emojis immediately
+              emojiVersion="5.0"
+              lazyLoadEmojis={false}
               defaultSkinTone="neutral"
             >
             </EmojiPicker>
@@ -263,11 +258,7 @@ const ChatInput = ({
                 className="p-1 hover:bg-gray-100  hidden md:block rounded-full transition-colors dark:text-white dark:hover:bg-primary dark:hover:text-black"
                 aria-label="Attach file"
                 onClick={() =>
-                  // document
-                  //   .getElementById("file-upload")
-                  //   .click()
                   setDocModel(!docModel)
-
                 }
               >
                 {selectedFiles &&

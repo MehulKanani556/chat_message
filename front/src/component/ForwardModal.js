@@ -12,7 +12,7 @@ const ForwardModal = () => {
   const dispatch = useDispatch();
 
   const { allUsers } = useSelector((state) => state.user);
-  const { forwardingMessage, showForwardModal } = useSelector(state => state.magageState);
+  const { forwardingMessage } = useSelector(state => state.magageState);
   //===========Use the custom socket hook===========
   const { forwardMessage } = useSocket();
 
@@ -20,14 +20,11 @@ const ForwardModal = () => {
     user.userName && user.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-
   const handleForwardSubmit = async (selectedUsers) => {
     try {
       for (const userId of selectedUsers) {
-        console.log(forwardingMessage);
         await forwardMessage(userId, forwardingMessage);
       }
-
       dispatch(setShowForwardModal(false));
       dispatch(setForwardingMessage(null));
     } catch (error) {
@@ -127,7 +124,6 @@ const ForwardModal = () => {
                 <input
                   type="checkbox"
                   checked={selectedUsers.includes(user._id)}
-                  onChange={() => { }} // Handled by parent div click
                   className="w-5 h-5 rounded-full border-2 border-indigo-500 text-indigo-500 
                            focus:ring-indigo-500 focus:ring-offset-0 checked:bg-indigo-500"
                 />

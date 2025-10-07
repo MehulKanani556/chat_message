@@ -1,20 +1,16 @@
 import React, { useEffect, useRef, useState, memo, useMemo } from "react";
 import { ImCross, ImImages } from "react-icons/im";
-import { MdBlock, MdInfoOutline, MdModeEdit, MdOutlineModeEdit } from "react-icons/md";
+import { MdInfoOutline, MdModeEdit } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import {
   updateGroup,
   leaveGroup,
   getAllMessageUsers,
-  updateUser,
   getAllMessages,
 } from "../redux/slice/user.slice";
-import { CgProfile } from "react-icons/cg";
 import {
-  FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
-  FaChevronUp,
   FaPaperclip,
 } from "react-icons/fa";
 import { HiOutlineUserGroup } from "react-icons/hi";
@@ -42,16 +38,10 @@ const fetchUrlTitle = async (url) => {
 };
 const GroupProfile = memo(({
   setGroupUsers,
-  // socket,
   handleMakeCall,
-  // handleImageClick
 }) => {
 
-  // console.log("groupProfile");
-
   const dispatch = useDispatch();
-  // const [isEditing, setIsEditing] = useState(false);
-  // const [editedUserName, setEditedUserName] = useState("");
   const [groupPhoto, setGroupPhoto] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -59,7 +49,7 @@ const GroupProfile = memo(({
   const [openDirection, setOpenDirection] = useState("bottom");
   const [attachFile, setAttachFile] = useState(false)
   const [activeTab, setActiveTab] = useState('media');
-  const [urlTitles, setUrlTitles] = useState({}); // State to hold URL titles
+  const [urlTitles, setUrlTitles] = useState({});
   const [enabled, setEnabled] = useState(false);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const selectedChat = useSelector(state => state.magageState.selectedChat)
@@ -966,9 +956,6 @@ const GroupProfile = memo(({
                               className={`absolute z-10 bg-white dark:bg-black/50 dark:text-white shadow-md rounded ${openDirection === "top" ? "bottom-5" : "top-5"
                                 } right-8`}
                             >
-                              {/* <button className="px-4 py-2 text-sm flex items-center w-full hover:bg-opacity-25">
-                                <MdBlock className="mr-2" /> Block
-                              </button> */}
                               <button className=" px-4 py-2 text-sm text-red-600  flex items-center w-full hover:bg-opacity-25" onClick={() => handleRemoveMember(member)}>
                                 <RiDeleteBin6Line className="mr-2" /> Remove
                               </button>
@@ -985,11 +972,6 @@ const GroupProfile = memo(({
               <div className=" max-w-md bg-[#F9FAFA] flex dark:bg-primary-dark  rounded-lg p-3 my-3 mx-auto">
                 <button
                   className="w-full flex justify-between items-center"
-                // onClick={() => {
-                //   setGroupUsers(selectedChat?.members);
-                //   setIsGroupModalOpen(false);
-                //   setIsModalOpen(true);
-                // }}
                 >
                   <div className="flex items-center space-x-2">
                     <IoNotificationsOutline size={18} />

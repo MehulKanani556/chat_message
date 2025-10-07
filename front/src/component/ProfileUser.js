@@ -1,13 +1,12 @@
 import React, { useState, useEffect, memo, useMemo } from 'react'
-import { FaChevronUp, FaChevronDown, FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaDownload, FaChevronRight, FaChevronLeft, FaFileVideo, FaFileArchive, FaLink } from 'react-icons/fa';
+import { FaFilePdf, FaFileWord, FaFileExcel, FaFileAudio, FaFile, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { CgProfile } from 'react-icons/cg';
 import { FaPaperclip } from 'react-icons/fa';
 import { IMG_URL } from '../utils/baseUrl';
-import { IoCallOutline, IoCameraOutline, IoNotificationsOutline, IoVideocamOutline } from 'react-icons/io5';
+import { IoCallOutline, IoNotificationsOutline, IoVideocamOutline } from 'react-icons/io5';
 import { ImCross } from 'react-icons/im';
 import { HiOutlineDownload } from "react-icons/hi";
 import { PiLinkSimpleBold } from "react-icons/pi";
-import { FiLogOut } from 'react-icons/fi';
 import { MdBlock } from 'react-icons/md';
 import { blockUser, getAllMessageUsers, getUser } from '../redux/slice/user.slice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,7 +26,7 @@ const fetchUrlTitle = async (url) => {
     return 'Could not fetch title';
   }
 };
-const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
+const ProfileUser = memo(({ isOpen, handleMakeCall }) => {
 
   const [userInfoOpen, setUserInfoOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
@@ -40,8 +39,7 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
   const dispatch = useDispatch();
   const selectedChat = useSelector(state => state.magageState.selectedChat);
   const onlineUsers = useSelector(state => state.magageState.onlineUsers);
-  const { allUsers, messages } = useSelector((state) => state.user);
-
+  const { messages } = useSelector((state) => state.user);
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -107,7 +105,6 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
     dispatch(setSelectedImage(imageUrl));
     dispatch(setIsImageModalOpen(true));
   };
-
 
   return (
     <div
@@ -603,7 +600,6 @@ const ProfileUser = memo(({ isOpen, onClose, handleMakeCall }) => {
                         About
                       </span>
                     </div>
-                    {/* {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />} */}
                   </button>
 
                   <div className="px-4 pb-2 pt-1">

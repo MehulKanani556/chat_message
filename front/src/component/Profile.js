@@ -1,27 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { FaChevronDown, FaChevronUp, FaPaperclip } from "react-icons/fa";
-import { CgProfile } from "react-icons/cg";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { IMG_URL } from "../utils/baseUrl";
-import { updateUser } from "../redux/slice/user.slice";
 import ColorPicker from "./ColorPicker";
 import { initializePrimaryColor } from "../utils/themeUtils";
 
 const Profile = () => {
-
-  // console.log("profile");
-
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [urlUserId, setUrlUserId] = useState(sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"));
-  const [isEditing, setIsEditing] = useState(false);
   const currentUser = useSelector((state) => state.user.user);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [userInfoOpen, setUserInfoOpen] = useState(true);
-  const [filesOpen, setFilesOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -77,7 +66,6 @@ const Profile = () => {
       const fetchUserData = async () => {
         try {
           setIsLoading(true);
-          // console.log("Fetching user data for ID:", targetUserId);
           const response = await axios.get(
             `${process.env.REACT_APP_API_URL}/api/users/${targetUserId}`
           );
@@ -112,7 +100,6 @@ const Profile = () => {
       fetchUserData();
     } else if (currentUser) {
       // Use current user data
-      // console.log("Using current user data:", currentUser._id);
       setUser(currentUser);
       setProfileData({
         name: currentUser.userName || "User",
@@ -134,69 +121,6 @@ const Profile = () => {
       });
     }
   }, [currentUser, targetUserId]);
-
-  const handleEdit = () => {
-    setTempData({ ...profileData });
-    setIsEditing(true);
-  };
-
-  const handleSave = async () => {
-    try {
-      setIsLoading(true);
-
-      // Create form data for the update
-      const formData = new FormData();
-      formData.append("userName", tempData.name);
-      formData.append("email", tempData.email);
-      formData.append("mobileNumber", tempData.mobileNumber);
-      formData.append("bio", tempData.bio);
-
-      // If there's a new image file, append it
-      if (tempData.photoFile) {
-        formData.append("photo", tempData.photoFile);
-      }
-
-      // Dispatch the update action
-      await dispatch(updateUser({ id: user._id, values: formData })).unwrap();
-
-      setProfileData({
-        ...tempData,
-        profileImage: tempData.photoFile
-          ? URL.createObjectURL(tempData.photoFile)
-          : tempData.profileImage,
-      });
-
-      setIsEditing(false);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setTempData({ ...tempData, [name]: value });
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTempData({
-          ...tempData,
-          profileImage: reader.result,
-          photoFile: file,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const toggleAccordion = () => {
     setIsOpen(!isOpen);
@@ -285,22 +209,11 @@ const Profile = () => {
                           <p className="text-gray-400 text-sm">Name</p>
                           <p className="text-black font-semibold dark:text-primary-light">{profileData.name}</p>
                         </div>
-
-                        {/* <div className="mb-4">
-                          <p className="text-gray-400 text-sm">Email</p>
-                          <p className="text-black font-semibold dark:text-primary-light">{profileData.email}</p>
-                        </div> */}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              {/* <div className="mb-4">
-                <p className="text-gray-400 text-sm">Email</p>
-                <p className="text-black font-semibold dark:text-primary-light">
-                  {profileData.email}
-                </p>
-              </div> */}
             </div>
           </div>
 
@@ -327,25 +240,6 @@ const Profile = () => {
               </div>
             )}
           </div>
-
-          {/* <div>
-                            <button
-                                className="w-full px-4 py-3 flex justify-between items-center"
-                                onClick={() => setFilesOpen(!filesOpen)}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <FaPaperclip size={18} className=" " />
-                                    <span className="font-medium">Attached Files</span>
-                                </div>
-                                {filesOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                            </button>
-
-                            {filesOpen && (
-                                <div className="px-4 py-4">
-                                    <p className="text-gray-400 italic">No files attached</p>
-                                </div>
-                            )}
-                        </div> */}
         </div>
       </div>
     </div>

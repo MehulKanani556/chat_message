@@ -12,7 +12,7 @@ import { getAllMessageUsers } from "../redux/slice/user.slice";
 const ChatList = memo(({
   handleMultipleFileUpload,
 }) => {
-  const { allUsers, allMessageUsers, user, } = useSelector((state) => state.user);
+  const { allMessageUsers, user } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -116,9 +116,7 @@ const ChatList = memo(({
     event.preventDefault();
     event.currentTarget.classList.remove('bg-primary/50', 'dark:bg-primary/30');
     const files = event.dataTransfer.files;
-
     if (files.length > 0) {
-      // console.log("Files dropped:", files);
       const file = files[0];
     }
   };

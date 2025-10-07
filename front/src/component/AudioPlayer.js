@@ -6,7 +6,6 @@ import WaveSurfer from "wavesurfer.js";
 const AudioPlayer = ({ audioUrl }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState("0:00");
-  const audioRef = useRef(null);
   const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
   const playbackRates = [0.2, 0.5, 0.7, 1, 1.2, 1.5, 1.7, 2];

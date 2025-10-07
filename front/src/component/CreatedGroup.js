@@ -1,43 +1,25 @@
 import React, { useState, useEffect, memo, useMemo } from "react";
 import { ImCross } from "react-icons/im";
-import { MdOutlineModeEdit } from "react-icons/md";
-import { IMG_URL } from "../utils/baseUrl"; // Assuming IMG_URL is needed here
 import { createGroup, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { RiUserAddLine } from "react-icons/ri";
 import { FaChevronRight } from "react-icons/fa";
 import { setGroupBio, setGroupName, setGroupPhoto, setIsGroupCreateModalOpen, setIsModalOpen, setShowGroups, setShowLeftSidebar } from "../redux/slice/manageState.slice";
+
 const CreatedGroup = memo(({
   isOpen,
-  // allUsers,
-  // currentUser,
-  onCreateGroup,
   socket,
-  creatGroup,
   setCreatGroup,
   groupUsers,
   setGroupUsers
 }) => {
-
-  // console.log("CreatedGroup");
-
   const dispatch = useDispatch();
-  // const [groupName, setGroupName] = useState("");
-  // const [groupBio, setGroupBio] = useState("");
-  // const [groupUsers, setGroupUsers] = useState([]);
-  // const [groupPhoto, setGroupPhoto] = useState(null);
-  // const {onlineUsers,selectedChat} = useSelector(state => state.magageState)
-  // const { allUsers,messages } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
-
-  // Reset state when modal is closed/opened
   const groupName = useSelector(state => state.magageState.groupName);
   const groupPhoto = useSelector(state => state.magageState.groupPhoto);
   const groupBio = useSelector(state => state.magageState.groupBio);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-  // Pass the data up to the parent component
-
 
   const handleCreateGroup = async () => {
     const data = {
@@ -57,12 +39,9 @@ const CreatedGroup = memo(({
       dispatch(setIsGroupCreateModalOpen(false));
       dispatch(getAllMessageUsers());
     } catch (error) {
-      // Handle any errors that occur during group creation
       console.error("Error creating group:", error);
-      // Optionally show error to user via toast/alert
     }
   };
-  // console.log(groupName);
 
   useEffect(() => {
     const handleResize = () => {
@@ -76,7 +55,6 @@ const CreatedGroup = memo(({
 
   return (
     <div
-      // className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative"
       className={`w-full sm:w-[425px] md:w-[404px] lg:w-[580px] xl:w-[380px] bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full relative transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
@@ -103,11 +81,10 @@ const CreatedGroup = memo(({
             src={
               groupPhoto
                 ? URL.createObjectURL(groupPhoto)
-                : require("../img/grouplogo.jpg") // Make sure this path is correct relative to this file or use a placeholder
+                : require("../img/grouplogo.jpg")
             }
             alt="Group Profile"
             className="cursor-pointer object-cover w-full h-full rounded-full"
-          // onClick={() => document.getElementById("groupFileInput").click()}
           />
           <input
             type="file"
@@ -195,7 +172,6 @@ const CreatedGroup = memo(({
           <button
             className="w-full flex justify-between items-center"
             onClick={() => {
-              // setGroupUsers(selectedChat?.members);
               setCreatGroup(true);
               dispatch(setIsGroupCreateModalOpen(false));
               dispatch(setIsModalOpen(true));
@@ -209,7 +185,6 @@ const CreatedGroup = memo(({
           </button>
         </div>
       </div>
-      {/* <div className="fixed bottom-8  mt-4 flex justify-center max-w-[350px] w-full"> */}
       <div
         className="fixed max-w-md bg-[#F9FAFA] flex rounded-lg m-3"
         style={{
@@ -218,7 +193,7 @@ const CreatedGroup = memo(({
       >
         <button
           onClick={handleCreateGroup}
-          disabled={!groupName && groupUsers.length === 0} // Optional: Disable button if no name and no users selected
+          disabled={!groupName && groupUsers.length === 0}
           className="bg-primary w-full text-white px-4 py-1 rounded-md hover:bg-primary/70 disabled:opacity-50"
         >
           Create Group

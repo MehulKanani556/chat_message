@@ -16,7 +16,7 @@ const AddParticipants = memo(({
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchInput, setSearchInput] = useState("");
   const selectedChat = useSelector(state => state.magageState.selectedChat)
-  const { allUsers, messages } = useSelector((state) => state.user);
+  const { allUsers } = useSelector((state) => state.user);
 
   const userId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 

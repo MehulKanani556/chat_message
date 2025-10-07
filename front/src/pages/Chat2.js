@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaPaperclip, FaFilePdf, FaFileExcel, FaFileWord, FaFilePowerpoint, FaFileArchive } from "react-icons/fa";
 import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
@@ -6,7 +6,7 @@ import { ImCross } from "react-icons/im";
 import { RxCross2 } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllGroups, getAllMessages, getAllMessageUsers, getAllUsers, getUser, updateMessage, clearChat, getAllCallUsers, deleteChat, pinChat } from "../redux/slice/user.slice";
-import { BASE_URL, IMG_URL } from "../utils/baseUrl";
+import { BASE_URL } from "../utils/baseUrl";
 import axios from "axios";
 import Front from "../component/Front";
 import MessageList from "../component/MessageList";
@@ -24,7 +24,7 @@ import ForwardModal from "../component/ForwardModal";
 import IncomingCall from "../component/IncomingCall";
 import VideoCallLayout from "../component/VideoCallLayout";
 import CallParticipantModal from "../component/CallParticipantModal";
-import { setBackCameraAvailable, setCameraStream, setEditingMessage, setIncomingShare, setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsImageModalOpen, setIsModalOpen, setIsSearchBoxOpen, setIsUserProfileModalOpen, setMessageInput, setOpenCameraState, setParticipantOpen, setReplyingTo, setSearchInputbox, setSelectedChat, setSelectedChatModule, setSelectedFiles, setSelectedImage, setShowCallHistory, setShowGroups, setShowLeftSidebar, setShowProfile, setShowSettings, setUploadProgress } from "../redux/slice/manageState.slice";
+import { setEditingMessage, setIncomingShare, setIsGroupCreateModalOpen, setIsGroupModalOpen, setIsImageModalOpen, setIsModalOpen, setIsUserProfileModalOpen, setMessageInput, setParticipantOpen, setReplyingTo, setSelectedChat, setSelectedChatModule, setSelectedFiles, setShowCallHistory, setShowGroups, setShowLeftSidebar, setShowProfile, setShowSettings, setUploadProgress } from "../redux/slice/manageState.slice";
 import MediaViewer from "../component/MediaViewer";
 import { useSocket } from "../context/SocketContext";
 import MessageInput from "../component/MessageInput";
@@ -35,8 +35,15 @@ import ScreenSourceSelector from "../component/ScreenSourceSelector";
 const Chat2 = () => {
   const { allUsers, user, allMessageUsers } = useSelector((state) => state.user);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [groupUsers, setGroupUsers] = useState([]);
+  const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
+  const [selectedProfileImage, setSelectedProfileImage] = useState(null);
+  const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
+  const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
+  const [creatGroup, setCreatGroup] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
 
-  const remoteStreams = useSelector(state => state.magageState.remoteStreams);
   const isConnected = useSelector(state => state.magageState.isConnected);
   const isVideoCalling = useSelector(state => state.magageState.isVideoCalling);
   const incomingCall = useSelector(state => state.magageState.incomingCall);
@@ -62,7 +69,6 @@ const Chat2 = () => {
   const callChatList = useSelector(state => state.magageState.callChatList);
   const chatMessages = useSelector(state => state.magageState.chatMessages);
   const showForwardModal = useSelector(state => state.magageState.showForwardModal);
-  const onlineUsers = useSelector(state => state.magageState.onlineUsers)
   const uploadProgress = useSelector(state => state.magageState.uploadProgress);
   const showScreenSource = useSelector(state => state.magageState.showScreenSource);
 
@@ -77,22 +83,9 @@ const Chat2 = () => {
   }, []);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
 
-  const navigate = useNavigate();
-  const [groupUsers, setGroupUsers] = useState([]);
-
-  const [isProfileImageModalOpen, setIsProfileImageModalOpen] = useState(false);
-  const [selectedProfileImage, setSelectedProfileImage] = useState(null);
-  const [isClearChatModalOpen, setIsClearChatModalOpen] = useState(false);
-  const [isDeleteChatModalOpen, setIsDeleteChatModalOpen] = useState(false);
-
-  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
-  const [creatGroup, setCreatGroup] = useState(false)
-  const [isDragging, setIsDragging] = useState(false);
-  // Object to hold durations keyed by message ID
-
-  const [userStreams, setUserStreams] = useState({});
 
   //===========Use the custom socket hook===========
   const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall, sendGroupMessage } = useSocket();
@@ -133,8 +126,6 @@ const Chat2 = () => {
     try {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
-      console.log(permission);
-
     } catch (error) {
       console.error("Error requesting notification permission:", error);
     }
@@ -154,8 +145,6 @@ const Chat2 = () => {
     // Create notification content
     let notificationTitle = senderName || "New Message";
     let notificationBody = "";
-
-    console.log(message, "dcfsdfg");
 
     // Handle different message types
     if (message.content.type === "text") {
@@ -347,7 +336,6 @@ const Chat2 = () => {
         console.error("Failed to update message:", error);
       }
     } else {
-      console.log("isBlockedByRecipient");
       const isBlockedByRecipient = selectedChat?.blockedUsers?.includes(currentUser);
       if (
         (data.type == "text" && data?.content?.trim() === "") ||
@@ -514,9 +502,7 @@ const Chat2 = () => {
         setShowLeftSidebar(false); // On desktop, hide sidebar if no chat selected
       }
     }
-
   }, [selectedChat]);
-
 
   // clear chat
   const handleClearChat = async () => {
@@ -541,9 +527,6 @@ const Chat2 = () => {
     });
   }, [dispatch]);
 
-
-
-
   useEffect(() => {
     // Listen for the resetSelectedChat event
     const handleResetSelectedChat = () => {
@@ -557,25 +540,6 @@ const Chat2 = () => {
       window.removeEventListener("resetSelectedChat", handleResetSelectedChat);
     };
   }, []);
-
-  // useEffect(() => {
-  //   // Listen for the showChatList event
-  //   const handleShowChatList = (event) => {
-  //     dispatch(setShowGroups(false));
-  //     if (event.detail?.selectedChat) {
-  //       dispatch(setSelectedChat(event.detail.selectedChat));
-  //     }
-  //     if (event.detail?.openGroupCreateModal) {
-  //       dispatch(setIsGroupCreateModalOpen(true));
-  //     }
-  //   };
-
-  //   window.addEventListener("showChatList", handleShowChatList);
-
-  //   return () => {
-  //     window.removeEventListener("showChatList", handleShowChatList);
-  //   };
-  // }, []);
 
   useEffect(() => {
     // Listen for the showProfile event
@@ -702,12 +666,6 @@ const Chat2 = () => {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                {/* {(!(
-                  isGroupModalOpen ||
-                  isModalOpen ||
-                  isGroupCreateModalOpen ||
-                  isUserProfileModalOpen
-                ) ||  !showOverlay) && ( */}
                 <>
                   {selectedChat ? (
                     <>
@@ -946,8 +904,6 @@ const Chat2 = () => {
           </div>
         </div>
       )}
-
-
 
       {isImageModalOpen && selectedImage && <MediaViewer />}
 

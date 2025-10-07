@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { IMG_URL } from "../utils/baseUrl";
+import React from 'react';
 
-const Front = ({ data, handleMultipleFileUpload }) => {
+const Front = ({ data }) => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-primary-dark dark:to-primary-dark py-12 px-4 md:px-6 lg:px-8 grid place-content-center" >
             <div className="max-w-2xl mx-auto">

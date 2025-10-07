@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getPrimaryColor, setPrimaryColor } from "../utils/themeUtils";
 
 const ColorPicker = () => {
@@ -31,38 +31,17 @@ const ColorPicker = () => {
         {colorOptions.map((color) => (
           <div key={color.value} className="flex flex-col items-center">
             <button
-              className={`w-6 h-6 rounded-full mb-1 border-[1px] ${
-                selectedColor === color.value
-                  ? "border-gray-800 dark:border-white"
-                  : "border-transparent"
-              }`}
+              className={`w-6 h-6 rounded-full mb-1 border-[1px] ${selectedColor === color.value
+                ? "border-gray-800 dark:border-white"
+                : "border-transparent"
+                }`}
               style={{ backgroundColor: color.value }}
               onClick={() => handleColorChange(color.value)}
               aria-label={`Select ${color.name} color`}
             />
-            {/* <span className="text-xs text-gray-600 dark:text-gray-300">
-              {color.name}
-            </span> */}
           </div>
         ))}
       </div>
-
-      {/* <div className="mt-4 flex justify-between items-center justify-content-center">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Custom Color
-        </label>
-        <div className="flex items-center">
-          <input
-            type="color"
-            value={selectedColor}
-            onChange={(e) => handleColorChange(e.target.value)}
-            className="h-10 w-20 rounded cursor-pointer"
-          />
-          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-            {selectedColor}
-          </span>
-        </div>
-      </div> */}
     </div>
   );
 };

@@ -156,7 +156,6 @@ const CallParticipantModal = memo(({
                         className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                         onClick={() => {
                           const invited = allUsers.filter(user => selectedCallUsers.has(user._id));
-                          // setInvitedUsers(invited);
                           selectedCallUsers.forEach(userId => {
                             inviteToCall(userId);
                           });

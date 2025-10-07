@@ -1,12 +1,8 @@
-// ... existing imports ...
 import { MdCallEnd, MdGroupAdd } from "react-icons/md";
 import { FiCamera, FiCameraOff } from "react-icons/fi";
 import { BsFillMicFill, BsFillMicMuteFill } from "react-icons/bs";
 
-// ... existing code ...
-
 const VideoCall = () => {
-    // ... existing state and functions ...
 
     const endCall = () => {
         if (!callAccept && selectedChat) {
@@ -61,7 +57,6 @@ const VideoCall = () => {
 
     return (
         <>
-            {/* ... existing JSX ... */}
             <div
                 className={`flex-grow flex flex-col p-4 ml-16 bg-primary-light dark:bg-primary-dark scrollbar-hide ${isReceiving || isVideoCalling || isVoiceCalling || voiceCallData ? "" : "hidden"}`}
             >
@@ -151,10 +146,8 @@ const VideoCall = () => {
                     )}
                 </div>
             </div>
-            {/* ... existing code ... */}
         </>
     );
 };
 
 export default VideoCall;
-// ... existing exports ...

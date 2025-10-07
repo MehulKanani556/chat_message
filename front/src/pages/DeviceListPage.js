@@ -26,7 +26,6 @@ const DeviceListPage = () => {
           }
         });
 
-        // console.log('Fetched devices:', response.data);
         if (response.data.status === 200) {
           setDevices(response.data.devices);
         }
@@ -46,12 +45,6 @@ const DeviceListPage = () => {
       setLoading(true);
       const token = sessionStorage.getItem('token');
       const currentDeviceId = localStorage.getItem('deviceId');
-      
-      // console.log('Removing device:', {
-      //   deviceId,
-      //   currentDeviceId,
-      //   allDevices: devices
-      // });
 
       // Call the logout endpoint to remove the device
       const response = await axios.post(`${BASE_URL}/logout-device`, {
@@ -62,12 +55,9 @@ const DeviceListPage = () => {
         }
       });
 
-      // console.log('Logout device response:', response.data);
-
       if (response.data.status === 200) {
         // If removing current device
         if (deviceId === currentDeviceId) {
-          // console.log('Removing current device and logging out');
           // Clean up socket connection if it exists
           if (window.socketRef?.current) {
             window.socketRef.current.disconnect();
@@ -79,7 +69,6 @@ const DeviceListPage = () => {
           // Redirect to login
           navigate('/login');
         } else {
-          // console.log('Removing other device');
           // Update the device list to remove the deleted device
           setDevices(prevDevices => prevDevices.filter(device => device.deviceId !== deviceId));
         }
