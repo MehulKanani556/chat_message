@@ -97,6 +97,16 @@ const decryptMessage = (encryptedText) => {
   return result;
 };
 
+const getDeviceType = () => {
+  const userAgent = navigator.userAgent;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isTablet = /iPad|Android(?=.*\bMobile\b)/i.test(userAgent);
+
+  if (isMobile) return 'mobile';
+  if (isTablet) return 'tablet';
+  return 'desktop';
+};
+
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const peerRef = useRef(null);
@@ -202,7 +212,8 @@ export const SocketProvider = ({ children }) => {
           forceNew: true,
           auth: {
             token,
-            deviceId
+            deviceId,
+            deviceType: getDeviceType() // Add this
           }
         });
 
@@ -263,6 +274,58 @@ export const SocketProvider = ({ children }) => {
 
     initializeSocket();
   }, [userId, navigate,]);
+
+  // Add call dismissal handler
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    // Handle call dismissal
+    socketRef.current.on("call-dismissed", (data) => {
+      console.log("Call dismissed:", data);
+      // Remove incoming call notification
+      dispatch(setIncomingCall(null));
+      dispatch(setIsVideoCalling(false));
+      dispatch(setIsVoiceCalling(false));
+      // Show notification that call was accepted on another device
+      // alert("Call was accepted on another device");
+    });
+
+    // Handle screen share dismissal
+    socketRef.current.on("screen-share-dismissed", (data) => {
+      console.log("Screen share dismissed:", data);
+      // Remove incoming screen share notification
+      dispatch(setIncomingShare(null));
+      dispatch(setIsSharing(false));
+      dispatch(setIsReceiving(false));
+      // Show notification that screen share was accepted on another device
+      // alert("Screen share was accepted on another device");
+    });
+
+    // Handle message read updates from other devices
+    socketRef.current.on("message-read-update", (data) => {
+      console.log("Message read update from other device:", data);
+      // Update local message read status
+      dispatch(updateMessageReadStatus(data));
+      dispatch(getAllMessageUsers());
+    });
+
+    // Handle group message read updates from other devices
+    socketRef.current.on("group-message-read-update", (data) => {
+      console.log("Group message read update from other device:", data);
+      // Update local group message read status
+      dispatch(updateMessageReadStatus(data));
+      dispatch(getAllMessageUsers());
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("call-dismissed");
+        socketRef.current.off("screen-share-dismissed");
+        socketRef.current.off("message-read-update");
+        socketRef.current.off("group-message-read-update");
+      }
+    };
+  }, [socketRef.current]);
 
   // Media devices check effect
   useEffect(() => {
@@ -723,7 +786,6 @@ export const SocketProvider = ({ children }) => {
       peerRef.current[incomingShare.fromEmail] = peer;
 
       peer.on("signal", (signal) => {
-        // console.log("Receiver generated signal, sending accept");
         socketRef.current.emit("share-accept", {
           signal,
           fromEmail: incomingShare.fromEmail,
@@ -735,7 +797,6 @@ export const SocketProvider = ({ children }) => {
       });
 
       peer.on("stream", (stream) => {
-        // console.log("Receiver got stream");
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = stream;
           remoteVideoRef.current
@@ -758,7 +819,6 @@ export const SocketProvider = ({ children }) => {
 
       // Signal the peer with the initial offer
       if (incomingShare.signal) {
-        // console.log("Receiver signaling with initial offer");
         peer.signal(incomingShare.signal);
       }
       dispatch(setIncomingShare(null));

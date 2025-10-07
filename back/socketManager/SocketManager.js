@@ -28,27 +28,188 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in
 
 // mouse.config.mouseSpeed = 1500;
 
-async function handleUserLogin(socket, userId) {
-  // Remove any existing socket connection for this user
-  // for (const [existingUserId, existingSocketId] of onlineUsers.entries()) {
-  //   if (existingUserId === userId && existingSocketId !== socket.id) {
-  //     const existingSocket = global.io.sockets.sockets.get(existingSocketId);
-  //     if (existingSocket) {
-  //       existingSocket.disconnect();
-  //     }
-  //     onlineUsers.delete(existingUserId);
-  //   }
-  // }
+// Add device type tracking
+const userDevices = new Map(); // userId => { socketId: { deviceType, priority } }
 
+// Device types and priorities (lower number = higher priority)
+const DEVICE_PRIORITIES = {
+  'mobile': 1,
+  'tablet': 2,
+  'desktop': 3,
+  'web': 4
+};
+
+// Helper function to detect device type from socket
+function detectDeviceType(socket) {
+  // Check if device type is provided in auth
+  if (socket.handshake.auth && socket.handshake.auth.deviceType) {
+    return socket.handshake.auth.deviceType;
+  }
+
+  // Fallback to user agent detection
+  const userAgent = socket.handshake.headers['user-agent'] || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isTablet = /iPad|Android(?=.*\bMobile\b)/i.test(userAgent);
+
+  if (isMobile) return 'mobile';
+  if (isTablet) return 'tablet';
+  return 'desktop';
+}
+
+// Helper function to get highest priority device for a user
+function getHighestPriorityDevice(userId) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return null;
+
+  let highestPriority = Infinity;
+  let bestDevice = null;
+
+  for (const [socketId, deviceInfo] of devices) {
+    if (deviceInfo.priority < highestPriority) {
+      highestPriority = deviceInfo.priority;
+      bestDevice = { socketId, ...deviceInfo };
+    }
+  }
+
+  return bestDevice;
+}
+
+// Helper function to emit call notification with priority
+function emitCallNotificationWithPriority(userId, event, data) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  // Sort devices by priority (mobile first)
+  const sortedDevices = Array.from(devices.entries())
+    .sort(([, a], [, b]) => a.priority - b.priority);
+
+  // Send to highest priority device first
+  if (sortedDevices.length > 0) {
+    const [socketId, deviceInfo] = sortedDevices[0];
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit(event, { ...data, isPrimaryDevice: true });
+    }
+  }
+
+  // Send to other devices with lower priority
+  for (let i = 1; i < sortedDevices.length; i++) {
+    const [socketId, deviceInfo] = sortedDevices[i];
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit(event, { ...data, isPrimaryDevice: false });
+    }
+  }
+}
+
+// Helper function to emit screen share notification with priority
+function emitScreenShareNotificationWithPriority(userId, event, data) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  // Sort devices by priority (mobile first)
+  const sortedDevices = Array.from(devices.entries())
+    .sort(([, a], [, b]) => a.priority - b.priority);
+
+  // Send to highest priority device first
+  if (sortedDevices.length > 0) {
+    const [socketId, deviceInfo] = sortedDevices[0];
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit(event, { ...data, isPrimaryDevice: true });
+    }
+  }
+
+  // Send to other devices with lower priority
+  for (let i = 1; i < sortedDevices.length; i++) {
+    const [socketId, deviceInfo] = sortedDevices[i];
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit(event, { ...data, isPrimaryDevice: false });
+    }
+  }
+}
+
+// Helper function to dismiss call from all other devices
+function dismissCallFromOtherDevices(userId, roomId, acceptedSocketId) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  for (const [socketId, deviceInfo] of devices) {
+    if (socketId !== acceptedSocketId) {
+      const socket = global.io.sockets.sockets.get(socketId);
+      if (socket) {
+        socket.emit("call-dismissed", { roomId, reason: "accepted-on-other-device" });
+      }
+    }
+  }
+}
+
+// Helper function to dismiss screen share from all other devices
+function dismissScreenShareFromOtherDevices(userId, roomId, acceptedSocketId) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  for (const [socketId, deviceInfo] of devices) {
+    if (socketId !== acceptedSocketId) {
+      const socket = global.io.sockets.sockets.get(socketId);
+      if (socket) {
+        socket.emit("screen-share-dismissed", { roomId, reason: "accepted-on-other-device" });
+      }
+    }
+  }
+}
+
+// Helper function to broadcast message read status to all user devices
+function broadcastMessageReadToAllDevices(userId, data) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  for (const [socketId, deviceInfo] of devices) {
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit("message-read-update", data);
+    }
+  }
+}
+
+// Helper function to broadcast group message read status to all user devices
+function broadcastGroupMessageReadToAllDevices(userId, data) {
+  const devices = userDevices.get(userId);
+  if (!devices || devices.size === 0) return;
+
+  for (const [socketId, deviceInfo] of devices) {
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit("group-message-read-update", data);
+    }
+  }
+}
+
+async function handleUserLogin(socket, userId) {
   // Add new socket connection
-  onlineUsers.set(userId, socket.id);
+  let sockets = onlineUsers.get(userId) || new Set();
+  sockets.add(socket.id);
+  onlineUsers.set(userId, sockets);
   socket.userId = userId;
+
+  // Track device type and priority
+  const deviceType = detectDeviceType(socket);
+  const priority = DEVICE_PRIORITIES[deviceType] || DEVICE_PRIORITIES['web'];
+
+  if (!userDevices.has(userId)) {
+    userDevices.set(userId, new Map());
+  }
+
+  userDevices.get(userId).set(socket.id, {
+    deviceType,
+    priority,
+    connectedAt: Date.now()
+  });
 
   // Broadcast updated online users list to all connected clients
   const onlineUsersList = Array.from(onlineUsers.keys());
-
   global.io.emit("user-status-changed", onlineUsersList);
-  // socket.emit("user-status-changed", onlineUsersList);
 
   try {
     // Find all unread messages for this user
@@ -62,22 +223,27 @@ async function handleUserLogin(socket, userId) {
       for (const message of pendingMessages) {
         await Message.findByIdAndUpdate(message._id, { status: "delivered" });
 
-        // Notify sender about delivery
-        const senderSocketId = onlineUsers.get(message.sender.toString());
-        if (senderSocketId) {
-          socket.to(senderSocketId).emit("message-sent-status", {
-            messageId: message._id,
-            status: "delivered",
-          });
-        }
+        // Notify sender about delivery - use emitToUser for multiple sockets
+        emitToUser(message.sender.toString(), "message-sent-status", {
+          messageId: message._id,
+          status: "delivered",
+        });
       }
     }
   } catch (error) {
     console.error("Error updating pending messages:", error);
   }
+}
 
-  // console.log("User logged in:", userId);
-  // console.log("Current online users:", onlineUsersList);
+function emitToUser(userId, event, data, exceptSocketId = null) {
+  const sockets = onlineUsers.get(userId);
+  if (sockets) {
+    for (const socketId of sockets) {
+      if (exceptSocketId && socketId === exceptSocketId) continue;
+      const s = global.io.sockets.sockets.get(socketId);
+      if (s) s.emit(event, data);
+    }
+  }
 }
 
 function getSocketByUserId(userId) {
@@ -105,9 +271,9 @@ async function handlePrivateMessage(socket, data) {
       isBlocked: isBlocked,
     });
 
-    const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId && !isBlocked) {
-      socket.to(receiverSocketId).emit("receive-message", {
+    // const receiverSocketId = onlineUsers.get(receiverId);
+    if (!isBlocked) {
+      emitToUser(receiverId, "receive-message", {
         _id: savedMessage._id,
         sender: senderId,
         content: savedMessage.content,
@@ -149,15 +315,19 @@ async function handleMessageRead(socket, data) {
 
     // Get sender's socket ID to notify them
     const message = await Message.findById(messageId);
-    const senderSocketId = onlineUsers.get(message.sender.toString());
 
-    if (senderSocketId) {
-      // Notify sender that message was read
-      socket.to(senderSocketId).emit("message-read", {
-        messageId,
-        readerId,
-      });
-    }
+    // Notify sender that message was read
+    emitToUser(message.sender.toString(), "message-read", {
+      messageId,
+      readerId,
+    });
+
+    // Broadcast read status to all devices of the reader
+    broadcastMessageReadToAllDevices(readerId, {
+      messageId,
+      readerId,
+      status: "read"
+    });
   } catch (error) {
     console.error("Error handling message read status:", error);
   }
@@ -186,16 +356,22 @@ async function handleGroupMessageRead(socket, data) {
     const group = await findGroupById(groupId);
     if (group && group.members) {
       group.members.forEach((memberId) => {
-        const memberSocketId = onlineUsers.get(memberId.toString());
-        if (memberSocketId && memberSocketId !== socket.id) {
-          socket.to(memberSocketId).emit("group-message-read", {
-            messageId,
-            readerId,
-            groupId
-          });
-        }
+        // Use emitToUser to notify all sockets of each member
+        emitToUser(memberId.toString(), "group-message-read", {
+          messageId,
+          readerId,
+          groupId
+        }, socket.id); // Exclude the current socket
       });
     }
+
+    // Broadcast group read status to all devices of the reader
+    broadcastGroupMessageReadToAllDevices(readerId, {
+      messageId,
+      readerId,
+      groupId,
+      status: "read"
+    });
   } catch (error) {
     console.error("Error handling group message read status:", error);
   }
@@ -204,15 +380,13 @@ async function handleGroupMessageRead(socket, data) {
 // ===========================handle typing status=============================
 function handleTypingStatus(socket, data) {
   const { senderId, receiverId, isTyping } = data;
-  const receiverSocketId = onlineUsers.get(receiverId);
 
-  if (receiverSocketId) {
-    socket.to(receiverSocketId).emit("user-typing", {
-      userId: senderId,
-      isTyping,
-      receiverId,
-    });
-  }
+  // Use emitToUser to notify all receiver's sockets
+  emitToUser(receiverId, "user-typing", {
+    userId: senderId,
+    isTyping,
+    receiverId,
+  });
 }
 
 async function handleDeleteMessage(socket, messageId) {
@@ -225,11 +399,8 @@ async function handleDeleteMessage(socket, messageId) {
     // console.log("message", message.receiver.toString());
 
     // Notify the other user about the message deletion
-    const receiverSocketId = onlineUsers.get(message.receiver.toString());
-    // console.log("receiverSocketId", receiverSocketId);
-    if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("message-deleted", messageId);
-    }
+    // Use emitToUser to notify all receiver's sockets
+    emitToUser(message.receiver.toString(), "message-deleted", messageId);
   } catch (error) {
     console.error("Error handling message deletion:", error);
   }
@@ -242,13 +413,11 @@ async function handleUpdateMessage(socket, data) {
     if (!message) return;
 
     // Notify the other user about the message update
-    const receiverSocketId = onlineUsers.get(message.receiver.toString());
-    if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("message-updated", {
-        messageId,
-        content,
-      });
-    }
+    // Use emitToUser to notify all receiver's sockets
+    emitToUser(message.receiver.toString(), "message-updated", {
+      messageId,
+      content,
+    });
   } catch (error) {
     console.error("Error handling message update:", error);
   }
@@ -257,56 +426,48 @@ async function handleUpdateMessage(socket, data) {
 // ===========================screen share=============================
 
 function handleScreenShareRequest(socket, data) {
-  // console.log(data.roomId, "-----------");
+  socket.join(data.roomId);
 
-  socket.join(data.roomId)
-  // socket.join(roomId);
   if (data.isGroup) {
-    // For group sharing, forward to specific member
-    const targetSocketId = onlineUsers.get(data.toEmail);
-    if (targetSocketId) {
-      socket.to(targetSocketId).emit("screen-share-request", {
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        groupId: data.groupId,
-        isGroup: true,
-        roomId: data.roomId
-      });
-    }
+    // For group sharing, forward to specific member with priority
+    emitScreenShareNotificationWithPriority(data.toEmail, "screen-share-request", {
+      fromEmail: data.fromEmail,
+      signal: data.signal,
+      groupId: data.groupId,
+      isGroup: true,
+      roomId: data.roomId
+    });
   } else {
-    // Original single-user logic
-    const targetSocketId = onlineUsers.get(data.toEmail);
-    if (targetSocketId) {
-      socket.to(targetSocketId).emit("screen-share-request", {
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        isGroup: false,
-        roomId: data.roomId
-      });
-    }
+    // Original single-user logic with priority
+    emitScreenShareNotificationWithPriority(data.toEmail, "screen-share-request", {
+      fromEmail: data.fromEmail,
+      signal: data.signal,
+      isGroup: false,
+      roomId: data.roomId
+    });
   }
 }
 
 function handleScreenShareAccept(socket, data) {
-  socket.join(data.roomId)
-  const targetSocketId = onlineUsers.get(data.fromEmail);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("share-accepted", {
-      signal: data.signal,
-      fromEmail: data.toEmail,
-      groupId: data.groupId,
-      isGroup: data.isGroup,
-    });
-  }
+  socket.join(data.roomId);
+
+  // Send acceptance to the sender
+  emitToUser(data.fromEmail, "share-accepted", {
+    signal: data.signal,
+    fromEmail: data.toEmail,
+    groupId: data.groupId,
+    isGroup: data.isGroup,
+  });
+
+  // Dismiss screen share notification from all other devices of the accepting user
+  dismissScreenShareFromOtherDevices(data.toEmail, data.roomId, socket.id);
 }
 
 function handleScreenShareSignal(socket, data) {
-  const targetSocketId = onlineUsers.get(data.toEmail);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit("share-signal", {
-      signal: data.signal,
-    });
-  }
+  // Use emitToUser to notify all receiver's sockets
+  emitToUser(data.toEmail, "share-signal", {
+    signal: data.signal,
+  });
 }
 
 // ===========================Video call=============================
@@ -323,8 +484,6 @@ async function handleCallRequest(socket, data) {
     roomId,
   } = data;
 
-
-
   let isUserInCall = false;
   for (const [callRoomId, callData] of Object.entries(activeCalls)) {
     if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
@@ -332,8 +491,6 @@ async function handleCallRequest(socket, data) {
       break;
     }
   }
-
-  // console.log("activeCalls",activeCalls, "=======================", isUserInCall,"isUserInCall");
 
   if (isUserInCall) {
     socket.emit("user-in-call", {
@@ -349,25 +506,21 @@ async function handleCallRequest(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
-
-
-  const targetSocketId = onlineUsers.get(toEmail);
-
-  // console.log(toEmail, targetSocketId);
+  const targetSockets = onlineUsers.get(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
 
-  if (targetSocketId) {
+  if (targetSockets && targetSockets.size > 0) {
     activeCalls[roomId].ringing.push(toEmail);
   }
 
-  if (targetSocketId) {
-
+  if (targetSockets && targetSockets.size > 0) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
-    socket.to(targetSocketId).emit("call-requested", {
+    // Use priority-based call notification
+    emitCallNotificationWithPriority(toEmail, "call-requested", {
       fromEmail,
       signal,
       type,
@@ -397,7 +550,8 @@ const handleUserIncall = (socket, data) => {
   delete activeCalls[roomId];
 
   if (targetSocketId) {
-    socket.to(targetSocketId).emit("user-in-call", {
+    // Use emitToUser to notify all sender's sockets
+    emitToUser(fromEmail, "user-in-call", {
       fromEmail,
       signal,
       type,
@@ -422,7 +576,6 @@ function handleCallInvite(socket, data) {
     roomId,
   } = data;
 
-
   let isUserInCall = false;
   for (const [callRoomId, callData] of Object.entries(activeCalls)) {
     if (callData.joined.includes(toEmail) || callData.ringing.includes(toEmail)) {
@@ -445,18 +598,19 @@ function handleCallInvite(socket, data) {
     activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
   }
 
-  const targetSocketId = onlineUsers.get(toEmail);
+  const targetSockets = onlineUsers.get(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
-  if (targetSocketId) {
+  if (targetSockets && targetSockets.size > 0) {
     activeCalls[roomId].ringing.push(toEmail);
   }
-  if (targetSocketId) {
 
+  if (targetSockets && targetSockets.size > 0) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
-    socket.to(targetSocketId).emit("call-invited", {
+    // Use priority-based call notification
+    emitCallNotificationWithPriority(toEmail, "call-invited", {
       fromEmail,
       signal,
       participants,
@@ -473,7 +627,8 @@ function handleParticipantJoined(socket, data) {
 
   if (targetSocketId) {
 
-    socket.to(targetSocketId).emit("participant-joined", {
+    // Use emitToUser to notify all target's sockets
+    emitToUser(data.to, "participant-joined", {
       newParticipantId,
       from,
       participants,
@@ -524,28 +679,25 @@ function handleCallAccept(socket, data) {
 
   socket.join(roomId);
   const call = activeCalls[roomId];
-  // console.log("call", call, roomId);
 
   if (call) {
     if (!call.joined.includes(fromEmail)) {
       call.joined.push(fromEmail);
-      call.invited = call.invited.filter((id) => id != fromEmail)
+      call.invited = call.invited.filter((id) => id != fromEmail);
     }
     if (!call.joined.includes(toEmail)) {
       call.joined.push(toEmail);
-      call.invited = call.invited.filter((id) => id != toEmail)
+      call.invited = call.invited.filter((id) => id != toEmail);
     }
     call.ringing = call.ringing.filter((id) => id !== fromEmail);
     call.ringing = call.ringing.filter((id) => id !== toEmail);
   }
 
-  const targetSocketId = onlineUsers.get(fromEmail);
-  const toSocketId = onlineUsers.get(toEmail);
+  const targetSockets = onlineUsers.get(fromEmail);
 
-  if (targetSocketId) {
-
+  if (targetSockets && targetSockets.size > 0) {
     // Send call acceptance to the caller
-    socket.to(targetSocketId).emit("call-accepted", {
+    emitToUser(fromEmail, "call-accepted", {
       signal,
       fromEmail: toEmail,
       roomId,
@@ -554,6 +706,9 @@ function handleCallAccept(socket, data) {
     // Emit to all participants in the room including the accepting user
     socket.to(roomId).emit("call:update-participant-list", call);
     socket.emit("call:update-participant-list", call);
+
+    // Dismiss call notification from all other devices of the accepting user
+    dismissCallFromOtherDevices(toEmail, roomId, socket.id);
   }
 }
 
@@ -562,7 +717,7 @@ function handleCallSignal(socket, data) {
   const targetSocketId = onlineUsers.get(to);
 
   if (targetSocketId) {
-    socket.to(targetSocketId).emit("call-signal", {
+    emitToUser(to, "call-signal", {
       signal,
       from,
       roomId,
@@ -589,7 +744,8 @@ function handleCallEnd(socket, data) {
 
     socket.to(roomId).emit("call:update-participant-list", call);
 
-    socket.to(targetSocketId).emit("call-ended", {
+    // Use emitToUser to notify all receiver's sockets
+    emitToUser(to, "call-ended", {
       from,
       duration,
       roomId,
@@ -642,16 +798,9 @@ async function handleSaveCallMessage(socket, data) {
       content,
     });
 
-    // Emit to both sender and receiver
-    const senderSocket = onlineUsers.get(senderId);
-    const receiverSocket = onlineUsers.get(receiverId);
-
-    if (senderSocket) {
-      socket.to(senderSocket).emit("receive-message", savedMessage);
-    }
-    if (receiverSocket) {
-      socket.to(receiverSocket).emit("receive-message", savedMessage);
-    }
+    // Use emitToUser to notify all sockets of both sender and receiver
+    emitToUser(senderId, "receive-message", savedMessage);
+    emitToUser(receiverId, "receive-message", savedMessage);
   } catch (error) {
     console.error("Error saving call message:", error);
   }
@@ -691,16 +840,12 @@ async function handleCreateGroup(socket, data) {
       }
     }
 
-    // Emit to all members of the group
+    // Emit to all members of the group - use emitToUser for each member
     members.forEach((memberId) => {
-      const memberSocket = onlineUsers.get(memberId.toString());
-      // console.log("memberSocket", memberSocket);
-      if (memberSocket) {
-        socket.to(memberSocket).emit("group-updated", {
-          type: "created",
-          group: data,
-        });
-      }
+      emitToUser(memberId.toString(), "group-updated", {
+        type: "created",
+        group: data,
+      });
     });
   } catch (error) {
     console.error("Error creating group:", error);
@@ -734,25 +879,18 @@ async function handleUpdateGroup(socket, data) {
       });
     }
 
+    // Use emitToUser for each member
     members.forEach((memberId) => {
-      const memberSocket = onlineUsers.get(memberId);
-      if (memberSocket) {
-        // console.log("aa",updatedGroup)
-        socket.to(memberSocket).emit("group-updated", {
-          type: "updated",
-          // group: updatedGroup,
-        });
-      }
+      emitToUser(memberId, "group-updated", {
+        type: "updated",
+        // group: updatedGroup,
+      });
     });
     if (removeId) {
-      const memberSocket = onlineUsers.get(removeId);
-      if (memberSocket) {
-        // console.log("aa",updatedGroup)
-        socket.to(memberSocket).emit("group-updated", {
-          type: "updated",
-          // group: updatedGroup,
-        });
-      }
+      emitToUser(removeId, "group-updated", {
+        type: "updated",
+        // group: updatedGroup,
+      });
     }
   } catch (error) {
     console.error("Error updating group:", error);
@@ -763,15 +901,13 @@ async function handleDeleteGroup(socket, groupId) {
   try {
     const group = await getGroupById(groupId);
     await deleteGroup(groupId);
-    // Emit to all members of the group
+
+    // Use emitToUser for each member
     group.members.forEach((memberId) => {
-      const memberSocket = onlineUsers.get(memberId.toString());
-      if (memberSocket) {
-        socket.to(memberSocket).emit("group-updated", {
-          type: "deleted",
-          groupId,
-        });
-      }
+      emitToUser(memberId.toString(), "group-updated", {
+        type: "deleted",
+        groupId,
+      });
     });
   } catch (error) {
     console.error("Error deleting group:", error);
@@ -805,18 +941,22 @@ async function handleGroupMessage(socket, data) {
     const groupMembers = await getGroupMembers(groupId);
     // console.log("Group members' socket IDs:", groupMembers); // Log the socket IDs
 
-    groupMembers.forEach((memberSocketId) => {
-      if (memberSocketId !== socket.id) {
-        socket.to(memberSocketId).emit("receive-group", {
-          _id: Date.now().toString(),
-          sender: senderId,
-          content: content,
-          groupId,
-          createdAt: new Date().toISOString(),
-          group: true
-        });
-      }
-    });
+    // Use emitToUser for each member instead of direct socket emission
+    const group = await findGroupById(groupId);
+    if (group && group.members) {
+      group.members.forEach((memberId) => {
+        if (memberId !== senderId) { // Don't send to sender
+          emitToUser(memberId.toString(), "receive-group", {
+            _id: Date.now().toString(),
+            sender: senderId,
+            content: content,
+            groupId,
+            createdAt: new Date().toISOString(),
+            group: true
+          }, socket.id); // Exclude current socket
+        }
+      });
+    }
   } catch (error) {
     console.error("Error handling group message:", error);
   }
@@ -851,10 +991,6 @@ async function handleMessageReaction(socket, data) {
 
     await message.save();
 
-    // Emit to sender and receiver
-    const receiverSocketId = onlineUsers.get(message.receiver.toString());
-    const senderSocketId = onlineUsers.get(message.sender.toString());
-
     const reactionData = {
       messageId,
       userId,
@@ -862,12 +998,9 @@ async function handleMessageReaction(socket, data) {
       action: existingReactionIndex !== -1 ? 'removed' : 'added'
     };
 
-    if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("message-reaction", reactionData);
-    }
-    if (senderSocketId && senderSocketId !== socket.id) {
-      socket.to(senderSocketId).emit("message-reaction", reactionData);
-    }
+    // Use emitToUser for both sender and receiver
+    emitToUser(message.receiver.toString(), "message-reaction", reactionData);
+    emitToUser(message.sender.toString(), "message-reaction", reactionData, socket.id);
   } catch (error) {
     console.error("Error handling message reaction:", error);
   }
@@ -889,10 +1022,6 @@ async function handleRemoveMessageReaction(socket, data) {
 
     await message.save();
 
-    // Emit to sender and receiver
-    const receiverSocketId = onlineUsers.get(message.receiver.toString());
-    const senderSocketId = onlineUsers.get(message.sender.toString());
-
     const reactionData = {
       messageId,
       userId,
@@ -900,12 +1029,9 @@ async function handleRemoveMessageReaction(socket, data) {
       action: 'removed'
     };
 
-    if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("message-reaction", reactionData);
-    }
-    if (senderSocketId && senderSocketId !== socket.id) {
-      socket.to(senderSocketId).emit("message-reaction", reactionData);
-    }
+    // Use emitToUser for both sender and receiver
+    emitToUser(message.receiver.toString(), "message-reaction", reactionData);
+    emitToUser(message.sender.toString(), "message-reaction", reactionData, socket.id);
   } catch (error) {
     console.error("Error handling remove message reaction:", error);
   }
@@ -915,20 +1041,35 @@ async function handleRemoveMessageReaction(socket, data) {
 
 function handleDisconnect(socket) {
   if (socket.userId) {
-    onlineUsers.delete(socket.userId);
+    // Remove from onlineUsers
+    let sockets = onlineUsers.get(socket.userId);
+    if (sockets) {
+      sockets.delete(socket.id);
+      if (sockets.size === 0) {
+        onlineUsers.delete(socket.userId);
+      } else {
+        onlineUsers.set(socket.userId, sockets);
+      }
+    }
+
+    // Remove from userDevices
+    const devices = userDevices.get(socket.userId);
+    if (devices) {
+      devices.delete(socket.id);
+      if (devices.size === 0) {
+        userDevices.delete(socket.userId);
+      }
+    }
+
     // Broadcast updated online users list
     const onlineUsersList = Array.from(onlineUsers.keys());
     global.io.emit("user-status-changed", onlineUsersList);
 
     // Remove userId from activeCalls
     Object.keys(activeCalls).forEach(roomId => {
-      // activeCalls[roomId].invited = activeCalls[roomId].invited.filter(id => id !== socket.userId);
       activeCalls[roomId].ringing = activeCalls[roomId].ringing.filter(id => id !== socket.userId);
       activeCalls[roomId].joined = activeCalls[roomId].joined.filter(id => id !== socket.userId);
     });
-
-    // console.log("User disconnected:", socket.userId);
-    // console.log("Current online users:", onlineUsersList);
   }
 }
 
@@ -975,24 +1116,17 @@ async function handleForwardMessage(socket, data) {
       status: "sent",
     });
 
-    const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
-      socket.to(receiverSocketId).emit("receive-message", savedMessage);
+    // Use emitToUser to notify all receiver's sockets
+    emitToUser(receiverId, "receive-message", savedMessage);
 
-      await Message.findByIdAndUpdate(savedMessage._id, {
-        status: "delivered",
-      });
+    await Message.findByIdAndUpdate(savedMessage._id, {
+      status: "delivered",
+    });
 
-      socket.emit("message-sent-status", {
-        messageId: savedMessage._id,
-        status: "delivered",
-      });
-    } else {
-      socket.emit("message-sent-status", {
-        messageId: savedMessage._id,
-        status: "sent",
-      });
-    }
+    socket.emit("message-sent-status", {
+      messageId: savedMessage._id,
+      status: "delivered",
+    });
   } catch (error) {
     console.error("Error handling forward message:", error);
     socket.emit("message-sent-status", {
@@ -1006,22 +1140,26 @@ async function handleForwardMessage(socket, data) {
 // ===========================camera status=============================
 function handleCameraStatusChange(socket, data) {
   const { userId, isCameraOn } = data;
+
   // Get all online users except the sender
   const onlineUsersList = Array.from(onlineUsers.entries());
+
   // Broadcast camera status to all other users
-  onlineUsersList.forEach(([onlineUserId, socketId]) => {
+  onlineUsersList.forEach(([onlineUserId, sockets]) => {
     if (onlineUserId !== userId) {
-      // console.log(`[Camera Status] Sending update to user ${onlineUserId}`);
-      socket.to(socketId).emit("camera-status-change", {
+      // Use emitToUser for each user
+      emitToUser(onlineUserId, "camera-status-change", {
         userId,
         isCameraOn,
       });
     }
   });
-  socket.emit("camera-status-change", {
+
+  // Also emit to the sender's other sockets
+  emitToUser(userId, "camera-status-change", {
     userId,
     isCameraOn,
-  });
+  }, socket.id);
 }
 
 // ===========================mic status=============================
