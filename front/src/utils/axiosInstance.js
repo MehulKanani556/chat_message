@@ -146,7 +146,7 @@ axiosInstance.interceptors.response.use(
         store.dispatch(logoutUser(userId));
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "/login";
+        window.location.href = "/";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

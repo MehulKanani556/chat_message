@@ -34,6 +34,7 @@ import ScreenSourceSelector from "../component/ScreenSourceSelector";
 
 const Chat2 = () => {
   const { allUsers, user, allMessageUsers } = useSelector((state) => state.user);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const remoteStreams = useSelector(state => state.magageState.remoteStreams);
   const isConnected = useSelector(state => state.magageState.isConnected);
@@ -68,10 +69,12 @@ const Chat2 = () => {
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    const handleResize = () => setScreenWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [screenWidth, window.innerWidth]);
+    const mq = window.matchMedia('(max-width: 1025px)');
+    const apply = () => setShowOverlay(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   const dispatch = useDispatch();
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
@@ -90,13 +93,12 @@ const Chat2 = () => {
   // Object to hold durations keyed by message ID
 
   const [userStreams, setUserStreams] = useState({});
-  const [showOverlay, setShowOverlay] = useState(false);
 
   //===========Use the custom socket hook===========
   const { socket, cleanupConnection, sendPrivateMessage, subscribeToMessages, acceptScreenShare, startCall, sendGroupMessage } = useSocket();
 
   useEffect(() => {
-    if (screenWidth <= 1439) {
+    if (screenWidth <= 1025) {
       setShowOverlay(true);
     } else {
       setShowOverlay(false);
