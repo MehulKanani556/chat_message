@@ -3,12 +3,9 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-
 import { BASE_URL } from '../utils/baseUrl';
 
 const SERVER_URL = BASE_URL.replace('/api', '');
-
-
 
 const ScannerComponent = () => {
   const [cameraError, setCameraError] = useState(null);
@@ -49,7 +46,6 @@ const ScannerComponent = () => {
 
   const validateQRData = (data) => {
     try {
-      console.log('Validating QR data:', data);
       const qrData = JSON.parse(data);
       
       // Check if it's a login QR code
@@ -79,7 +75,6 @@ const ScannerComponent = () => {
   const handleQRLogin = async (qrData) => {
     try {
       setScanResult('Processing login...');
-      console.log('Making QR login request with data:', qrData);
       
       // Get current user's credentials
       const authToken = sessionStorage.getItem('token');
@@ -101,8 +96,6 @@ const ScannerComponent = () => {
           'Authorization': `Bearer ${authToken}`
         }
       });
-
-      console.log('QR login response:', response.data);
       
       if (socket) {
         socket.emit('qr-scan-success', {
@@ -142,14 +135,11 @@ const ScannerComponent = () => {
   const handleScan = (result) => {
     if (result && result.length > 0) {
       const qrData = result[0].rawValue;
-      console.log('Raw QR code scanned:', qrData);
       try {
         const validation = validateQRData(qrData);
         if (validation.valid) {
-          console.log('QR data validation passed:', validation.data);
           handleQRLogin(validation.data);
         } else {
-          console.log('QR data validation failed:', validation.error);
           setScanResult('Scan failed: ' + validation.error);
         }
       } catch (parseError) {
@@ -164,9 +154,6 @@ const ScannerComponent = () => {
     setCameraError("Failed to start camera: " + error.message);
   };
 
-  const getStatusMessage = () => {
-    return '';
-  };
 
   return (
     <div className="scanner-container">

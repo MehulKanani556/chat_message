@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import OtpModal from "../component/OtpModal";
-import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import CountryList from '../component/CountryList';
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
@@ -102,7 +101,6 @@ const LoginNew = () => {
     try {
       dispatch(mobileOtp({ mobileNumber: fullPhoneNumber }))
         .then((response) => {
-          // console.log(response)
           if (response.payload.status == 200) {
             setShowOtpModal(true);
           }
@@ -121,7 +119,6 @@ const LoginNew = () => {
         otp
       }))
         .then((response) => {
-          // console.log(response)
           if (response.payload.status == 200) {
           navigate('/chat')
           }

@@ -15,7 +15,6 @@ const Chat = () => {
     const [selectedTab, setSelectedTab] = useState('All');
     const [recentChats, setRecentChats] = useState([]);
     const [messages, setMessages] = useState([]);
-    const [showDialpad, setShowDialpad] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [selectedChat, setSelectedChat] = useState(null);
     const [message, setMessage] = useState('');

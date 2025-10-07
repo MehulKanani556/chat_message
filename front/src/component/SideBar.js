@@ -58,14 +58,6 @@ const Sidebar = memo(() => {
 
 
   const menuItems = [
-    // { icon: <BsChatDots size={20} />, path: "#", label: "Chat" },
-    // {
-    //   icon: <BsPerson size={20} />, path: "#", label: "Profile", onClick: () => {
-    //     const event = new CustomEvent('showProfile');
-    //     window.dispatchEvent(event);
-    //     setActiveItem("Profile");
-    //   }
-    // },
     {
       icon: <BsChatDots size={20} />, path: "#", label: "chat", onClick: () => {
         const event = new CustomEvent('showChatList');
@@ -87,22 +79,10 @@ const Sidebar = memo(() => {
         setActiveItem("Call");
       }
     },
-    // {
-    // icon: <BsGlobe size={20} />, path: "#", label: "Language", onClick: () => {
-    //     const event = new CustomEvent('showLanguage');
-    //     window.dispatchEvent(event);
-    //     setActiveItem("Language");
-    //   }
-    // },
   ];
 
   // Logout
   const handleLogout = async() => {
-    // sessionStorage.removeItem("token");
-    // sessionStorage.removeItem("userId");
-    // navigate("/");
-    // console.log("Sdsdgsdfdfgdfg");
-    
     await dispatch(logoutUser(currentUser));
     navigate("/");
   };
@@ -116,9 +96,6 @@ const Sidebar = memo(() => {
       border-gray-400/30 dark:border-gray-700z
       transition-all duration-300
       z-50"
-    // style={{
-    //   boxShadow: "0 0 10px 0 rgba(0, 0, 0, 0.1)"
-    // }}
     >
       <div className="
         flex md:flex-col

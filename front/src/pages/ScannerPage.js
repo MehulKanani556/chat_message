@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Scanner from '../component/Scanner';
 import { useNavigate } from 'react-router-dom';
-import io from 'socket.io-client';
-
-import { BASE_URL } from '../utils/baseUrl';
-
-const SERVER_URL = BASE_URL;
 
 
 const ScannerPage = () => {
@@ -27,7 +22,6 @@ const ScannerPage = () => {
 
   const handleScanSuccess = (data) => {
     try {
-      // console.log('Handling scan success:', data);
       setLoading(true);
       setError(null);
       

@@ -22,16 +22,12 @@ import {
   FaFile,
   FaFileAudio,
 } from "react-icons/fa";
-import { PiDotsThreeVerticalBold, PiDotsThreeBold } from "react-icons/pi";
-import { VscCallIncoming, VscCallOutgoing, VscCopy } from "react-icons/vsc";
+import {  PiDotsThreeBold } from "react-icons/pi";
 import {
   MdCallEnd,
   MdOutlineModeEdit,
-  MdPhoneEnabled,
   MdGroupAdd,
-  MdOutlineModeEditOutline,
 } from "react-icons/md";
-import { CiSquareRemove } from "react-icons/ci";
 import { RiShutDownLine } from "react-icons/ri";
 import {
   LuScreenShare,
@@ -47,9 +43,6 @@ import { RxCross2 } from "react-icons/rx";
 import {
   IoCallOutline,
   IoCameraOutline,
-  IoCheckmarkCircleOutline,
-  IoCheckmarkDoneCircle,
-  IoCheckmarkDoneCircleOutline,
   IoPersonCircleOutline,
 } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
@@ -73,10 +66,7 @@ import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import axios from "axios";
 import Front from "../component/Front";
 import { MdOutlineDeleteSweep } from "react-icons/md";
-import AudioPlayer from "../component/AudioPlayer";
 import ChatItem from "../component/ChatItem"; // Import the new ChatItem component
-import { BiReply, BiShare } from "react-icons/bi";
-import { SlActionUndo } from "react-icons/sl";
 import MessageList from "../component/MessageList";
 import { useSocket } from "../context/SocketContext";
 import AddParticipants from "../component/AddParticipants";
@@ -282,7 +272,6 @@ const Chat2 = () => {
       if (selectedTab === "Unread") {
         setFilteredUsers(
           allMessageUsers.filter((user) => {
-            // console.log(user.messages),
             if (user.messages && user.messages.length > 0) {
               return user.messages.some(
                 (message) =>
@@ -308,7 +297,6 @@ const Chat2 = () => {
       const updatedChat = allMessageUsers.find(
         (chat) => chat._id === selectedChat._id
       );
-      // console.log("updatedChat", updatedChat);
       if (updatedChat) {
         setSelectedChat(updatedChat);
       }
@@ -325,7 +313,6 @@ const Chat2 = () => {
             (msg.status === "sent" || msg.status === "delivered")
         )
         .map((msg) => msg._id);
-      // console.log("unreadMessages", unreadMessages, messages);
       // Mark these messages as read
       if (unreadMessages.length > 0) {
         markMessageAsRead(unreadMessages);
@@ -407,13 +394,11 @@ const Chat2 = () => {
     const files = e.target.files; // Get the files from the input
     if (files && files.length > 0) {
       const filesArray = Array.from(files); // Convert FileList to an array
-      // console.log("setting selected", filesArray);
       setSelectedFiles((prev) => [...prev, ...filesArray]); // Add files to the existing selected files array
       return; // Exit the function early if files are being processed
     }
 
     setMessageInput(e.target.value);
-    // console.log(e.target.value);
     if (selectedChat) {
       sendTypingStatus(selectedChat._id, true);
     }
@@ -448,7 +433,6 @@ const Chat2 = () => {
       )
         return;
 
-      // console.log("data", data);
 
       try {
         const messageData = {
@@ -531,7 +515,6 @@ const Chat2 = () => {
     for (const file of filesArray) {
       const formData = new FormData();
       formData.append("file", file);
-      // console.log("multiple file upload", file);
 
       try {
         const response = await axios.post(`${BASE_URL}/upload`, formData, {
@@ -561,10 +544,8 @@ const Chat2 = () => {
   //================screen sharing================
 
   const handleStartScreenShare = async () => {
-    // console.log(selectedChat);
     if (selectedChat) {
       const success = await startSharing(selectedChat);
-      // console.log(success);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
@@ -580,13 +561,11 @@ const Chat2 = () => {
 
     if (type == "video") {
       const success = await startVideoCall(selectedChat._id);
-      // console.log(success);
       if (!success) {
         console.error("Failed to start screen sharing");
       }
     } else if (type == "voice") {
       const success = await startVoiceCall(selectedChat._id);
-      // console.log(success);
       if (!success) {
         console.error("Failed to start voice call");
       }
@@ -621,7 +600,6 @@ const Chat2 = () => {
   const handleDeleteMessage = async (messageId) => {
     try {
       await dispatch(deleteMessage(messageId));
-      // Emit socket event for real-time deletion
       socket.emit("delete-message", messageId);
       if (selectedChat) {
         dispatch(getAllMessages({ selectedId: selectedChat._id }));
@@ -633,7 +611,6 @@ const Chat2 = () => {
   };
 
   const handleEditMessage = (message) => {
-    // console.log("message", message);
     setEditingMessage(message);
     setMessageInput(message.content.content);
     setContextMenu({ visible: false, x: 0, y: 0, messageId: null });
@@ -809,7 +786,6 @@ const Chat2 = () => {
   };
 
   useEffect(() => {
-    // console.log("Dropdown state:", isDropdownOpen);
   }, [isDropdownOpen]);
 
   const handleDropdownToggle = (messageId) => {
@@ -853,7 +829,6 @@ const Chat2 = () => {
   const handleUserNameBlur = () => {
     setIsEditingUserName(false);
     // Optionally, dispatch an action to update the username in the store
-    // dispatch(updateUserName(editedUserName));
     dispatch(
       updateUser({ id: currentUser, values: { userName: editedUserName } })
     );
@@ -921,7 +896,6 @@ const Chat2 = () => {
 
     // Find all highlighted spans containing the search text
     const highlightedSpans = document.querySelectorAll(".highlight-text");
-    // console.log("highlightedSpans", highlightedSpans);
 
     if (highlightedSpans.length > 0) {
       highlightedSpans.forEach((span) => {
@@ -932,7 +906,6 @@ const Chat2 = () => {
         currentMatchIndex++;
       });
     }
-    // console.log("targetElement", targetElement, targetSpan);
 
     // Scroll to the target element if found
     if (targetElement && targetSpan) {
@@ -1000,7 +973,6 @@ const Chat2 = () => {
 
         recorder.onstop = async () => {
           const audioBlob = new Blob(chunks, { type: "audio/webm" }); // Change to 'audio/webm' for better quality
-          // console.log("Audio Blob:", audioBlob);
 
           // Dispatch the audio message
           if (selectedChat) {
@@ -1008,7 +980,6 @@ const Chat2 = () => {
               type: "file", // Determine the type based on input
               content: audioBlob, // The actual content of the message
             };
-            // console.log("add", audioBlob);
 
             // Use the same upload logic as for other files
             const formData = new FormData();
@@ -1219,7 +1190,6 @@ const Chat2 = () => {
       setCallUsers(allCallUsers);
     }
   };
-  // console.log("aaaaaa-------", callUsers);
   // clear chat
   const handleClearChat = () => {
     dispatch(clearChat({ selectedId: selectedChat._id })).then(() => {
@@ -1601,10 +1571,6 @@ const Chat2 = () => {
             <FaUsers className="w-6 h-6" />
             <span className="text-xs mt-1">+Group</span>
           </div>
-          {/* <div className="flex flex-col items-center text-gray-500">
-            <FaBell className="w-6 h-6" />
-            <span className="text-xs mt-1">Notifications</span>
-          </div> */}
         </div>
 
         {callUsers.length == 0 && (
@@ -1775,9 +1741,7 @@ const Chat2 = () => {
                   <div
                     className="ml-3 cursor-pointer"
                     onClick={() => {
-                      // console.log("selectedChat", selectedChat);
                       if (selectedChat?.members) {
-                        // console.log("selectedChat");
                         setIsGroupModalOpen(true);
                       } else {
                         setIsUserProfileModalOpen(true);
@@ -1815,25 +1779,6 @@ const Chat2 = () => {
                     data-tooltip-delay="0"
                     data-tooltip-duration="0"
                   />
-
-                  {/* <MdOutlineDeleteSweep
-                    className="w-6 h-6 cursor-pointer text-red-500 hover:text-red-600 text-4xl"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Are you sure you want to clear this chat?"
-                        )
-                      ) {
-                        dispatch(
-                          clearChat({ selectedId: selectedChat._id })
-                        ).then(() => {
-                          dispatch(
-                            getAllMessages({ selectedId: selectedChat._id })
-                          );
-                        });
-                      }
-                    }}
-                  /> */}
 
                   <MdOutlineDeleteSweep
                     onClick={() => setIsClearChatModalOpen(true)}
@@ -1895,7 +1840,6 @@ const Chat2 = () => {
                     data-tooltip-delay="0"
                     data-tooltip-duration="0"
                   />
-                  {/* <FaEllipsisH className="" /> */}
                 </div>
                 {isSearchBoxOpen && (
                   <div
@@ -2069,9 +2013,6 @@ const Chat2 = () => {
                         }
                       </div>
                       <div className="text-gray-600 text-sm line-clamp-2">
-                        {/* {console.log(
-                          replyingTo.content.fileType === "image/jpeg"
-                        )} */}
                         {replyingTo.content.content}
                         {replyingTo.content.fileType === "image/jpeg" && (
                           <img
@@ -2122,7 +2063,6 @@ const Chat2 = () => {
                           emojiVersion="5.0" // show all emojis from latest Unicode
                           lazyLoadEmojis={false}    // load all emojis immediately
                           defaultSkinTone="neutral"
-                        // height={300}
                         />
                       </div>
                     )}
@@ -2403,8 +2343,6 @@ const Chat2 = () => {
               Incoming {incomingCall.type} call...
             </p>
             <div className="flex justify-center gap-8">
-              {/* {console.log(incomingCall.type)} */}
-
               <button
                 onClick={
                   incomingCall.type === "video"
@@ -2710,10 +2648,6 @@ const Chat2 = () => {
                 <span className="text-gray-600 font-bold">Skype Name</span>
                 <span className="text-gray-800">{selectedChat?.userName}</span>
               </div>
-              {/* <div className="flex items-center justify-between p-2 border-b ">
-                <span className="text-gray-600 font-bold">Email</span>
-                <span className="text-gray-800">{selectedChat?.email}</span>
-              </div> */}
               <div className="flex items-center justify-between p-2 border-b ">
                 <span className="text-gray-600 font-bold">Phone Number</span>
                 <span className="text-gray-800">
@@ -3244,7 +3178,6 @@ const Chat2 = () => {
                     key={user._id}
                     className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
                     onClick={() => {
-                      // console.log("user", user);
                       inviteToCall(user._id);
                       setParticipantOpen(false);
                     }}

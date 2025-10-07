@@ -1,39 +1,29 @@
 import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FaChevronDown, FaChevronUp, FaPaperclip, FaEdit, FaCheck, FaTimes, FaChevronLeft } from 'react-icons/fa';
-import { CgProfile } from "react-icons/cg";
+import { useNavigate } from 'react-router-dom';
+import { FaChevronDown, FaChevronUp, FaChevronLeft } from 'react-icons/fa';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { IMG_URL } from '../utils/baseUrl';
 import { updateUser, updateUserGroupToJoin, updateUserProfilePhotoPrivacy } from '../redux/slice/user.slice';
-import { MdEdit, MdModeEdit } from 'react-icons/md';
 import ColorPicker from "./ColorPicker";
 import { initializePrimaryColor } from "../utils/themeUtils";
 import { ImImages } from 'react-icons/im';
 import { SlPencil } from "react-icons/sl";
-// import styled from 'styled-components';
 const Setting = memo(() => {
 
-    // console.log("setting");
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const urlUserId = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
-    const [isEditing, setIsEditing] = useState(false);
     const currentUser = useSelector((state) => state.user.user);
     const [isLoading, setIsLoading] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
     const [userInfoOpen, setUserInfoOpen] = useState(true);
     const [filesOpen, setFilesOpen] = useState(false);
-    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [editingField, setEditingField] = useState(null);
     const [profilePhotoPrivacy, setProfilePhotoPrivacy] = useState('Everyone');
     const [groupsPrivacy, setGroupsPrivacy] = useState('Everyone');
     const [privacyDropdownOpen, setPrivacyDropdownOpen] = useState(false);
     const [groupsPrivacyDropdownOpen, setGroupsPrivacyDropdownOpen] = useState(false);
-    const [lastSeenPrivacy, setLastSeenPrivacy] = useState(true);
-    const [editedUserName, setEditedUserName] = useState(user?.userName || "");
-    const [isEditingUserName, setIsEditingUserName] = useState(false);
     const [isToggled, setIsToggled] = useState(false);
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem("theme");
@@ -95,10 +85,8 @@ const Setting = memo(() => {
             const fetchUserData = async () => {
                 try {
                     setIsLoading(true);
-                    // console.log('Fetching user data for ID:', targetUserId);
                     const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${targetUserId}`);
                     const userData = response.data;
-                    // console.log(response.data)
 
                     setUser(userData);
                     setProfileData({
@@ -129,7 +117,6 @@ const Setting = memo(() => {
             fetchUserData();
         } else if (currentUser) {
             // Use current user data
-            // console.log('Using current user data:', currentUser._id);
             setUser(currentUser);
             setProfileData({
                 name: currentUser.userName || '',
@@ -159,7 +146,6 @@ const Setting = memo(() => {
     };
 
     const handleImageUpload = (e) => {
-        // console.log('File selected:', e.target.files[0]);
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -184,11 +170,7 @@ const Setting = memo(() => {
     const handleSaveImage = async (file) => {
         try {
             setIsLoading(true);
-
-            // Dispatch the update action
             const result = await dispatch(updateUser({ id: user._id, values: { photo: file } })).unwrap();
-
-            // Update local state
             if (result && result.user) {
                 setUser(result.user);
                 setProfileData(prev => ({
@@ -196,7 +178,6 @@ const Setting = memo(() => {
                     profileImage: result.user.photo ? `${IMG_URL}${result.user.photo.replace(/\\/g, "/")}` : prev.profileImage
                 }));
             }
-
             setIsLoading(false);
         } catch (error) {
             console.error('Error updating profile image:', error);
@@ -213,7 +194,6 @@ const Setting = memo(() => {
         try {
             setIsLoading(true);
 
-            // Prepare the update object
             const updateObject = {
                 userName: tempData.name,
                 email: tempData.email,
@@ -221,21 +201,17 @@ const Setting = memo(() => {
                 bio: tempData.bio,
             };
 
-            // If there's a new image file, add it to the update object
             if (tempData.photoFile) {
                 updateObject.photo = tempData.photoFile;
             }
 
-            // Dispatch the update action
             const result = await dispatch(updateUser({ id: user._id, values: updateObject })).unwrap();
 
-            // Update local state
             setProfileData({
                 ...tempData,
                 profileImage: tempData.photoFile ? URL.createObjectURL(tempData.photoFile) : tempData.profileImage
             });
 
-            // Update user state in Redux
             if (result && result.user) {
                 setUser(result.user);
             }
@@ -248,32 +224,19 @@ const Setting = memo(() => {
         }
     };
 
-    // const handleUserNameChange = (e) => {
-    //     setEditedUserName(e.target.value);
-    // };
-
-
-    // const handleUserNameBlur = () => {
-    //     setIsEditingUserName(false);
-    //     // Optionally, dispatch an action to update the username in the store
-    //     // dispatch(updateUserName(editedUserName));
-    //     dispatch(
-    //         updateUser({ id: currentUser, values: { userName: editedUserName } })
-    //     );
-    // };
     const toggleColorPicker = () => {
         setShowColorPicker(!showColorPicker);
     };
 
 
-    const handleToggle = (notification) => {
+    const handleToggle = () => {
         setIsToggled(!isToggled);
         dispatch(updateUser({ id: user._id, values: { notification: isToggled } }))
     };
 
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
-        };
+    };
 
     return (
         <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 h-[100vh] overflow-hidden  relative"
@@ -373,16 +336,13 @@ const Setting = memo(() => {
 
                 {/* Profile Content */}
                 <div className="max-w-md mx-auto  rounded-lg p-8 dark:text-primary-light">
-                    {/* Accordion content */}
                     <div className="w-full max-w-md bg-[#F9FAFA] rounded shadow dark:bg-primary-light/15 ">
-                        {/* User Info Section */}
                         <div className="border-b border-gray-300">
                             <button
                                 className="w-full px-4 py-3 flex justify-between items-center"
                                 onClick={() => setUserInfoOpen(!userInfoOpen)}
                             >
                                 <div className="flex items-center space-x-2">
-                                    {/* <CgProfile /> */}
                                     <span className="text-lg font-medium ">Personal Info</span>
                                 </div>
                                 {userInfoOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
@@ -459,10 +419,6 @@ const Setting = memo(() => {
                                         )}
                                     </div>
 
-                                    {/* <div className="mb-4">
-                                        <p className="text-gray-400 text-sm">Email</p>
-                                        <p className="text-black font-semibold dark:text-primary-light break-words">{profileData.email}</p>
-                                    </div> */}
                                     <div className="mb-4">
                                         <p className="text-gray-400 text-sm">Mobile Number</p>
                                         <p className="text-black font-semibold dark:text-primary-light">{profileData.mobileNumber}</p>
@@ -578,6 +534,7 @@ const Setting = memo(() => {
                                             )}
                                         </div>
                                     </div>
+
                                     {/* Notofication */}
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="text-gray-400 text-sm">Notification</p>
@@ -608,9 +565,8 @@ const Setting = memo(() => {
                                     </div>
                                 </div>
                             )}
-
-
                         </div>
+
                         {/* Theme Color Section */}
                         <div className="">
                             <button
@@ -627,8 +583,6 @@ const Setting = memo(() => {
                                     <FaChevronDown size={12} />
                                 )}
                             </button>
-
-
 
                             {showColorPicker && (
                                 <div className="px-4 py-4">
@@ -664,36 +618,6 @@ const Setting = memo(() => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Notifications Section */}
-                        {/* <div className="border-b border-gray-300">
-                            <button
-                                className="w-full px-4 py-3 flex justify-between items-center"
-                                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <span className="font-medium">Security</span>
-                                </div>
-                                {notificationsOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                            </button>
-
-                            {notificationsOpen && (
-                                <div className='px-4 pb-4 pt-1 relative'>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <p className="text-gray-400 text-sm">Show security notification</p>
-                                        <div className="relative inline-block text-left">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
-                                                onClick={() => setLastSeenPrivacy(!lastSeenPrivacy)}
-                                            >
-                                                {lastSeenPrivacy ? 'On' : 'Off'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div> */}
                     </div>
                 </div>
             </div>

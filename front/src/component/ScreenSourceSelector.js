@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setScreenSource, setShowScreenSource } from '../redux/slice/manageState.slice';
-import { useSocket } from '../context/SocketContext';
 
 function ScreenSourceSelector({ onSelect }) {
   const dispatch = useDispatch()
   const [sources, setSources] = useState([]);
-  const { cleanupConnection, startCall,startSharing,registerAsHost,unregisterAsHost,isControlling,isHost } = useSocket();
-  const selectedChat = useSelector(state => state.magageState.selectedChat);
   const modalRef = useRef(null);
 
 
@@ -30,38 +27,16 @@ function ScreenSourceSelector({ onSelect }) {
 
   const loadSources = async () => {
     if (window.electron) {
-      const availableSources = await window.electron.getSources();
-      // console.log(availableSources);
-      
+      const availableSources = await window.electron.getSources();      
       setSources(availableSources);
     }
   };
 
-  // const handleSelectSource = (source) => {
-  //   setSelectedSource(source);
-  //   onSelect(source);
-  // };
-
   const handleSelectSource = async (source) => {
-    // try {
-    //   const stream = await navigator.mediaDevices.getUserMedia({
-    //     audio: false,
-    //     video: {
-    //       mandatory: {
-    //         chromeMediaSource: 'desktop',
-    //         chromeMediaSourceId: source.id
-    //       }
-    //     }
-    //   });
-    //   setStream(stream);
-    // } catch (err) {
-    //   alert('Error: ' + err.message);
-    // }
     await dispatch(setScreenSource(source));
     if (window.electron && window.electron.setActiveWindow) {
       window.electron.setActiveWindow(source.name);
     }
-    // dispatch(setShowScreenSource(false));
   };
 
   return (
