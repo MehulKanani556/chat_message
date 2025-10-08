@@ -792,11 +792,11 @@ const VideoCallLayout = memo(() => {
         style={{ display: "none" }}
       />
       {/* Participant Grid */}
-      <div className="flex flex-wrap relative justify-center items-center w-full overflow-hidden">
+      <div className={`flex flex-wrap relative justify-center items-center w-full h-full overflow-hidden ${(participants.length == 1 && isVoiceCalling)? "p-10" : ''}`}>
         {/* Add hidden canvas for recording */}
         {participants.length == 1 ? (
           isVoiceCalling ? (
-            <div className="w-full h-full dark:bg-white/10 relative rounded-xl">
+            <div className="w-full h-full dark:bg-white/10 relative rounded-xl ">
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
                 <div className="flex flex-col items-center">
                   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
