@@ -21,6 +21,7 @@ const getParticipantWidth = (count) => {
 };
 
 const VideoCallLayout = memo(() => {
+
   const participants = useSelector((state) => state.magageState.participants);
   const selectedChat = useSelector((state) => state.magageState.selectedChat);
   const isMicrophoneOn = useSelector((state) => state.magageState.isMicrophoneOn);
@@ -36,6 +37,7 @@ const VideoCallLayout = memo(() => {
   const isControlling = useSelector((state) => state.magageState.isControlling);
   const viewerControlling = useSelector((state) => state.magageState.viewerControlling);
   const participantOpen = useSelector((state) => state.magageState.participantOpen);
+  const selectedChatModule = useSelector(state => state.magageState.selectedChatModule);
   const callChatList = useSelector((state) => state.magageState.callChatList);
   const roomId = useSelector((state) => state.magageState.shareRoomId);
   const allUsers = useSelector((state) => state.user.allUsers);
@@ -53,15 +55,7 @@ const VideoCallLayout = memo(() => {
   const localVideoRef = useRef(null);
 
   //===========Use the custom socket hook===========
-  const {
-    endCall,
-    cleanupConnection,
-    toggleCamera,
-    toggleMicrophone,
-    sendControl,
-    grantControl,
-    revokeControl,
-  } = useSocket();
+  const { endCall, cleanupConnection, toggleCamera, toggleMicrophone, sendControl, grantControl, revokeControl } = useSocket();
 
   //===========Use the custom socket hook===========
 
@@ -464,7 +458,6 @@ const VideoCallLayout = memo(() => {
   };
 
   const handleStop = async () => {
-    // ... existing handleStop logic ...
     const blob = new Blob(recordedChunksRef.current, {
       type: "video/webm",
     });
@@ -765,8 +758,7 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"
-        }`}
+      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"}`}
       style={
         chatMessages
           ? {
@@ -792,11 +784,11 @@ const VideoCallLayout = memo(() => {
         style={{ display: "none" }}
       />
       {/* Participant Grid */}
-      <div className={`flex flex-wrap relative justify-center items-center w-full h-full overflow-hidden ${(participants.length == 1 && isVoiceCalling)? "p-10" : ''}`}>
+      <div className={`flex flex-wrap relative justify-center items-center w-full overflow-hidden ${(participants?.length == 1 && isVoiceCalling) ? "p-10" : ''}`}>
         {/* Add hidden canvas for recording */}
         {participants.length == 1 ? (
           isVoiceCalling ? (
-            <div className="w-full h-full dark:bg-white/10 relative rounded-xl ">
+            <div className="w-full h-[calc(100vh-200px)] dark:bg-white/10 relative rounded-xl ">
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
                 <div className="flex flex-col items-center">
                   <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
@@ -834,7 +826,6 @@ const VideoCallLayout = memo(() => {
             Array.from(participants)?.map(([participantId, stream]) => {
               const participant = allUsers.find((u) => u._id === participantId);
               const isLocalUser = participantId === currentUser;
-
               const widthClass = getParticipantWidth(participants?.length);
               const setVideoRef = (el) => {
                 if (el) {
@@ -888,7 +879,6 @@ const VideoCallLayout = memo(() => {
                         ? "transform -translate-x-1 -scale-x-100 h-full object-cover rounded-xl"
                         : "object-contain"
                         }`}
-                      // muted={participantId === currentUser}
                       ref={(el) => {
                         setVideoRef(el);
                         if (el && stream instanceof MediaStream) {
@@ -904,10 +894,10 @@ const VideoCallLayout = memo(() => {
                       }}
                     />
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
-                      {isLocalUser ? "You" : participant?.userName || "Par"}
+                      {isLocalUser ? "You" : participant?.userName || "Participant"}
                     </div>
                     <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
-                      {isLocalUser ? "You" : participant?.userName || "Par"}
+                      {isLocalUser ? "You" : participant?.userName || "Participant"}
                     </div>
                     {userIncall && (
                       <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
@@ -947,8 +937,6 @@ const VideoCallLayout = memo(() => {
                   : false;
                 const isLocalUser = participantId === currentUser;
                 const widthClass = getParticipantWidth(participants?.length);
-                // localVideoRef.current.srcObject = isLocalUser ? stream : null
-
                 const setVideoRef = (el) => {
                   if (el) {
                     videoElementsRef.current[participantId] = el;

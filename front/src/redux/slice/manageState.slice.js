@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   remoteStreams: new Map(),
@@ -102,20 +102,13 @@ const manageStateSlice = createSlice({
     updateParticipant: (state, action) => {
       const { userId, stream } = action.payload;
       const allStreams = new Map(state.participants);
-
-      // console.log(allStreams);
       allStreams.set(userId, stream);
       state.participants = Array.from(allStreams);
     },
     removeParticipant: (state, action) => {
-      // console.log(action.payload);
-
       const userId = action.payload;
       const allStreams = new Map(state.participants);
       allStreams.delete(userId)
-
-      // console.log(Array.from(allStreams));
-
       state.participants = Array.from(allStreams);
     },
 
@@ -127,7 +120,6 @@ const manageStateSlice = createSlice({
       state.isConnected = !state.isConnected;
     },
     setOnlineUsers: (state, action) => {
-      // console.log(action.payload);
       state.onlineUsers = action.payload;
     },
     setIsReceiving: (state, action) => {

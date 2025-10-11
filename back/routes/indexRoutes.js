@@ -14,7 +14,7 @@ const {
   pinChat,
   muteUsers,
   mute,
-  getDevices, removeDevice, 
+  getDevices, removeDevice,
   addContactList
 } = require("../controller/userController");
 const {
@@ -37,7 +37,7 @@ const {
   updateMessage,
   clearChat,
 } = require("../controller/messageController");
-const {upload} = require("../helper/upload");
+const { upload } = require("../helper/upload");
 const uploadController = require("../controller/uploadController");
 const {
   createGroup,
@@ -49,8 +49,8 @@ const {
   addParticipants,
 } = require("../controller/groupController");
 const { handleQrLogin, getSessionStatus, logoutDevice } = require('../controller/authController');
-  const { auth } = require("../helper/auth");
-  const { checkElectronInstalled, downloadElectronApp } = require("../controller/electronController");
+const { auth } = require("../helper/auth");
+const { checkElectronInstalled, downloadElectronApp } = require("../controller/electronController");
 
 const indexRoutes = express.Router();
 
@@ -64,8 +64,8 @@ indexRoutes.post("/verifyOtp", verifyOtp);
 indexRoutes.post("/changePassword", changePassword);
 indexRoutes.post("/profile-info", auth, upload.single("photo"), profileInfo);
 // Generate new tokens
-indexRoutes.post("/generateNewTokens",generateNewToken);
-indexRoutes.post("/logoutUser",logoutUser);
+indexRoutes.post("/generateNewTokens", generateNewToken);
+indexRoutes.post("/logoutUser", logoutUser);
 
 
 // User Routes
@@ -88,7 +88,7 @@ indexRoutes.post("/addContactList", auth, addContactList);
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);
 indexRoutes.put("/updateGroup/:groupId", auth, upload.single("photo"), updateGroup);
 indexRoutes.delete("/deleteGroup/:groupId", auth, deleteGroup);
-indexRoutes.get("/allGroups",auth, getAllGroups);
+indexRoutes.get("/allGroups", auth, getAllGroups);
 indexRoutes.get("/getGroupById/:groupId", auth, getGroupById);
 indexRoutes.post("/leaveGroup", auth, leaveGroup);
 indexRoutes.post("/addParticipants", auth, addParticipants);
@@ -100,8 +100,6 @@ indexRoutes.post("/allMessages", auth, getAllMessages);
 indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
 indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
 indexRoutes.post("/clearChat", auth, clearChat);
-
-
 
 // QR Login endpoint
 indexRoutes.post('/qr-login', auth, handleQrLogin);
@@ -116,8 +114,6 @@ indexRoutes.post("/upload", auth, upload.single("file"), uploadController.upload
 indexRoutes.get('/devices', auth, getDevices);
 indexRoutes.delete('/devices/:deviceId', auth, removeDevice);
 indexRoutes.post('/logout-device', auth, logoutDevice);
-
-
 
 // Electron Routes
 indexRoutes.get("/check-electron-installed", auth, checkElectronInstalled);

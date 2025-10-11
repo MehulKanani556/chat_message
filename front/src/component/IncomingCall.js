@@ -23,9 +23,7 @@ const IncomingCall = memo(() => {
     <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-white/15 flex items-center justify-center z-[9999]">
       <div className="bg-black rounded-lg p-6 w-60 md:w-96  text-center">
         <h3 className="text-2xl text-white">
-          {
-            userData?.userName
-          }
+          {userData?.userName}
         </h3>
         <p className="text-gray-400 mb-4 animate-pulse text-sm md:text-base">
           is Calling You.

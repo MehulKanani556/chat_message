@@ -3,18 +3,14 @@ import sessionStorage from "redux-persist/es/storage/session";
 import axios from "axios";
 import { BASE_URL } from "../../utils/baseUrl";
 import axiosInstance from "../../utils/axiosInstance";
-// import { Socket } from "socket.io-client";
-// import { enqueueSnackbar } from 'notistack';
 
-const handleErrors = (error, dispatch, rejectWithValue) => {
+const handleErrors = (error, rejectWithValue) => {
   const errorMessage = error.response?.data?.message || "An error occurred";
-
   return rejectWithValue(error.response?.data || { message: errorMessage });
 };
 const initialState = {
   user: null,
   allCallUsers: [],
-  // onlineUser: [],
   allUsers: [],
   allMessageUsers: [],
   messages: [],
@@ -36,7 +32,6 @@ export const login = createAsyncThunk(
       const response = await axios.post(`${BASE_URL}/usrLogin`, credentials);
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("userId", response.data.user._id);
-      // console.log(response.data);
       return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -66,7 +61,7 @@ export const forgotPassword = createAsyncThunk(
         email,
       });
       if (response.status === 200) {
-        return response.data; // Assuming the API returns a success message
+        return response.data;
       }
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -83,7 +78,7 @@ export const verifyOtp = createAsyncThunk(
         otp,
       });
       if (response.status === 200) {
-        return response.data; // Assuming the API returns a success message
+        return response.data;
       }
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -100,7 +95,7 @@ export const resetPassword = createAsyncThunk(
         password,
       });
       if (response.status === 200) {
-        return response.data.message; // Assuming the API returns a success message
+        return response.data.message;
       }
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -117,7 +112,6 @@ export const googleLogin = createAsyncThunk(
         name,
         email,
       });
-      // console.log(response.data.user);
       sessionStorage.setItem("token", response.data.token);
       sessionStorage.setItem("userId", response.data.user._id);
       return response.data;
@@ -133,25 +127,12 @@ export const getUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/singleUser/${userId}`);
-      return response.data; // Assuming the API returns the user data
+      return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
     }
   }
 );
-
-// export const updateUser = createAsyncThunk(
-//     'auth/updateUser',
-//     async ({ id, values }, { rejectWithValue }) => {
-//         console.log(values);
-//         try {
-//             const response = await axios.post(`${BASE_URL}/user/${id}`, values);
-//             return response.data; // Assuming the API returns the updated user data
-//         } catch (error) {
-//             return handleErrors(error, null, rejectWithValue);
-//         }
-//     }
-// );
 
 export const createPlan = createAsyncThunk(
   "auth/createPlan",
@@ -200,23 +181,6 @@ export const getAllCallUsers = createAsyncThunk(
     }
   }
 );
-
-// export const getOnlineUsers = createAsyncThunk(
-//     'user/getOnlineUsers',
-//     async (_, { rejectWithValue }) => {
-//         try {
-//             const token = await sessionStorage.getItem("token");
-//             const response = await axios.get(`${BASE_URL}/online-users`,{
-//                 headers:{
-//                     Authorization: `Bearer ${token}`
-//                 }
-//             });
-//             return response.data;
-//         } catch (error) {
-//             return handleErrors(error, null, rejectWithValue);
-//         }
-//     }
-// );
 
 export const getAllMessages = createAsyncThunk(
   "user/getAllMessages",
@@ -267,7 +231,7 @@ export const updateUser = createAsyncThunk(
           "Content-Type": "multipart/form-data",
         },
       });
-      return response.data; // Assuming the API returns the updated user data
+      return response.data;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
     }
@@ -281,7 +245,7 @@ export const createGroup = createAsyncThunk(
     Object.keys(groupData).forEach((key) => {
       if (Array.isArray(groupData[key])) {
         groupData[key].forEach((member) => {
-          formData.append(`${key}[]`, member); // Append each member in the array
+          formData.append(`${key}[]`, member);
         });
       } else {
         formData.append(key, groupData[key]);
@@ -392,22 +356,6 @@ export const leaveGroup = createAsyncThunk(
     }
   }
 );
-// export const getOnlineUsers = createAsyncThunk(
-//   "user/getOnlineUsers",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const token = await sessionStorage.getItem("token");
-//       const response = await axios.get(`${BASE_URL}/online-users`, {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       });
-//       return response.data;
-//     } catch (error) {
-//       return handleErrors(error, null, rejectWithValue);
-//     }
-//   }
-// );
 
 export const archiveUser = createAsyncThunk(
   "user/archiveUser",
@@ -514,8 +462,6 @@ export const muteChat = createAsyncThunk(
   }
 );
 
-
-
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -529,10 +475,7 @@ const userSlice = createSlice({
       state.message = action.payload?.message || "Logged out successfully";
       window.localStorage.clear();
       window.sessionStorage.clear();
-    },
-    // setOnlineuser: (state, action) => {
-    //   state.onlineUser = action.payload;
-    // },
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -562,7 +505,7 @@ const userSlice = createSlice({
       })
       .addCase(forgotPassword.fulfilled, (state, action) => {
         state.loading = false;
-        state.message = action.payload; // Assuming the API returns a success message
+        state.message = action.payload;
       })
       .addCase(forgotPassword.rejected, (state, action) => {
         state.loading = false;
@@ -571,7 +514,7 @@ const userSlice = createSlice({
       })
       .addCase(verifyOtp.fulfilled, (state, action) => {
         state.loading = false;
-        state.message = action.payload.message; // Assuming the API returns a success message
+        state.message = action.payload.message;
       })
       .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
@@ -580,7 +523,7 @@ const userSlice = createSlice({
       })
       .addCase(resetPassword.fulfilled, (state, action) => {
         state.loading = false;
-        state.message = action.payload; // Assuming the API returns a success message
+        state.message = action.payload;
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
@@ -600,7 +543,7 @@ const userSlice = createSlice({
         state.message = action.payload?.message || "Google Login Failed";
       })
       .addCase(getUser.fulfilled, (state, action) => {
-        state.user = action.payload.users; // Assuming the API returns the user data
+        state.user = action.payload.users;
         state.loading = false;
         state.error = null;
         state.message = "User retrieved successfully";
@@ -611,7 +554,7 @@ const userSlice = createSlice({
         state.message = action.payload?.message || "Failed to retrieve user";
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = action.payload.users; // Assuming the API returns the updated user data
+        state.user = action.payload.users;
         state.loading = false;
         state.error = null;
         state.message = "User updated successfully";
@@ -642,18 +585,6 @@ const userSlice = createSlice({
         state.error = action.payload.message;
         state.message = action.payload?.message || "Failed to retrieve users";
       })
-      // .addCase(getOnlineUsers.fulfilled, (state, action) => {
-      //   state.onlineUser = action.payload;
-      //   state.loading = false;
-      //   state.error = null;
-      //   state.message = "Online users retrieved successfully";
-      // })
-      // .addCase(getOnlineUsers.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = action.payload.message;
-      //   state.message =
-      //     action.payload?.message || "Failed to retrieve online users";
-      // })
       .addCase(getAllMessages.fulfilled, (state, action) => {
         state.messages = action.payload;
         state.loading = false;
@@ -760,7 +691,7 @@ const userSlice = createSlice({
         state.message = action.payload?.message || "Failed to clear chat";
       })
       .addCase(getAllCallUsers.fulfilled, (state, action) => {
-        state.allCallUsers = action.payload; // Assuming the API returns the call users
+        state.allCallUsers = action.payload;
         state.loading = false;
         state.error = null;
         state.message = "Call users retrieved successfully";

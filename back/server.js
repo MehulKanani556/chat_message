@@ -21,12 +21,13 @@ app.use(session({
   resave: true,
   saveUninitialized: true,
 }));
+
 const allowedOrigins = [
   'https://chat-message-2.onrender.com',
-  'http://localhost:3000',        // React dev server
-  'http://localhost:3001',        // optional second dev port
-  'app://.', 
-  'file://'                     // for Electron custom protocol if used
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'app://.',
+  'file://'
 ];
 
 app.use(cors({
@@ -41,14 +42,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-
-// app.use(cors({
-//   origin: '*',
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true
-// }));
-
 
 // Middlewares
 app.use(express.json());
@@ -68,7 +61,6 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    // allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   },
   transports: ['websocket', 'polling'],

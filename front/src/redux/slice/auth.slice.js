@@ -2,12 +2,9 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import sessionStorage from 'redux-persist/es/storage/session';
 import axios from 'axios';
 import { BASE_URL } from '../../utils/baseUrl';
-import Cookies from 'js-cookie';
-// import { enqueueSnackbar } from 'notistack';
 
-const handleErrors = (error, dispatch, rejectWithValue) => {
+const handleErrors = (error, rejectWithValue) => {
     const errorMessage = error.response?.data?.message || 'An error occurred';
-
     return rejectWithValue(error.response?.data || { message: errorMessage });
 };
 
@@ -28,7 +25,6 @@ export const login = createAsyncThunk(
             const response = await axios.post(`${BASE_URL}/usrLogin`, credentials);
             sessionStorage.setItem('token', response.data.token);
             sessionStorage.setItem('userId', response.data.user._id);
-            // console.log(response.data)
             return response.data;
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -54,10 +50,9 @@ export const forgotPassword = createAsyncThunk(
     'auth/forgotPassword',
     async (email, { rejectWithValue }) => {
         try {
-            // console.log(email);
             const response = await axios.post(`${BASE_URL}/forgotPassword`, { email });
             if (response.status === 200) {
-                return response.data; // Assuming the API returns a success message
+                return response.data;
             }
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -71,7 +66,7 @@ export const verifyOtp = createAsyncThunk(
         try {
             const response = await axios.post(`${BASE_URL}/verifyOtp`, { email, otp });
             if (response.status === 200) {
-                return response.data; // Assuming the API returns a success message
+                return response.data;
             }
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -85,7 +80,7 @@ export const resetPassword = createAsyncThunk(
         try {
             const response = await axios.post(`${BASE_URL}/changePassword`, { email, newPassword });
             if (response.status === 200) {
-                return response.data; // Assuming the API returns a success message
+                return response.data;
             }
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -98,7 +93,7 @@ export const mobileOtp = createAsyncThunk(
         try {
             const response = await axios.post(`${BASE_URL}/mobile-otp`, { mobileNumber });
             if (response.status === 200) {
-                return response.data; // Assuming the API returns a success message
+                return response.data;
             }
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -109,21 +104,21 @@ export const verifyMobileOtp = createAsyncThunk(
     'auth/verify-mobile-otp',
     async ({ mobileNumber, otp }, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp },{withCredentials: true});
+            const response = await axios.post(`${BASE_URL}/verify-mobile-otp`, { mobileNumber, otp }, { withCredentials: true });
             if (response.status === 200) {
                 sessionStorage.setItem('token', response.data.token);
                 localStorage.setItem('ChatToken', response.data.token);
                 sessionStorage.setItem('userId', response.data.user._id);
                 localStorage.setItem('ChatuserId', response.data.user._id);
-                localStorage.setItem('refreshToken',response.data.refreshToken);
-                if(window.electron){
+                localStorage.setItem('refreshToken', response.data.refreshToken);
+                if (window.electron) {
                     window.electron.saveAuthData({
                         token: response.data.token,
                         userId: response.data.user._id,
                         refToken: response.data.refreshToken
-                      });  
+                    });
                 }
-                return response.data; // Assuming the API returns a success message
+                return response.data;
             }
         } catch (error) {
             return handleErrors(error, null, rejectWithValue);
@@ -146,30 +141,6 @@ export const googleLogin = createAsyncThunk(
     }
 );
 
-
-
-// export const updateUser = createAsyncThunk(
-//     'auth/updateUser',
-//     async ({ id, values }, { rejectWithValue }) => {
-//         const token = await sessionStorage.getItem("token");
-//         const formData = new FormData();
-//         Object.keys(values).forEach(key => {
-//             formData.append(key, values[key]);
-//         });
-//         try {
-//             const response = await axios.put(`${BASE_URL}/editUser/${id}`, formData, {
-//                 headers: {
-//                     Authorization: `Bearer ${token}`,
-//                     'Content-Type': 'multipart/form-data'
-//                 }
-//             });
-//             return response.data; // Assuming the API returns the updated user data
-//         } catch (error) {
-//             return handleErrors(error, null, rejectWithValue);
-//         }
-//     }
-// );
-
 export const createPlan = createAsyncThunk(
     'auth/createPlan',
     async (planData, { rejectWithValue }) => {
@@ -181,27 +152,27 @@ export const createPlan = createAsyncThunk(
         }
     }
 );
+
 export const logoutUser = createAsyncThunk('auth/logout', async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/logoutUser`, { _id: userId });
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Logout failed');
-      }
-      localStorage.removeItem('ChatToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem("ChatuserId")
-      sessionStorage.clear();
+        const response = await axios.post(`${BASE_URL}/logoutUser`, { _id: userId });
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Logout failed');
+        }
+        localStorage.removeItem('ChatToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem("ChatuserId")
+        sessionStorage.clear();
 
-      if(window.electron){
-        window.electron.clearAuthToken();
-      }
-     
-      
-      return response.data;
+        if (window.electron) {
+            window.electron.clearAuthToken();
+        }
+
+        return response.data;
     } catch (err) {
-      return rejectWithValue(err.message || 'An unknown error occurred during logout.');
+        return rejectWithValue(err.message || 'An unknown error occurred during logout.');
     }
-  });
+});
 
 const authSlice = createSlice({
     name: 'auth',
@@ -226,15 +197,11 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = null;
                 state.message = action.payload?.message || "Login successfully";
-                // if (action.payload?.message) {
-                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
-                // }
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Login Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
 
             })
             .addCase(logoutUser.fulfilled, (state, action) => {
@@ -243,18 +210,12 @@ const authSlice = createSlice({
                 state.loggedIn = false;
                 state.isLoggedOut = true;
                 state.message = action.payload?.message || "Logged out successfully";
-                // window.localStorage.clear();
                 window.sessionStorage.clear();
-                // if (action.payload?.message) {
-                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
-                // }
             })
             .addCase(logoutUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Login Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
-
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.user = action.payload.user;
@@ -262,114 +223,83 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.error = null;
                 state.message = action.payload?.message || "Register successfully";
-                // if (action.payload?.message) {
-                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
-                // }
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "User Already Exist";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
             .addCase(forgotPassword.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.message = action.payload; // Assuming the API returns a success message
-                // enqueueSnackbar(state.message, { variant: 'success' });
+                state.message = action.payload;
             })
             .addCase(forgotPassword.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Forgot Password Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
             .addCase(verifyOtp.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.message = action.payload.message; // Assuming the API returns a success message
-                // enqueueSnackbar(state.message, { variant: 'success' });
+                state.message = action.payload.message;
             })
             .addCase(verifyOtp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload.data?.message || "Verify OTP Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
             .addCase(resetPassword.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.message = action.payload; // Assuming the API returns a success message
-                // enqueueSnackbar(state.message, { variant: 'success' });
+                state.message = action.payload;
             })
             .addCase(resetPassword.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Reset Password Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
             .addCase(googleLogin.fulfilled, (state, action) => {
                 state.user = action.payload.user;
                 state.isAuthenticated = true;
                 state.loading = false;
                 state.error = null;
-
                 state.message = action.payload?.message || "Google Login successful";
-                // if (action.payload?.message) {
-                //     enqueueSnackbar(action.payload?.message, { variant: 'success' });
-                // }
             })
             .addCase(googleLogin.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Google Login Failed";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
-
-            // .addCase(updateUser.fulfilled, (state, action) => {
-            //     state.user = action.payload.users; // Assuming the API returns the updated user data
-            //     state.loading = false;
-            //     state.error = null;
-            //     state.message = "User updated successfully";
-            //     // enqueueSnackbar(state.message, { variant: 'success' });
-            // })
-            // .addCase(updateUser.rejected, (state, action) => {
-            //     state.loading = false;
-            //     state.error = action.payload.message;
-            //     state.message = action.payload?.message || "Failed to update user";
-            //     // enqueueSnackbar(state.message, { variant: 'error' });
-            // })
             .addCase(createPlan.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
                 state.message = action.payload?.message || "Plan created successfully";
-                // enqueueSnackbar(state.message, { variant: 'success' });
             })
             .addCase(createPlan.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
                 state.message = action.payload?.message || "Failed to create plan";
-                // enqueueSnackbar(state.message, { variant: 'error' });
             })
             .addCase(mobileOtp.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.message = action.payload.message || "OTP sent successfully"; // Assuming the API returns a success message
+                state.message = action.payload.message || "OTP sent successfully";
             })
             .addCase(mobileOtp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
-                state.message = action.payload?.message || "Failed to send OTP"; // Default error message
+                state.message = action.payload?.message || "Failed to send OTP";
             })
             .addCase(verifyMobileOtp.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.message = action.payload.message || "OTP Verify successfully"; // Assuming the API returns a success message
+                state.message = action.payload.message || "OTP Verify successfully";
             })
             .addCase(verifyMobileOtp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload.message;
-                state.message = action.payload?.message || "Failed to verify OTP"; // Default error message
+                state.message = action.payload?.message || "Failed to verify OTP";
             });
     },
 });

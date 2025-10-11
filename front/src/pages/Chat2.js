@@ -31,7 +31,6 @@ import MessageInput from "../component/MessageInput";
 import ChatHeader from "../component/ChatHeader";
 import ScreenSourceSelector from "../component/ScreenSourceSelector";
 
-
 const Chat2 = () => {
   const { allUsers, user, allMessageUsers } = useSelector((state) => state.user);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -43,7 +42,6 @@ const Chat2 = () => {
   const [creatGroup, setCreatGroup] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
-
   const isConnected = useSelector(state => state.magageState.isConnected);
   const isVideoCalling = useSelector(state => state.magageState.isVideoCalling);
   const incomingCall = useSelector(state => state.magageState.incomingCall);
@@ -71,7 +69,6 @@ const Chat2 = () => {
   const showForwardModal = useSelector(state => state.magageState.showForwardModal);
   const uploadProgress = useSelector(state => state.magageState.uploadProgress);
   const showScreenSource = useSelector(state => state.magageState.showScreenSource);
-
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -96,7 +93,7 @@ const Chat2 = () => {
     } else {
       setShowOverlay(false);
     }
-  }, [screenWidth]); // Changed from showOverlay to screenWidth
+  }, [screenWidth]);
   // ====================auth=======================
 
   useEffect(() => {
@@ -435,18 +432,15 @@ const Chat2 = () => {
         const success = await startCall(selectedChat._id, true, selectedChat, type);
         if (!success) {
           console.error("Failed to start group call");
-          // alert("Failed to start group call. Please check your microphone permissions.");
         }
       } else {
         const success = await startCall(selectedChat._id, false, selectedChat, type);
         if (!success) {
           console.error("Failed to start individual call");
-          // alert("Failed to start call. Please check your microphone permissions.");
         }
       }
     } catch (error) {
       console.error("Error in handleMakeCall:", error);
-      // alert("Failed to start call. Please check your microphone permissions and try again.");
     }
   }, [selectedChat, startCall]);
 
@@ -694,12 +688,9 @@ const Chat2 = () => {
                             </div>
                           </div>
                         )}
-                        {/* {visibleDate && <FloatingDateIndicator />} */}
                         <MessageList
                           handleMakeCall={handleMakeCall}
-                          // handleForward={handleForwardMessage}
                           handleMultipleFileUpload={handleMultipleFileUpload}
-                        // openCamera={openCamera}
                         />
 
                         {selectedFiles && selectedFiles?.length > 0 && (
@@ -790,7 +781,6 @@ const Chat2 = () => {
                         <MessageInput
                           handleMultipleFileUpload={handleMultipleFileUpload}
                           handleSendMessage={handleSendMessage}
-                          // openCamera={openCamera}
                           setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
                         />
                       </div>
@@ -856,7 +846,8 @@ const Chat2 = () => {
       )}
 
       {/*=========================================== screen share ==================================*/}
-      < div
+      {/* ${selectedChatModule ? 'w-[70%]' : 'w-full'} */}
+      <div
         className={`h-full w-full flex-1 flex bg-primary-light dark:bg-primary-dark scrollbar-hide ${(isReceiving || isVideoCalling || isVoiceCalling)
           ? ""
           : "hidden"
