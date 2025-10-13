@@ -99,7 +99,11 @@ const GroupProfile = memo(({
         removeId: userId,
       })
     ).then((res) => {
+      console.log(res,"res");
+      
       if (res.payload.success) {
+       console.log("socket",socket);
+       
         socket.emit("update-group", {
           groupId: selectedChat._id,
           members: selectedChat?.members.filter((id) => id !== memberId),
@@ -112,6 +116,7 @@ const GroupProfile = memo(({
       }
     });
   };
+  
   // ============changed==============
   const [profileData, setProfileData] = useState({
     name: selectedChat?.userName,
@@ -1026,7 +1031,7 @@ const GroupProfile = memo(({
           </div>
         </>
       )}
-    </div>
+    </div> 
   );
 });
 

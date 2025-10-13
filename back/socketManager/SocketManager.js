@@ -204,11 +204,18 @@ async function handleUserLogin(socket, userId) {
 }
 
 function emitToUser(userId, event, data, exceptSocketId = null) {
+  // console.log(userId,userId);
+  
   const sockets = onlineUsers.get(userId);
+
+  console.log(userId,"socketssockets");
+  
   if (sockets) {
     for (const socketId of sockets) {
       if (exceptSocketId && socketId === exceptSocketId) continue;
       const s = global.io.sockets.sockets.get(socketId);
+      // console.log(s,"ssssssssssssssssssssssss");
+      
       if (s) s.emit(event, data);
     }
   }
@@ -792,6 +799,9 @@ async function handleCreateGroup(socket, data) {
 
 async function handleUpdateGroup(socket, data) {
   const { groupId, name, members, updateType, user, newData, oldData, removeId } = data;
+
+  console.log("update-group",data);
+  
   try {
     const userData = await User.findById(user);
     let contentData;
@@ -815,6 +825,8 @@ async function handleUpdateGroup(socket, data) {
       });
     }
 
+    console.log(members,removeId,"fhdfhfghfgh");
+    
     // Use emitToUser for each member
     members.forEach((memberId) => {
       emitToUser(memberId, "group-updated", {
@@ -825,7 +837,7 @@ async function handleUpdateGroup(socket, data) {
     if (removeId) {
       emitToUser(removeId, "group-updated", {
         type: "updated",
-        // group: updatedGroup,
+       groupId,
       });
     }
   } catch (error) {

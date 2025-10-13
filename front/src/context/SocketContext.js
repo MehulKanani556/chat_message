@@ -43,6 +43,7 @@ import {
   setViewerControlling,
   setMicStatus,
   updateMessageReadStatus,
+  setSelectedChat,
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from '../utils/baseUrl';
 import { useNavigate } from 'react-router-dom';
@@ -1624,7 +1625,25 @@ export const SocketProvider = ({ children }) => {
 
     // Handle group updates
     const handleGroupUpdate = (data) => {
-      dispatch(getAllMessageUsers());
+      console.log("data",data);
+      
+      dispatch(getAllMessageUsers()).then((res) => {
+        
+        const groupId = data.groupId;
+        console.log(res,Array.isArray(res.payload),res.payload,groupId);
+
+        if (groupId && res && Array.isArray(res.payload)) {
+          const found = res.payload.find((user) => user._id === groupId);
+          console.log(found,"found",!found);
+          
+          if (!found) {
+            dispatch(setSelectedChat(null));
+          }
+        }
+      }).catch((error) => {
+        console.error('Failed to update message users on group update:', error);
+      });;
+      
     };
     socketRef.current.on("group-updated", handleGroupUpdate);
     return () => {

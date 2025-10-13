@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo, useMemo } from "react";
 import { ImCross } from "react-icons/im";
-import { createGroup, getAllMessageUsers } from "../redux/slice/user.slice";
+import { createGroup, getAllGroups, getAllMessageUsers } from "../redux/slice/user.slice";
 import { useDispatch, useSelector } from "react-redux";
 import { RiUserAddLine } from "react-icons/ri";
 import { FaChevronRight } from "react-icons/fa";
@@ -38,6 +38,7 @@ const CreatedGroup = memo(({
       dispatch(setGroupBio(""));
       dispatch(setIsGroupCreateModalOpen(false));
       dispatch(getAllMessageUsers());
+      dispatch(getAllGroups());
     } catch (error) {
       console.error("Error creating group:", error);
     }

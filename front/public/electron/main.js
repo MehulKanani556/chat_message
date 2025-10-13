@@ -35,7 +35,7 @@ async function createWindow() {
 
   mainWindow.loadURL(
     isDev
-      ? "http://localhost:3000/login"
+      ? "http://localhost:3000/"
       : `file://${path.join(__dirname, "..", "index.html")}`
   );
 
