@@ -128,7 +128,7 @@ const ChatInput = ({
 
         {!isRecording && (
           <>
-            <div className="flex-1 min-w-0 p-1 md:p-2 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative">
+            <div className="flex-1 min-w-0 rounded-md bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative">
               <input
                 ref={inputRef}
                 type="text"

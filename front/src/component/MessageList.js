@@ -430,7 +430,7 @@ const MessageList = memo(({
                     : "calc(100vh - 229px)"
                   : window.innerWidth < 768
                     ? "calc(100vh - 179px)"
-                    : "calc(100vh - 173px)",
+                    : "calc(100vh - 160px)",
         }}
         ref={messagesContainerRef}
       >
