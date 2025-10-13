@@ -204,18 +204,12 @@ async function handleUserLogin(socket, userId) {
 }
 
 function emitToUser(userId, event, data, exceptSocketId = null) {
-  // console.log(userId,userId);
-  
   const sockets = onlineUsers.get(userId);
 
-  console.log(userId,"socketssockets");
-  
   if (sockets) {
     for (const socketId of sockets) {
       if (exceptSocketId && socketId === exceptSocketId) continue;
       const s = global.io.sockets.sockets.get(socketId);
-      // console.log(s,"ssssssssssssssssssssssss");
-      
       if (s) s.emit(event, data);
     }
   }
@@ -800,8 +794,6 @@ async function handleCreateGroup(socket, data) {
 async function handleUpdateGroup(socket, data) {
   const { groupId, name, members, updateType, user, newData, oldData, removeId } = data;
 
-  console.log("update-group",data);
-  
   try {
     const userData = await User.findById(user);
     let contentData;
@@ -825,8 +817,6 @@ async function handleUpdateGroup(socket, data) {
       });
     }
 
-    console.log(members,removeId,"fhdfhfghfgh");
-    
     // Use emitToUser for each member
     members.forEach((memberId) => {
       emitToUser(memberId, "group-updated", {
@@ -837,7 +827,7 @@ async function handleUpdateGroup(socket, data) {
     if (removeId) {
       emitToUser(removeId, "group-updated", {
         type: "updated",
-       groupId,
+        groupId,
       });
     }
   } catch (error) {
@@ -1046,30 +1036,102 @@ async function handleGetGroupMembers(socket, groupId) {
   }
 }
 
+// async function handleForwardMessage(socket, data) {
+//   const { senderId, receiverId, content, forwardedFrom } = data;
+
+//   try {
+//     // Save forwarded message to database
+//     const savedMessage = await saveMessage({
+//       senderId,
+//       receiverId,
+//       content: content,
+//       forwardedFrom: forwardedFrom,
+//       status: "sent",
+//     });
+
+//     // Use emitToUser to notify all receiver's sockets
+//     emitToUser(receiverId, "receive-message", savedMessage);
+
+//     await Message.findByIdAndUpdate(savedMessage._id, {
+//       status: "delivered",
+//     });
+
+//     socket.emit("message-sent-status", {
+//       messageId: savedMessage._id,
+//       status: "delivered",
+//     });
+//   } catch (error) {
+//     console.error("Error handling forward message:", error);
+//     socket.emit("message-sent-status", {
+//       messageId: Date.now(),
+//       status: "failed",
+//       error: error.message,
+//     });
+//   }
+// }
+
+// ===========================camera status=============================
+
 async function handleForwardMessage(socket, data) {
-  const { senderId, receiverId, content, forwardedFrom } = data;
+  const { senderId, receiverId, groupId, content, forwardedFrom, isGroup } = data;
 
   try {
-    // Save forwarded message to database
-    const savedMessage = await saveMessage({
-      senderId,
-      receiverId,
-      content: content,
-      forwardedFrom: forwardedFrom,
-      status: "sent",
-    });
+    if (isGroup && groupId) {
+      // Save as group message
+      const savedMessage = await saveMessage({
+        senderId,
+        receiverId: groupId,
+        content: content,
+        forwardedFrom: forwardedFrom,
+        status: "sent",
+        isGroupMessage: true,
+      });
 
-    // Use emitToUser to notify all receiver's sockets
-    emitToUser(receiverId, "receive-message", savedMessage);
+      // Deliver to all group members except the sender
+      const group = await findGroupById(groupId);
+      if (group && group.members) {
+        group.members.forEach((memberId) => {
+          if (memberId.toString() !== senderId.toString()) {
+            emitToUser(memberId.toString(), "receive-group", {
+              _id: savedMessage._id?.toString() || Date.now().toString(),
+              sender: senderId,
+              content: savedMessage.content,
+              groupId,
+              createdAt: savedMessage.createdAt || new Date().toISOString(),
+              group: true,
+              forwardedFrom: forwardedFrom,
+            }, socket.id); // exclude current socket
+          }
+        });
+      }
 
-    await Message.findByIdAndUpdate(savedMessage._id, {
-      status: "delivered",
-    });
+      await Message.findByIdAndUpdate(savedMessage._id, { status: "delivered" });
 
-    socket.emit("message-sent-status", {
-      messageId: savedMessage._id,
-      status: "delivered",
-    });
+      socket.emit("message-sent-status", {
+        messageId: savedMessage._id,
+        status: "delivered",
+      });
+    } else {
+      // Original 1:1 forward
+      const savedMessage = await saveMessage({
+        senderId,
+        receiverId,
+        content: content,
+        forwardedFrom: forwardedFrom,
+        status: "sent",
+      });
+
+      emitToUser(receiverId, "receive-message", savedMessage);
+
+      await Message.findByIdAndUpdate(savedMessage._id, {
+        status: "delivered",
+      });
+
+      socket.emit("message-sent-status", {
+        messageId: savedMessage._id,
+        status: "delivered",
+      });
+    }
   } catch (error) {
     console.error("Error handling forward message:", error);
     socket.emit("message-sent-status", {
@@ -1080,7 +1142,6 @@ async function handleForwardMessage(socket, data) {
   }
 }
 
-// ===========================camera status=============================
 function handleCameraStatusChange(socket, data) {
   const { userId, isCameraOn } = data;
 

@@ -34,7 +34,7 @@ const CallParticipantModal = memo(({
         <>
           {/* First Section */}
           {showFirstSection && (
-            <div className="h-full w-96 bg-primary-light dark:bg-primary-dark/90 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
+            <div className="h-full w-80 md:w-96 bg-primary-light dark:bg-primary-dark/90 dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
               <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
                 <div className="flex justify-between items-center p-4 py-6">
                   <div className="flex gap-1 items-center">
@@ -175,7 +175,7 @@ const CallParticipantModal = memo(({
 
           {/* Second Section */}
           {!showFirstSection && (
-            <div className="h-full w-96 bg-primary-light dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
+            <div className="h-full w-80 md:w-96 bg-primary-light dark:text-white shadow-lg transition-transform duration-300 ease-in-out">
               <div className="w-full bg-primary-dark/5 dark:bg-primary-dark/95 dark:text-primary-light h-full" style={{ boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)" }}>
                 <div className="flex justify-between items-center p-4 py-6">
                   <h2 className="text-lg font-bold">Add Members</h2>

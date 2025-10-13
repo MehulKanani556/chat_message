@@ -612,7 +612,7 @@ export const SocketProvider = ({ children }) => {
                 );
               });
 
-              peer.on("connect", () => {});
+              peer.on("connect", () => { });
 
               // Store peer connection for this member
               if (!peerRef.current) peerRef.current = {};
@@ -1245,7 +1245,7 @@ export const SocketProvider = ({ children }) => {
           video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
-     
+
       } catch (err) {
         console.warn("Could not get media devices:", err);
       }
@@ -1622,20 +1622,12 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (!socketRef.current) return;
-
     // Handle group updates
     const handleGroupUpdate = (data) => {
-      console.log("data",data);
-      
       dispatch(getAllMessageUsers()).then((res) => {
-        
         const groupId = data.groupId;
-        console.log(res,Array.isArray(res.payload),res.payload,groupId);
-
         if (groupId && res && Array.isArray(res.payload)) {
           const found = res.payload.find((user) => user._id === groupId);
-          console.log(found,"found",!found);
-          
           if (!found) {
             dispatch(setSelectedChat(null));
           }
@@ -1643,7 +1635,7 @@ export const SocketProvider = ({ children }) => {
       }).catch((error) => {
         console.error('Failed to update message users on group update:', error);
       });;
-      
+
     };
     socketRef.current.on("group-updated", handleGroupUpdate);
     return () => {
@@ -1654,21 +1646,45 @@ export const SocketProvider = ({ children }) => {
   }, [socketRef.current]);
 
   // Add new socket event handlers
-  const forwardMessage = (receiverId, message) => {
+  // const forwardMessage = (receiverId, message) => {
+  //   return new Promise((resolve, reject) => {
+  //     if (!socketRef.current?.connected) {
+  //       reject(new Error("Socket not connected"));
+  //       return;
+  //     }
+
+  //     const messageData = {
+  //       senderId: userId,
+  //       receiverId,
+  //       content: message.content,
+  //       forwardedFrom: message.sender,
+  //     };
+
+  //     socketRef.current.emit("forward-message", messageData);
+  //     resolve();
+  //   });
+  // };
+  const forwardMessage = ({ receiverId, groupId, message, isGroup = false }) => {
     return new Promise((resolve, reject) => {
       if (!socketRef.current?.connected) {
         reject(new Error("Socket not connected"));
         return;
       }
 
-      const messageData = {
+      const payload = {
         senderId: userId,
-        receiverId,
         content: message.content,
         forwardedFrom: message.sender,
+        isGroup,
       };
 
-      socketRef.current.emit("forward-message", messageData);
+      if (isGroup) {
+        payload.groupId = groupId;
+      } else {
+        payload.receiverId = receiverId;
+      }
+
+      socketRef.current.emit("forward-message", payload);
       resolve();
     });
   };

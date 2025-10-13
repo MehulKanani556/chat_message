@@ -531,6 +531,7 @@ const Chat2 = () => {
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
+      dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showGroups event
@@ -540,6 +541,7 @@ const Chat2 = () => {
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
+      dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showChatList event
@@ -549,6 +551,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
+      dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showSettings event
@@ -558,6 +561,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowCallHistory(false));
+      dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showCall event
@@ -567,6 +571,7 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
+      dispatch(setShowLeftSidebar(true));
     };
 
     window.addEventListener("showProfile", handleShowProfile);
@@ -598,7 +603,7 @@ const Chat2 = () => {
   }, [selectedChat]);
 
   return (
-    <div className="flex h-screen bg-white transition-all duration-300">
+    <div className="flex min-h-screen bg-white transition-all duration-300">
       {(!(isReceiving || isVideoCalling || isVoiceCalling) || callChatList || chatMessages) && (
         <Sidebar />
       )}
@@ -611,7 +616,7 @@ const Chat2 = () => {
             <div
               className={`${screenWidth <= 600
                 ? "ml-0 w-full"
-                : "md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
+                : "w-full md:ml-16 md:w-[300px] lg:w-[380px] shrink-0"
                 } ${showLeftSidebar ? "block" : "hidden md600:block"}`}
             >
               {showGroups && <Groups />}
@@ -634,8 +639,8 @@ const Chat2 = () => {
                   (((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||
                     isGroupCreateModalOpen ||
                     (isUserProfileModalOpen && !selectedChat?.members))
-                  ? "w-0 opacity-0"
-                  : "w-full opacity-100"
+                  ? "w-0 opacity-0 hidden"
+                  : "w-full opacity-100 block"
                   } ${!showLeftSidebar ? "block" : "hidden md600:block"}`}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}

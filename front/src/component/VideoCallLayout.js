@@ -758,7 +758,7 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"}`}
+      className={`h-screen flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"}`}
       style={
         chatMessages
           ? {
@@ -1149,31 +1149,32 @@ const VideoCallLayout = memo(() => {
             </button>
           )}
 
-          <button
-            title="Recording"
-            onClick={() => (recording ? stopRecording() : startRecording())}
-            className={`w-10 grid place-content-center rounded-full h-10 border
+          {isVideoCalling && (
+            <button
+              title="Recording"
+              onClick={() => (recording ? stopRecording() : startRecording())}
+              className={`w-10 grid place-content-center rounded-full h-10 border
               ${recording
-                ? " text-white animate-spin-slow"
-                : " text-black dark:text-white"
-              }
+                  ? " text-white animate-spin-slow"
+                  : " text-black dark:text-white"
+                }
             `}
-            style={{
-              borderColor: recording ? "#dc2626" : "",
-              transition: "background 0.3s, color 0.3s"
-            }}
-          >
-            <PiVinylRecord
-              className={`text-2xl transition-all duration-300
+              style={{
+                borderColor: recording ? "#dc2626" : "",
+                transition: "background 0.3s, color 0.3s"
+              }}
+            >
+              <PiVinylRecord
+                className={`text-2xl transition-all duration-300
                 ${recording ? "text-red-500 animate-spin-slow" : ""}
               `}
-              style={{
-                color: recording ? "#ef4444" : "",
-                animation: recording ? "spin 1.5s linear infinite" : "none"
-              }}
-            />
-            <style>
-              {`
+                style={{
+                  color: recording ? "#ef4444" : "",
+                  animation: recording ? "spin 1.5s linear infinite" : "none"
+                }}
+              />
+              <style>
+                {`
                 @keyframes spin {
                   100% { transform: rotate(360deg); }
                 }
@@ -1181,8 +1182,9 @@ const VideoCallLayout = memo(() => {
                   animation: spin 1.5s linear infinite;
                 }
               `}
-            </style>
-          </button>
+              </style>
+            </button>
+          )}
           {
             window.electron &&
             (isHost ? (

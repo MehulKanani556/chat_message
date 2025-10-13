@@ -98,12 +98,8 @@ const GroupProfile = memo(({
         userId: memberId,
         removeId: userId,
       })
-    ).then((res) => {
-      console.log(res,"res");
-      
-      if (res.payload.success) {
-       console.log("socket",socket);
-       
+    ).then((res) => {      
+      if (res.payload.success) {       
         socket.emit("update-group", {
           groupId: selectedChat._id,
           members: selectedChat?.members.filter((id) => id !== memberId),
@@ -296,13 +292,15 @@ const GroupProfile = memo(({
       className="w-full flex-grow bg-primary-dark/5 dark:bg-primary-dark/90 dark:text-primary-light h-full"
       style={{
         boxShadow: "inset 0 0 5px 0 rgba(0, 0, 0, 0.1)",
-        maxWidth: screenWidth === 1024 ? '600px' : screenWidth === 768 ? '404px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '380px'
+        maxWidth: screenWidth === 1024 ? '580px' : screenWidth === 768 ? '404px' : screenWidth === 425 ? '425px' : screenWidth === 375 ? '375px' : screenWidth === 320 ? '320px' : '100%'
       }}
     >
       {attachFile ? (
         <>
           <div className="flex justify-between items-center p-4 py-5">
-            <h2 className="text-lg font-bold flex items-center">  <FaChevronLeft className="mr-2 cursor-pointer" onClick={() => setAttachFile(false)} />  Attach File</h2>
+            <h2 className="text-lg font-bold flex items-center">  <FaChevronLeft className="mr-2 cursor-pointer" onClick={() => {
+              setAttachFile(false)
+            }} />  Attach File</h2>
             <button
               onClick={() => dispatch(setIsGroupModalOpen(false))}
               className="text-gray-500 hover:text-gray-700"
