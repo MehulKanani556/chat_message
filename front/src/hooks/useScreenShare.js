@@ -13,7 +13,6 @@ const useScreenShare = (socketInstance) => {
     peerConnection.current = new RTCPeerConnection(configuration);
 
     peerConnection.current.ontrack = (event) => {
-      // console.log("Track received:", event);
       if (videoRef.current) {
         videoRef.current.srcObject = event.streams[0];
       }
@@ -28,8 +27,6 @@ const useScreenShare = (socketInstance) => {
 
   const handleScreenShareOffer = async (offer) => {
     try {
-      // console.log("Received screen share offer:", offer);
-
       if (!peerConnection.current) {
         initializePeerConnection();
       }

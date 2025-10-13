@@ -188,12 +188,6 @@ const Chat2 = () => {
       vibrate: [200, 100, 200], // Vibrates the device for the specified duration
       tag: "new-message", // Identifies the notification
       renotify: true, // Allows the notification to be re-shown if it's already active
-      // badge: "/logo.png", // Sets the badge icon for the notification
-      // image: "/logo.png", // Sets the image for the notification
-      // actions: [
-      //   { action: "reply", title: "Reply" },
-      //   { action: "dismiss", title: "Dismiss" }
-      // ], // Adds actions to the notification
       dir: "auto", // Sets the direction of the text
       lang: "en-US", // Sets the language of the notification
       timestamp: new Date().getTime(),
@@ -311,7 +305,6 @@ const Chat2 = () => {
   }, [selectedChat]);
 
   //===========handle send message ===========
-
   const handleSendMessage = async (data, userId) => {
 
     if (editingMessage) {
@@ -368,10 +361,8 @@ const Chat2 = () => {
   };
 
   //===========handle multiple file upload===========
-
   const handleMultipleFileUpload = useCallback(async (files, userId) => {
     const filesArray = Array.from(files);
-    // Use userId if provided, otherwise fallback to selectedChat._id
     const targetUserId = userId || (selectedChat && selectedChat._id);
     for (const file of filesArray) {
       const formData = new FormData();
@@ -416,10 +407,8 @@ const Chat2 = () => {
       }
     }
   }, [selectedChat]);
+
   // =========================== video call=============================
-
-  // Add call handling functions
-
   const handleMakeCall = useCallback(async (type) => {
 
     if (!selectedChat) {
@@ -489,7 +478,6 @@ const Chat2 = () => {
   useEffect(() => {
     // Set showLeftSidebar to true when no chat is selected
     if (!selectedChat) {
-      // setShowLeftSidebar(false);
       if (window.innerWidth <= 600) {
         setShowLeftSidebar(true); // On mobile, always show chat list if no chat selected
       } else {
@@ -539,7 +527,6 @@ const Chat2 = () => {
     // Listen for the showProfile event
     const handleShowProfile = () => {
       dispatch(setShowProfile(true));
-      // dispatch(setShowLeftSidebar(true));
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
@@ -553,7 +540,6 @@ const Chat2 = () => {
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
-      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showChatList event
@@ -563,7 +549,6 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setShowSettings(false));
       dispatch(setShowCallHistory(false));
-      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showSettings event
@@ -573,7 +558,6 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowCallHistory(false));
-      // dispatch(setShowLeftSidebar(true));
     };
 
     // Listen for the showCall event
@@ -583,7 +567,6 @@ const Chat2 = () => {
       dispatch(setShowGroups(false));
       dispatch(setSelectedChatModule(false));
       dispatch(setShowSettings(false));
-      // dispatch(setShowLeftSidebar(true));
     };
 
     window.addEventListener("showProfile", handleShowProfile);
@@ -602,7 +585,6 @@ const Chat2 = () => {
   }, []);
 
   useEffect(() => {
-    // Cleanup function to close the participant section when the component unmounts
     return () => {
       dispatch(setParticipantOpen(false));
     };
@@ -777,14 +759,12 @@ const Chat2 = () => {
                         )}
 
                         {/*========== Message Input ==========*/}
-
                         <MessageInput
                           handleMultipleFileUpload={handleMultipleFileUpload}
                           handleSendMessage={handleSendMessage}
                           setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
                         />
                       </div>
-
                     </>
                   ) : (
                     <Front data={user} handleMultipleFileUpload={handleMultipleFileUpload} />
@@ -793,8 +773,8 @@ const Chat2 = () => {
                 {/* )} */}
               </div>
             }
-            {/* // ============================== right sidebar =========================================== */}
 
+            {/* // ============================== right sidebar =========================================== */}
             {!(isReceiving || isVideoCalling || isVoiceCalling) &&
               <div
                 className={`transition-all duration-300 ease-in-out flex-grow shrink-0  ${!showLeftSidebar ? "block" : "hidden md600:block"} ${((isGroupModalOpen || isModalOpen) && selectedChat?.members) ||

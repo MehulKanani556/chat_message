@@ -6,9 +6,6 @@ exports.auth = async (req, res, next) => {
       
         const authHeader = req.header('Authorization') || req.cookies.accessToken ;
 
-        // console.log(authHeader,"-----------------------");
-        
-            // let token = await authorization.split(' ')[1] 
             let token = authHeader;
             if (authHeader.startsWith('Bearer ')) {
                 token = authHeader.substring(7);

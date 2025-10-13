@@ -37,7 +37,6 @@ export const setPrimaryColor = (color) => {
 
 // Apply the primary color to the document
 export const applyPrimaryColor = (color, rgb) => {
-  // console.log("applyPrimaryColor", color, rgb);
   // Create or update CSS variables
   document.documentElement.style.setProperty("--primary-color", color);
   document.documentElement.style.setProperty("--primary-color-rgb", rgb);
@@ -61,7 +60,6 @@ export const applyPrimaryColor = (color, rgb) => {
   style.id = "primary-color-style";
   document.head.appendChild(style);
 
-  // Force a re-render of the page to apply the new color
   // This is a workaround for some browsers that don't update CSS variables immediately
   const event = new Event("primaryColorChanged");
   window.dispatchEvent(event);

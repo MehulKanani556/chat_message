@@ -55,8 +55,6 @@ const Sidebar = memo(() => {
     setShowDropdown(!showDropdown);
   };
 
-
-
   const menuItems = [
     {
       icon: <BsChatDots size={20} />, path: "#", label: "chat", onClick: () => {
@@ -208,7 +206,6 @@ const Sidebar = memo(() => {
                   <button
                     onClick={() => setIsLogoutModalOpen(false)}
                     className="px-4 py-2 w-full rounded dark:text-white border border-black dark:border-white "
-                    // style={{ backgroundColor: "transparent", color: "white", border: "1px solid black" }}
                   >
                     Cancel
                   </button>

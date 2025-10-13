@@ -39,6 +39,7 @@ exports.createUser = async (req, res) => {
     return res.status(500).json({ status: 500, message: error.message });
   }
 };
+
 exports.getAllUsers = async (req, res) => {
   try {
     let page = parseInt(req.query.page);
@@ -78,199 +79,6 @@ exports.getAllUsers = async (req, res) => {
     return res.status(500).json({ status: 500, message: error.message });
   }
 };
-// exports.getAllMessageUsers = async (req, res) => {
-
-//   try {
-//     const pipeline = [
-//       // Match messages where user is either sender or receiver
-//       {
-//         $match: {
-//           $or: [
-//             { sender: req.user._id },
-//             { receiver: req.user._id }
-//           ]
-//         }
-//       },
-
-//       // Project to get the other user in the conversation
-//       {
-//         $project: {
-//           user: {
-//             $cond: {
-//               if: { $eq: ["$sender", req.user._id] },
-//               then: "$receiver",
-//               else: "$sender"
-//             }
-//           }
-//         }
-//       },
-
-//       // Group by user to remove duplicates
-//       {
-//         $group: {
-//           _id: "$user"
-//         }
-//       },
-
-//       // Lookup user details
-//       {
-//         $lookup: {
-//           from: "users",
-//           localField: "_id",
-//           foreignField: "_id",
-//           as: "userData"
-//         }
-//       },
-
-//       // Unwind user data
-//       {
-//         $unwind: "$userData"
-//       },
-
-//       // Project required user fields
-//       {
-//         $project: {
-//           _id: 1,
-//           userName: "$userData.userName",
-//           email: "$userData.email",
-//           createdAt: "$userData.createdAt"
-//         }
-//       },
-
-//       // Union with current user's data
-//       {
-//         $unionWith: {
-//           coll: "users",
-//           pipeline: [
-//             {
-//               $match: {
-//                 _id: req.user._id
-//               }
-//             },
-//             {
-//               $project: {
-//                 _id: 1,
-//                 userName: 1,
-//                 email: 1,
-//                 createdAt: 1
-//               }
-//             }
-//           ]
-//         }
-//       },
-
-//       // Group again to remove potential duplicates
-//       {
-//         $group: {
-//           _id: "$_id",
-//           userName: { $first: "$userName" },
-//           email: { $first: "$email" },
-//           createdAt: { $first: "$createdAt" }
-//         }
-//       },
-
-//       // Lookup group information
-//       {
-//         $lookup: {
-//           from: "groups",
-//           localField: "_id",
-//           foreignField: "members",
-//           as: "groupData"
-//         }
-//       },
-
-//       // Unwind group data (preserve users without groups)
-//       {
-//         $unwind: {
-//           path: "$groupData",
-//           preserveNullAndEmptyArrays: true
-//         }
-//       },
-
-//       // Lookup messages for each user (both sent and received) with specific statuses
-//       {
-//         $lookup: {
-//           from: "messages", // Assuming the messages collection is named "messages"
-//           let: { userId: "$_id" },
-//           pipeline: [
-//             {
-//               $match: {
-//                 $expr: {
-//                   $and: [
-//                     {
-//                       $or: [
-//                         { $eq: ["$sender", "$$userId"] },
-//                         { $eq: ["$receiver", req.user._id] }
-//                       ]
-//                     },
-//                     {
-//                       $or: [
-//                         { $eq: ["$status", "sent"] },
-//                         { $eq: ["$status", "delivered"] }
-//                       ]
-//                     }
-//                   ]
-//                 }
-//               }
-//             }
-//           ],
-//           as: "userMessages"
-//         }
-//       },
-
-//       // Final projection with user messages
-//       {
-//         $project: {
-//           _id: 1,
-//           userName: 1,
-//           email: 1,
-//           createdAt: 1,
-//           group: {
-//             groupId: { $ifNull: ["$groupData._id", null] },
-//             groupName: { $ifNull: ["$groupData.userName", null] },
-//             groupCreatedAt: { $ifNull: ["$groupData.createdAt", null] }
-//           },
-//           messages: "$userMessages" // Include messages in the response
-//         }
-//       }
-//     ];
-
-//     const results = await message.aggregate(pipeline);
-
-//     // Format the response
-//     const formattedUsers = results.map(user => ({
-//       _id: user._id,
-//       userName: user.userName,
-//       email: user.email,
-//       createdAt: user.createdAt,
-//       group: user.group.groupId ? user.group : null,
-//       messages: user.messages // Include messages in the response
-//     }));
-
-//     // Extract unique groups
-//     const uniqueGroups = Array.from(new Set(results
-//       .filter(user => user.group.groupId)
-//       .map(user => JSON.stringify({
-//         _id: user.group.groupId,
-//         userName: user.group.groupName,
-//         createdAt: user.group.groupCreatedAt
-//       }))
-//     )).map(group => JSON.parse(group));
-
-//     return res.status(200).json({
-//       status: 200,
-//       message: "All Message Users and Groups Found Successfully...",
-//       users: [...formattedUsers, ...uniqueGroups]
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       status: 500,
-//       message: error.message
-//     });
-//   }
-// };
 
 exports.getAllMessageUsers = async (req, res) => {
   try {
@@ -449,7 +257,6 @@ exports.getAllMessageUsers = async (req, res) => {
                           $and: [
                             { $eq: ["$sender", "$$currentUserId"] },
                             { $eq: ["$receiver", "$$userId"] },
-                            // { $ne: ["$isBlocked", true] },
                           ],
                         },
                       ],
@@ -516,7 +323,6 @@ exports.getAllMessageUsers = async (req, res) => {
       (r) => r._id.toString() === req.user._id.toString()
     );
 
-    // console.log("currentUser", currentUser);
 
     // Now fetch messages for each group
     const groupsWithMessages = [];
@@ -565,12 +371,6 @@ exports.getAllMessageUsers = async (req, res) => {
             const deletedForStrings = u.deletedFor.map((id) => id.toString());
             return !deletedForStrings.includes(currentUser._id.toString());
           });
-        // console.log(
-        //   "hasMessages",
-        //   hasMessages.length,
-        //   isInDeleteChatFor,
-        //   currentUser._id.toString()
-        // );
         }
 
         if(hasMessages && hasMessages?.length <= 0){
@@ -578,9 +378,6 @@ exports.getAllMessageUsers = async (req, res) => {
         }else{
           return true
         }
-       
-        // Keep user if they have messages or are not in deleteChatFor
-        // return (hasMessages.length <= 0 && isInDeleteChatFor);
       })
       .map((user) => ({
         _id: user._id,
@@ -611,13 +408,13 @@ exports.getAllMessageUsers = async (req, res) => {
     });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     // Include the photo field in the update
     if (req.file) {
       req.body.photo = req.file.location;
     }
-    // console.log(req.file);
     const updatedUser = await user.findByIdAndUpdate(
       req.params.id,
       { ...req.body, photo: req.body.photo ? req.body.photo : undefined }, // Ensure photo is included if provided
@@ -644,6 +441,7 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
 exports.getSingleUser = async (req, res) => {
   try {
     const users = await user.findById(req.params.id);
@@ -667,6 +465,7 @@ exports.getSingleUser = async (req, res) => {
     });
   }
 };
+
 exports.getAllCallUsers = async (req, res) => {
   try {
     const pipeline = [
@@ -854,6 +653,7 @@ exports.archiveUser = async (req, res) => {
     });
   }
 };
+
 exports.blockUser = async (req, res) => {
   try {
     const { selectedUserId } = req.body;
@@ -894,6 +694,7 @@ exports.blockUser = async (req, res) => {
     });
   }
 };
+
 exports.deleteChat = async (req, res) => {
   try {
     const { selectedUserId } = req.body;
@@ -1011,6 +812,7 @@ exports.getDevices = async (req, res) => {
       return res.status(500).json({ status: 500, message: error.message });
   }
 };
+
 exports.removeDevice = async (req, res) => {
   try {
       const userId = req.user._id;
@@ -1069,7 +871,6 @@ exports.addContactList = async (req, res) => {
       if (!existingContact) {
         // Check if the phone number exists in the database
         const userWithPhone = await user.findOne({ mobileNumber: contact.phone });
-        // console.log("contacts", userWithPhone);
         
         if (userWithPhone) {
           // Add new contact to the contacts array

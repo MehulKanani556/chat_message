@@ -1,4 +1,3 @@
-// front/src/utils/electronManager.js
 
 import { BASE_URL } from './baseUrl';
 
@@ -24,12 +23,6 @@ export const checkElectronInstalled = async () => {
 
 export const downloadAndLaunchElectron = async () => {
   try {
-    // // First check if already installed
-    // const isInstalled = await checkElectronInstalled();
-    // if (isInstalled) {
-    //   return true;
-    // }
-
     // Determine platform
     const platform = navigator.platform.toLowerCase();
     const isWindows = platform.includes('win');

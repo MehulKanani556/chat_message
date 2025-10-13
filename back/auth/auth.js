@@ -19,10 +19,8 @@ try {
 // ===========================Token===================================
 
 const generateTokens = async (id) => {
-    // console.log("id", id);
     try {
         const userData = await user.findOne({ _id: id });
-        // console.log("user", userData);
         if (!userData) {
             throw new Error("User not found");
         }
@@ -59,8 +57,6 @@ const generateNewToken = async (req, res) => {
 
     const token = req.cookies.refreshToken || req.header('Authorization').split(' ')[1];
 
-    // console.log("TOKENS---------------", token);
-
     if (!token) {
         return res.status(401)
             .json({
@@ -71,8 +67,6 @@ const generateNewToken = async (req, res) => {
 
     jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
         try {
-            // console.log(err);
-
             if (err) {
                 return res.status(400)
                     .json({
@@ -82,8 +76,6 @@ const generateNewToken = async (req, res) => {
             }
 
             const USERS = await user.findOne({ _id: decoded._id });
-            // console.log("USERSss", USERS)
-
             if (!USERS) {
                 return res.status(404)
                     .json({
@@ -94,7 +86,6 @@ const generateNewToken = async (req, res) => {
             const { accessToken, refreshToken } = await generateTokens(decoded._id);
 
             const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
-            // console.log("userDetailsss", userDetails);
 
             return res.status(200)
                 .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
@@ -129,7 +120,6 @@ const userLogin = async (req, res) => {
             return res.status(404).json({ status: 404, message: "Password Not Match" })
         }
 
-        // let token = await jwt.sign({ _id: checkEmailIsExist._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
         const { accessToken, refreshToken } = await generateTokens(checkEmailIsExist._id);
 
         return res.status(200)
@@ -267,24 +257,7 @@ const sendOtpToMobile = async (req, res) => {
     try {
         let { mobileNumber } = req.body;
 
-        // Generate a random OTP
-        // let otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
         let otp = 123456;
-        // Check if Twilio is configured
-        // if (!twilioClient) {
-        //     return res.status(503).json({ 
-        //         status: 503, 
-        //         message: "SMS service is not configured. Please contact the administrator." 
-        //     });
-        // }
-
-        // Send OTP via SMS
-        // await twilioClient.messages.create({
-        //     body: `Your OTP is: ${otp}`,
-        //     from: process.env.TWILIO_PHONE_NUMBER,
-        //     to: mobileNumber
-        // });
-
         // Save the OTP to the user's record
         let checkUser = await user.findOne({ mobileNumber });
         if (!checkUser) {
@@ -321,13 +294,6 @@ const verifyMobileOtp = async (req, res) => {
         userRecord.otp = undefined;
         userRecord.devices = []
 
-
-        // Generate token for the user
-        // const token = jwt.sign(
-        //     { _id: userRecord._id },
-        //     process.env.SECRET_KEY,
-        //     { expiresIn: "1D" }
-        // );
         await userRecord.save();
 
         const { accessToken, refreshToken } = await generateTokens(userRecord._id);

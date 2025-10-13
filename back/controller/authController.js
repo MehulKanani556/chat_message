@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModels');
-const { getOnlineUsers, onlineUsers, getSocketByUserId } = require('../socketManager/SocketManager');
 
 // Store active QR sessions
 const activeSessions = new Map();
@@ -20,9 +19,6 @@ const handleQrLogin = async (req, res) => {
     try {
         const { qrData, deviceInfo } = req.body;
         const { sessionId, timestamp } = qrData;
-
-        // console.log('QR data:', qrData);
-        // console.log('Device info:', deviceInfo);
 
         // Validate QR data
         if (!sessionId || !timestamp) {
@@ -148,11 +144,7 @@ const logoutDevice = async (req, res) => {
         user.devices.splice(deviceIndex, 1);
         await user.save();
 
-        // If this is the current device, also invalidate the token
-        if (deviceId === req.user.deviceId) {
-            // You might want to add the token to a blacklist here
-            // or implement some other token invalidation mechanism
-        }
+        if (deviceId === req.user.deviceId) {}
 
         // Emit socket event to notify the device to logout
         if (global.io) {

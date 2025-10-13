@@ -3,7 +3,6 @@ import { BASE_URL } from "./baseUrl";
 import { logoutUser } from "../redux/slice/auth.slice";
 import Cookies from 'js-cookie';
 const userId = sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId") ;
-// import Cookies from "js-cookie";
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
@@ -15,7 +14,6 @@ axiosInstance.interceptors.request.use(
   (config) => {
 
     const token =  sessionStorage.getItem("token") || localStorage.getItem("ChatToken") ;
-    // console.log(token,"-==-=-=-=-=-=");
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -27,52 +25,6 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle token refresh
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-
-//     console.log(originalRequest.url,"--=-=-=-=-=-=rererert");
-    
-
-//     // If error is 401 and we haven't tried to refresh token yet
-//     if (error.response?.status === 401 &&  !originalRequest._retry &&  !originalRequest.url.includes('/generateNewTokens') ) {
-//       originalRequest._retry = true;
-
-//       try {
-//         // Try to refresh the token
-//         const refreshToken = Cookies.get('refreshToken') || localStorage.getItem('refreshToken');
-//         const response = await axios.post(`${BASE_URL}/generateNewTokens`, {}, { headers: { 'Authorization': `Bearer ${refreshToken}` } }, { withCredentials: true });
-
-//         console.log(response);
-      
-//         if (response.data.success && response.data.accessToken) {
-//           // Store the new token
-//           localStorage.setItem("token", response.data.accessToken);
-//           sessionStorage.setItem("token", response.data.accessToken);
-//           localStorage.setItem('refreshToken',response.data.refreshToken);
-//           // Update the original request with new token
-//           originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
-
-//           // Retry the original request
-//           return axiosInstance(originalRequest);
-//         }
-//       } catch (refreshError) {
-//         const { store } = require('../redux/Store').configureStore();
-//         store.dispatch(logoutUser(userId));
-//         // If refresh token fails, redirect to login
-//         localStorage.removeItem("token");
-//         localStorage.removeItem("user");
-//         // store.dispatch(logoutUser(_id));
-//         window.location.href = "/login";
-//         return Promise.reject(refreshError);
-//       }
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
 let isRefreshing = false;
 let failedQueue = [];
 

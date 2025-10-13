@@ -4,7 +4,6 @@ const Users = require("../models/userModels");
 
 exports.saveMessage = async (messageData) => {
   try {
-    // console.log("messageData", messageData);
     const message = new Message({
       sender: messageData.senderId,
       receiver: messageData.receiverId,
@@ -82,7 +81,6 @@ exports.getAllMessages = async (req, res) => {
     }
 
     const { selectedId } = req.body;
-    // console.log(selectedId);
 
     let paginatedUser;
 
@@ -127,8 +125,6 @@ exports.deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
 
-    // console.log(messageId);
-
     // Find the message first to check if it exists and if the user has permission
     const message = await Message.findById(messageId);
 
@@ -149,12 +145,6 @@ exports.deleteMessage = async (req, res) => {
         message: "You don't have permission to delete this message",
       });
     }
-
-    // await Message.findByIdAndUpdate(messageId, {
-    //   content: { content: "deleted message", type: "text" },
-    //   deletedAt: new Date(),
-    //   status: "deleted",
-    // });
 
     await Message.findByIdAndDelete(messageId);
 
