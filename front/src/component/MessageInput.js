@@ -12,6 +12,7 @@ import { BASE_URL, IMG_URL } from "../utils/baseUrl";
 import { setBackCameraAvailable, setCameraStream, setEditingMessage, setMessageInput, setOpenCameraState, setReplyingTo, setSelectedFiles, setUploadProgress } from "../redux/slice/manageState.slice";
 import axios from "axios";
 import { decryptMessage } from "../utils/decryptMess";
+import emojiRegex from 'emoji-regex';
 
 const MessageInput = memo(
   ({
@@ -420,6 +421,23 @@ const MessageInput = memo(
       };
     }, [docModel]);
 
+    const setCaretToEnd = (el) => {
+      if (!el) return;
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(el);
+      range.collapse(false); // false = to end
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+
+    useEffect(() => {
+      // Restore caret position after messageInput changes
+      if (inputRef.current && document.activeElement === inputRef.current) {
+        setCaretToEnd(inputRef.current);
+      }
+    }, [messageInput]);
+
     // ====================================return======================================
     if (!selectedChat) return null;
 
@@ -466,6 +484,12 @@ const MessageInput = memo(
         console.error("Error accessing the camera: ", error);
       }
     };
+
+    const regex = emojiRegex();
+
+    const html = messageInput.replace(regex, (match) => {
+      return `<span class='inline-block align-middle'><img src='https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${match.codePointAt(0).toString(16)}.png' alt='${match}' class='inline h-5 w-5' onerror='this.onerror=null;this.replaceWith(document.createTextNode("${match}"));' /></span>`;
+    });
 
     return (
       <div className="w-full mx-auto px-4 py-3 mb-5 md:mb-0 dark:bg-[#1A1A1A]">
@@ -656,38 +680,44 @@ const MessageInput = memo(
                     </div>
                   </div>
                 )}
-                <div className={`flex-1 min-w-0 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative`}>
+                <div className={`flex-1 min-w-0 p-1 md:p-2 ${replyingTo || Object.keys(uploadProgress).length != 0 ? 'rounded-b-md' : 'rounded-md'} bg-[#e5e7eb] dark:text-white dark:bg-white/10 relative w-full`}>
                   <div style={{ position: "relative" }}>
-                    {/* Textarea with automatic text wrapping */}
-                    <textarea
+                    {/* Placeholder */}
+                    {(!messageInput || messageInput.length === 0) && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 8, // adjust as needed for padding
+                          top: 4,   // adjust as needed for vertical alignment
+                          color: "#aaa",
+                          pointerEvents: "none",
+                          fontSize: "1rem",
+                          zIndex: 1,
+                        }}
+                      >
+                        {editingMessage ? "Edit message..." : "Type a message..."}
+                      </span>
+                    )}
+
+                    {/* ContentEditable div */}
+                    <div
                       ref={inputRef}
-                      value={messageInput}
-                      placeholder={editingMessage ? "Edit message..." : "Type a message..."}
+                      contentEditable
+                      suppressContentEditableWarning
                       dir="ltr"
-                      rows={1}
-                      className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent resize-none overflow-y-auto placeholder:text-[#aaa] scrollbar-hide"
+                      className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent max-h-[32px] overflow-auto scrollbar-hide"
                       style={{
                         direction: "ltr",
                         textAlign: "left",
-                        fontFamily: 'system-ui, -apple-system, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Symbol", sans-serif',
-                        wordWrap: 'break-word',
-                        whiteSpace: 'pre-wrap',
-                        lineHeight: '1.5',
-                        height: '36px',
-                        maxHeight: '36px',
-                        scrollbarWidth: 'none',
-                        msOverflowStyle: 'none'
+                        fontFamily: 'system-ui, -apple-system, "Segoe UI Emoji",.3 "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Symbol", sans-serif'
                       }}
                       onInput={e => {
-                        const text = e.target.value;
+                        const text = e.target.innerText;
                         dispatch(setMessageInput(text));
                         sendTypingStatus(selectedChat._id, true);
                       }}
-                      onChange={e => {
-                        dispatch(setMessageInput(e.target.value));
-                      }}
                       onKeyDown={async (e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (e.key === "Enter") {
                           e.preventDefault();
                           if (selectedFiles.length > 0) {
                             await handleMultipleFileUpload(selectedFiles);
@@ -698,9 +728,12 @@ const MessageInput = memo(
                           e.key === "Escape" &&
                           editingMessage
                         ) {
-                          dispatch(setEditingMessage(""));
+                          dispatch(setEditingMessage(null));
                           dispatch(setMessageInput(""));
                         }
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: html,
                       }}
                     />
                   </div>
