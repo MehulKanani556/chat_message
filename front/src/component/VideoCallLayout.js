@@ -758,9 +758,9 @@ const VideoCallLayout = memo(() => {
   const content = (
     <div
       ref={containerRef}
-      className={`h-screen flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"}`}
+      className={`h-screen flex-1 flex flex-col items-center justify-between p-2 md:p-4 overflow-hidden bg-black ${participantOpen ? "w-[70%]" : "w-full"} ${chatMessages ? "max-[500px]:!w-screen max-[500px]:!h-screen max-[500px]:!fixed max-[500px]:!top-0 max-[500px]:!left-0 max-[500px]:!z-[9999]" : ""}`}
       style={
-        chatMessages
+        chatMessages && window.innerWidth > 500
           ? {
             width: "25%",
             height: "34%",
@@ -771,7 +771,12 @@ const VideoCallLayout = memo(() => {
             userSelect: "none",
             transform: "none",
           }
-          : {}
+          : chatMessages && window.innerWidth <= 500
+            ? {
+              cursor: isDragging ? "grabbing" : "grab",
+              userSelect: "none",
+            }
+            : {}
       }
       onTouchStart={handleTouchStart}
       onMouseDown={handleMouseDown}
@@ -784,37 +789,37 @@ const VideoCallLayout = memo(() => {
         style={{ display: "none" }}
       />
       {/* Participant Grid */}
-      <div className={`flex flex-wrap relative justify-center items-center w-full overflow-hidden ${(participants?.length == 1 && isVoiceCalling) ? "p-10" : ''}`}>
+      <div className={`flex flex-wrap relative justify-center items-center w-full h-full overflow-hidden ${(participants?.length == 1 && isVoiceCalling) ? "p-8 md:p-12" : 'p-1 md:p-2'}`}>
         {/* Add hidden canvas for recording */}
         {participants.length == 1 ? (
           isVoiceCalling ? (
-            <div className="w-full h-[calc(100vh-200px)] dark:bg-white/10 relative rounded-xl ">
+            <div className="w-full h-full max-h-[calc(100vh-180px)] dark:bg-white/10 relative rounded-xl">
               <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
                 <div className="flex flex-col items-center">
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:0.5s]" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
-                  <span className="absolute w-24 h-24 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
+                  <span className="absolute w-28 h-28 md:w-32 md:h-32 rounded-full border animate-wave dark:border-white/50 [animation-delay:0s]" />
+                  <span className="absolute w-28 h-28 md:w-32 md:h-32 rounded-full border animate-wave dark:border-white/50 [animation-delay:0.5s]" />
+                  <span className="absolute w-28 h-28 md:w-32 md:h-32 rounded-full border animate-wave dark:border-white/50 [animation-delay:1s]" />
+                  <span className="absolute w-28 h-28 md:w-32 md:h-32 rounded-full border animate-wave dark:border-white/50 [animation-delay:1.5s]" />
                   {selectedChat &&
                     selectedChat.photo &&
                     selectedChat.photo !== "null" ? (
                     <img
                       src={`${IMG_URL}${selectedChat.photo.replace(/\\/g, "/")}`}
                       alt="User profile"
-                      className="object-cover border rounded-full w-24 h-24"
+                      className="object-cover border rounded-full w-28 h-28 md:w-32 md:h-32"
                     />
                   ) : (
-                    <div className="flex items-center justify-center border rounded-full w-24 h-24 bg-black/50">
+                    <div className="flex items-center justify-center border rounded-full w-28 h-28 md:w-32 md:h-32 bg-black/50">
                       <span className="text-white text-4xl text-center">
                         {selectedChat?.userName?.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <p className="mt-20 text-white text-lg font-medium text-center">
+                  <p className="mt-20 md:mt-24 text-white text-lg font-medium text-center">
                     {selectedChat?.userName || "Unknown User"}
                   </p>
                   {userIncall && (
-                    <p className="mt-10 text-red-500 text-lg font-medium text-center animate-pulse">
+                    <p className="mt-8 md:mt-10 text-red-500 text-lg font-medium text-center animate-pulse">
                       {selectedChat?.userName} {userIncall}
                     </p>
                   )}
@@ -843,10 +848,10 @@ const VideoCallLayout = memo(() => {
                   ref={isLocalUser ? localVideoRef : null}
                   className={`${participants.length == 2
                     ? isLocalUser
-                      ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                      ? "absolute w-32 h-24 md:w-40 md:h-28 lg:w-48 lg:h-32 z-20 cursor-move bottom-5 right-5"
                       : widthClass
                     : widthClass
-                    } p-2 flex items-center justify-center`}
+                    } p-1.5 md:p-2.5 flex items-center justify-center`}
                   style={{
                     height: `${!(isLocalUser && participants.length == 2)
                       ? `calc(100% / ${participants.length <= 2
@@ -861,8 +866,8 @@ const VideoCallLayout = memo(() => {
                     ...(isLocalUser && participants.length == 2
                       ? {
                         position: "absolute",
-                        bottom: "1rem",
-                        right: "1rem",
+                        bottom: "1.25rem",
+                        right: "1.25rem",
                         cursor: isDraggingLocal ? "grabbing" : "grab",
                       }
                       : {}),
@@ -871,7 +876,7 @@ const VideoCallLayout = memo(() => {
                     handleLocalVideoMouseDown(e, participantId)
                   }
                 >
-                  <div className="aspect-video relative w-full h-full bg-primary-dark overflow-hidden shadow-lg">
+                  <div className="aspect-video relative w-full h-full bg-primary-dark overflow-hidden shadow-lg rounded-xl">
                     <video
                       autoPlay
                       playsInline
@@ -893,14 +898,11 @@ const VideoCallLayout = memo(() => {
                         }
                       }}
                     />
-                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
-                      {isLocalUser ? "You" : participant?.userName || "Participant"}
-                    </div>
-                    <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                    <div className="absolute bottom-3 left-3 px-4 py-1.5 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                       {isLocalUser ? "You" : participant?.userName || "Participant"}
                     </div>
                     {userIncall && (
-                      <p className="mt-20 text-white text-lg font-medium text-center animate-pulse absolute bottom-2 left-[50%] px-3 py-1">
+                      <p className="text-white text-lg font-medium text-center animate-pulse absolute bottom-3 left-1/2 -translate-x-1/2 px-4 py-2">
                         {selectedChat?.userName} {userIncall}
                       </p>
                     )}
@@ -952,10 +954,10 @@ const VideoCallLayout = memo(() => {
                     ref={isLocalUser ? localVideoRef : null}
                     className={`${participants.length == 2
                       ? isLocalUser
-                        ? "absolute w-40 h-28 md:w-56 md:h-36 z-20 cursor-move bottom-4 right-4"
+                        ? "absolute w-32 h-24 md:w-40 md:h-28 lg:w-48 lg:h-32 z-20 cursor-move bottom-5 right-5"
                         : widthClass
                       : widthClass
-                      } p-2 flex items-center justify-center`}
+                      } p-1.5 md:p-2.5 flex items-center justify-center`}
                     style={{
                       height: `${!(isLocalUser && participants.length == 2)
                         ? `calc(100% / ${participants.length <= 2
@@ -970,8 +972,8 @@ const VideoCallLayout = memo(() => {
                       ...(isLocalUser && participants.length == 2
                         ? {
                           position: "absolute",
-                          bottom: "1rem",
-                          right: "1rem",
+                          bottom: "1.25rem",
+                          right: "1.25rem",
                           cursor: isDraggingLocal ? "grabbing" : "grab",
                         }
                         : {}),
@@ -980,7 +982,7 @@ const VideoCallLayout = memo(() => {
                       handleLocalVideoMouseDown(e, participantId)
                     }
                   >
-                    <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20 ">
+                    <div className="aspect-video relative w-full h-full bg-primary-dark rounded-xl overflow-hidden shadow-lg border border-black/20 dark:border-white/20">
                       {isCameraEnabled ? (
                         <>
                           <video
@@ -1001,13 +1003,13 @@ const VideoCallLayout = memo(() => {
                               }
                             }}
                           />
-                          <div className="absolute bottom-2 left-2 px-3 py-1 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
+                          <div className="absolute bottom-3 left-3 px-4 py-1.5 rounded-full text-white bg-blue-600 text-[clamp(10px,1.2vw,14px)]">
                             {isLocalUser
                               ? "You"
                               : participant?.userName || "Par"}
                           </div>
                           {(isMicClose || (!isMicrophoneOn && isLocalUser)) && (
-                            <div className="absolute top-2 right-2 text-xl  text-white">
+                            <div className="absolute top-3 right-3 text-xl text-white">
                               <BsMicMute />
                             </div>
                           )
@@ -1034,7 +1036,10 @@ const VideoCallLayout = memo(() => {
                             }}
                           />
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-gray-500 flex items-center justify-center">
+                            <div className={`rounded-full overflow-hidden bg-gray-500 flex items-center justify-center ${participants.length === 2 && isLocalUser
+                              ? "w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16"
+                              : "w-full h-full max-w-[200px] max-h-[200px] md:max-w-[280px] md:max-h-[280px] lg:max-w-[60px] lg:max-h-[60px]"
+                              }`}>
                               {participant?.photo &&
                                 participant.photo !== "null" ? (
                                 <img
@@ -1047,14 +1052,17 @@ const VideoCallLayout = memo(() => {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <span className="text-white text-[clamp(18px,4vw,28px)] font-bold">
+                                  <span className={`text-white font-bold ${participants.length === 2 && isLocalUser
+                                    ? "text-[clamp(12px,2vw,16px)]"
+                                    : "text-[clamp(32px,8vw,45px)]"
+                                    }`}>
                                     {participant?.userName?.[0]?.toUpperCase() ||
                                       "?"}
                                   </span>
                                 </div>
                               )}
                             </div>
-                            <div className="mt-2 text-white text-[clamp(10px,1.2vw,14px)]">
+                            <div className="mt-3 md:mt-4 text-white text-[clamp(10px,1.2vw,14px)]">
                               {participant?.userName || "Pa"}{" "}
                               {!isVideoCalling ? "" : " (Camera Off)"}
                               {/* </div> */}
@@ -1070,8 +1078,7 @@ const VideoCallLayout = memo(() => {
         )}
       </div >
 
-      {!chatMessages && (
-        <div className="p-2  w-full flex justify-center items-center space-x-3 md:space-x-4 dark:bg-[#1A1A1A] bg-black/10">
+      <div className={`p-2 w-full flex justify-center items-center space-x-3 md:space-x-4 dark:bg-[#1A1A1A] bg-black/10 ${chatMessages ? 'max-[500px]:!flex hidden' : 'flex'}`}>
           <button
             onClick={() => {
               dispatch(setParticipantOpen(false));
@@ -1222,8 +1229,7 @@ const VideoCallLayout = memo(() => {
               ))
             ))
           }
-        </div >
-      )}
+        </div>
     </div>
   );
   return content;
