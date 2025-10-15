@@ -2351,7 +2351,7 @@ const RegularMessage = memo(({
         </div>{" "}
         <div className="flex">
           <div
-            className={`p-2 pl-3 relative min-w-[100px] dark:text-white ${isSingleEmoji
+            className={`p-2 pl-3 relative min-w-[100px] dark:text-white break-all ${isSingleEmoji
               ? "bg-transparent"
               : message.sender === userId
                 ? "bg-primary/50 rounded-s-xl"

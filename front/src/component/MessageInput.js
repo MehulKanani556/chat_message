@@ -705,7 +705,7 @@ const MessageInput = memo(
                       contentEditable
                       suppressContentEditableWarning
                       dir="ltr"
-                      className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent max-h-[32px] overflow-auto scrollbar-hide"
+                      className="px-9 md:ps-2 w-full md:px-2 py-1 outline-none text-black dark:text-white bg-transparent max-h-[32px] overflow-auto scrollbar-hide break-all"
                       style={{
                         direction: "ltr",
                         textAlign: "left",
