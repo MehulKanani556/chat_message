@@ -10,10 +10,7 @@ import React, {
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  getAllMessages,
-  getAllMessageUsers,
-} from "../redux/slice/user.slice";
+import { getAllMessages, getAllMessageUsers } from "../redux/slice/user.slice";
 import {
   setRemoteStreams,
   setParticipants,
@@ -44,12 +41,13 @@ import {
   setMicStatus,
   updateMessageReadStatus,
   setSelectedChat,
+  removeCallParticipants
 } from "../redux/slice/manageState.slice";
-import { BASE_URL } from '../utils/baseUrl';
-import { useNavigate } from 'react-router-dom';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { BASE_URL } from "../utils/baseUrl";
+import { useNavigate } from "react-router-dom";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
-const SOCKET_SERVER_URL = BASE_URL.replace('/api', '');
+const SOCKET_SERVER_URL = BASE_URL.replace("/api", "");
 const SocketContext = createContext();
 
 // Initialize FingerprintJS
@@ -58,13 +56,13 @@ const fpPromise = FingerprintJS.load();
 // Function to get device ID
 
 const getDeviceId = async () => {
-  let deviceId = localStorage.getItem('deviceId');
+  let deviceId = localStorage.getItem("deviceId");
 
   if (!deviceId) {
     const fp = await fpPromise;
     const result = await fp.get();
     deviceId = result.visitorId;
-    localStorage.setItem('deviceId', deviceId);
+    localStorage.setItem("deviceId", deviceId);
   }
   return deviceId;
 };
@@ -83,18 +81,24 @@ const decryptMessage = (encryptedText) => {
 
 const getDeviceType = () => {
   const userAgent = navigator.userAgent;
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      userAgent
+    );
   const isTablet = /iPad|Android(?=.*\bMobile\b)/i.test(userAgent);
 
-  if (isMobile) return 'mobile';
-  if (isTablet) return 'tablet';
-  return 'desktop';
+  if (isMobile) return "mobile";
+  if (isTablet) return "tablet";
+  return "desktop";
 };
+
+
 
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const peerRef = useRef(null);
   const peersRef = useRef({});
+  const pendingSignals = useRef({});
   const [peerEmail, setPeerEmail] = useState("");
   const [error, setError] = useState(null);
   const [hasWebcam, setHasWebcam] = useState(false);
@@ -111,7 +115,8 @@ export const SocketProvider = ({ children }) => {
   const [callStatus, setCallStatus] = useState(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const userId = sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId");
+  const userId =
+    sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId");
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
@@ -131,7 +136,8 @@ export const SocketProvider = ({ children }) => {
     typingUsers,
     selectedChat,
     screenSource,
-    showScreenSource
+    showScreenSource,
+    participants
   } = useSelector((state) => state.magageState);
 
   const { messages } = useSelector((state) => state.user);
@@ -160,6 +166,27 @@ export const SocketProvider = ({ children }) => {
     }
   };
 
+  const processPendingSignals = (peerId) => {
+    const queue = pendingSignals.current[peerId];
+    const peer = peersRef.current[peerId];
+    if (!queue || !peer) return;
+    while (queue.length) {
+      const sig = queue.shift();
+      try {
+        // ignore if already stable and sig is answer
+        if (peer._pc && peer._pc.signalingState === "stable" && sig.type === "answer") {
+          console.warn("Ignoring queued answer because peer already stable:", peerId);
+          continue;
+        }
+        peer.signal(sig);
+      } catch (err) {
+        console.warn("Error applying queued signal for", peerId, err);
+      }
+    }
+  };
+
+  
+
   useEffect(() => {
     if (socketRef.current) {
       socketRef.current.on("group-message-read", (data) => {
@@ -175,14 +202,15 @@ export const SocketProvider = ({ children }) => {
       socketRef.current.disconnect();
     }
 
-    const token = sessionStorage.getItem('token') || localStorage.getItem("ChatToken");
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("ChatToken");
 
     const initializeSocket = async () => {
       const deviceId = await getDeviceId();
 
       if (token) {
         socketRef.current = io(SOCKET_SERVER_URL, {
-          transports: ['websocket', 'polling'],
+          transports: ["websocket", "polling"],
           reconnectionAttempts: 5,
           reconnectionDelay: 1000,
           timeout: 20000,
@@ -190,11 +218,13 @@ export const SocketProvider = ({ children }) => {
           auth: {
             token,
             deviceId,
-            deviceType: getDeviceType() // Add this
-          }
+            deviceType: getDeviceType(), // Add this
+          },
         });
 
         socketRef.current.on("connect", () => {
+          console.log("Socket connection established");
+
           dispatch(setIsConnected());
           socketRef.current.emit("user-login", userId);
           // Join device room
@@ -221,9 +251,9 @@ export const SocketProvider = ({ children }) => {
           }
           // Clear all storage
           sessionStorage.clear();
-          localStorage.removeItem('deviceId');
+          localStorage.removeItem("deviceId");
           // Redirect to login
-          navigate('/login');
+          navigate("/login");
         });
 
         socketRef.current.on("user-status-changed", (onlineUserIds) => {
@@ -244,7 +274,7 @@ export const SocketProvider = ({ children }) => {
     };
 
     initializeSocket();
-  }, [userId, navigate,]);
+  }, [userId, navigate]);
 
   // Add call dismissal handler
   useEffect(() => {
@@ -308,11 +338,12 @@ export const SocketProvider = ({ children }) => {
       try {
         let content = message.data.content;
         const hasEmoji = (str) => {
-          const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
+          const emojiRegex =
+            /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
           return emojiRegex.test(str);
         };
 
-        if (typeof content === 'string' && hasEmoji(content)) {
+        if (typeof content === "string" && hasEmoji(content)) {
           content = content; // Keep emoji as is without encryption
         }
 
@@ -368,12 +399,11 @@ export const SocketProvider = ({ children }) => {
   };
 
   const toggleMicrophone = () => {
-
     if (socketRef.current?.connected) {
       socketRef.current.emit("mic-status-change", {
         userId,
         isMicOn: !isMicrophoneOn,
-        roomId: callRoom
+        roomId: callRoom,
       });
     }
     if (streamRef.current) {
@@ -472,11 +502,12 @@ export const SocketProvider = ({ children }) => {
       // Decrypt the message content if it's encrypted
       let content = message.content.content;
       const hasEmoji = (str) => {
-        const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
+        const emojiRegex =
+          /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/gu;
         return emojiRegex.test(str);
       };
 
-      if (typeof content === 'string' && hasEmoji(content)) {
+      if (typeof content === "string" && hasEmoji(content)) {
         content = content; // Keep emoji as is without encryption
       }
 
@@ -560,7 +591,6 @@ export const SocketProvider = ({ children }) => {
         } else {
           return;
         }
-
       } else {
         stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
@@ -601,7 +631,7 @@ export const SocketProvider = ({ children }) => {
                   signal,
                   groupId: selectedChat._id,
                   isGroup: true,
-                  roomId: roomId
+                  roomId: roomId,
                 });
               });
 
@@ -612,7 +642,7 @@ export const SocketProvider = ({ children }) => {
                 );
               });
 
-              peer.on("connect", () => { });
+              peer.on("connect", () => {});
 
               // Store peer connection for this member
               if (!peerRef.current) peerRef.current = {};
@@ -634,7 +664,7 @@ export const SocketProvider = ({ children }) => {
             toEmail: selectedChat._id,
             signal,
             isGroup: false,
-            roomId: roomId
+            roomId: roomId,
           });
         });
 
@@ -644,8 +674,7 @@ export const SocketProvider = ({ children }) => {
           cleanupConnection();
         });
 
-        peer.on("connect", () => {
-        });
+        peer.on("connect", () => {});
 
         peerRef.current = { [selectedChat._id]: peer };
       }
@@ -657,7 +686,7 @@ export const SocketProvider = ({ children }) => {
         cleanupConnection();
       };
 
-      dispatch(setShowScreenSource(false))
+      dispatch(setShowScreenSource(false));
 
       return true;
     } catch (err) {
@@ -696,7 +725,7 @@ export const SocketProvider = ({ children }) => {
           toEmail: userId,
           groupId: incomingShare?.groupId,
           isGroup: incomingShare?.isGroup,
-          roomId: incomingShare?.roomId
+          roomId: incomingShare?.roomId,
         });
       });
 
@@ -707,12 +736,15 @@ export const SocketProvider = ({ children }) => {
             .play()
             .catch((e) => console.error("Error playing:", e));
         }
-
-        dispatch(setRemoteStreams(
-          new Map(remoteStreams).set(incomingShare.fromEmail, stream)
-        ));
-        dispatch(updateParticipant({ userId: incomingShare.fromEmail, stream }));
-
+        console.log(stream,"strestreamstreamam");
+        dispatch(
+          setRemoteStreams(
+            new Map(remoteStreams).set(incomingShare.fromEmail, stream)
+          )
+        );
+        dispatch(
+          updateParticipant({ userId: incomingShare.fromEmail, stream })
+        );
       });
 
       peer.on("error", (err) => {
@@ -753,7 +785,6 @@ export const SocketProvider = ({ children }) => {
           });
 
           if (incomingCall.isGroupCall) {
-
             socketRef.current.emit("participant-left", {
               leavingUser: userId,
               to: incomingCall.fromEmail,
@@ -791,114 +822,165 @@ export const SocketProvider = ({ children }) => {
 
     // Handle incoming video call request with 30 sec timeout and disconnect function
     socketRef.current.on("call-requested", async (data) => {
-      dispatch(setIncomingCall({
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        type: data.type,
-        participants: data.participants,
-        isGroupCall: data.isGroupCall,
-        groupId: data.groupId || null,
-        roomId: data.roomId,
-      }));
+      dispatch(
+        setIncomingCall({
+          fromEmail: data.fromEmail,
+          signal: data.signal,
+          type: data.type,
+          participants: data.participants,
+          isGroupCall: data.isGroupCall,
+          groupId: data.groupId || null,
+          roomId: data.roomId,
+        })
+      );
       setCallRoom(data.roomId);
       setCallStatus("ringing");
+      if(data.groupId){
+        setGroupCall(data.groupId)
+      }
     });
 
     socketRef.current.on("call-invited", async (data) => {
-      dispatch(setIncomingCall({
-        fromEmail: data.fromEmail,
-        signal: data.signal,
-        type: data.type,
-        participants: data.participants || [],
-        isGroupCall: data.isGroupCall || false,
-        roomId: data.roomId,
-      }));
-      setCallRoom(data.roomId);
+      console.log("call-invited", data);
 
+      dispatch(
+        setIncomingCall({
+          fromEmail: data.fromEmail,
+          signal: data.signal,
+          type: data.type,
+          participants: data.participants || [],
+          isGroupCall: data.isGroupCall || false,
+          roomId: data.roomId,
+          groupId:data.groupId
+        })
+      );
+      setCallRoom(data.roomId);
+      if(data.isGroupCall){
+        setGroupCall(data.groupId)
+      }
       setCallStatus("ringing");
     });
 
-    socketRef.current.on("participant-joined", async ({ newParticipantId, from, participants, roomId }) => {
-      if (newParticipantId !== userId && streamRef.current) {
-
-        const peer = new Peer({
-          initiator: false,
-          trickle: false,
-          stream: streamRef.current,
-        });
-
-        peer.on("signal", (signal) => {
-          socketRef.current.emit("call-signal", {
-            signal,
-            to: newParticipantId,
-            from: userId,
-            roomId,
-          });
-        });
-
-        peer.on("stream", (stream) => {
-          dispatch(setRemoteStreams(
-            new Map(remoteStreams).set(newParticipantId, stream)
-          ));
-
-          dispatch(updateParticipant({ userId: newParticipantId, stream: stream }));
-
-          setAllCallUsers((prev) =>
-            new Map(prev).set(newParticipantId, stream)
-          );
-        });
-
-        peersRef.current[newParticipantId] = peer;
-        dispatch(setCallParticipants(new Set([...callParticipants, newParticipantId])));
+    socketRef.current.on(
+      "participant-joined",
+      async ({ newParticipantId, from, participants, roomId }) => {
+        if (newParticipantId !== userId && streamRef.current) {
+          // ensure we do NOT create a direct `new Peer(...)` here — use createPeer
+          if (!peersRef.current[newParticipantId]) {
+            const peer = createPeer(true, streamRef.current, newParticipantId);
+    
+            peer.on("signal", (signal) => {
+              socketRef.current.emit("call-signal", {
+                signal,
+                to: newParticipantId,
+                from: userId,
+                roomId,
+              });
+            });
+    
+            peer.on("stream", (stream) => {
+              dispatch(setRemoteStreams(new Map(remoteStreams).set(newParticipantId, stream)));
+              dispatch(updateParticipant({ userId: newParticipantId, stream }));
+              setAllCallUsers((prev) => new Map(prev).set(newParticipantId, stream));
+            });
+    
+            peersRef.current[newParticipantId] = peer;
+    
+            // process any queued signals for this participant
+            processPendingSignals(newParticipantId);
+          }
+    
+          dispatch(setCallParticipants(new Set([...callParticipants, newParticipantId])));
+        }
       }
-    }
     );
+    
 
     socketRef.current.on("call-signal", ({ signal, from, roomId }) => {
-      if (peersRef.current[from]) {
-        peersRef.current[from].signal(signal);
+      // if peer does not exist yet, queue the signal
+      if (!peersRef.current[from]) {
+        pendingSignals.current[from] = pendingSignals.current[from] || [];
+        pendingSignals.current[from].push(signal);
+        console.warn("Queued signal for future peer:", from);
+        return;
+      }
+    
+      const peer = peersRef.current[from];
+    
+      // Safe-guard: check internal pc state (if exists) and peer flag
+      const signalingState = peer._pc ? peer._pc.signalingState : null;
+      if (signalingState === "stable" && signal && signal.type === "answer") {
+        console.warn("Ignoring answer for stable peer:", from);
+        return;
+      }
+    
+      try {
+        peer.signal(signal);
+      } catch (err) {
+        // ignore invalid state errors and log them
+        console.warn("Ignored signal due to error:", from, err);
       }
     });
 
-    socketRef.current.on("participant-lefted", ({ leavingUser, duration, roomId }) => {
+    socketRef.current.on(
+      "participant-lefted",
+      ({ leavingUser, duration, roomId }) => {
+        // Remove the leaving participant's remote stream
+        dispatch(
+          setRemoteStreams(() => {
+            const newStreams = new Map(remoteStreams);
+            newStreams.delete(leavingUser);
+            return newStreams;
+          })
+        );
+        dispatch(removeParticipant(leavingUser));
+        dispatch(removeCallParticipants(leavingUser));
 
-      // Remove the leaving participant's remote stream
-      dispatch(setRemoteStreams(() => {
-        const newStreams = new Map(remoteStreams);
-        newStreams.delete(leavingUser);
-        return newStreams;
-      }));
-      dispatch(removeParticipant(leavingUser))
 
-      // Remove the leaving participant from the participants list
-      const newParticipants = new Set(callParticipants);
-      newParticipants.delete(leavingUser);
-      dispatch(setCallParticipants(newParticipants));
-
-      // Clean up peer connection for the leaving participant
-      if (peersRef.current[leavingUser]) {
-        peersRef.current[leavingUser].destroy();
-        delete peersRef.current[leavingUser];
+        // Clean up peer connection for the leaving participant
+        if (peersRef.current[leavingUser]) {
+          peersRef.current[leavingUser].destroy();
+          delete peersRef.current[leavingUser];
+        }
       }
-    }
     );
 
     // Handle when call is accepted
     socketRef.current.on("call-accepted", ({ signal, fromEmail, roomId }) => {
       setCallAccept(true);
       setCallStatus("connected");
-
-      if (peersRef.current) {
-        peersRef.current[fromEmail].signal(signal);
-      } else {
-        console.error("No peer connection found for:", fromEmail);
+    
+      // ensure peer exists; if not create and then process queued signals
+      let peer = peersRef.current[fromEmail];
+      if (!peer) {
+        peer = createPeer(false, streamRef.current, fromEmail);
+        peersRef.current[fromEmail] = peer;
       }
+    
+      // If peer already stable and incoming signal is an answer -> ignore
+      if (peer._pc && peer._pc.signalingState === "stable" && signal && signal.type === "answer") {
+        console.warn("Ignoring answer because peer already stable:", fromEmail);
+        return;
+      }
+    
+      try {
+        peer.signal(signal);
+        // mark applied answer to avoid duplicates
+        if (signal && signal.type === "answer") peer.hasAppliedRemoteAnswer = true;
+      } catch (err) {
+        console.warn("Error applying call-accepted signal for", fromEmail, err);
+        // if error occurred because peer hadn't been fully created, queue it
+        pendingSignals.current[fromEmail] = pendingSignals.current[fromEmail] || [];
+        pendingSignals.current[fromEmail].push(signal);
+      }
+    
+      // process any queued signals now
+      processPendingSignals(fromEmail);
     });
 
     socketRef.current.on("call-ended", ({ to, from, duration, roomId }) => {
-
       if (!duration) {
-        alert("User is Busy so Rejected  call")
+        alert("User is Busy so Rejected  call");
       }
       setCallStartTime(null);
       setCallDuration(null);
@@ -943,11 +1025,21 @@ export const SocketProvider = ({ children }) => {
     socketRef.current.on("screen-share-request", async (data) => {
       dispatch(setIncomingShare(data));
       setCallRoom(data.roomId);
-      dispatch(setshareRoomId(data.roomId))
+      dispatch(setshareRoomId(data.roomId));
     });
 
     // Handle when share is accepted
     socketRef.current.on("share-accepted", async ({ signal, fromEmail }) => {
+      // const peer = peersRef.current[fromEmail];
+      // if (peer && peer._pc.signalingState !== "stable") {
+      //   try {
+      //     peer.signal(signal);
+      //   } catch (err) {
+      //     console.warn("Ignored duplicate signal for", fromEmail, err);
+      //   }
+      // } else {
+      //   console.warn("Peer is already stable, ignoring signal from", fromEmail);
+      // }
       if (peerRef.current && peerRef.current[fromEmail]) {
         peerRef.current[fromEmail].signal(signal);
       } else {
@@ -972,7 +1064,10 @@ export const SocketProvider = ({ children }) => {
         if (window.electron) {
           switch (type) {
             case "mousemove":
-              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.moveMouse(
+                payload.x,
+                payload.y
+              );
               break;
 
             case "click":
@@ -980,21 +1075,33 @@ export const SocketProvider = ({ children }) => {
               break;
 
             case "rightClick":
-              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.moveMouse(
+                payload.x,
+                payload.y
+              );
               await window.electron.remoteControl.rightClick();
               break;
 
             case "doubleClick":
-              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.moveMouse(
+                payload.x,
+                payload.y
+              );
               await window.electron.remoteControl.doubleClick();
               break;
 
             case "keydown":
-              await window.electron.remoteControl.pressKey(payload.key, payload.ctrlKey);
+              await window.electron.remoteControl.pressKey(
+                payload.key,
+                payload.ctrlKey
+              );
               break;
 
             case "scroll":
-              await window.electron.remoteControl.moveMouse(payload.x, payload.y);
+              await window.electron.remoteControl.moveMouse(
+                payload.x,
+                payload.y
+              );
               await window.electron.remoteControl.scroll(payload.amount);
               break;
 
@@ -1090,10 +1197,11 @@ export const SocketProvider = ({ children }) => {
         streamRef.current = stream;
 
         dispatch(updateParticipant({ userId, stream }));
-
       } catch (err) {
         console.error("Could not get media devices:", err);
-        setError("Failed to access camera/microphone. Please check your device permissions.");
+        setError(
+          "Failed to access camera/microphone. Please check your device permissions."
+        );
         return;
       }
 
@@ -1106,7 +1214,6 @@ export const SocketProvider = ({ children }) => {
       if (otherMembers) {
         // Group call handling
         otherMembers.forEach((member) => {
-
           const peer = createPeer(true, stream, member);
           peer.on("signal", (signal) => {
             const data = {
@@ -1123,8 +1230,12 @@ export const SocketProvider = ({ children }) => {
           });
 
           peer.on("stream", (remoteStream) => {
-            dispatch(setRemoteStreams(new Map(remoteStreams).set(member, remoteStream)));
-            dispatch(updateParticipant({ userId: member, stream: remoteStream }));
+            dispatch(
+              setRemoteStreams(new Map(remoteStreams).set(member, remoteStream))
+            );
+            dispatch(
+              updateParticipant({ userId: member, stream: remoteStream })
+            );
             setAllCallUsers((prev) => new Map(prev).set(member, remoteStream));
           });
 
@@ -1151,8 +1262,14 @@ export const SocketProvider = ({ children }) => {
         });
 
         peer.on("stream", (remoteStream) => {
-          dispatch(setRemoteStreams(new Map(remoteStreams).set(receiverId, remoteStream)));
-          dispatch(updateParticipant({ userId: receiverId, stream: remoteStream }));
+          dispatch(
+            setRemoteStreams(
+              new Map(remoteStreams).set(receiverId, remoteStream)
+            )
+          );
+          dispatch(
+            updateParticipant({ userId: receiverId, stream: remoteStream })
+          );
           setAllCallUsers((prev) =>
             new Map(prev).set(receiverId, remoteStream)
           );
@@ -1169,7 +1286,7 @@ export const SocketProvider = ({ children }) => {
         dispatch(setIsVoiceCalling(true));
       }
 
-      dispatch(setSelectedChatModule(false))
+      dispatch(setSelectedChatModule(false));
       dispatch(setCallChatList(false));
     } catch (err) {
       console.error("Error starting call:", err);
@@ -1178,15 +1295,12 @@ export const SocketProvider = ({ children }) => {
   };
 
   const inviteToCall = async (newParticipantId) => {
-
+    // console.log(callParticipants,"callParticipantscallParticipants");
+    
     setCallFrom(userId);
 
     try {
-      const newPeer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: streamRef.current,
-      });
+      const newPeer = createPeer(true, streamRef.current, newParticipantId);
 
       newPeer.on("signal", (signal) => {
         socketRef.current.emit("call-invite", {
@@ -1196,18 +1310,43 @@ export const SocketProvider = ({ children }) => {
           type: isVideoCalling ? "video" : "voice",
           participants: Array.from(callParticipants),
           roomId: callRoom,
+          isGroupCall: true,
         });
       });
 
       newPeer.on("stream", (remoteStream) => {
-        dispatch(setRemoteStreams(new Map(remoteStreams).set(newParticipantId, remoteStream)));
-        dispatch(updateParticipant({ userId: newParticipantId, stream: remoteStream }));
+        const validRemoteStreams =
+  remoteStreams instanceof Map
+    ? remoteStreams
+    : new Map();
+    dispatch(
+      setRemoteStreams(
+        new Map(validRemoteStreams).set(newParticipantId, remoteStream)
+      )
+    );
+        dispatch(
+          updateParticipant({ userId: newParticipantId, stream: remoteStream })
+        );
         setAllCallUsers((prev) =>
           new Map(prev).set(newParticipantId, remoteStream)
         );
       });
 
       peersRef.current[newParticipantId] = newPeer;
+
+      // console.log(participants,"participants");
+      
+
+      // if (Array.isArray(participants)) {
+      //   const participantIds = participants.map((p) => Array.isArray(p) ? p[0] : p);
+      //   console.log(participantIds,"participantIdsparticipantIds");
+        
+      //   const updatedParticipants = new Set(participantIds);
+      //   console.log(updatedParticipants,"updatedParticipantsupdatedParticipants");
+        
+      //   dispatch(setCallParticipants(updatedParticipants));
+      // }
+
 
       // Notify all existing participants about the new member
       Array.from(callParticipants).forEach((participantId) => {
@@ -1221,7 +1360,9 @@ export const SocketProvider = ({ children }) => {
         }
       });
 
-      dispatch(setCallParticipants(new Set([...callParticipants, newParticipantId])));
+      dispatch(
+        setCallParticipants(new Set([...callParticipants, newParticipantId]))
+      );
     } catch (err) {
       console.error("Error inviting to call:", err);
     }
@@ -1233,7 +1374,7 @@ export const SocketProvider = ({ children }) => {
       // Set call start time when call is accepted
       setCallStartTime(new Date());
       startCallDurationTimer();
-      setGroupCall(incomingCall?.isGroupCall ? incomingCall?.groupId : null);
+      setGroupCall(incomingCall?.isGroupCall ? incomingCall?.groupId || true : null);
       setCallFrom(incomingCall?.fromEmail);
       setCallStatus("accepted");
       setCallAccept(true);
@@ -1245,7 +1386,6 @@ export const SocketProvider = ({ children }) => {
           video: incomingCall.type == "video" ? hasWebcam : false,
           audio: hasMicrophone,
         });
-
       } catch (err) {
         console.warn("Could not get media devices:", err);
       }
@@ -1264,20 +1404,26 @@ export const SocketProvider = ({ children }) => {
       const peer = createPeer(false, stream, incomingCall.fromEmail);
 
       peer.on("signal", (signal) => {
-        socketRef.current.emit("call-accept", {
-          signal,
-          fromEmail: incomingCall.fromEmail,
-          toEmail: userId,
-          participants: incomingCall.participants,
-          roomId: callRoom,
-        });
+        setTimeout(() => {
+          socketRef.current.emit("call-accept", {
+            signal,
+            fromEmail: incomingCall.fromEmail,
+            toEmail: userId,
+            participants: incomingCall.participants,
+            roomId: callRoom,
+          });
+        }, Math.random() * 500); // 0–500ms delay
       });
 
       peer.on("stream", (stream) => {
-        dispatch(setRemoteStreams(
-          new Map(remoteStreams).set(incomingCall.fromEmail, stream)
-        ));
-        dispatch(updateParticipant({ userId: incomingCall.fromEmail, stream: stream }));
+        dispatch(
+          setRemoteStreams(
+            new Map(remoteStreams).set(incomingCall.fromEmail, stream)
+          )
+        );
+        dispatch(
+          updateParticipant({ userId: incomingCall.fromEmail, stream: stream })
+        );
         setAllCallUsers((prev) =>
           new Map(prev).set(incomingCall.fromEmail, stream)
         );
@@ -1289,16 +1435,11 @@ export const SocketProvider = ({ children }) => {
       // Connect with other existing participants
       if (incomingCall.participants) {
         incomingCall.participants.forEach((participantId) => {
-          if (
-            participantId !== userId &&
-            participantId !== incomingCall.fromEmail
-          ) {
-            const participantPeer = new Peer({
-              initiator: true,
-              trickle: false,
-              stream,
-            });
-
+          if (participantId === userId || participantId === incomingCall.fromEmail) return;
+        
+          if (!peersRef.current[participantId]) {
+            const participantPeer = createPeer(true, stream, participantId);
+        
             participantPeer.on("signal", (signal) => {
               socketRef.current.emit("call-signal", {
                 signal,
@@ -1306,18 +1447,16 @@ export const SocketProvider = ({ children }) => {
                 from: userId,
               });
             });
-
-            participantPeer.on("stream", (stream) => {
-              dispatch(setRemoteStreams(
-                new Map(remoteStreams).set(participantId, stream)
-              ));
-              dispatch(updateParticipant({ userId: participantId, stream }));
-              setAllCallUsers((prev) =>
-                new Map(prev).set(participantId, stream)
-              );
+        
+            participantPeer.on("stream", (s) => {
+              dispatch(setRemoteStreams(new Map(remoteStreams).set(participantId, s)));
+              dispatch(updateParticipant({ userId: participantId, stream: s }));
+              setAllCallUsers((prev) => new Map(prev).set(participantId, s));
             });
-
+        
             peersRef.current[participantId] = participantPeer;
+            // If any signals were queued for this peer, process them
+            processPendingSignals(participantId);
           }
         });
       }
@@ -1327,7 +1466,7 @@ export const SocketProvider = ({ children }) => {
       } else {
         dispatch(setIsVoiceCalling(true));
       }
-      setCallAccept(true)
+      setCallAccept(true);
       setPeerEmail(incomingCall.fromEmail);
       dispatch(setCallParticipants(new Set(incomingCall.participants)));
       dispatch(setIncomingCall(null));
@@ -1361,7 +1500,6 @@ export const SocketProvider = ({ children }) => {
             duration: finalDuration,
             roomId: callRoom,
           });
-
         } else {
           callParticipantsList?.joined.forEach((participantId) => {
             if (participantId !== userId) {
@@ -1499,9 +1637,18 @@ export const SocketProvider = ({ children }) => {
     setCallAccept(false);
   };
 
-  const rejectCall = (type, userId, groupId) => {
+  const rejectCall = (type, userId, groupId, roomId, isGroupCall) => {
     if (!incomingCall) return;
     // Save missed call message
+
+    console.log(
+      type,
+      userId,
+      groupId,
+      roomId,
+      isGroupCall,
+      "type, userId, groupId, roomId,isGroupCall"
+    );
 
     if (groupId) {
       socketRef.current.emit("save-call-message", {
@@ -1520,13 +1667,26 @@ export const SocketProvider = ({ children }) => {
         timestamp: new Date(),
       });
     }
-    if (socketRef.current) {
+
+    if (socketRef.current && !groupId && !isGroupCall) {
+      console.log("end-call");
       socketRef.current.emit("end-call", {
         to: incomingCall.fromEmail,
         from: userId,
         duration: null,
       });
+    } else if (isGroupCall) {
+      console.log("reject-group-call");
+
+      socketRef.current.emit("reject-group-call", {
+        to: incomingCall.fromEmail,
+        userId,
+        duration: null,
+        roomId,
+        groupId,
+      });
     }
+
     dispatch(setIsVoiceCalling(false));
     dispatch(setIsVideoCalling(false));
     dispatch(setIncomingCall(null));
@@ -1535,7 +1695,7 @@ export const SocketProvider = ({ children }) => {
 
   // ==================group message=============================
   // Send group message
-  const sendGroupMessage = (groupId, message,) => {
+  const sendGroupMessage = (groupId, message) => {
     return new Promise((resolve, reject) => {
       if (!socketRef.current?.connected) {
         reject(new Error("Socket not connected"));
@@ -1624,18 +1784,22 @@ export const SocketProvider = ({ children }) => {
     if (!socketRef.current) return;
     // Handle group updates
     const handleGroupUpdate = (data) => {
-      dispatch(getAllMessageUsers()).then((res) => {
-        const groupId = data.groupId;
-        if (groupId && res && Array.isArray(res.payload)) {
-          const found = res.payload.find((user) => user._id === groupId);
-          if (!found) {
-            dispatch(setSelectedChat(null));
+      dispatch(getAllMessageUsers())
+        .then((res) => {
+          const groupId = data.groupId;
+          if (groupId && res && Array.isArray(res.payload)) {
+            const found = res.payload.find((user) => user._id === groupId);
+            if (!found) {
+              dispatch(setSelectedChat(null));
+            }
           }
-        }
-      }).catch((error) => {
-        console.error('Failed to update message users on group update:', error);
-      });;
-
+        })
+        .catch((error) => {
+          console.error(
+            "Failed to update message users on group update:",
+            error
+          );
+        });
     };
     socketRef.current.on("group-updated", handleGroupUpdate);
     return () => {
@@ -1664,7 +1828,12 @@ export const SocketProvider = ({ children }) => {
   //     resolve();
   //   });
   // };
-  const forwardMessage = ({ receiverId, groupId, message, isGroup = false }) => {
+  const forwardMessage = ({
+    receiverId,
+    groupId,
+    message,
+    isGroup = false,
+  }) => {
     return new Promise((resolve, reject) => {
       if (!socketRef.current?.connected) {
         reject(new Error("Socket not connected"));
@@ -1693,19 +1862,27 @@ export const SocketProvider = ({ children }) => {
     if (!socketRef.current) return;
 
     // Add camera status change listener
-    socketRef.current.on("camera-status-change", ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
-      dispatch(setCameraStatus({
-        ...cameraStatus,
-        [remoteUserId]: remoteCameraStatus,
-      }));
-    }
+    socketRef.current.on(
+      "camera-status-change",
+      ({ userId: remoteUserId, isCameraOn: remoteCameraStatus }) => {
+        dispatch(
+          setCameraStatus({
+            ...cameraStatus,
+            [remoteUserId]: remoteCameraStatus,
+          })
+        );
+      }
     );
-    socketRef.current.on("mic-status-change", ({ userId: remoteUserId, isMicOn: remoteMicStatus }) => {
-      dispatch(setMicStatus({
-        ...micStatus,
-        [remoteUserId]: remoteMicStatus,
-      }));
-    }
+    socketRef.current.on(
+      "mic-status-change",
+      ({ userId: remoteUserId, isMicOn: remoteMicStatus }) => {
+        dispatch(
+          setMicStatus({
+            ...micStatus,
+            [remoteUserId]: remoteMicStatus,
+          })
+        );
+      }
     );
     return () => {
       if (socketRef.current) {
@@ -1727,10 +1904,12 @@ export const SocketProvider = ({ children }) => {
           const callusers = Array.from(remoteStreams.keys());
           const no_of_callUser = sessionStorage.getItem("callUser");
 
+          console.log(participants,groupCall,"aaaaaaaaaaaaa");
+          
+
           if (groupCall) {
             Array.from(callParticipants).forEach((participantId) => {
               if (participantId !== userId) {
-
                 socketRef.current.emit("participant-left", {
                   leavingUser: userId,
                   to: participantId,
@@ -1785,11 +1964,12 @@ export const SocketProvider = ({ children }) => {
       }
 
       // Remove from remote streams
-      dispatch(setRemoteStreams(
-        new Map(remoteStreams).delete(peerId)
-      ));
+      
+      if (remoteStreams && remoteStreams.size > 0) {
+        dispatch(setRemoteStreams(new Map(remoteStreams).delete(peerId)));
+      }
 
-      dispatch(removeParticipant(peerId))
+      dispatch(removeParticipant(peerId));
       // Remove from call participants
       const newParticipants = new Set(callParticipants);
       newParticipants.delete(peerId);
@@ -1817,9 +1997,31 @@ export const SocketProvider = ({ children }) => {
       trickle: false,
       stream,
     });
-
+  
+    // flag to avoid double-answer applying
+    peer.hasAppliedRemoteAnswer = false;
+  
+    // When this peer emits a signal (offer/answer/ICE)
+    peer.on("signal", (signal) => {
+      // mark when an answer was produced locally
+      if (signal && signal.type === "answer") {
+        peer.hasAppliedRemoteAnswer = true;
+      }
+    });
+  
+    // Optional: fallback stream event hook
+    peer.on("stream", (s) => {
+      // You already handle remote streams where you create peers,
+      // but this is kept for safety/debugging
+      console.log(`[createPeer] Stream received from ${targetId}`, s);
+    });
+  
+    // Centralized peer error handler
     peer.on("error", (err) => handlePeerError(err, targetId));
-
+  
+    // Process any queued signals that might have arrived before this peer existed
+    setTimeout(() => processPendingSignals(targetId), 50);
+  
     return peer;
   };
 
@@ -1828,7 +2030,11 @@ export const SocketProvider = ({ children }) => {
     if (data.isTyping) {
       dispatch(setTypingUsers([...new Set([...typingUsers, data.userId])]));
       setTimeout(() => {
-        dispatch(setTypingUsers([...new Set(typingUsers.filter(id => id !== data.userId))]));
+        dispatch(
+          setTypingUsers([
+            ...new Set(typingUsers.filter((id) => id !== data.userId)),
+          ])
+        );
       }, 5000);
     }
   };
@@ -1843,26 +2049,34 @@ export const SocketProvider = ({ children }) => {
     };
   }, [isConnected]);
 
-
   // ====================================Controle========================
   const sendControl = (type, payload, roomId) => {
     socketRef.current.emit("control-event", { roomId, type, payload });
   };
 
-  const requestControl = useCallback((hostId) => {
-    if (!socketRef.current?.connected) return;
-    socketRef.current.emit('request-control', { hostId });
-  }, [socketRef]);
+  const requestControl = useCallback(
+    (hostId) => {
+      if (!socketRef.current?.connected) return;
+      socketRef.current.emit("request-control", { hostId });
+    },
+    [socketRef]
+  );
 
-  const grantControl = useCallback((viewerId) => {
-    if (!socketRef.current?.connected) return;
-    socketRef.current.emit('grant-control', { viewerId });
-  }, [socketRef]);
+  const grantControl = useCallback(
+    (viewerId) => {
+      if (!socketRef.current?.connected) return;
+      socketRef.current.emit("grant-control", { viewerId });
+    },
+    [socketRef]
+  );
 
-  const revokeControl = useCallback((viewerId) => {
-    if (!socketRef.current?.connected) return;
-    socketRef.current.emit('revoke-control', { viewerId });
-  }, [socketRef]);
+  const revokeControl = useCallback(
+    (viewerId) => {
+      if (!socketRef.current?.connected) return;
+      socketRef.current.emit("revoke-control", { viewerId });
+    },
+    [socketRef]
+  );
 
   // Update socket event listeners
   useEffect(() => {
@@ -1896,107 +2110,192 @@ export const SocketProvider = ({ children }) => {
       dispatch(setViewerControlling(null));
     };
 
-    socketRef.current.on('control-permission', handleControlPermission);
-    socketRef.current.on('control-request', handleControlRequest);
-    socketRef.current.on('control-revoked', handleControlRevoked);
-    socketRef.current.on('control-granted', handleControlGranted);
-    socketRef.current.on('control-revoked-for-host', handleControlRevokedForHost);
+    socketRef.current.on("control-permission", handleControlPermission);
+    socketRef.current.on("control-request", handleControlRequest);
+    socketRef.current.on("control-revoked", handleControlRevoked);
+    socketRef.current.on("control-granted", handleControlGranted);
+    socketRef.current.on(
+      "control-revoked-for-host",
+      handleControlRevokedForHost
+    );
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('control-permission', handleControlPermission);
-        socketRef.current.off('control-request', handleControlRequest);
-        socketRef.current.off('control-revoked', handleControlRevoked);
-        socketRef.current.off('control-granted', handleControlGranted);
-        socketRef.current.off('control-revoked-for-host', handleControlRevokedForHost);
+        socketRef.current.off("control-permission", handleControlPermission);
+        socketRef.current.off("control-request", handleControlRequest);
+        socketRef.current.off("control-revoked", handleControlRevoked);
+        socketRef.current.off("control-granted", handleControlGranted);
+        socketRef.current.off(
+          "control-revoked-for-host",
+          handleControlRevokedForHost
+        );
       }
     };
   }, [socketRef.current, grantControl]);
 
-  const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [userId, socketRef]);
-  const memoizedsendGroupMessage = useCallback(sendGroupMessage, [userId, socketRef]);
+  const memoizedSendPrivateMessage = useCallback(sendPrivateMessage, [
+    userId,
+    socketRef,
+  ]);
+  const memoizedsendGroupMessage = useCallback(sendGroupMessage, [
+    userId,
+    socketRef,
+  ]);
   const memoizedCleanupConnection = useCallback(cleanupConnection, [dispatch]);
-  const memoizedStartSharing = useCallback(startSharing, [userId, socketRef, dispatch]);
-  const memoizedStartCall = useCallback(startCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone]);
-  const memoizedAcceptCall = useCallback(acceptCall, [userId, socketRef, dispatch, hasWebcam, hasMicrophone, incomingCall]);
-  const memoizedEndCall = useCallback(endCall, [userId, socketRef, groupCall, callParticipantsList, callStartTime]);
-  const memoizedToggleCamera = useCallback(toggleCamera, [streamRef, isCameraOn, userId, socketRef, dispatch]);
-  const memoizedToggleMicrophone = useCallback(toggleMicrophone, [streamRef, dispatch, callRoom, userId, isMicrophoneOn]);
-  const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [userId, socketRef, dispatch]);
-  const memoizedRejectCall = useCallback(rejectCall, [userId, socketRef, dispatch, incomingCall]);
-  const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [incomingShare, dispatch, userId, socketRef]);
-  const memoizedInviteToCall = useCallback(inviteToCall, [userId, socketRef, dispatch, callParticipants, isVideoCalling]);
-  const memoizedForwardMessage = useCallback(forwardMessage, [userId, socketRef]);
-  const memoizedAddMessageReaction = useCallback(addMessageReaction, [userId, socketRef, dispatch]);
-  const memoizedRemoveMessageReaction = useCallback(removeMessageReaction, [userId, socketRef, dispatch]);
-  const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [socketRef]);
-  const memoizedSendTypingStatus = useCallback(sendTypingStatus, [userId, socketRef]);
-  const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
-
-  // Use the memoized functions in useMemo
-  const value = useMemo(() => ({
-    socket: socketRef.current,
-    sendPrivateMessage: memoizedSendPrivateMessage,
-    cleanupConnection: memoizedCleanupConnection,
-    startSharing: memoizedStartSharing,
-    startCall: memoizedStartCall,
-    acceptCall: memoizedAcceptCall,
-    endCall: memoizedEndCall,
-    toggleCamera: memoizedToggleCamera,
-    toggleMicrophone: memoizedToggleMicrophone,
-    markMessageAsRead: memoizedMarkMessageAsRead,
-    rejectCall: memoizedRejectCall,
-    acceptScreenShare: memoizedAcceptScreenShare,
-    inviteToCall: memoizedInviteToCall,
-    forwardMessage: memoizedForwardMessage,
-    addMessageReaction: memoizedAddMessageReaction,
-    removeMessageReaction: memoizedRemoveMessageReaction,
-    subscribeToMessages: memoizedSubscribeToMessages,
-    sendTypingStatus: memoizedSendTypingStatus,
-    sendControl: memoizedsendControls,
-    requestControl,
-    grantControl,
-    revokeControl,
-    sendGroupMessage: memoizedsendGroupMessage
-  }), [
+  const memoizedStartSharing = useCallback(startSharing, [
+    userId,
+    socketRef,
+    dispatch,
+  ]);
+  const memoizedStartCall = useCallback(startCall, [
+    userId,
+    socketRef,
+    dispatch,
+    hasWebcam,
+    hasMicrophone,
+  ]);
+  const memoizedAcceptCall = useCallback(acceptCall, [
     userId,
     socketRef,
     dispatch,
     hasWebcam,
     hasMicrophone,
     incomingCall,
+  ]);
+  const memoizedEndCall = useCallback(endCall, [
+    userId,
+    socketRef,
     groupCall,
     callParticipantsList,
     callStartTime,
+  ]);
+  const memoizedToggleCamera = useCallback(toggleCamera, [
     streamRef,
     isCameraOn,
+    userId,
+    socketRef,
+    dispatch,
+  ]);
+  const memoizedToggleMicrophone = useCallback(toggleMicrophone, [
+    streamRef,
+    dispatch,
+    callRoom,
+    userId,
+    isMicrophoneOn,
+  ]);
+  const memoizedMarkMessageAsRead = useCallback(markMessageAsRead, [
+    userId,
+    socketRef,
+    dispatch,
+  ]);
+  const memoizedRejectCall = useCallback(rejectCall, [
+    userId,
+    socketRef,
+    dispatch,
+    incomingCall,
+  ]);
+  const memoizedAcceptScreenShare = useCallback(acceptScreenShare, [
     incomingShare,
+    dispatch,
+    userId,
+    socketRef,
+  ]);
+  const memoizedInviteToCall = useCallback(inviteToCall, [
+    userId,
+    socketRef,
+    dispatch,
     callParticipants,
     isVideoCalling,
-    memoizedSendPrivateMessage,
-    memoizedCleanupConnection,
-    memoizedStartSharing,
-    memoizedStartCall,
-    memoizedAcceptCall,
-    memoizedEndCall,
-    memoizedToggleCamera,
-    memoizedToggleMicrophone,
-    memoizedMarkMessageAsRead,
-    memoizedRejectCall,
-    memoizedAcceptScreenShare,
-    memoizedInviteToCall,
-    memoizedForwardMessage,
-    memoizedAddMessageReaction,
-    memoizedRemoveMessageReaction,
-    memoizedSubscribeToMessages,
-    memoizedSendTypingStatus,
-    memoizedsendControls,
-    memoizedsendGroupMessage,
   ]);
+  const memoizedForwardMessage = useCallback(forwardMessage, [
+    userId,
+    socketRef,
+  ]);
+  const memoizedAddMessageReaction = useCallback(addMessageReaction, [
+    userId,
+    socketRef,
+    dispatch,
+  ]);
+  const memoizedRemoveMessageReaction = useCallback(removeMessageReaction, [
+    userId,
+    socketRef,
+    dispatch,
+  ]);
+  const memoizedSubscribeToMessages = useCallback(subscribeToMessages, [
+    socketRef,
+  ]);
+  const memoizedSendTypingStatus = useCallback(sendTypingStatus, [
+    userId,
+    socketRef,
+  ]);
+  const memoizedsendControls = useCallback(sendControl, [userId, socketRef]);
+
+  // Use the memoized functions in useMemo
+  const value = useMemo(
+    () => ({
+      socket: socketRef.current,
+      sendPrivateMessage: memoizedSendPrivateMessage,
+      cleanupConnection: memoizedCleanupConnection,
+      startSharing: memoizedStartSharing,
+      startCall: memoizedStartCall,
+      acceptCall: memoizedAcceptCall,
+      endCall: memoizedEndCall,
+      toggleCamera: memoizedToggleCamera,
+      toggleMicrophone: memoizedToggleMicrophone,
+      markMessageAsRead: memoizedMarkMessageAsRead,
+      rejectCall: memoizedRejectCall,
+      acceptScreenShare: memoizedAcceptScreenShare,
+      inviteToCall: memoizedInviteToCall,
+      forwardMessage: memoizedForwardMessage,
+      addMessageReaction: memoizedAddMessageReaction,
+      removeMessageReaction: memoizedRemoveMessageReaction,
+      subscribeToMessages: memoizedSubscribeToMessages,
+      sendTypingStatus: memoizedSendTypingStatus,
+      sendControl: memoizedsendControls,
+      requestControl,
+      grantControl,
+      revokeControl,
+      sendGroupMessage: memoizedsendGroupMessage,
+    }),
+    [
+      userId,
+      socketRef,
+      dispatch,
+      hasWebcam,
+      hasMicrophone,
+      incomingCall,
+      groupCall,
+      callParticipantsList,
+      callStartTime,
+      streamRef,
+      isCameraOn,
+      incomingShare,
+      callParticipants,
+      isVideoCalling,
+      memoizedSendPrivateMessage,
+      memoizedCleanupConnection,
+      memoizedStartSharing,
+      memoizedStartCall,
+      memoizedAcceptCall,
+      memoizedEndCall,
+      memoizedToggleCamera,
+      memoizedToggleMicrophone,
+      memoizedMarkMessageAsRead,
+      memoizedRejectCall,
+      memoizedAcceptScreenShare,
+      memoizedInviteToCall,
+      memoizedForwardMessage,
+      memoizedAddMessageReaction,
+      memoizedRemoveMessageReaction,
+      memoizedSubscribeToMessages,
+      memoizedSendTypingStatus,
+      memoizedsendControls,
+      memoizedsendGroupMessage,
+    ]
+  );
 
   return (
-    <SocketContext.Provider value={value}>{children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
   );
 };
 
@@ -2007,5 +2306,3 @@ export const useSocket = () => {
   }
   return context;
 };
-
-

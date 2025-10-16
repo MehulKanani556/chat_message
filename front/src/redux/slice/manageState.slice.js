@@ -72,7 +72,7 @@ const initialState = {
 };
 
 const manageStateSlice = createSlice({
-  name: "user",
+  name: "manageState",
   initialState,
   reducers: {
     updateMessageReadStatus: (state, action) => {
@@ -94,7 +94,7 @@ const manageStateSlice = createSlice({
       state.selectedChat = action.payload;
     },
     setRemoteStreams: (state, action) => {
-      state.remoteStreams = action.payload;
+      state.remoteStreams = action.payload ?? new Map();
     },
     setParticipants: (state, action) => {
       state.participants = action.payload;
@@ -157,6 +157,11 @@ const manageStateSlice = createSlice({
     },
     setCallParticipants: (state, action) => {
       state.callParticipants = action.payload;
+    },
+    removeCallParticipants:(state, action) => {
+      if (state.callParticipants instanceof Set) {
+        state.callParticipants = new Set([...state.callParticipants].filter(p => p !== action.payload));
+      }
     },
     setSelectedChatModule: (state, action) => {
       state.selectedChatModule = action.payload;
@@ -308,6 +313,7 @@ export const {
   setCameraStatus,
   setMicStatus,
   setCallParticipants,
+  removeCallParticipants,
   setSelectedChatModule,
   setShowProfile,
   setShowSettings,

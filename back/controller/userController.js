@@ -80,6 +80,36 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getContactUsers = async (req, res) => {
+  try {
+    // Replace with how you get the userId, e.g. from token or params
+    const userId = req.user._id || req.params.id;
+
+    const userData = await user.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ status: 404, message: "User not found" });
+    }
+
+    const contactList = userData.contactList || [];
+    // Assuming each contact has a "phone" field
+    const contactPhones = contactList.map(contact => contact.phone);
+
+    // Now find all Users whose mobileNumber is in contactPhones
+    const users = await user.find({ mobileNumber: { $in: contactPhones } });
+
+    return res.status(200).json({
+      status: 200,
+      message: "Contact Users found successfully",
+      users,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: 500, message: error.message });
+  }
+};
+
 exports.getAllMessageUsers = async (req, res) => {
   try {
     
@@ -839,52 +869,53 @@ exports.removeDevice = async (req, res) => {
 
 exports.addContactList = async (req, res) => {
   try {
-    // Handle nested contacts structure
-    const contactsData = Array.isArray(req.body) ? req.body : [req.body];
-    const contacts = contactsData[0]?.contacts || [];
-    
-    const currentUser = req.user._id;
-    const userData = await user.findById(currentUser);
-    
+    const contacts = Array.isArray(req.body.contacts) ? req.body.contacts : [];
+
+    const currentUserId = req.user._id;
+    const userData = await user.findById(currentUserId);
+
     if (!userData) {
       return res.status(404).json({
         status: 404,
         message: "User not found"
       });
     }
-    
-    // Initialize contacts array if it doesn't exist
-    if (!userData.contactList) {
+
+    // Initialize contactList if missing
+    if (!Array.isArray(userData.contactList)) {
       userData.contactList = [];
     }
-    
-    // Process each contact in the array
+
     for (const contact of contacts) {
-      // Validate required fields
       if (!contact.id || !contact.name || !contact.phone) {
-        continue; // Skip invalid contacts
+        continue; // skip invalid
       }
-      
-      // Check if contact already exists in user's contact list
-      const existingContact = userData.contactList.find(c => c.phone === contact.phone);
-      
-      if (!existingContact) {
-        // Check if the phone number exists in the database
-        const userWithPhone = await user.findOne({ mobileNumber: contact.phone });
-        
-        if (userWithPhone) {
-          // Add new contact to the contacts array
-          userData.contactList.push({
-            contactId: contact.id,
-            userName:userWithPhone.userName,
-            phone: contact.phone,
-            photo: userWithPhone.photo || null,
-            addedAt: new Date(),
-            status: 'active',
-            _id: userWithPhone._id // Store the user's ID if they exist in the system
-          });
-        }
+
+      // Check if contact already exists; if so, skip
+      if (userData.contactList.some(c => c.phone === contact.phone)) {
+        continue;
       }
+
+      // Look up if the phone belongs to an existing user
+      const existingUser = await user.findOne({ mobileNumber: contact.phone });
+
+      const newContact = {
+        contactId: contact.id,
+        userName: contact.name,
+        phone: contact.phone,
+        photo: contact.photoUri || null,
+        addedAt: new Date(),
+        status: "active",
+      };
+
+      // If this contact is also a registered user, add profile fields
+      if (existingUser) {
+        // newContact._id = existingUser._id;
+        // newContact.userName = existingUser.userName;
+        newContact.photo = existingUser.photo || contact.photoUri || null;
+      }
+
+      userData.contactList.push(newContact);
     }
 
     await userData.save();
@@ -894,6 +925,7 @@ exports.addContactList = async (req, res) => {
       message: "Contacts added successfully",
       contacts: userData.contactList
     });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({

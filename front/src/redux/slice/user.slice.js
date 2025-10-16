@@ -12,6 +12,7 @@ const initialState = {
   user: null,
   allCallUsers: [],
   allUsers: [],
+  allContactUsers: [],
   allMessageUsers: [],
   messages: [],
   groups: [],
@@ -151,6 +152,18 @@ export const getAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/allUsers");
+      return response.data.users;
+    } catch (error) {
+      return handleErrors(error, null, rejectWithValue);
+    }
+  }
+);
+
+export const getContactUsers = createAsyncThunk(
+  "user/getContactUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get("/allContactUsers");
       return response.data.users;
     } catch (error) {
       return handleErrors(error, null, rejectWithValue);
@@ -550,7 +563,7 @@ const userSlice = createSlice({
       })
       .addCase(getUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || "Failed to retrieve user";;
         state.message = action.payload?.message || "Failed to retrieve user";
       })
       .addCase(updateUser.fulfilled, (state, action) => {
@@ -582,7 +595,22 @@ const userSlice = createSlice({
       })
       .addCase(getAllUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || "Failed to retrieve users";
+        state.message = action.payload?.message || "Failed to retrieve users";
+      })
+      .addCase(getContactUsers.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getContactUsers.fulfilled, (state, action) => {
+        state.allContactUsers = action.payload;
+        state.loading = false;
+        state.error = null;
+        state.message = "Users retrieved successfully";
+      })
+      .addCase(getContactUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to retrieve users";
         state.message = action.payload?.message || "Failed to retrieve users";
       })
       .addCase(getAllMessages.fulfilled, (state, action) => {
@@ -631,9 +659,8 @@ const userSlice = createSlice({
       })
       .addCase(getAllMessageUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
-        state.message =
-          action.payload?.message || "Failed to retrieve message users";
+        state.error =  action.payload?.message || "Failed to retrieve message users";
+        state.message = action.payload?.message || "Failed to retrieve message users";
       })
       .addCase(getAllGroups.fulfilled, (state, action) => {
         state.groups = action.payload;
@@ -698,9 +725,8 @@ const userSlice = createSlice({
       })
       .addCase(getAllCallUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
-        state.message =
-          action.payload?.message || "Failed to retrieve call users";
+        state.error = action.payload?.message || "Failed to retrieve call users";
+        state.message = action.payload?.message || "Failed to retrieve call users";
       })
       .addCase(updateUserGroupToJoin.fulfilled, (state, action) => {
         state.loading = false;

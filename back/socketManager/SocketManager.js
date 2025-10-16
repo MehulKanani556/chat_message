@@ -527,6 +527,9 @@ function handleCallInvite(socket, data) {
     }
   }
 
+  // console.log(data, "datadatadatadata");
+  
+
   if (isUserInCall) {
     socket.emit("user-in-call", {
       toEmail,
@@ -560,6 +563,7 @@ function handleCallInvite(socket, data) {
       type,
       isGroupCall,
       roomId,
+      groupId:fromEmail
     });
   }
 }
@@ -611,6 +615,35 @@ function handleParticipantLeft(socket, data) {
     duration,
     roomId,
   });
+  socket.leave(roomId);
+}
+function handleRejectGroupCall(socket, data) {
+
+  const { to,userId, groupId, duration, roomId } = data;
+
+  // console.log(data,"datadatadatadata");
+  
+
+  const call = activeCalls[roomId];
+
+  // console.log(call,"callcallcallcall");
+  
+
+
+  if (call) {  
+    if(call?.ringing && call?.ringing.includes(userId)){
+      // console.log("rrrrrrrrrrr");
+      
+      call.ringing = call?.ringing.filter((id) => id !== userId);
+    } else {
+      // console.log("qqqqqqqqqqq");
+      if(!(call?.invited && call?.invited.includes(userId))){
+        // console.log("ppppppppppppppp");
+        call.invited.push(userId);
+      }
+    }
+    socket.to(roomId).emit("call:update-participant-list", call);
+  }
   socket.leave(roomId);
 }
 
@@ -1346,6 +1379,7 @@ function initializeSocket(io) {
     socket.on("call-accept", (data) => handleCallAccept(socket, data));
     socket.on("call-signal", (data) => handleCallSignal(socket, data));
     socket.on("end-call", (data) => handleCallEnd(socket, data));
+    socket.on("reject-group-call", (data) => handleRejectGroupCall(socket, data));
     socket.on("call-invite", (data) => handleCallInvite(socket, data));
     socket.on("participant-join", (data) => handleParticipantJoined(socket, data));
     socket.on("participant-left", (data) => handleParticipantLeft(socket, data));

@@ -5,7 +5,7 @@ import { LuScreenShare, LuScreenShareOff } from "react-icons/lu";
 import { ImCross } from "react-icons/im";
 import { RxCross2 } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllGroups, getAllMessages, getAllMessageUsers, getAllUsers, getUser, updateMessage, clearChat, getAllCallUsers, deleteChat, pinChat } from "../redux/slice/user.slice";
+import { getAllGroups, getAllMessages, getAllMessageUsers, getAllUsers, getUser, updateMessage, clearChat, getAllCallUsers, deleteChat, pinChat, getContactUsers } from "../redux/slice/user.slice";
 import { BASE_URL } from "../utils/baseUrl";
 import axios from "axios";
 import Front from "../component/Front";
@@ -109,6 +109,8 @@ const Chat2 = () => {
     dispatch(getAllGroups());
     dispatch(getUser(currentUser));
     dispatch(getAllCallUsers());
+    dispatch(getContactUsers());
+
   }, []);
   // =================Notification=======================
 

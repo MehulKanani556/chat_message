@@ -15,7 +15,8 @@ const {
   muteUsers,
   mute,
   getDevices, removeDevice,
-  addContactList
+  addContactList,
+  getContactUsers
 } = require("../controller/userController");
 const {
   userLogin,
@@ -83,6 +84,8 @@ indexRoutes.post("/muteChat", auth, muteUsers);
 indexRoutes.post("/updateUserGroupToJoin/:id", auth, updateUserGroupToJoin);
 indexRoutes.post("/updateUserProfilePhotoPrivacy/:id", auth, updateUserProfilePhotoPrivacy);
 indexRoutes.post("/addContactList", auth, addContactList);
+indexRoutes.get("/allContactUsers", auth, getContactUsers);
+
 
 // Group Routes
 indexRoutes.post("/createGroup", auth, upload.single("photo"), createGroup);

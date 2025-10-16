@@ -781,6 +781,8 @@ const VideoCallLayout = memo(() => {
       onTouchStart={handleTouchStart}
       onMouseDown={handleMouseDown}
     >
+{/* {console.log(participants,"participantsparticipants")} */}
+    
       <ElectronStatus />
       <canvas
         ref={canvasRef}
@@ -841,6 +843,9 @@ const VideoCallLayout = memo(() => {
                   delete videoElementsRef.current[participantId];
                 }
               };
+
+              console.log(participants,"participantsparticipantsparticipantsparticipantsparticipants");
+              
 
               return (
                 <div

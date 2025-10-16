@@ -155,7 +155,7 @@ const CallParticipantModal = memo(({
                       <button
                         className="cursor-pointer px-4 py-2 w-full bg-primary text-white rounded-md hover:bg-primary/50 transition-colors"
                         onClick={() => {
-                          const invited = allUsers.filter(user => selectedCallUsers.has(user._id));
+                          // const invited = allUsers.filter(user => selectedCallUsers.has(user._id));
                           selectedCallUsers.forEach(userId => {
                             inviteToCall(userId);
                           });
@@ -286,7 +286,8 @@ const CallParticipantModal = memo(({
                             </h3>
                           </div>
                           {!callParticipantsList?.ringing.includes(uId) ? (
-                            <FaRegBell className="h-6 w-6" />
+                            <FaRegBell className="h-6 w-6 hover:text-primary"  onClick={()=> inviteToCall(uId)}  />
+                            // <FaRegBell className="h-6 w-6"/>
                           ) : (
                             <div className="flex items-center justify-center gap-1 h-6 w-8 cursor-pointer">
                               {Array.from({ length: 7 }).map((_, i) => (

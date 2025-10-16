@@ -899,7 +899,6 @@ const MessageInput = memo(
                   enableBackground: "new 0 0 24 24",
                 }}
                 xmlSpace="preserve"
-                className
               >
                 <g>
                   <path
@@ -907,7 +906,6 @@ const MessageInput = memo(
                     fill="currentColor"
                     opacity={1}
                     data-original="#000000"
-                    className
                   />
                 </g>
               </svg>
