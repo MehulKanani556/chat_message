@@ -19,7 +19,7 @@ const Front = ({ data }) => {
                                     <div className="w-full h-full text-white  text-4xl font-bold capitalize grid place-content-center">
                                         {data?.userName && data?.userName.includes(' ')
                                             ? data?.userName.split(' ')[0][0] + data?.userName.split(' ')[1][0]
-                                            : data?.userName[0]}
+                                            : data?.userName?.[0] || "userName"}
                                     </div>
                                 )}
                             </div>
