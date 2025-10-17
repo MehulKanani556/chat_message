@@ -652,14 +652,12 @@ const Chat2 = () => {
                 <>
                   {selectedChat ? (
                     <>
-
                       <ChatHeader
                         handleProfileImageClick={handleProfileImageClick}
                         setIsClearChatModalOpen={setIsClearChatModalOpen}
                         setIsDeleteChatModalOpen={setIsDeleteChatModalOpen}
                         setGroupUsers={setGroupUsers}
                       />
-
                       {/*========================== Messages ==============================*/}
                       <div className="relative">
 

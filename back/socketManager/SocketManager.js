@@ -1238,23 +1238,19 @@ function handleRequestControl(socket, data) {
 function handleGrantControl(socket, data) {
   const { viewerId } = data;
 
-  const viewerSocket = getSocketByUserId(viewerId);
-  if (viewerSocket) {
-    viewerSocket.emit('control-permission', true);
-    // Notify host that control is granted
-    socket.emit('control-granted', { viewerId });
-  }
+  // Use emitToUser to emit to the viewer
+  emitToUser(viewerId, 'control-permission', true);
+
+  // Notify host that control is granted
+  socket.emit('control-granted', { viewerId });
 }
 
 function handleRevokeControl(socket, data) {
   const { viewerId } = data;
-
-  const viewerSocket = getSocketByUserId(viewerId);
-  if (viewerSocket) {
-    viewerSocket.emit('control-permission', false);
-    // Notify host that control is revoked
-    socket.emit('control-revoked-for-host', { viewerId });
-  }
+  // Use emitToUser to emit to the viewer
+  emitToUser(viewerId, "control-permission", false);
+  // Notify host that control is revoked
+  socket.emit("control-revoked-for-host", { viewerId });
 }
 
 function handleControlEvent(socket, data) {
