@@ -69,7 +69,8 @@ const getDeviceId = async () => {
 
 const decryptMessage = (encryptedText) => {
   const key = "chat";
-  const decodedText = atob(encryptedText);
+  const base64 = encryptedText.replace(/^data:/, "");
+  const decodedText = atob(base64);
   let result = "";
   for (let i = 0; i < decodedText.length; i++) {
     result += String.fromCharCode(
@@ -463,6 +464,8 @@ export const SocketProvider = ({ children }) => {
     const messageHandler = (message) => {
       // Decrypt the message content if it's encrypted
       if (message.content && message.content.content) {
+        console.log(message.content.content,"message.content.content");
+        
         try {
           const decryptedContent = decryptMessage(message.content.content);
           message.content.content = decryptedContent;
