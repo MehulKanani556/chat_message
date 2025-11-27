@@ -464,8 +464,6 @@ export const SocketProvider = ({ children }) => {
     const messageHandler = (message) => {
       // Decrypt the message content if it's encrypted
       if (message.content && message.content.content) {
-        console.log(message.content.content,"message.content.content");
-        
         try {
           const decryptedContent = decryptMessage(message.content.content);
           message.content.content = decryptedContent;
