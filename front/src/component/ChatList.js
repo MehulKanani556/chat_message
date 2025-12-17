@@ -34,7 +34,7 @@ const ChatList = memo(({
       filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
     } else {
       filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers?.includes(item._id))
-      filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
+      filteredUsers = filteredUsers?.filter(item => item.userName?.toLowerCase().includes(searchInput.toLowerCase()))
       allUsers = allContactUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
 
     }

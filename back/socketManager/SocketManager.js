@@ -223,47 +223,137 @@ function getSocketByUserId(userId) {
   return null;
 }
 
+// async function handlePrivateMessage(socket, data) {
+//   const { senderId, receiverId, content, replyTo, isBlocked } = data;
+
+//   try {
+//     // Save message to database with initial status 'sent'
+//     const savedMessage = await saveMessage({
+//       senderId,
+//       receiverId,
+//       content: content,
+//       replyTo: replyTo,
+//       status: "sent",
+//       isBlocked: isBlocked,
+//     });
+
+//     if (!isBlocked) {
+//       emitToUser(receiverId, "receive-message", {
+//         _id: savedMessage._id,
+//         sender: senderId,
+//         content: savedMessage.content,
+//         createdAt: savedMessage.createdAt,
+//         status: "delivered",
+//       });
+
+//       await Message.findByIdAndUpdate(savedMessage._id, {
+//         status: "delivered",
+//       });
+
+//       socket.emit("message-sent-status", {
+//         messageId: savedMessage._id,
+//         status: "delivered",
+//       });
+//     } else {
+//       socket.emit("message-sent-status", {
+//         messageId: savedMessage._id,
+//         status: "sent",
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error handling private message:", error);
+//     socket.emit("message-sent-status", {
+//       messageId: Date.now(),
+//       status: "failed",  
+//       error: error.message,
+//     });
+//   }
+// }
+
 async function handlePrivateMessage(socket, data) {
-  const { senderId, receiverId, content, replyTo, isBlocked } = data;
+  const { senderId, receiverId, content, replyTo, isBlocked, tempMessageId } = data;
 
   try {
-    // Save message to database with initial status 'sent'
+    console.log("📥 Received private-message:");
+    console.log("   Sender:", senderId);
+    console.log("   Receiver:", receiverId);
+    console.log("   Content type:", content?.type);
+    console.log("   Temp ID:", tempMessageId);
+
+    // ✅ CRITICAL FIX: Save message with correct content structure
     const savedMessage = await saveMessage({
       senderId,
       receiverId,
-      content: content,
+      content: content, // ✅ Pass the entire content object (includes type, fileUrl, etc.)
       replyTo: replyTo,
       status: "sent",
       isBlocked: isBlocked,
     });
 
+    console.log("✅ Message saved with ID:", savedMessage._id);
+
+    const serverMessageId = savedMessage._id.toString();
+
     if (!isBlocked) {
+      // Send to receiver
       emitToUser(receiverId, "receive-message", {
-        _id: savedMessage._id,
+        _id: serverMessageId,
+        messageId: serverMessageId,
         sender: senderId,
+        senderId: senderId,
+        receiver: receiverId,
+        receiverId: receiverId,
+        content: savedMessage.content,
+        createdAt: savedMessage.createdAt,
+        status: "delivered",
+        tempMessageId: tempMessageId,
+      });
+
+      // Update status in database
+      await Message.findByIdAndUpdate(savedMessage._id, {
+        status: "delivered",
+      });
+
+      // ✅ CRITICAL: Send status back to sender with BOTH IDs
+      socket.emit("message-sent-status", {
+        messageId: serverMessageId,
+        tempMessageId: tempMessageId,
+        status: "delivered",
+      });
+
+      // ✅ Echo back to sender so they see their own message
+      socket.emit("private-message", {
+        _id: serverMessageId,
+        messageId: serverMessageId,
+        tempMessageId: tempMessageId,
+        sender: senderId,
+        senderId: senderId,
+        receiver: receiverId,
+        receiverId: receiverId,
         content: savedMessage.content,
         createdAt: savedMessage.createdAt,
         status: "delivered",
       });
 
-      await Message.findByIdAndUpdate(savedMessage._id, {
-        status: "delivered",
-      });
-
-      socket.emit("message-sent-status", {
-        messageId: savedMessage._id,
-        status: "delivered",
-      });
+      console.log("✅ Message delivered successfully");
     } else {
+      // Blocked case
       socket.emit("message-sent-status", {
-        messageId: savedMessage._id,
+        messageId: serverMessageId,
+        tempMessageId: tempMessageId,
         status: "sent",
       });
+      
+      console.log("⚠️ Message blocked");
     }
   } catch (error) {
-    console.error("Error handling private message:", error);
+    console.error("❌ Error handling private message:", error);
+    console.error("Error details:", error.message);
+    console.error("Stack trace:", error.stack);
+    
     socket.emit("message-sent-status", {
-      messageId: Date.now(),
+      messageId: tempMessageId || Date.now().toString(),
+      tempMessageId: tempMessageId,
       status: "failed",
       error: error.message,
     });
@@ -343,15 +433,59 @@ async function handleGroupMessageRead(socket, data) {
 }
 
 // ===========================handle typing status=============================
+// function handleTypingStatus(socket, data) {
+//   const { senderId, receiverId, isTyping } = data;
+
+//   // Use emitToUser to notify all receiver's sockets
+//   emitToUser(receiverId, "user-typing", {
+//     userId: senderId,
+//     isTyping,
+//     receiverId,
+//   });
+// }
+
+const typingTimers = {};
 function handleTypingStatus(socket, data) {
   const { senderId, receiverId, isTyping } = data;
 
-  // Use emitToUser to notify all receiver's sockets
+  // Immediately send typing update to receiver
   emitToUser(receiverId, "user-typing", {
     userId: senderId,
     isTyping,
     receiverId,
   });
+
+  // If user is typing → start/reset timeout
+  if (isTyping) {
+
+    // Clear old timer if exists
+    if (typingTimers[senderId]) {
+      clearTimeout(typingTimers[senderId]);
+    }
+
+    // Auto stop typing after 3 seconds
+    typingTimers[senderId] = setTimeout(() => {
+      emitToUser(receiverId, "user-typing", {
+        userId: senderId,
+        isTyping: false,
+        receiverId,
+      });
+      delete typingTimers[senderId];
+    }, 3000);
+
+  } else {
+    // If typing:false received → immediately broadcast
+    if (typingTimers[senderId]) {
+      clearTimeout(typingTimers[senderId]);
+      delete typingTimers[senderId];
+    }
+
+    emitToUser(receiverId, "user-typing", {
+      userId: senderId,
+      isTyping: false,
+      receiverId,
+    });
+  }
 }
 
 async function handleDeleteMessage(socket, messageId) {

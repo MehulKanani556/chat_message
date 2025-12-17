@@ -54,52 +54,93 @@ const generateTokens = async (id) => {
 }
 
 const generateNewToken = async (req, res) => {
-
-    const token = req.cookies.refreshToken || req.header('Authorization').split(' ')[1];
-
-    if (!token) {
-        return res.status(401)
-            .json({
-                success: false,
-                message: "Token not available"
-            })
-    }
-
-    jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
-        try {
-            if (err) {
-                return res.status(400)
-                    .json({
-                        success: false,
-                        message: "Token invalid"
-                    })
+    try {
+        // ✅ FIXED: Safely get token from cookies or Authorization header
+        let token = req.cookies?.refreshToken;
+        
+        // If not in cookies, check Authorization header
+        if (!token && req.header('Authorization')) {
+            const authHeader = req.header('Authorization');
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.split(' ')[1];
             }
-
-            const USERS = await user.findOne({ _id: decoded._id });
-            if (!USERS) {
-                return res.status(404)
-                    .json({
-                        success: false,
-                        message: "User not found..!!"
-                    })
-            }
-            const { accessToken, refreshToken } = await generateTokens(decoded._id);
-
-            const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
-
-            return res.status(200)
-                .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
-                .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
-                .json({ success: true, finduser: userDetails, accessToken: accessToken, refreshToken: refreshToken });
-
-        } catch (error) {
-            return res.status(500).json({
-                success: false,
-                data: [],
-                error: "Error in register user: " + error.message
-            })
         }
-    });
+
+        // If still no token found
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token not available"
+            });
+        }
+
+        // Verify the token
+        jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
+            try {
+                if (err) {
+                    console.error("Token verification error:", err.message);
+                    return res.status(401).json({
+                        success: false,
+                        message: "Invalid or expired refresh token"
+                    });
+                }
+
+                const USERS = await user.findOne({ _id: decoded._id });
+                if (!USERS) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "User not found"
+                    });
+                }
+
+                // Check if the refresh token matches the one stored in database
+                if (USERS.refreshToken !== token) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "Invalid refresh token"
+                    });
+                }
+
+                // Generate new tokens
+                const { accessToken, refreshToken } = await generateTokens(decoded._id);
+
+                const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
+
+                return res.status(200)
+                    .cookie("accessToken", accessToken, { 
+                        httpOnly: true, 
+                        secure: true, 
+                        maxAge: 2 * 60 * 60 * 1000, 
+                        sameSite: "None" 
+                    })
+                    .cookie("refreshToken", refreshToken, { 
+                        httpOnly: true, 
+                        secure: true, 
+                        maxAge: 15 * 24 * 60 * 60 * 1000, 
+                        sameSite: "None" 
+                    })
+                    .json({ 
+                        success: true, 
+                        finduser: userDetails, 
+                        accessToken: accessToken, 
+                        refreshToken: refreshToken 
+                    });
+
+            } catch (error) {
+                console.error("Error in token generation:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Error generating new tokens: " + error.message
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Error in generateNewToken:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error: " + error.message
+        });
+    }
 }
 
 // ==================================================================
@@ -124,8 +165,8 @@ const userLogin = async (req, res) => {
 
         return res.status(200)
             .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
-            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
-            .json({ status: 200, message: "User Login SuccessFully...", user: checkEmailIsExist, token: assesToken })
+            .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
+            .json({ status: 200, message: "User Login Successfully...", user: checkEmailIsExist, token: accessToken })
 
     } catch (error) {
         console.log(error)
@@ -146,13 +187,11 @@ const googleLogin = async (req, res) => {
             });
         }
         checkUser = checkUser.toObject();
-        // let token = await jwt.sign({ _id: checkUser._id }, process.env.SECRET_KEY, { expiresIn: "1D" })
         const { accessToken, refreshToken } = await generateTokens(checkUser._id);
         return res.status(200)
             .cookie("accessToken", accessToken, { httpOnly: true, secure: true, maxAge: 2 * 60 * 60 * 1000, sameSite: "None" })
             .cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, maxAge: 15 * 24 * 60 * 60 * 1000, sameSite: "None" })
             .json({ message: 'login successful', success: true, user: checkUser, token: accessToken });
-
 
     } catch (error) {
         throw new Error(error);
@@ -195,7 +234,7 @@ const forgotPassword = async (req, res) => {
                 console.log(error);
                 return res.status(500).json({ status: 500, success: false, message: error.message })
             }
-            return res.status(200).json({ status: 200, success: true, message: "Email Sent SuccessFully..." });
+            return res.status(200).json({ status: 200, success: true, message: "Email Sent Successfully..." });
         })
 
     } catch (error) {
@@ -222,7 +261,7 @@ const verifyOtp = async (req, res) => {
 
         await chekcEmail.save();
 
-        return res.status(200).json({ status: 200, message: "Otp Verify SuccessFully...", user: chekcEmail })
+        return res.status(200).json({ status: 200, message: "Otp Verify Successfully...", user: chekcEmail })
 
     } catch (error) {
         console.log(error)
@@ -245,7 +284,7 @@ const changePassword = async (req, res) => {
 
         let updatePassword = await user.findByIdAndUpdate(userId._id, { password: hashPassword }, { new: true })
 
-        return res.json({ status: 200, message: "Password Changed SuccessFully..." })
+        return res.json({ status: 200, message: "Password Changed Successfully..." })
 
     } catch (error) {
         console.log(error)
