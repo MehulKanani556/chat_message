@@ -270,6 +270,19 @@ function getSocketByUserId(userId) {
 //   }
 // }
 
+const cleanSlashes = (obj) => {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  
+  Object.keys(obj).forEach(key => {
+    if (typeof obj[key] === 'string') {
+      obj[key] = obj[key].replace(/\\\//g, '/');
+    } else if (typeof obj[key] === 'object') {
+      cleanSlashes(obj[key]);
+    }
+  });
+  return obj;
+};
+
 async function handlePrivateMessage(socket, data) {
   const { senderId, receiverId, content, replyTo, isBlocked, tempMessageId } = data;
 
@@ -280,11 +293,14 @@ async function handlePrivateMessage(socket, data) {
     console.log("   Content type:", content?.type);
     console.log("   Temp ID:", tempMessageId);
 
+    // Use it like this:
+    const sanitizedContent = cleanSlashes(content);
+
     // ✅ CRITICAL FIX: Save message with correct content structure
     const savedMessage = await saveMessage({
       senderId,
       receiverId,
-      content: content, // ✅ Pass the entire content object (includes type, fileUrl, etc.)
+      content: sanitizedContent, // ✅ Pass the entire content object (includes type, fileUrl, etc.)
       replyTo: replyTo,
       status: "sent",
       isBlocked: isBlocked,
