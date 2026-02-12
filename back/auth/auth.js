@@ -57,7 +57,7 @@ const generateNewToken = async (req, res) => {
     try {
         // ✅ FIXED: Safely get token from cookies or Authorization header
         let token = req.cookies?.refreshToken;
-        
+
         // If not in cookies, check Authorization header
         if (!token && req.header('Authorization')) {
             const authHeader = req.header('Authorization');
@@ -107,23 +107,23 @@ const generateNewToken = async (req, res) => {
                 const userDetails = await user.findOne({ _id: USERS._id }).select("-password -refreshToken");
 
                 return res.status(200)
-                    .cookie("accessToken", accessToken, { 
-                        httpOnly: true, 
-                        secure: true, 
-                        maxAge: 2 * 60 * 60 * 1000, 
-                        sameSite: "None" 
+                    .cookie("accessToken", accessToken, {
+                        httpOnly: true,
+                        secure: true,
+                        maxAge: 2 * 60 * 60 * 1000,
+                        sameSite: "None"
                     })
-                    .cookie("refreshToken", refreshToken, { 
-                        httpOnly: true, 
-                        secure: true, 
-                        maxAge: 15 * 24 * 60 * 60 * 1000, 
-                        sameSite: "None" 
+                    .cookie("refreshToken", refreshToken, {
+                        httpOnly: true,
+                        secure: true,
+                        maxAge: 15 * 24 * 60 * 60 * 1000,
+                        sameSite: "None"
                     })
-                    .json({ 
-                        success: true, 
-                        finduser: userDetails, 
-                        accessToken: accessToken, 
-                        refreshToken: refreshToken 
+                    .json({
+                        success: true,
+                        finduser: userDetails,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken
                     });
 
             } catch (error) {
@@ -296,19 +296,34 @@ const sendOtpToMobile = async (req, res) => {
     try {
         let { mobileNumber } = req.body;
 
+        if (!mobileNumber) {
+            return res.status(400).json({ status: 400, message: "Mobile number is required." });
+        }
+
         let otp = 123456;
         // Save the OTP to the user's record
         let checkUser = await user.findOne({ mobileNumber });
+
         if (!checkUser) {
-            checkUser = new user({ mobileNumber, otp });
+            // Create a new user if not found
+            checkUser = await user.create({
+                mobileNumber,
+                otp,
+                userName: "User" + Math.floor(Math.random() * 1000000)
+            });
+
+            if (!checkUser) {
+                return res.status(500).json({ status: 500, message: "Failed to create user." });
+            }
         } else {
+            // Update OTP for existing user
             checkUser.otp = otp;
+            await checkUser.save();
         }
-        await checkUser.save();
 
         return res.status(200).json({ status: 200, message: "OTP sent successfully." });
     } catch (error) {
-        console.log(error);
+        console.error("Error in sendOtpToMobile:", error);
         return res.status(500).json({
             status: 500,
             message: error.message || "Failed to send OTP. Please try again later."

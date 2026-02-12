@@ -12,7 +12,7 @@ import { getAllMessageUsers } from "../redux/slice/user.slice";
 const ChatList = memo(({
   handleMultipleFileUpload,
 }) => {
-  const { allMessageUsers, user,allContactUsers } = useSelector((state) => state.user);
+  const { allMessageUsers, user, allContactUsers } = useSelector((state) => state.user);
   const currentUser = useMemo(() => sessionStorage.getItem("userId") || localStorage.getItem("ChatuserId"), []);
   const [findUser, setFindUser] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -25,51 +25,28 @@ const ChatList = memo(({
   const isVideoCalling = useSelector((state) => state.magageState.isVideoCalling);
   const isVoiceCalling = useSelector((state) => state.magageState.isVoiceCalling);
 
-
   useEffect(() => {
     let filteredUsers = [];
     let allUsers = [];
     if (archive) {
-      filteredUsers = allMessageUsers.filter(item => user?.archiveUsers?.includes(item._id))
-      filteredUsers = filteredUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
+      filteredUsers = allMessageUsers.filter(item => user?.archiveUsers?.includes(item._id));
+      filteredUsers = filteredUsers.filter(item => item?.userName && item.userName.toLowerCase().includes(searchInput.toLowerCase()));
     } else {
-      filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers?.includes(item._id))
-      filteredUsers = filteredUsers?.filter(item => item.userName?.toLowerCase().includes(searchInput.toLowerCase()))
-      allUsers = allContactUsers.filter(item => item.userName.toLowerCase().includes(searchInput.toLowerCase()))
-
+      filteredUsers = allMessageUsers.filter(item => !user?.archiveUsers?.includes(item._id));
+      filteredUsers = filteredUsers?.filter(item => item?.userName && item.userName.toLowerCase().includes(searchInput.toLowerCase()));
+      if (allContactUsers?.length > 0) {
+        allUsers = allContactUsers.filter(item => item?.userName && item.userName.toLowerCase().includes(searchInput.toLowerCase()));
+      }
     }
     setFilteredMessageUsers(filteredUsers);
     setFilteredAllUsers(allUsers);
-  }, [archive, searchInput, allMessageUsers,allContactUsers]);
+  }, [archive, searchInput, allMessageUsers, allContactUsers]);
 
   const [draggedUser, setDraggedUser] = useState(null);
   const dispatch = useDispatch();
   const { socket } = useSocket();
 
-  useEffect(() => {
-    let filteredUsers = [];
-    let allUsers = [];
-    if (archive) {
-      filteredUsers = allMessageUsers.filter((item) =>
-        user?.archiveUsers?.includes(item._id)
-      );
-      filteredUsers = filteredUsers.filter((item) =>
-        item.userName.toLowerCase().includes(searchInput.toLowerCase())
-      );
-    } else {
-      filteredUsers = allMessageUsers.filter(
-        (item) => !user?.archiveUsers?.includes(item._id)
-      );
-      filteredUsers = filteredUsers.filter((item) =>
-        item.userName.toLowerCase().includes(searchInput.toLowerCase())
-      );
-      allUsers = allContactUsers.filter((item) =>
-        item.userName.toLowerCase().includes(searchInput.toLowerCase())
-      );
-    }
-    setFilteredMessageUsers(filteredUsers);
-    setFilteredAllUsers(allUsers);
-  }, [archive, searchInput, allMessageUsers,allContactUsers]);
+
 
   // Filter all users based on search input
   // const filteredAllUsers = user?.contactList;

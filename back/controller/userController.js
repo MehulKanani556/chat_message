@@ -5,9 +5,10 @@ const message = require("../models/messageModel");
 
 exports.createUser = async (req, res) => {
   try {
-    let { userName, email, password } = req.body;
+    let { userName, email, password, mobileNumber } = req.body;
 
     let checkExistUser = await user.findOne({ email });
+    // let checkExistUserByMobileNumber = await user.findOne({ mobileNumber });
 
     if (checkExistUser) {
       return res
@@ -24,6 +25,7 @@ exports.createUser = async (req, res) => {
       userName:user,
       email,
       password: hashPassword,
+      // mobileNumber,
     });
     let token = await jwt.sign(
       { _id: checkExistUser._id },
