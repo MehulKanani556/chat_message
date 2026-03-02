@@ -1,5 +1,5 @@
 const Call = require('../models/call.model');
-const User = require('../models/user.model');
+const userModels = require('../models/userModels');
 
 const getCallHistory = async (req, res) => {
   try {
@@ -19,7 +19,7 @@ const getCallHistory = async (req, res) => {
     const callsWithUserDetails = await Promise.all(
       calls.map(async (call) => {
         const otherUserId = call.senderId.equals(userId) ? call.receiverId : call.senderId;
-        const user = await User.findById(otherUserId).select('userName photo');
+        const user = await userModels.findById(otherUserId).select('userName photo');
         
         return {
           ...call.toObject(),
