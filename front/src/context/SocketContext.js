@@ -45,6 +45,7 @@ import {
 } from "../redux/slice/manageState.slice";
 import { BASE_URL } from "../utils/baseUrl";
 import { useNavigate } from "react-router-dom";
+import { registerWebPushToken } from "../utils/pushNotifications";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 const SOCKET_SERVER_URL = BASE_URL.replace("/api", "");
@@ -230,6 +231,7 @@ export const SocketProvider = ({ children }) => {
           socketRef.current.emit("user-login", userId);
           // Join device room
           socketRef.current.emit("join-device-room", deviceId);
+          registerWebPushToken({ deviceId }).catch((error) => console.warn("Web push registration skipped:", error.message));
         });
 
         socketRef.current.on("connect_error", (error) => {

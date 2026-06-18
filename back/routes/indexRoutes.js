@@ -38,6 +38,18 @@ const {
   updateMessage,
   clearChat,
 } = require("../controller/messageController");
+const {
+  registerDevice,
+  unregisterDevice,
+  refreshDeviceToken,
+} = require("../controller/deviceController");
+const {
+  syncMessages,
+  getMessageById,
+  markDeliveredReceipt,
+  markReadReceipt,
+  replyFromNotification,
+} = require("../controller/notificationMessageController");
 const { upload } = require("../helper/upload");
 const uploadController = require("../controller/uploadController");
 const {
@@ -103,6 +115,11 @@ indexRoutes.post("/allMessages", auth, getAllMessages);
 indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
 indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
 indexRoutes.post("/clearChat", auth, clearChat);
+indexRoutes.get("/messages/sync", auth, syncMessages);
+indexRoutes.get("/messages/message/:messageId", auth, getMessageById);
+indexRoutes.post("/messages/receipts/delivered", auth, markDeliveredReceipt);
+indexRoutes.post("/messages/receipts/read", auth, markReadReceipt);
+indexRoutes.post("/messages/reply-from-notification", auth, replyFromNotification);
 
 // QR Login endpoint
 indexRoutes.post('/qr-login', auth, handleQrLogin);
@@ -117,6 +134,9 @@ indexRoutes.post("/upload", auth, upload.single("file"), uploadController.upload
 indexRoutes.get('/devices', auth, getDevices);
 indexRoutes.delete('/devices/:deviceId', auth, removeDevice);
 indexRoutes.post('/logout-device', auth, logoutDevice);
+indexRoutes.post('/devices/register', auth, registerDevice);
+indexRoutes.post('/devices/unregister', auth, unregisterDevice);
+indexRoutes.post('/devices/refresh-token', auth, refreshDeviceToken);
 
 // Electron Routes
 indexRoutes.get("/check-electron-installed", auth, checkElectronInstalled);

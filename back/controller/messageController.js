@@ -11,6 +11,7 @@ exports.saveMessage = async (messageData) => {
       forwardedFrom: messageData.forwardedFrom,
       replyTo: messageData.replyTo,
       isBlocked: messageData.isBlocked,
+      clientMessageId: messageData.clientMessageId,
     });
 
     // If it's a group message, initialize readBy with sender

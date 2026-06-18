@@ -4,6 +4,11 @@ const { deleteGroup, getGroupById, findGroupById } = require("../controller/grou
 const User = require("../models/userModels");
 const jwt = require("jsonwebtoken");
 const Groups = require("../models/groupModel");
+const {
+  createEventAndPush,
+  markRead,
+  getGroupRecipientIds,
+} = require("../services/messageDeliveryService");
 
 const onlineUsers = new Map();
 const deviceRooms = new Map();
@@ -308,6 +313,7 @@ async function handlePrivateMessage(socket, data) {
 
     console.log("✅ Message saved with ID:", savedMessage._id);
 
+    const event = await createEventAndPush(savedMessage, { recipients: [receiverId] });
     const serverMessageId = savedMessage._id.toString();
 
     if (!isBlocked) {
@@ -321,20 +327,17 @@ async function handlePrivateMessage(socket, data) {
         receiverId: receiverId,
         content: savedMessage.content,
         createdAt: savedMessage.createdAt,
-        status: "delivered",
+        status: "sent",
         tempMessageId: tempMessageId,
-      });
-
-      // Update status in database
-      await Message.findByIdAndUpdate(savedMessage._id, {
-        status: "delivered",
+        eventId: event.eventId,
       });
 
       // ✅ CRITICAL: Send status back to sender with BOTH IDs
       socket.emit("message-sent-status", {
         messageId: serverMessageId,
         tempMessageId: tempMessageId,
-        status: "delivered",
+        status: "sent",
+        eventId: event.eventId,
       });
 
       // ✅ Echo back to sender so they see their own message
@@ -348,7 +351,8 @@ async function handlePrivateMessage(socket, data) {
         receiverId: receiverId,
         content: savedMessage.content,
         createdAt: savedMessage.createdAt,
-        status: "delivered",
+        status: "sent",
+        eventId: event.eventId,
       });
 
       console.log("✅ Message delivered successfully");
@@ -381,17 +385,7 @@ async function handleMessageRead(socket, data) {
   const { messageId, readerId } = data;
 
   try {
-    // Update message status to 'read' in database
-    await Message.findByIdAndUpdate(messageId, { status: "read" });
-
-    // Get sender's socket ID to notify them
-    const message = await Message.findById(messageId);
-
-    // Notify sender that message was read
-    emitToUser(message.sender.toString(), "message-read", {
-      messageId,
-      readerId,
-    });
+    await markRead({ messageIds: [messageId], userId: readerId });
 
     // Broadcast read status to all devices of the reader
     broadcastMessageReadToAllDevices(readerId, {
@@ -1039,43 +1033,44 @@ async function handleGroupMessage(socket, data) {
   const { groupId, senderId, content } = data;
 
   try {
-    // Save message to database (content should not include replyTo, only other data)
     const { replyTo, ...contentWithoutReplyTo } = content || {};
-    await saveMessage({
+    const savedMessage = await saveMessage({
       senderId,
       receiverId: groupId,
       content: contentWithoutReplyTo ? contentWithoutReplyTo : content,
       replyTo: replyTo,
       isGroupMessage: true,
     });
-
-    async function getGroupMembers(groupId) {
-      // Assuming you have a way to get group members from your database or in-memory store
-      const group = await findGroupById(groupId);
-
-      return group.members
-        .map((memberId) => onlineUsers.get(memberId.toString()))
-        .filter(Boolean);
-    }
-
-    const groupMembers = await getGroupMembers(groupId);
+    const recipients = await getGroupRecipientIds(groupId, senderId);
+    const event = await createEventAndPush(savedMessage, { recipients });
 
     // Use emitToUser for each member instead of direct socket emission
     const group = await findGroupById(groupId);
     if (group && group.members) {
       group.members.forEach((memberId) => {
-        if (memberId !== senderId) { // Don't send to sender
+        if (memberId.toString() !== senderId.toString()) { // Don't send to sender
           emitToUser(memberId.toString(), "receive-group", {
-            _id: Date.now().toString(),
+            _id: savedMessage._id.toString(),
+            messageId: savedMessage._id.toString(),
             sender: senderId,
-            content: content,
+            senderId,
+            receiver: groupId,
+            receiverId: groupId,
+            content: savedMessage.content,
             groupId,
-            createdAt: new Date().toISOString(),
-            group: true
+            createdAt: savedMessage.createdAt,
+            status: "sent",
+            group: true,
+            eventId: event.eventId,
           }, socket.id); // Exclude current socket
         }
       });
     }
+    socket.emit("message-sent-status", {
+      messageId: savedMessage._id.toString(),
+      status: "sent",
+      eventId: event.eventId,
+    });
   } catch (error) {
     console.error("Error handling group message:", error);
   }
@@ -1607,5 +1602,6 @@ module.exports = {
   getOnlineUsers,
   getSocketByUserId,
   initializeSocket,
+  emitToUser,
   onlineUsers,
 };

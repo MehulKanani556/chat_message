@@ -71,6 +71,22 @@ const messageSchema = mongoose.Schema(
         },
       },
     ],
+    deliveredBy: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "user",
+          required: true,
+        },
+        deviceId: {
+          type: String,
+        },
+        deliveredAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     edited: {
       type: Boolean,
       default: false,
@@ -117,11 +133,17 @@ const messageSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    clientMessageId: {
+      type: String,
+      index: true,
+    },
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
+
+messageSchema.index({ clientMessageId: 1, sender: 1 }, { sparse: true, unique: true });
 
 module.exports = mongoose.model("message", messageSchema);
