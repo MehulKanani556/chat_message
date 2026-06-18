@@ -1265,6 +1265,9 @@ async function handleForwardMessage(socket, data) {
         isGroupMessage: true,
       });
 
+      const recipients = await getGroupRecipientIds(groupId, senderId);
+      const event = await createEventAndPush(savedMessage, { recipients });
+
       // Deliver to all group members except the sender
       const group = await findGroupById(groupId);
       if (group && group.members) {
@@ -1272,12 +1275,17 @@ async function handleForwardMessage(socket, data) {
           if (memberId.toString() !== senderId.toString()) {
             emitToUser(memberId.toString(), "receive-group", {
               _id: savedMessage._id?.toString() || Date.now().toString(),
+              messageId: savedMessage._id?.toString() || Date.now().toString(),
               sender: senderId,
+              senderId,
+              receiver: groupId,
+              receiverId: groupId,
               content: savedMessage.content,
               groupId,
               createdAt: savedMessage.createdAt || new Date().toISOString(),
               group: true,
               forwardedFrom: forwardedFrom,
+              eventId: event.eventId,
             }, socket.id); // exclude current socket
           }
         });
@@ -1288,6 +1296,7 @@ async function handleForwardMessage(socket, data) {
       socket.emit("message-sent-status", {
         messageId: savedMessage._id,
         status: "delivered",
+        eventId: event.eventId,
       });
     } else {
       // Original 1:1 forward
@@ -1299,7 +1308,21 @@ async function handleForwardMessage(socket, data) {
         status: "sent",
       });
 
-      emitToUser(receiverId, "receive-message", savedMessage);
+      const event = await createEventAndPush(savedMessage, { recipients: [receiverId] });
+
+      emitToUser(receiverId, "receive-message", {
+        _id: savedMessage._id.toString(),
+        messageId: savedMessage._id.toString(),
+        sender: senderId,
+        senderId,
+        receiver: receiverId,
+        receiverId,
+        content: savedMessage.content,
+        createdAt: savedMessage.createdAt,
+        status: "sent",
+        forwardedFrom: forwardedFrom,
+        eventId: event.eventId,
+      });
 
       await Message.findByIdAndUpdate(savedMessage._id, {
         status: "delivered",
@@ -1308,6 +1331,7 @@ async function handleForwardMessage(socket, data) {
       socket.emit("message-sent-status", {
         messageId: savedMessage._id,
         status: "delivered",
+        eventId: event.eventId,
       });
     }
   } catch (error) {

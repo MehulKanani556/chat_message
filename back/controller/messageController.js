@@ -4,15 +4,20 @@ const Users = require("../models/userModels");
 
 exports.saveMessage = async (messageData) => {
   try {
-    const message = new Message({
+    const messagePayload = {
       sender: messageData.senderId,
       receiver: messageData.receiverId,
       content: messageData.content,
       forwardedFrom: messageData.forwardedFrom,
       replyTo: messageData.replyTo,
       isBlocked: messageData.isBlocked,
-      clientMessageId: messageData.clientMessageId,
-    });
+    };
+
+    if (messageData.clientMessageId) {
+      messagePayload.clientMessageId = messageData.clientMessageId;
+    }
+
+    const message = new Message(messagePayload);
 
     // If it's a group message, initialize readBy with sender
     if (messageData.isGroupMessage) {

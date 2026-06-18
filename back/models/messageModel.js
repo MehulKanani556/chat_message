@@ -135,7 +135,8 @@ const messageSchema = mongoose.Schema(
     },
     clientMessageId: {
       type: String,
-      index: true,
+      default: undefined,
+      set: (value) => value || undefined,
     },
   },
   {
@@ -144,6 +145,20 @@ const messageSchema = mongoose.Schema(
   }
 );
 
-messageSchema.index({ clientMessageId: 1, sender: 1 }, { sparse: true, unique: true });
+messageSchema.pre("validate", function clearEmptyClientMessageId(next) {
+  if (!this.clientMessageId) {
+    this.clientMessageId = undefined;
+  }
+
+  next();
+});
+
+messageSchema.index(
+  { clientMessageId: 1, sender: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientMessageId: { $type: "string" } },
+  }
+);
 
 module.exports = mongoose.model("message", messageSchema);

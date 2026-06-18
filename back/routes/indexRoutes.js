@@ -109,17 +109,17 @@ indexRoutes.post("/leaveGroup", auth, leaveGroup);
 indexRoutes.post("/addParticipants", auth, addParticipants);
 
 // Message Routes
-indexRoutes.get("/messages/:userId", auth, getMessageHistory);
 indexRoutes.get("/online-users", getOnlineUsers);
 indexRoutes.post("/allMessages", auth, getAllMessages);
-indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
-indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
-indexRoutes.post("/clearChat", auth, clearChat);
 indexRoutes.get("/messages/sync", auth, syncMessages);
 indexRoutes.get("/messages/message/:messageId", auth, getMessageById);
 indexRoutes.post("/messages/receipts/delivered", auth, markDeliveredReceipt);
 indexRoutes.post("/messages/receipts/read", auth, markReadReceipt);
 indexRoutes.post("/messages/reply-from-notification", auth, replyFromNotification);
+indexRoutes.get("/messages/:userId", auth, getMessageHistory);
+indexRoutes.get("/deleteMessage/:messageId", auth, deleteMessage);
+indexRoutes.put("/updateMessage/:messageId", auth, updateMessage);
+indexRoutes.post("/clearChat", auth, clearChat);
 
 // QR Login endpoint
 indexRoutes.post('/qr-login', auth, handleQrLogin);

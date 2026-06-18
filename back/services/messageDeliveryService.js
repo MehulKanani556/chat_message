@@ -81,17 +81,19 @@ async function sendPushForMessage({ message, event, recipients }) {
     User.findById(message.sender).select("userName email"),
     Group.findById(message.receiver).select("userName"),
   ]);
+  const isGroup = Boolean(group);
 
   await sendDataPushToUsers(recipientIds, {
     type: "chat_message",
     message_id: message._id,
-    chat_id: message.receiver,
+    chat_id: isGroup ? message.receiver : message.sender,
     sender_id: message.sender,
+    receiver_id: message.receiver,
     sender_name: sender?.userName || sender?.email || "New message",
     message_type: message.content?.type || message.messageType || "text",
     preview: previewForContent(message.content),
     event_id: event.eventId,
-    is_group: Boolean(group),
+    is_group: isGroup,
     chat_name: group?.userName || "",
   });
 }

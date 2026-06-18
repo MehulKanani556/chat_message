@@ -6,13 +6,13 @@ exports.auth = async (req, res, next) => {
       
         const authHeader = req.header('Authorization') || req.cookies.accessToken ;
 
-            let token = authHeader;
-            if (authHeader.startsWith('Bearer ')) {
-                token = authHeader.substring(7);
+            if (!authHeader) {
+                return res.status(401).json({ status: 401, message: "Token Is Required" })
             }
-    
-            if (!token) {
-                return res.status(404).json({ status: 404, message: "Token Is Required" })
+
+            let token = authHeader;
+            if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7);
             }
 
             jwt.verify(token, process.env.SECRET_KEY, async function (err, decoded) {
