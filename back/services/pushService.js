@@ -54,53 +54,62 @@ function isInvalidTokenError(error) {
 }
 
 async function sendDataPushToUsers(userIds, data) {
-  const firebase = getFirebaseAdmin();
-  if (!firebase || !userIds?.length) return { sent: 0, skipped: true };
+  try {
+    const firebase = getFirebaseAdmin();
+    if (!firebase || !userIds?.length) return { sent: 0, skipped: true };
 
-  const tokens = await DeviceToken.find({
-    userId: { $in: userIds },
-    isActive: true,
-    fcmToken: { $exists: true, $ne: "" },
-  });
+    const tokens = await DeviceToken.find({
+      userId: { $in: userIds },
+      isActive: true,
+      fcmToken: { $exists: true, $ne: "" },
+    });
 
-  if (!tokens.length) return { sent: 0 };
+    if (!tokens.length) return { sent: 0 };
 
-  const tokenValues = tokens.map((token) => token.fcmToken);
-  const response = await firebase.messaging().sendEachForMulticast({
-    tokens: tokenValues,
-    data: compactData(data),
-    android: {
-      priority: "high",
-      ttl: 1000 * 60 * 60 * 24,
-    },
-    apns: {
-      headers: {
-        "apns-priority": "10",
-        "apns-expiration": `${Math.floor(Date.now() / 1000) + 60 * 60 * 24}`,
+    const tokenValues = tokens.map((token) => token.fcmToken);
+    const response = await firebase.messaging().sendEachForMulticast({
+      tokens: tokenValues,
+      data: compactData(data),
+      notification: {
+        title : '',
+        body: '',
       },
-      payload: {
-        aps: {
-          contentAvailable: true,
+      android: {
+        priority: "high",
+        ttl: 1000 * 60 * 60 * 24,
+      },
+      apns: {
+        headers: {
+          "apns-priority": "10",
+          "apns-expiration": `${Math.floor(Date.now() / 1000) + 60 * 60 * 24}`,
+        },
+        payload: {
+          aps: {
+            contentAvailable: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  const invalidTokens = [];
-  response.responses.forEach((item, index) => {
-    if (!item.success && isInvalidTokenError(item.error)) {
-      invalidTokens.push(tokenValues[index]);
+    const invalidTokens = [];
+    response.responses.forEach((item, index) => {
+      if (!item.success && isInvalidTokenError(item.error)) {
+        invalidTokens.push(tokenValues[index]);
+      }
+    });
+
+    if (invalidTokens.length) {
+      await DeviceToken.updateMany(
+        { fcmToken: { $in: invalidTokens } },
+        { $set: { isActive: false } }
+      );
     }
-  });
-
-  if (invalidTokens.length) {
-    await DeviceToken.updateMany(
-      { fcmToken: { $in: invalidTokens } },
-      { $set: { isActive: false } }
-    );
+    console.log("Notification sended successfully")
+    return { sent: response.successCount, failed: response.failureCount };
+  } catch (error) {
+    console.log(error);
   }
 
-  return { sent: response.successCount, failed: response.failureCount };
 }
 
 module.exports = {

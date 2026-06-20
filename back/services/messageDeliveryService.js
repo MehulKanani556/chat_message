@@ -90,7 +90,7 @@ async function sendPushForMessage({ message, event, recipients }) {
     sender_id: message.sender,
     receiver_id: message.receiver,
     sender_name: sender?.userName || sender?.email || "New message",
-    message_type: message.content?.type || message.messageType || "text",
+    content_type: message.content?.type || message.messageType || "text",
     preview: previewForContent(message.content),
     event_id: event.eventId,
     is_group: isGroup,
