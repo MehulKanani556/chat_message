@@ -12,7 +12,7 @@ const firebaseConfig = {
   measurementId: "G-BPKBG116HD"
 };
 
-const vapidKey = process.env.REACT_APP_FIREBASE_VAPID_KEY;
+const vapidKey = "BDt18bgMqvUmuZHcphwqAOy6xqloRdFl-sFyvG8ODlk_dnziaOe_AIk7B4G-XZaoGXqFUeqLg3IhEmbWXYnaK60";
 let foregroundListenerRegistered = false;
 
 function hasFirebaseConfig() {
@@ -41,15 +41,28 @@ export async function registerWebPushToken({ deviceId }) {
     throw new Error("Notification permission was not granted");
   }
 
+  let registration = null;
   if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    // Explicitly scope the registration to ensure Firebase picks up your custom worker
+    registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      scope: "/"
+    });
+    console.log("Service Worker successfully registered with scope:", registration.scope);
   }
 
   const messaging = await ensureMessaging();
-  const fcmToken = await getToken(messaging, { vapidKey });
+  
+  // Pass the service worker registration explicitly to avoid hidden subscription errors
+  const fcmToken = await getToken(messaging, { 
+    vapidKey,
+    serviceWorkerRegistration: registration 
+  });
+  
   if (!fcmToken) {
     throw new Error("No Firebase token returned");
   }
+
+  console.log("FCM Registration Token Generated:", fcmToken);
 
   await axiosInstance.post("/devices/register", {
     deviceId,
@@ -58,11 +71,11 @@ export async function registerWebPushToken({ deviceId }) {
     appVersion: process.env.REACT_APP_VERSION || "web",
   });
 
-  registerForegroundListener(messaging);
+  registerForegroundListener(messaging, registration);
   return fcmToken;
 }
 
-function registerForegroundListener(messaging) {
+function registerForegroundListener(messaging, registration) {
   if (foregroundListenerRegistered) return;
   foregroundListenerRegistered = true;
 
@@ -76,12 +89,28 @@ function registerForegroundListener(messaging) {
       ? `${data.chat_name}: ${data.sender_name || "New message"}`
       : data.sender_name || "New message";
 
-    new Notification(title, {
+    const options = {
       body: data.preview || "New message",
       icon: "/chat.png",
       tag: `chat_${data.chat_id}`,
+      renotify: true,
       data,
-    });
+      actions: [
+        {
+          action: "reply",
+          title: "Reply",
+          type: "text",
+          placeholder: "Type a reply...",
+        }
+      ]
+    };
+
+    // Use service worker registration to show interactive notifications even in foreground-hidden state
+    if (registration) {
+      registration.showNotification(title, options);
+    } else {
+      new Notification(title, options);
+    }
   });
 }
 
