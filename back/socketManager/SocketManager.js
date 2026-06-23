@@ -242,6 +242,36 @@ function emitToUser(userId, event, data, exceptSocketId = null) {
   }
 }
 
+function getLiveUserSockets(userId) {
+  const sockets = onlineUsers.get(userId);
+  if (!sockets || sockets.size === 0) return [];
+
+  const liveSockets = [];
+  const staleSocketIds = [];
+  for (const socketId of sockets) {
+    const socket = global.io.sockets.sockets.get(socketId);
+    if (socket?.connected) {
+      liveSockets.push(socket);
+    } else {
+      staleSocketIds.push(socketId);
+    }
+  }
+
+  if (staleSocketIds.length > 0) {
+    staleSocketIds.forEach((socketId) => sockets.delete(socketId));
+    if (sockets.size === 0) {
+      onlineUsers.delete(userId);
+      userDevices.delete(userId);
+    } else {
+      onlineUsers.set(userId, sockets);
+      const devices = userDevices.get(userId);
+      staleSocketIds.forEach((socketId) => devices?.delete(socketId));
+    }
+  }
+
+  return liveSockets;
+}
+
 function getSocketByUserId(userId) {
   const socketId = onlineUsers.get(userId);
   if (socketId && global.io && global.io.sockets) {
@@ -299,7 +329,7 @@ function getSocketByUserId(userId) {
 
 const cleanSlashes = (obj) => {
   if (typeof obj !== 'object' || obj === null) return obj;
-  
+
   Object.keys(obj).forEach(key => {
     if (typeof obj[key] === 'string') {
       obj[key] = obj[key].replace(/\\\//g, '/');
@@ -385,14 +415,14 @@ async function handlePrivateMessage(socket, data) {
         tempMessageId: tempMessageId,
         status: "sent",
       });
-      
+
       console.log("⚠️ Message blocked");
     }
   } catch (error) {
     console.error("❌ Error handling private message:", error);
     console.error("Error details:", error.message);
     console.error("Stack trace:", error.stack);
-    
+
     socket.emit("message-sent-status", {
       messageId: tempMessageId || Date.now().toString(),
       tempMessageId: tempMessageId,
@@ -621,15 +651,15 @@ async function handleCallRequest(socket, data) {
   socket.join(roomId);
 
   if (!activeCalls[roomId]) {
-    activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
+    activeCalls[roomId] = { invited: [], ringing: [], joined: [], pendingSignals: {} };
   }
 
-  const targetSockets = onlineUsers.get(toEmail);
+  const targetSockets = getLiveUserSockets(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
   activeCalls[roomId].invited.push(fromEmail);
 
-  if (targetSockets && targetSockets.size > 0) {
+  if (targetSockets.length > 0) {
     activeCalls[roomId].ringing.push(toEmail);
   } else {
     activeCalls[roomId].ringing.push(toEmail);
@@ -644,7 +674,7 @@ async function handleCallRequest(socket, data) {
     });
   }
 
-  if (targetSockets && targetSockets.size > 0) {
+  if (targetSockets.length > 0) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
@@ -705,7 +735,7 @@ async function handleCallInvite(socket, data) {
   }
 
   // console.log(data, "datadatadatadata");
-  
+
 
   if (isUserInCall) {
     socket.emit("user-in-call", {
@@ -718,13 +748,13 @@ async function handleCallInvite(socket, data) {
   socket.join(roomId);
 
   if (!activeCalls[roomId]) {
-    activeCalls[roomId] = { invited: [], ringing: [], joined: [] };
+    activeCalls[roomId] = { invited: [], ringing: [], joined: [], pendingSignals: {} };
   }
 
-  const targetSockets = onlineUsers.get(toEmail);
+  const targetSockets = getLiveUserSockets(toEmail);
 
   activeCalls[roomId].invited.push(toEmail);
-  if (targetSockets && targetSockets.size > 0) {
+  if (targetSockets.length > 0) {
     activeCalls[roomId].ringing.push(toEmail);
   } else {
     activeCalls[roomId].ringing.push(toEmail);
@@ -739,7 +769,7 @@ async function handleCallInvite(socket, data) {
     });
   }
 
-  if (targetSockets && targetSockets.size > 0) {
+  if (targetSockets.length > 0) {
     socket.to(roomId).emit("call:update-participant-list", activeCalls[roomId]);
     socket.emit("call:update-participant-list", activeCalls[roomId]);
 
@@ -751,7 +781,7 @@ async function handleCallInvite(socket, data) {
       type,
       isGroupCall,
       roomId,
-      groupId:fromEmail
+      groupId: fromEmail
     });
   }
 }
@@ -807,25 +837,25 @@ function handleParticipantLeft(socket, data) {
 }
 function handleRejectGroupCall(socket, data) {
 
-  const { to,userId, groupId, duration, roomId } = data;
+  const { to, userId, groupId, duration, roomId } = data;
 
   // console.log(data,"datadatadatadata");
-  
+
 
   const call = activeCalls[roomId];
 
   // console.log(call,"callcallcallcall");
-  
 
 
-  if (call) {  
-    if(call?.ringing && call?.ringing.includes(userId)){
+
+  if (call) {
+    if (call?.ringing && call?.ringing.includes(userId)) {
       // console.log("rrrrrrrrrrr");
-      
+
       call.ringing = call?.ringing.filter((id) => id !== userId);
     } else {
       // console.log("qqqqqqqqqqq");
-      if(!(call?.invited && call?.invited.includes(userId))){
+      if (!(call?.invited && call?.invited.includes(userId))) {
         // console.log("ppppppppppppppp");
         call.invited.push(userId);
       }
@@ -854,20 +884,32 @@ function handleCallAccept(socket, data) {
     call.ringing = call.ringing.filter((id) => id !== toEmail);
   }
 
-  const targetSockets = onlineUsers.get(fromEmail);
+  const callerId = fromEmail;
+  const receiverId = toEmail;
+  const targetSockets = getLiveUserSockets(callerId);
 
-  if (targetSockets && targetSockets.size > 0) {
+  if (targetSockets.length > 0) {
     // Send call acceptance to the caller
-    emitToUser(fromEmail, "call-accepted", {
+    emitToUser(callerId, "call-accepted", {
       signal,
       fromEmail: toEmail,
+      fromEmail: receiverId,
       roomId,
+    })
+
+    if (call) {
+      // Emit to all participants in the room including the accepting user
+      socket.to(roomId).emit("call:update-participant-list", call);
+      socket.emit("call:update-participant-list", call);
+    }
+
+    const pendingSignals = call?.pendingSignals?.[receiverId] || [];
+    pendingSignals.forEach((pending) => {
+      socket.emit("call-signal", pending);
     });
-
-    // Emit to all participants in the room including the accepting user
-    socket.to(roomId).emit("call:update-participant-list", call);
-    socket.emit("call:update-participant-list", call);
-
+    if (call?.pendingSignals) {
+      delete call.pendingSignals[receiverId];
+    }
     // Dismiss call notification from all other devices of the accepting user
     dismissCallFromOtherDevices(toEmail, roomId, socket.id);
   }
@@ -875,10 +917,28 @@ function handleCallAccept(socket, data) {
 
 function handleCallSignal(socket, data) {
   const { signal, to, from, roomId } = data;
-  const targetSocketId = onlineUsers.get(to);
+  const targetSockets = getLiveUserSockets(to);
 
-  if (targetSocketId) {
+  if (targetSockets.length > 0) {
     emitToUser(to, "call-signal", {
+      signal,
+      from,
+      roomId,
+    });
+    return;
+  }
+
+  socket.to(roomId).emit("call-signal", {
+    signal,
+    from,
+    roomId,
+  });
+
+  const call = activeCalls[roomId];
+  if (call) {
+    call.pendingSignals = call.pendingSignals || {};
+    call.pendingSignals[to] = call.pendingSignals[to] || [];
+    call.pendingSignals[to].push({
       signal,
       from,
       roomId,
