@@ -9,6 +9,7 @@ const {
   markRead,
   getGroupRecipientIds,
 } = require("../services/messageDeliveryService");
+const { sendDataPushToUsers } = require("../services/pushService");
 
 const onlineUsers = new Map();
 const deviceRooms = new Map();
@@ -73,6 +74,27 @@ function emitCallNotificationWithPriority(userId, event, data) {
       socket.emit(event, { ...data, isPrimaryDevice: false });
     }
   }
+}
+
+async function sendCallPushNotification(userId, event, data) {
+  const [caller, group] = await Promise.all([
+    User.findById(data.fromEmail).select("userName email"),
+    data.groupId ? Groups.findById(data.groupId).select("userName name") : null,
+  ]);
+
+  await sendDataPushToUsers([userId], {
+    notification_type: "incoming_call",
+    event,
+    fromEmail: data.fromEmail,
+    callerName: caller?.userName || caller?.email || "Unknown caller",
+    callType: data.type || "video",
+    signal: data.signal ? JSON.stringify(data.signal) : "",
+    participants: data.participants ? JSON.stringify(data.participants) : "",
+    isGroupCall: Boolean(data.isGroupCall),
+    groupId: data.groupId || "",
+    groupName: group?.userName || group?.name || "",
+    roomId: data.roomId,
+  });
 }
 
 // Helper function to emit screen share notification with priority
@@ -609,6 +631,17 @@ async function handleCallRequest(socket, data) {
 
   if (targetSockets && targetSockets.size > 0) {
     activeCalls[roomId].ringing.push(toEmail);
+  } else {
+    activeCalls[roomId].ringing.push(toEmail);
+    await sendCallPushNotification(toEmail, "call-requested", {
+      fromEmail,
+      signal,
+      type,
+      participants,
+      isGroupCall,
+      groupId: groupId || null,
+      roomId,
+    });
   }
 
   if (targetSockets && targetSockets.size > 0) {
@@ -652,7 +685,7 @@ const handleUserIncall = (socket, data) => {
   socket.leave(roomId)
 }
 
-function handleCallInvite(socket, data) {
+async function handleCallInvite(socket, data) {
   const {
     fromEmail,
     toEmail,
@@ -693,6 +726,17 @@ function handleCallInvite(socket, data) {
   activeCalls[roomId].invited.push(toEmail);
   if (targetSockets && targetSockets.size > 0) {
     activeCalls[roomId].ringing.push(toEmail);
+  } else {
+    activeCalls[roomId].ringing.push(toEmail);
+    await sendCallPushNotification(toEmail, "call-invited", {
+      fromEmail,
+      signal,
+      participants,
+      type,
+      isGroupCall,
+      roomId,
+      groupId: fromEmail,
+    });
   }
 
   if (targetSockets && targetSockets.size > 0) {
