@@ -78,7 +78,7 @@ async function addParticipants(req, res) {
   try {
     const { groupId, members, addedBy } = req.body;
 
-    const group = await Group.findByIdAndUpdate(groupId, { $push: { members } }, { new: true });
+    const group = await Group.findByIdAndUpdate(groupId, { $push: { members: { $each: members } } }, { new: true });
 
     for (const memberId of members) {
       const addedByUser = await User.findById(addedBy);
