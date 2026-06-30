@@ -12,6 +12,9 @@ const session = require('express-session');
 const indexRoutes = require("./routes/indexRoutes");
 const socketManager = require("./socketManager/SocketManager");
 
+const dns = require('node:dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 const app = express();
 app.use(cookieParser());
 const port = process.env.PORT;

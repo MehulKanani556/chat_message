@@ -1496,12 +1496,13 @@ function handleUnregisterAsHost(socket) {
 }
 
 function handleRequestControl(socket, data) {
-  const { hostId } = data;
+  const { hostId, roomId } = data;
 
-  const hostSocket = getSocketByUserId(hostId);
-  if (hostSocket) {
-    hostSocket.emit('control-request', {
-      viewerId: socket.userId
+  const hostSockets = getLiveUserSockets(hostId);
+  if (hostSockets.length > 0) {
+    emitToUser(hostId, 'control-request', {
+      viewerId: socket.userId,
+      roomId,
     });
   } else {
     socket.emit('control-permission', false);
@@ -1509,28 +1510,39 @@ function handleRequestControl(socket, data) {
 }
 
 function handleGrantControl(socket, data) {
-  const { viewerId } = data;
+  const { viewerId, roomId } = data;
 
   // Use emitToUser to emit to the viewer
   emitToUser(viewerId, 'control-permission', true);
 
   // Notify host that control is granted
-  socket.emit('control-granted', { viewerId });
+  socket.emit('control-granted', { viewerId, roomId });
 }
 
 function handleRevokeControl(socket, data) {
-  const { viewerId } = data;
+  const { viewerId, roomId } = data;
   // Use emitToUser to emit to the viewer
   emitToUser(viewerId, "control-permission", false);
   // Notify host that control is revoked
-  socket.emit("control-revoked-for-host", { viewerId });
+  socket.emit("control-revoked-for-host", { viewerId, roomId });
 }
 
 function handleControlEvent(socket, data) {
   const { roomId, type, payload } = data;
 
   // Broadcast the control event to all sockets in the room
-  socket.to(roomId).emit('control-event', { type, payload });
+  socket.to(roomId).emit('control-event', { type, payload, from: socket.userId, roomId });
+}
+
+function handleCallScreenShareState(socket, data) {
+  const { roomId, isSharing } = data;
+  if (!roomId) return;
+
+  socket.to(roomId).emit("call-screen-share-state", {
+    roomId,
+    isSharing: Boolean(isSharing),
+    from: socket.userId,
+  });
 }
 
 // =================================================================================
@@ -1710,6 +1722,7 @@ function initializeSocket(io) {
     socket.on('grant-control', (data) => handleGrantControl(socket, data));
     socket.on('revoke-control', (data) => handleRevokeControl(socket, data));
     socket.on('control-event', (data) => handleControlEvent(socket, data));
+    socket.on('call-screen-share-state', (data) => handleCallScreenShareState(socket, data));
   })
 }
 
